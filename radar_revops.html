@@ -1,0 +1,1819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RADAR — RevOps Data Platform</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#F0F2F5;color:#2D3436}
+.header{background:#1E1E2E;padding:0 24px;display:flex;align-items:stretch;justify-content:space-between}
+.header-left{display:flex;align-items:center;gap:14px;padding:14px 0}
+.logo{font-size:22px;font-weight:800;color:#6C5CE7;letter-spacing:2px}
+.header-sub{color:#B2BEC3;font-size:11px;margin-top:2px}
+.header-title{color:#fff;font-weight:600;font-size:14px}
+.nav-tabs{display:flex;align-items:stretch}
+.nav-tab{padding:0 28px;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:#B2BEC3;border-bottom:3px solid transparent;transition:all .2s}
+.nav-tab:hover{color:#fff}
+.nav-tab.active{color:#fff;border-bottom-color:#6C5CE7}
+.section{display:none;min-height:calc(100vh - 56px)}
+.section.active{display:block}
+
+/* ── DB PART ── */
+.db-hero{background:linear-gradient(135deg,#1E1E2E 0%,#2D2D44 100%);padding:28px 28px;color:#fff}
+.db-hero h1{font-size:20px;font-weight:700;margin-bottom:6px}
+.db-hero p{color:#B2BEC3;font-size:13px;line-height:1.6;max-width:680px}
+.conn-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:10px;margin-top:16px}
+.conn-card{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:13px;cursor:pointer;transition:all .2s}
+.conn-card .cc-icon{font-size:22px;margin-bottom:7px}
+.conn-card .cc-name{font-size:13px;font-weight:600;color:#fff}
+.conn-card .cc-sub{font-size:11px;color:#B2BEC3;margin-top:2px;line-height:1.4}
+.conn-card:hover{background:rgba(108,92,231,.25);border-color:rgba(108,92,231,.6);transform:translateY(-1px)}
+.conn-card.active-card{background:rgba(108,92,231,.3);border-color:#6C5CE7;box-shadow:0 0 0 2px rgba(108,92,231,.3)}
+.conn-card.ai-card:hover{background:rgba(253,121,168,.15);border-color:rgba(253,121,168,.5);transform:translateY(-1px)}
+.conn-card.ai-card.active-card{background:rgba(253,121,168,.2);border-color:#fd79a8;box-shadow:0 0 0 2px rgba(253,121,168,.25)}
+
+/* ── STEPS PANEL ── */
+.steps-panel{display:none;margin-top:20px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:12px;overflow:hidden;animation:fadeIn .2s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.steps-panel-header{padding:14px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(255,255,255,.1);background:rgba(0,0,0,.15)}
+.steps-panel-title{color:#fff;font-weight:700;font-size:15px}
+.steps-panel-close{background:rgba(255,255,255,.1);border:none;color:#B2BEC3;padding:4px 12px;border-radius:6px;cursor:pointer;font-size:12px;transition:all .15s}
+.steps-panel-close:hover{background:rgba(255,255,255,.2);color:#fff}
+.steps-panel-body{padding:20px}
+
+/* AI sub-tabs */
+.ai-subtabs{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap}
+.ai-subtab{padding:6px 14px;border-radius:20px;border:1.5px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);font-size:12px;font-weight:600;color:#B2BEC3;cursor:pointer;transition:all .15s}
+.ai-subtab:hover{border-color:rgba(253,121,168,.6);color:#fd79a8}
+.ai-subtab.active{background:rgba(253,121,168,.2);border-color:#fd79a8;color:#fd79a8}
+.ai-subtab-content{display:none}
+.ai-subtab-content.active{display:block}
+
+.step-item{display:flex;gap:12px;margin-bottom:14px;align-items:flex-start}
+.step-num{background:#6C5CE7;color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px}
+.step-num.ai-num{background:linear-gradient(135deg,#fd79a8,#a29bfe)}
+.step-body{flex:1}
+.step-title{color:#fff;font-weight:600;font-size:13px;margin-bottom:3px}
+.step-desc{color:#B2BEC3;font-size:12px;line-height:1.6}
+.step-code{background:rgba(0,0,0,.3);border-radius:6px;padding:9px 12px;font-family:"Courier New",monospace;font-size:11px;color:#A8E6CF;margin-top:6px;white-space:pre;overflow-x:auto;position:relative}
+.step-code .cpb2{position:absolute;top:5px;right:7px;background:#6C5CE7;color:#fff;border:none;border-radius:4px;padding:2px 7px;font-size:10px;cursor:pointer}
+.step-code .cpb2:hover{background:#5A4BD1}
+.step-note{background:rgba(0,184,148,.1);border-left:3px solid #00B894;padding:9px 13px;border-radius:0 6px 6px 0;color:#B2BEC3;font-size:12px;margin-top:14px;line-height:1.6}
+.step-note strong{color:#00B894}
+.step-note-ai{background:rgba(253,121,168,.08);border-left:3px solid #fd79a8;padding:9px 13px;border-radius:0 6px 6px 0;color:#B2BEC3;font-size:12px;margin-top:14px;line-height:1.6}
+.step-note-ai strong{color:#fd79a8}
+.prompt-box{background:rgba(0,0,0,.3);border:1px solid rgba(253,121,168,.3);border-radius:8px;padding:12px 14px;font-size:12px;color:#DFE6E9;margin-top:6px;line-height:1.7;font-style:italic;position:relative}
+.prompt-box .cpb2{font-style:normal}
+.section-divider{color:rgba(255,255,255,.2);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin:16px 0 10px;display:flex;align-items:center;gap:8px}
+.section-divider::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.1)}
+
+/* ── CONTROLS ── */
+.db-controls{background:#fff;padding:12px 24px;border-bottom:1px solid #DFE6E9;display:flex;gap:10px;flex-wrap:wrap;align-items:center;position:sticky;top:0;z-index:10;box-shadow:0 2px 6px rgba(0,0,0,.06)}
+.search-box{flex:1;min-width:200px;position:relative}
+.search-box input{width:100%;padding:8px 12px 8px 34px;border:1.5px solid #DFE6E9;border-radius:8px;font-size:13px;outline:none}
+.search-box input:focus{border-color:#6C5CE7}
+.sicon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#B2BEC3;font-size:13px}
+.layer-filter{display:flex;gap:6px}
+.lb{padding:6px 14px;border-radius:20px;border:1.5px solid #DFE6E9;background:#fff;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s}
+.lb:hover{border-color:#6C5CE7;color:#6C5CE7}
+.lb.all.active{background:#6C5CE7;border-color:#6C5CE7;color:#fff}
+.lb.gold.active{background:#00B894;border-color:#00B894;color:#fff}
+.lb.silver.active{background:#0984E3;border-color:#0984E3;color:#fff}
+.tables-grid{padding:20px 24px;display:grid;grid-template-columns:repeat(auto-fill,minmax(680px,1fr));gap:14px}
+.tcard{background:#fff;border-radius:10px;border:1.5px solid #DFE6E9;overflow:hidden;transition:all .2s}
+.tcard:hover{box-shadow:0 4px 18px rgba(0,0,0,.1);transform:translateY(-1px)}
+.tcard.exp{border-color:#6C5CE7;box-shadow:0 4px 22px rgba(108,92,231,.15)}
+.tc-header{padding:14px 16px;cursor:pointer;display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.tc-left{flex:1}
+.tc-top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.layer-badge{font-size:10px;font-weight:700;padding:2px 9px;border-radius:10px;text-transform:uppercase;letter-spacing:.5px;color:#fff}
+.layer-Gold{background:#00B894}
+.layer-Silver{background:#0984E3}
+.grain-badge{font-size:10px;color:#636E72;background:#F0F2F5;padding:2px 8px;border-radius:10px}
+.tc-name{font-family:"Courier New",monospace;font-size:15px;font-weight:700;color:#1E1E2E}
+.tc-desc{font-size:12px;color:#636E72;margin-top:4px;line-height:1.5}
+.tc-meta{display:flex;gap:10px;margin-top:8px}
+.tc-pill{font-size:10px;color:#636E72;background:#F8F9FA;padding:2px 8px;border-radius:6px;border:1px solid #DFE6E9}
+.tc-pill strong{color:#2D3436}
+.expand-btn{color:#B2BEC3;font-size:16px;flex-shrink:0;transition:transform .2s;margin-top:2px}
+.tcard.exp .expand-btn{transform:rotate(180deg)}
+.fields-section{border-top:1px solid #F0F2F5;display:none}
+.tcard.exp .fields-section{display:block}
+.best-for{padding:9px 16px;background:#E8F8F5;border-bottom:1px solid #D1F2EB;display:flex;align-items:center;gap:8px}
+.bf-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#00B894;flex-shrink:0}
+.bf-value{font-size:12px;color:#2D3436}
+.fields-search{padding:9px 14px;border-bottom:1px solid #F0F2F5}
+.fields-search input{width:100%;padding:5px 10px;border:1px solid #DFE6E9;border-radius:6px;font-size:12px;outline:none}
+.fields-table{width:100%;border-collapse:collapse;table-layout:fixed}
+.fields-table th{background:#F8F9FA;padding:6px 14px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#636E72;text-align:left;border-bottom:1px solid #DFE6E9}
+.fields-table th:nth-child(1){width:30%}
+.fields-table th:nth-child(2){width:12%}
+.fields-table th:nth-child(3){width:58%}
+.fields-table td{padding:7px 14px;font-size:12px;border-bottom:1px solid #F8F9FA;vertical-align:top;word-wrap:break-word;white-space:normal}
+.fields-table tr:last-child td{border-bottom:none}
+.fields-table tr:hover td{background:#FAFBFF}
+.field-name{font-family:"Courier New",monospace;font-weight:600;color:#1E1E2E;font-size:11px}
+.field-type{font-size:10px;color:#6C5CE7;background:#F1F0FF;padding:1px 6px;border-radius:4px;font-family:monospace}
+.field-desc{color:#636E72;line-height:1.4}
+.copy-snippet{padding:11px 14px;background:#F8F9FA;border-top:1px solid #F0F2F5}
+.cs-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#B2BEC3;margin-bottom:5px}
+.snippet{background:#1E1E2E;border-radius:6px;padding:9px 11px;font-family:"Courier New",monospace;font-size:11px;color:#A8E6CF;line-height:1.6;position:relative;overflow-x:auto;white-space:pre}
+.cpb{position:absolute;top:5px;right:7px;background:#6C5CE7;color:#fff;border:none;border-radius:4px;padding:2px 7px;font-size:10px;cursor:pointer}
+.cpb:hover{background:#5A4BD1}
+
+/* ── DATAPEDIA ── */
+.dp-hero{background:linear-gradient(135deg,#1E1E2E 0%,#2D2D44 100%);padding:20px 28px;color:#fff;display:flex;align-items:center;justify-content:space-between}
+.dp-hero h1{font-size:18px;font-weight:700}
+.dp-hero p{color:#B2BEC3;font-size:12px;margin-top:4px}
+.approved-badge{background:#00B894;color:#fff;padding:6px 16px;border-radius:20px;font-size:13px;font-weight:700;white-space:nowrap}
+.dp-controls{background:#fff;padding:12px 24px;border-bottom:1px solid #DFE6E9;display:flex;gap:10px;flex-wrap:wrap;align-items:center;position:sticky;top:0;z-index:10;box-shadow:0 2px 6px rgba(0,0,0,.06)}
+.filter-group{display:flex;gap:6px;flex-wrap:wrap}
+.fb{padding:6px 12px;border-radius:20px;border:1.5px solid #DFE6E9;background:#fff;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s}
+.fb:hover{border-color:#6C5CE7;color:#6C5CE7}
+.fb.active{background:#6C5CE7;border-color:#6C5CE7;color:#fff}
+.stats-bar{background:#fff;padding:5px 24px;border-bottom:1px solid #DFE6E9;display:flex;gap:18px;flex-wrap:wrap;align-items:center}
+.si2{display:flex;align-items:center;gap:5px;font-size:11px;color:#636E72}
+.sdot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.metrics-grid{padding:16px 24px;display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:12px}
+.mcard{background:#fff;border-radius:10px;border:1.5px solid #DFE6E9;overflow:hidden;transition:all .2s;cursor:pointer}
+.mcard:hover{box-shadow:0 4px 18px rgba(108,92,231,.1);border-color:#6C5CE7;transform:translateY(-1px)}
+.mcard.exp{border-color:#6C5CE7;box-shadow:0 4px 22px rgba(108,92,231,.15)}
+.mc-header{padding:13px 15px 9px}
+.mc-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.mc-badges{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+.cat-badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;text-transform:uppercase;letter-spacing:.5px}
+.approved-pill{font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;background:#D4EDDA;color:#1E7E34}
+.mc-id{font-size:10px;color:#B2BEC3;font-family:monospace;margin-top:2px}
+.mc-name{font-size:14px;font-weight:700;margin-top:5px;line-height:1.3}
+.mc-bq{font-size:12px;color:#636E72;margin-top:3px;font-style:italic;line-height:1.4}
+.mc-expand{color:#B2BEC3;font-size:15px;flex-shrink:0;transition:transform .2s}
+.mcard.exp .mc-expand{transform:rotate(180deg)}
+.mc-detail{padding:0 15px 13px;border-top:1px solid #F0F2F5;display:none;margin-top:9px;padding-top:11px}
+.mcard.exp .mc-detail{display:block}
+.detail-row{margin-bottom:10px}
+.dl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#B2BEC3;margin-bottom:3px}
+.dv{font-size:12px;color:#2D3436;line-height:1.5}
+.fchips{display:flex;gap:4px;flex-wrap:wrap;margin-top:3px}
+.chip{background:#F0F2F5;border-radius:4px;padding:2px 7px;font-size:10px;color:#636E72}
+.empty-state{text-align:center;padding:60px 24px;color:#B2BEC3;grid-column:1/-1}
+.empty-state h3{font-size:16px;color:#636E72;margin-bottom:6px}
+.cat-Finance{background:#F4ECF7;color:#8E44AD}
+.cat-Funnel{background:#FEF9E7;color:#B7770D}
+.cat-Sales_Productivity{background:#EAF2FB;color:#1A5276}
+.cat-Revenue{background:#E8F8F5;color:#0F6E56}
+.cat-Customer_Health{background:#FDEDEC;color:#C0392B}
+.cat-Marketing_Efficiency{background:#EBF5FB;color:#1A5276}
+.cat-Revenue_Risk{background:#FEF5E7;color:#B7770D}
+.cat-Product_Performance{background:#FDEBD0;color:#935116}
+
+/* ── LOGIN OVERLAY ── */
+.login-overlay{position:fixed;inset:0;background:#0D0F1A;display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:0}
+.login-card{background:#1E1E2E;border:1px solid rgba(108,92,231,.3);border-radius:16px;padding:40px 44px;width:100%;max-width:420px;box-shadow:0 24px 60px rgba(0,0,0,.6)}
+.login-logo{font-size:28px;font-weight:800;color:#6C5CE7;letter-spacing:3px;margin-bottom:4px;font-family:"Courier New",monospace}
+.login-tagline{color:#636E72;font-size:12px;margin-bottom:28px}
+.login-label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#B2BEC3;margin-bottom:7px}
+.login-input{width:100%;padding:11px 14px;background:#141627;border:1.5px solid rgba(255,255,255,.1);border-radius:8px;color:#fff;font-size:13px;outline:none;transition:border-color .2s;font-family:"Segoe UI",Arial,sans-serif}
+.login-input:focus{border-color:#6C5CE7}
+.login-btn{width:100%;margin-top:18px;padding:12px;background:#6C5CE7;border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;transition:opacity .2s;font-family:"Segoe UI",Arial,sans-serif}
+.login-btn:hover{opacity:.88}
+.login-error{color:#fd79a8;font-size:12px;margin-top:10px;min-height:18px}
+.login-note{color:#4a5060;font-size:11px;margin-top:14px;line-height:1.5}
+.logout-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:#B2BEC3;font-size:11px;padding:5px 12px;border-radius:6px;cursor:pointer;font-family:"Segoe UI",Arial,sans-serif;transition:all .15s}
+.logout-btn:hover{background:rgba(253,121,168,.15);border-color:rgba(253,121,168,.4);color:#fd79a8}
+.user-pill{font-size:11px;color:#636E72;font-family:"Courier New",monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
+
+/* ── DASHBOARD PLAN SECTION ── */
+.dash-hero{background:linear-gradient(135deg,#1E1E2E 0%,#2D2D44 100%);padding:24px 28px;color:#fff}
+.dash-hero h1{font-size:20px;font-weight:700;margin-bottom:6px}
+.dash-hero p{color:#B2BEC3;font-size:13px;line-height:1.6;max-width:700px}
+.plan-subtabs{display:flex;gap:0;border-bottom:1px solid rgba(255,255,255,.1);background:#1E1E2E;padding:0 28px;flex-wrap:wrap}
+.plan-subtab{padding:11px 20px;font-size:12px;font-weight:600;color:#B2BEC3;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap}
+.plan-subtab:hover{color:#fff}
+.plan-subtab.active{color:#6C5CE7;border-bottom-color:#6C5CE7}
+.plan-body{padding:24px 28px;max-width:1200px}
+.plan-section{display:none}
+.plan-section.active{display:block}
+.plan-h2{font-size:15px;font-weight:700;color:#2D3436;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.plan-h3{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#B2BEC3;margin:20px 0 10px;display:flex;align-items:center;gap:8px}
+.plan-h3::after{content:'';flex:1;height:1px;background:#DFE6E9}
+.page-card{background:#fff;border-radius:10px;border:1.5px solid #DFE6E9;padding:16px 20px;margin-bottom:12px}
+.page-card-title{font-size:13px;font-weight:700;color:#1E1E2E;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.page-badge{font-size:10px;font-weight:700;padding:2px 9px;border-radius:10px;background:#EDE9FE;color:#6C5CE7}
+.page-items{display:flex;flex-wrap:wrap;gap:6px}
+.page-item{font-size:11px;background:#F0F2F5;border-radius:5px;padding:3px 9px;color:#636E72;border:1px solid #DFE6E9}
+.page-item.highlight{background:#E8F8F5;color:#0F6E56;border-color:#D1F2EB}
+.kpi-def-table{width:100%;border-collapse:collapse}
+.kpi-def-table th{background:#F8F9FA;padding:8px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#636E72;text-align:left;border-bottom:2px solid #DFE6E9}
+.kpi-def-table td{padding:9px 12px;font-size:12px;border-bottom:1px solid #F0F2F5;vertical-align:top}
+.kpi-def-table tr:last-child td{border-bottom:none}
+.kpi-def-table tr:hover td{background:#FAFBFF}
+.kpi-name-cell{font-weight:700;color:#1E1E2E}
+.kpi-date-badge{display:inline-block;font-size:10px;font-weight:600;padding:1px 7px;border-radius:4px;background:#FEF9E7;color:#B7770D;border:1px solid #F9E79F;white-space:nowrap}
+.sql-block-wrap{background:#1E1E2E;border-radius:8px;overflow:hidden;margin-bottom:16px;border:1px solid rgba(108,92,231,.2)}
+.sql-block-header{padding:10px 14px;background:rgba(108,92,231,.15);display:flex;justify-content:space-between;align-items:center}
+.sql-block-title{font-size:12px;font-weight:700;color:#a29bfe;font-family:"Courier New",monospace}
+.sql-copy-btn{background:#6C5CE7;border:none;color:#fff;font-size:10px;font-weight:700;padding:3px 10px;border-radius:4px;cursor:pointer;font-family:"Segoe UI",Arial,sans-serif}
+.sql-copy-btn:hover{background:#5A4BD1}
+.sql-code{padding:14px 16px;font-family:"Courier New",monospace;font-size:11px;color:#A8E6CF;line-height:1.7;overflow-x:auto;white-space:pre;max-height:320px;overflow-y:auto}
+.filter-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:20px}
+.filter-card{background:#fff;border-radius:8px;border:1.5px solid #DFE6E9;padding:12px 14px}
+.filter-card-name{font-size:12px;font-weight:700;color:#1E1E2E;margin-bottom:4px}
+.filter-card-desc{font-size:11px;color:#636E72;line-height:1.4}
+.filter-card-field{font-family:"Courier New",monospace;font-size:10px;color:#6C5CE7;background:#F1F0FF;padding:1px 6px;border-radius:3px;margin-top:4px;display:inline-block}
+.prompt-wrap{background:#1E1E2E;border:1px solid rgba(253,121,168,.3);border-radius:10px;overflow:hidden;margin-bottom:16px}
+.prompt-header{padding:11px 16px;background:rgba(253,121,168,.1);display:flex;justify-content:space-between;align-items:center}
+.prompt-label{font-size:12px;font-weight:700;color:#fd79a8}
+.prompt-copy-btn{background:linear-gradient(135deg,#fd79a8,#a29bfe);border:none;color:#fff;font-size:10px;font-weight:700;padding:4px 12px;border-radius:4px;cursor:pointer;font-family:"Segoe UI",Arial,sans-serif}
+.prompt-text{padding:16px 18px;font-size:12px;color:#DFE6E9;line-height:1.75;white-space:pre-wrap;font-family:"Courier New",monospace;max-height:400px;overflow-y:auto}
+.github-step{display:flex;gap:12px;margin-bottom:14px;align-items:flex-start}
+.github-num{background:#24292e;color:#fff;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px}
+.github-body{flex:1}
+.github-title{font-size:13px;font-weight:700;color:#1E1E2E;margin-bottom:3px}
+.github-desc{font-size:12px;color:#636E72;line-height:1.6}
+.github-code{background:#1E1E2E;border-radius:6px;padding:9px 12px;font-family:"Courier New",monospace;font-size:11px;color:#A8E6CF;margin-top:6px;white-space:pre;overflow-x:auto;position:relative}
+.github-copy{position:absolute;top:5px;right:7px;background:#6C5CE7;color:#fff;border:none;border-radius:4px;padding:2px 7px;font-size:10px;cursor:pointer}
+
+.warn-box{background:#FEF5E7;border-left:3px solid #F39C12;border-radius:0 8px 8px 0;padding:10px 14px;font-size:12px;color:#7D6608;line-height:1.6;margin:14px 0}
+.warn-box strong{color:#E67E22}
+.info-box{background:#E8F8F5;border-left:3px solid #00B894;border-radius:0 8px 8px 0;padding:10px 14px;font-size:12px;color:#0F6E56;line-height:1.6;margin:14px 0}
+.info-box strong{color:#00B894}
+/* ── CONNECTION MODAL ── */
+.conn-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9000;display:none;align-items:center;justify-content:center}
+.conn-modal-overlay.open{display:flex}
+.conn-modal{background:#1E1E2E;border:1px solid rgba(255,255,255,.15);border-radius:14px;padding:28px 32px;width:480px;max-width:95vw;box-shadow:0 24px 60px rgba(0,0,0,.5)}
+.conn-modal h2{color:#fff;font-size:17px;font-weight:700;margin-bottom:4px}
+.conn-modal .cm-sub{color:#B2BEC3;font-size:12px;margin-bottom:22px}
+.conn-field{margin-bottom:16px}
+.conn-field label{display:block;color:#B2BEC3;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px}
+.conn-field input{width:100%;background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.12);border-radius:8px;padding:9px 12px;color:#fff;font-size:13px;outline:none;transition:border-color .2s}
+.conn-field input:focus{border-color:#6C5CE7}
+.conn-field input::placeholder{color:#636E72}
+.conn-btns{display:flex;gap:10px;margin-top:22px}
+.btn-connect{flex:1;background:#6C5CE7;color:#fff;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;transition:background .2s}
+.btn-connect:hover{background:#5A4BD1}
+.btn-test{background:rgba(255,255,255,.08);color:#B2BEC3;border:1.5px solid rgba(255,255,255,.12);border-radius:8px;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s}
+.btn-test:hover{background:rgba(255,255,255,.14);color:#fff}
+.btn-cancel{background:transparent;color:#636E72;border:none;padding:10px 14px;font-size:13px;cursor:pointer}
+.btn-cancel:hover{color:#B2BEC3}
+.conn-status-msg{margin-top:14px;font-size:12px;padding:8px 12px;border-radius:6px;display:none}
+.conn-status-msg.ok{background:rgba(0,184,148,.15);color:#00B894;display:block}
+.conn-status-msg.err{background:rgba(255,118,117,.12);color:#FF7675;display:block}
+.conn-status-msg.info{background:rgba(108,92,231,.15);color:#a29bfe;display:block}
+/* ── HEADER CONNECTION BADGE ── */
+.conn-badge{display:flex;align-items:center;gap:7px;padding:6px 13px;border-radius:20px;border:1.5px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);cursor:pointer;transition:all .2s;font-size:12px;font-weight:600;color:#B2BEC3;white-space:nowrap}
+.conn-badge:hover{border-color:rgba(108,92,231,.6);color:#a29bfe}
+.conn-badge.live{border-color:rgba(0,184,148,.5);background:rgba(0,184,148,.1);color:#00B894}
+.conn-dot{width:7px;height:7px;border-radius:50%;background:#636E72;flex-shrink:0}
+.conn-badge.live .conn-dot{background:#00B894;box-shadow:0 0 6px #00B894}
+/* ── REFRESH BUTTON ── */
+.refresh-btn{display:flex;align-items:center;gap:6px;padding:6px 13px;border-radius:20px;border:1.5px solid rgba(108,92,231,.4);background:rgba(108,92,231,.1);color:#a29bfe;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap}
+.refresh-btn:hover{background:rgba(108,92,231,.25);border-color:#6C5CE7;color:#fff}
+.refresh-btn.spinning .rb-icon{display:inline-block;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.refresh-btn:disabled{opacity:.45;cursor:not-allowed}
+.sync-bar{background:rgba(108,92,231,.12);border:1px solid rgba(108,92,231,.25);border-radius:8px;padding:8px 14px;font-size:12px;color:#a29bfe;margin:0 24px 10px;display:none;align-items:center;gap:8px}
+.sync-bar.show{display:flex}
+.sync-bar.err{background:rgba(255,118,117,.08);border-color:rgba(255,118,117,.25);color:#FF7675}
+.sync-bar.ok{background:rgba(0,184,148,.08);border-color:rgba(0,184,148,.25);color:#00B894}
+</style>
+</head>
+<body>
+
+<!-- ── LOGIN OVERLAY ── -->
+<div id="login-overlay" class="login-overlay">
+  <div class="login-card">
+    <div class="login-logo">RADAR</div>
+    <div class="login-tagline">RevOps Analytics, Data &amp; Reporting · Sprout Solutions</div>
+    <label class="login-label" for="login-email">Work Email</label>
+    <input class="login-input" type="email" id="login-email" placeholder="you@sprout.ph"
+      onkeydown="if(event.key==='Enter')radarLogin()">
+    <button class="login-btn" onclick="radarLogin()">Sign In</button>
+    <div class="login-error" id="login-error"></div>
+  </div>
+</div>
+
+<!-- ── APP ROOT (hidden until login) ── -->
+<div id="app-root" style="display:none">
+
+<div class="header">
+  <div class="header-left">
+    <div class="logo">RADAR</div>
+    <div>
+      <div class="header-title">RevOps Analytics, Data &amp; Reporting</div>
+      <div class="header-sub">Sprout Solutions · shared.revops · Databricks</div>
+    </div>
+  </div>
+  <div class="nav-tabs">
+    <div class="nav-tab active" id="tab-db"   onclick="switchTab('db')">🗄️ Database</div>
+    <div class="nav-tab" id="tab-dp"   onclick="switchTab('dp')">📖 DataPedia</div>
+    <div class="nav-tab" id="tab-dash" onclick="switchTab('dash')">📊 Dashboard Plan</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;padding:0 18px;flex-shrink:0">
+    <div class="conn-badge" id="conn-badge" onclick="openConnModal()"><span class="conn-dot" id="conn-dot"></span><span id="conn-badge-text">Not Connected</span></div>
+    <span class="user-pill" id="user-email-display"></span>
+    <button class="logout-btn" onclick="radarLogout()">Sign Out</button>
+  </div>
+</div>
+
+<!-- PART 1 — DATABASE -->
+<div class="section active" id="section-db">
+  <div class="db-hero">
+    <h1>📡 Connect Your Dashboard</h1>
+    <p>All tables live in <strong>shared.revops</strong> on Databricks. Use <strong>gold_monthly_exec_summary</strong> for standard dashboards — all KPIs are pre-computed. Use silver tables for custom drill-downs.</p>
+    <div class="conn-cards">
+      <div class="conn-card" id="card-powerbi" onclick="showSteps('powerbi')">
+        <div class="cc-icon">⚡</div>
+        <div class="cc-name">Power BI</div>
+        <div class="cc-sub">Azure Databricks connector → Direct Query or Import</div>
+      </div>
+      <div class="conn-card" id="card-databricks" onclick="showSteps('databricks')">
+        <div class="cc-icon">📊</div>
+        <div class="cc-name">Databricks SQL Editor</div>
+        <div class="cc-sub">Query directly in the Databricks workspace</div>
+      </div>
+      <div class="conn-card" id="card-excel" onclick="showSteps('excel')">
+        <div class="cc-icon">📗</div>
+        <div class="cc-name">Excel</div>
+        <div class="cc-sub">ODBC connector → pull data into Excel sheets</div>
+      </div>
+      <div class="conn-card" id="card-other" onclick="showSteps('other')">
+        <div class="cc-icon">🔗</div>
+        <div class="cc-name">Other BI Tools</div>
+        <div class="cc-sub">Tableau, Looker, Metabase via JDBC/ODBC</div>
+      </div>
+      <div class="conn-card ai-card" id="card-ai" onclick="showSteps('ai')">
+        <div class="cc-icon">🤖</div>
+        <div class="cc-name">AI Tools</div>
+        <div class="cc-sub">Claude, ChatGPT, Gemini → generate dashboards from data</div>
+      </div>
+    </div>
+
+    <!-- Steps Panel -->
+    <div id="steps-panel" class="steps-panel">
+      <div class="steps-panel-header">
+        <div class="steps-panel-title" id="steps-title"></div>
+        <button class="steps-panel-close" onclick="hideSteps()">✕ Close</button>
+      </div>
+      <div class="steps-panel-body" id="steps-content"></div>
+    </div>
+  </div>
+
+<div class="db-controls">
+    <div class="search-box">
+      <span class="sicon">🔍</span>
+      <input type="text" id="db-search" placeholder="Search tables or columns..." oninput="filterTables()">
+    </div>
+    <div class="layer-filter">
+      <button class="lb all active" id="layer-all" onclick="setLayer('')">All Tables</button>
+      <button class="lb gold" id="layer-Gold" onclick="setLayer('Gold')">Gold</button>
+      <button class="lb silver" id="layer-Silver" onclick="setLayer('Silver')">Silver</button>
+    </div>
+    <button class="refresh-btn" id="db-refresh-btn" onclick="refreshDatabase()"><span class="rb-icon">&#8635;</span> Sync Schema</button>
+    <span id="db-count" style="font-size:12px;color:#636E72;white-space:nowrap">5 tables</span>
+  </div>
+  <div class="sync-bar" id="db-sync-bar"></div>
+<div class="tables-grid" id="tables-grid"></div>
+</div>
+
+<!-- PART 2 — DATAPEDIA -->
+<div class="section" id="section-dp">
+  <div class="dp-hero">
+    <div>
+      <h1>📖 DataPedia</h1>
+      <p>Centralized metrics dictionary — approved definitions, formulas, and data sources</p>
+    </div>
+    <div class="approved-badge" id="approved-badge">✅ <span id="approved-count">34</span> Approved Metrics</div>
+  </div>
+  <div class="dp-controls">
+    <div class="search-box">
+      <span class="sicon">🔍</span>
+      <input type="text" id="dp-search" placeholder="Search metrics, definitions, questions..." oninput="filterMetrics()">
+    </div>
+    <div class="filter-group" id="cat-filters"></div>
+    <span id="dp-count" style="font-size:12px;color:#636E72;white-space:nowrap">43 metrics</span>
+  </div>
+  <div class="sync-bar" id="dp-sync-bar"></div>
+<div class="stats-bar" id="stats-bar"></div>
+  <div class="metrics-grid" id="metrics-grid"></div>
+</div>
+
+<!-- PART 3 — DASHBOARD PLAN -->
+<div class="section" id="section-dash" style="display:none">
+  <div class="dash-hero">
+    <h1>📊 RevOps Dashboard Plan</h1>
+    <p>Official layout, metric definitions, SQL templates, filters, Claude prompt, and GitHub publishing guide for the RevOps Analytics Dashboard connected to <strong>shared.revops</strong>.</p>
+  </div>
+
+  <!-- Sub-tabs -->
+  <div class="plan-subtabs">
+    <div class="plan-subtab" id="ptab-sql" class="plan-subtab active" onclick="setPlanTab('sql')">💾 SQL Templates</div>
+    <div class="plan-subtab" id="ptab-filters" onclick="setPlanTab('filters')">🔧 Filters</div>
+    <div class="plan-subtab" id="ptab-prompt"  onclick="setPlanTab('prompt')">🤖 Claude Prompt</div>
+    <div class="plan-subtab" id="ptab-github"  onclick="setPlanTab('github')">🐙 GitHub Guide</div>
+  </div>
+
+  <div class="plan-body">
+
+    <!-- ── LAYOUT ── -->
+    
+
+    <!-- ── KPI DEFINITIONS ── -->
+    
+
+    <!-- ── SQL TEMPLATES ── -->
+    <div class="plan-section active" id="plan-sql">
+      <div class="plan-h2">💾 SQL Templates — 22 Reference Queries</div>
+      <p style="font-size:12px;color:#636E72;margin-bottom:6px">All queries use Databricks SQL syntax against <code style="font-size:11px">shared.revops</code>.</p>
+      <div class="info-box" style="margin-bottom:18px"><strong>💡 Tip:</strong> Copy any query and paste it into Claude alongside your dashboard request. Claude will use these as the reference logic to calculate metrics correctly — no need to re-explain the business rules.</div>
+
+      <div id="sql-blocks-container"></div>
+    </div><!-- /plan-sql -->
+
+    <!-- ── FILTERS ── -->
+    <div class="plan-section" id="plan-filters">
+      <div class="plan-h2">🔧 Recommended Filters / Slicers</div>
+      <div class="filter-grid" id="filter-cards-container"></div>
+      <div class="plan-h3">Date Basis Selector</div>
+      <p style="font-size:12px;color:#636E72;margin-bottom:12px">If your BI tool supports parameter-driven date field switching, expose a selector with these options:</p>
+      <div class="page-items" style="margin-bottom:20px">
+        <span class="page-item highlight">Projected Close Date → pipeline / TMRR metrics</span>
+        <span class="page-item highlight">Close Date → Won, Revenue, Avg Deal Value</span>
+        <span class="page-item highlight">Create Date → Leads, Channel, Conversion, Velocity</span>
+      </div>
+      <div class="warn-box"><strong>Important:</strong> Do not mix date bases in a single visual. Each metric section has its own date basis. Mixing them produces incorrect cohort counts.</div>
+    </div><!-- /plan-filters -->
+
+    <!-- ── CLAUDE PROMPT ── -->
+    <div class="plan-section" id="plan-prompt">
+      <div class="plan-h2">🤖 Claude Prompt — RevOps Dashboard Builder</div>
+      <p style="font-size:12px;color:#636E72;margin-bottom:16px">Copy this prompt into Claude to generate a live HTML dashboard connected to your Databricks tables.</p>
+
+      <div class="prompt-wrap" id="main-prompt-wrap">
+        <div class="prompt-header">
+          <span class="prompt-label">📋 RevOps Dashboard Prompt — paste into Claude</span>
+          <button class="prompt-copy-btn" onclick="cpPrompt('main-prompt-text')">Copy Prompt</button>
+        </div>
+        <div class="prompt-text" id="main-prompt-text">You are a RevOps Data Analytics Engineer building dashboards and analyses using Databricks.
+
+Your goal is to create scalable, production-ready dashboards using standardized RevOps data models, business logic, and approved metric definitions.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🧱 DATA PLATFORM
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+USE CATALOG shared;
+USE SCHEMA revops;
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🥇 GOLD TABLES (PRIMARY — ALWAYS USE FIRST)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• shared.revops.gold_monthly_exec_summary → pre-aggregated KPIs (PRIMARY)
+• shared.revops.gold_targets → targets (MRR, QL, Won, EF MRR)
+• shared.revops.gold_metrics_datapedia → approved metric definitions
+
+🥈 SILVER TABLES (ONLY FOR DRILLDOWN OR MISSING METRICS)
+• shared.revops.silver_deals → 1 row per deal
+• shared.revops.silver_line_items → product-level MRR
+• shared.revops.silver_company → company attributes
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚙️ CORE DATA RULES (STRICT)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. EXCLUDE RENEWALS (always):
+   WHERE LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%'
+
+2. SEGMENT STANDARDIZATION:
+   CASE WHEN UPPER(segment) = 'MICRO' THEN 'SME' ELSE segment END
+
+3. LEAD-BASED FUNNEL LOGIC (FINAL):
+   Base Population → qualified_lead = 'Yes'
+
+   Funnel Stage  | Logic
+   ─────────────────────────────────────────────────────────────
+   MQL (Leads)   | qualified_lead = 'Yes'
+   SQL           | qualified_lead = 'Yes' AND client_journey_stage = 'Opportunity'
+   Won Leads     | qualified_lead = 'Yes' AND client_journey_stage = 'Customer'
+   Lost Leads    | qualified_lead = 'Yes' AND client_journey_stage = 'Closed Lost'
+
+   ⚠️ MQL is NOT stage-based → it is lead qualification-based
+   ⚠️ Always use DISTINCT deal_id for counts
+
+4. DATE LOGIC:
+   Pipeline (TMRR)     → projected_close_date
+   Won / Revenue       → close_date
+   Funnel / Conversion → create_date
+
+5. MRR LOGIC:
+   mrr    → recurring revenue
+   ef_mrr → Embedded Finance (ReadyCash + ReadyWage)
+
+6. DEPARTMENT SOURCE: Always use department_source_clean (NOT raw department_source)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 GOLD TABLE PRE-AGGREGATED FIELDS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+gold_monthly_exec_summary already includes (renewal-excluded, funnel-aligned):
+qualified_leads, sales_qualified_leads, won_deals, lost_deals, dq_leads,
+won_mrr, won_ef_mrr, won_amount, avg_deal_size, avg_deal_velocity, mrr_in_pipeline
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 TARGET LOGIC
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Join gold_targets using: metric_month, pipeline_name, segment, department_source_clean
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🧠 APPROVED METRIC DEFINITIONS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• MQL          → COUNT(DISTINCT deal_id) WHERE qualified_lead = 'Yes'
+• SQL          → COUNT(DISTINCT deal_id) WHERE qualified_lead = 'Yes' AND client_journey_stage = 'Opportunity'
+• Won Leads    → COUNT(DISTINCT deal_id) WHERE qualified_lead = 'Yes' AND client_journey_stage = 'Customer'
+• Lost Leads   → COUNT(DISTINCT deal_id) WHERE qualified_lead = 'Yes' AND client_journey_stage = 'Closed Lost'
+• MQL TMRR     → SUM(mrr) using projected_close_date
+• SQL TMRR     → SUM(mrr) where stage = Opportunity
+• Won MRR      → SUM(mrr) where stage = Customer
+• EmFi MRR     → SUM(ef_mrr) where stage = Customer
+• Avg Deal Value → won_mrr ÷ won_deals
+• Deal Velocity  → AVG(deal_velocity_days)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🏗️ BUILD REQUIREMENTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Use GOLD tables first; join with targets where needed
+2. Use SILVER only for drilldowns or missing metrics
+3. Always apply lead-based funnel logic (qualified_lead = 'Yes')
+4. Always exclude renewals
+5. Always use standardized segment + department_source_clean
+6. Align date logic per metric type
+
+🎛️ STANDARD FILTERS TO INCLUDE:
+Date range | Pipeline name | Segment (SME/ENT) | Department source clean
+Channel source | Sales rep | HubSpot team | Deal type
+
+🎨 OUTPUT FORMAT — Return:
+1. SQL queries (Databricks SQL)
+2. KPI definitions
+3. Chart suggestions
+4. Notes / assumptions
+
+🚫 DO NOT:
+• Use raw HubSpot logic
+• Redefine metrics outside gold_metrics_datapedia
+• Mix date logic across metric types
+• Include renewal deals
+• Ignore the qualified_lead filter
+• Use raw department_source field
+
+CONNECTION DETAILS (fill in locally — do not share):
+• Server Hostname: [YOUR_SERVER_HOSTNAME]
+• HTTP Path: [YOUR_HTTP_PATH]
+• Personal Access Token: [YOUR_PAT]</div>
+      </div>
+
+<div class="warn-box"><strong>Security reminder:</strong> Never paste your actual Databricks PAT token into a public AI tool. Use the [YOUR_PAT] placeholder in the prompt, then fill it in locally in the generated file.</div>
+
+      <div class="plan-h3">Tips for Best Results</div>
+      <div class="filter-grid">
+        <div class="filter-card">
+          <div class="filter-card-name">Always paste DESCRIBE TABLE output</div>
+          <div class="filter-card-desc">Claude needs real column names. Run DESCRIBE TABLE in Databricks SQL Editor and paste the output to prevent hallucinated columns.</div>
+        </div>
+        <div class="filter-card">
+          <div class="filter-card-name">Start with gold table</div>
+          <div class="filter-card-desc">Use gold_monthly_exec_summary first. Simpler queries, faster responses, and all KPIs are pre-computed.</div>
+        </div>
+        <div class="filter-card">
+          <div class="filter-card-name">Be specific about charts</div>
+          <div class="filter-card-desc">Say "bar chart of Won MRR by month, line for target" instead of "make a dashboard." Specificity = accuracy.</div>
+        </div>
+        <div class="filter-card">
+          <div class="filter-card-name">Provide approved definitions</div>
+          <div class="filter-card-desc">Include the DataPedia definitions in your prompt so Claude uses the correct business logic, not its own assumptions.</div>
+        </div>
+      </div>
+    </div><!-- /plan-prompt -->
+
+    <!-- ── GITHUB GUIDE ── -->
+    <div class="plan-section" id="plan-github">
+      <div class="plan-h2">🐙 GitHub Pages Publishing Guide</div>
+      <p style="font-size:12px;color:#636E72;margin-bottom:20px">Publish RADAR as a public (or private) web app using GitHub Pages — no server, no cost, accessible from any browser.</p>
+
+      <div class="plan-h3">Step-by-Step</div>
+
+      <div class="github-step">
+        <div class="github-num">1</div>
+        <div class="github-body">
+          <div class="github-title">Create a GitHub account (if needed)</div>
+          <div class="github-desc">Go to <strong>github.com</strong> and sign up. Use your @sprout.ph email for the team account.</div>
+        </div>
+      </div>
+
+      <div class="github-step">
+        <div class="github-num">2</div>
+        <div class="github-body">
+          <div class="github-title">Create a new repository</div>
+          <div class="github-desc">Click <strong>+ → New repository</strong>. Name it <code>radar-revops</code>. Set visibility to <strong>Private</strong> (recommended — PAT tokens should not be in public repos). Initialize with a README.</div>
+        </div>
+      </div>
+
+      <div class="github-step">
+        <div class="github-num">3</div>
+        <div class="github-body">
+          <div class="github-title">Add your HTML file as index.html</div>
+          <div class="github-desc">Rename <code>radar_revops.html</code> to <code>index.html</code>. In the repo, click <strong>Add file → Upload files</strong> and upload it. Also upload <code>revops_dashboard_queries.sql</code> for reference.</div>
+        </div>
+      </div>
+
+      <div class="github-step">
+        <div class="github-num">4</div>
+        <div class="github-body">
+          <div class="github-title">Enable GitHub Pages</div>
+          <div class="github-desc">Go to <strong>Settings → Pages</strong>. Under Source, select <strong>Deploy from a branch</strong>. Choose branch <strong>main</strong>, folder <strong>/ (root)</strong>. Click Save.</div>
+        </div>
+      </div>
+
+      <div class="github-step">
+        <div class="github-num">5</div>
+        <div class="github-body">
+          <div class="github-title">Get your Pages URL</div>
+          <div class="github-desc">After ~1 minute, your app is live at:<br>
+          <div class="github-code" style="margin-top:6px"><button class="github-copy" onclick="cpGithub(this)">Copy</button>https://[your-username].github.io/radar-revops/</div></div>
+        </div>
+      </div>
+
+      <div class="github-step">
+        <div class="github-num">6</div>
+        <div class="github-body">
+          <div class="github-title">Update the app (after changes)</div>
+          <div class="github-desc">Re-upload the updated <code>index.html</code>. GitHub Pages auto-republishes within ~1 minute.</div>
+          <div class="github-code"><button class="github-copy" onclick="cpGithub(this)">Copy</button>git add index.html
+git commit -m "Update RADAR dashboard"
+git push origin main</div>
+        </div>
+      </div>
+
+      <div class="warn-box"><strong>Private repos and GitHub Pages:</strong> GitHub Pages on private repos requires a paid GitHub plan (Team or Enterprise). For a free option, use a <em>public</em> repo — but remove any hard-coded PAT tokens first. Use the login gate to restrict access.</div>
+
+      <div class="plan-h3">README.md Content</div>
+      <div class="sql-block-wrap">
+        <div class="sql-block-header">
+          <span class="sql-block-title">README.md — copy this into your repo</span>
+          <button class="sql-copy-btn" onclick="cpSqlBlock(this)">Copy</button>
+        </div>
+        <div class="sql-code"># RADAR — RevOps Analytics, Data &amp; Reporting
+
+RADAR is Sprout Solutions' internal RevOps data portal.
+It provides access to the shared.revops Databricks data
+layer: table schemas, metric definitions (DataPedia),
+and a full dashboard plan for the RevOps Analytics Dashboard.
+
+## Data Sources
+
+| Table | Layer | Purpose |
+|---|---|---|
+| gold_monthly_exec_summary | Gold | Pre-aggregated monthly KPIs |
+| gold_targets | Gold | Monthly quota targets |
+| silver_deals | Silver | Deal-level HubSpot data |
+| silver_line_items | Silver | Product line items per deal |
+| silver_company | Silver | Company/account attributes |
+| gold_metrics_datapedia | Gold | Metric definitions glossary |
+| datapedia_approved | Gold | Approved metric definitions |
+
+## Access Requirements
+
+- Read access to catalog: shared
+- Read access to schema: revops
+- Access to a Databricks SQL Warehouse
+- Server Hostname and HTTP Path (from SQL Warehouses > Connection Details)
+
+## Run Locally
+
+1. Download index.html
+2. Open in Chrome or Edge
+3. Login with your @sprout.ph email
+4. No server required — runs entirely in the browser
+
+## Publish to GitHub Pages
+
+1. Create repo: radar-revops
+2. Upload index.html
+3. Settings > Pages > Branch: main / Folder: / (root)
+4. Access at: https://[username].github.io/radar-revops/
+
+## Security
+
+RADAR uses a lightweight email-only login gate (localStorage).
+Only @sprout.ph email addresses can access the app.
+This is NOT secure authentication — it is a front-end gate only.
+
+For production: implement Google OAuth restricted to @sprout.ph domain,
+or use Sprout SSO.
+
+## Maintainer
+
+RevOps Analytics Team · Sprout Solutions
+</div>
+      </div>
+    </div><!-- /plan-github -->
+
+  </div><!-- /plan-body -->
+</div><!-- /section-dash -->
+
+</div><!-- /app-root -->
+
+<script>
+const TABLES = [{"name":"gold_monthly_exec_summary","layer":"Gold","color":"#00B894","description":"Pre-aggregated monthly KPIs — PRIMARY table for all dashboards. QL/SQL based on create_date. Won/Lost/MRR based on close_date. Pipeline MRR uses silver_line_items.hs_mrr and zeroes out past months.","grain":"1 row per month / pipeline / segment / dept source","refresh":"Daily","best_for":"Executive dashboards, monthly trend reports, KPI scorecards, Power BI","fields":[{"name":"metric_month","type":"date","desc":"DATE_TRUNC(month, create_date) or close_date — first day of month"},{"name":"pipeline_name","type":"string","desc":"Sales Pipeline | Unified Channel Pipeline | PH Upsell Pipeline | TH Sales Pipeline"},{"name":"segment_official","type":"string","desc":"SME | ENT | Channels"},{"name":"department_source_clean","type":"string","desc":"MKT Inbound | LDU Outbound | Sales Outbound | Channels | CSM Inbound | Upsell Outbound"},{"name":"qualified_leads","type":"int","desc":"COUNT(DISTINCT deal_id) WHERE qualified_lead=Yes — CREATE DATE month"},{"name":"sales_qualified_leads","type":"int","desc":"COUNT(DISTINCT deal_id) WHERE qualified_lead=Yes AND client_journey_stage<>MQL — CREATE DATE month"},{"name":"won_deals","type":"int","desc":"COUNT(DISTINCT deal_id) WHERE client_journey_stage=Customer — CLOSE DATE month"},{"name":"lost_deals","type":"int","desc":"COUNT(DISTINCT deal_id) WHERE client_journey_stage=Closed Lost — CLOSE DATE month"},{"name":"dq_leads","type":"int","desc":"COUNT(DISTINCT deal_id) WHERE stage_label=Disqualified AND qualified_lead=Yes"},{"name":"sql_pct","type":"double","desc":"sales_qualified_leads / qualified_leads × 100"},{"name":"win_rate","type":"double","desc":"won_deals / (won_deals + lost_deals) × 100"},{"name":"dq_rate","type":"double","desc":"dq_leads / qualified_leads × 100"},{"name":"won_amount","type":"double","desc":"SUM(amount) WHERE client_journey_stage=Customer"},{"name":"won_mrr","type":"double","desc":"SUM(mrr) WHERE client_journey_stage=Customer"},{"name":"won_ef_mrr","type":"double","desc":"SUM(ef_mrr) WHERE client_journey_stage=Customer"},{"name":"won_otp_only","type":"double","desc":"SUM(otp_only) WHERE client_journey_stage=Customer"},{"name":"won_mrr_lt_12","type":"double","desc":"SUM(mrr_lt_12) WHERE client_journey_stage=Customer"},{"name":"won_otp","type":"double","desc":"SUM(otp) WHERE client_journey_stage=Customer"},{"name":"won_implem_fee","type":"double","desc":"SUM(implem_fee) WHERE client_journey_stage=Customer"},{"name":"avg_deal_size","type":"double","desc":"won_mrr / won_deals — won deals with Availed line items only"},{"name":"avg_deal_velocity","type":"double","desc":"AVG(deal_velocity_days) — won deals with Availed line items only"},{"name":"mrr_in_pipeline","type":"double","desc":"SUM(sli.hs_mrr) for Opportunity deals — future projected dates only, past months = 0"}]},{"name":"gold_targets","layer":"Gold","color":"#00B894","description":"Monthly targets loaded from Google Sheets. Supports multiple target types per pipeline and segment. Join to gold_monthly_exec_summary to compute attainment.","grain":"1 row per month / target_type / pipeline / segment / dept source","refresh":"On change — manually loaded","best_for":"Quota attainment, pipeline coverage ratio, target vs actual dashboards","fields":[{"name":"metric_month","type":"date","desc":"First day of the target month — join key"},{"name":"target_type","type":"string","desc":"Type of target: MRR | Won Deals | QL | EF MRR | OTP | etc."},{"name":"pipeline_name","type":"string","desc":"Pipeline scope — join key"},{"name":"segment_official","type":"string","desc":"SME | ENT | Channels — join key"},{"name":"department_source_clean","type":"string","desc":"Department source scope"},{"name":"target_value","type":"double","desc":"Target amount for this month/type/pipeline/segment"},{"name":"source_tab","type":"string","desc":"Google Sheet tab this row was loaded from"},{"name":"loaded_at","type":"timestamp","desc":"When this row was last loaded — audit trail"}]},{"name":"silver_company","layer":"Silver","color":"#0984E3","description":"All HubSpot companies with cleaned fields. Owner names resolved, segment normalized, industry merged (2025 definition priority), Brands derived, PH timezone applied.","grain":"1 row per company","refresh":"Daily","best_for":"Company profiles, CSM assignment, segment/industry analysis, account health","fields":[{"name":"Company_id","type":"string","desc":"Unique HubSpot company ID (primary key)"},{"name":"Company_name","type":"string","desc":"The name of the company or organization."},{"name":"Registered_company_name","type":"string","desc":"Registered legal company name."},{"name":"Company_domain_name","type":"string","desc":"The domain name of the company or organization."},{"name":"Brands","type":"string","desc":"PH Sprout | TH Sprout | PH Sprout, TH Sprout | Other. Derived from hs_all_assigned_business_unit_ids."},{"name":"Street_address","type":"string","desc":"Street address of the company"},{"name":"City","type":"string","desc":"City where the company is located"},{"name":"State_country","type":"string","desc":"State or country (country_state field)"},{"name":"Geo_region","type":"string","desc":"Geographic region classification"},{"name":"Province","type":"string","desc":"Province classification (geo_province)"},{"name":"City_municipality_province","type":"string","desc":"Combined city / municipality / province (province_a_to_l__ph_)"},{"name":"Segment","type":"string","desc":"Company segment. MICRO remapped to SME. Values: SME | ENT."},{"name":"Service_level_csm","type":"string","desc":"Segmentation based on MRR — CSM service level classification."},{"name":"Industry","type":"string","desc":"Industry classification. COALESCE(industry_2025, industry_legacy)."},{"name":"Sub_industry","type":"string","desc":"Sub-industry classification."},{"name":"Headcount","type":"double","desc":"Company headcount."},{"name":"HR_headcount_active_client","type":"double","desc":"HR module headcount for active clients"},{"name":"Payroll_headcount_active_client","type":"double","desc":"Payroll module headcount for active clients"},{"name":"Freemium_status","type":"string","desc":"Freemium status of the company"},{"name":"Year_founded","type":"double","desc":"Year the company was founded"},{"name":"company_owner","type":"string","desc":"Current HubSpot company owner full name."},{"name":"hubspot_team","type":"string","desc":"HubSpot team of the company owner."},{"name":"Lifecycle_stage","type":"string","desc":"The qualification of companies to sales readiness throughout the buying journey."},{"name":"Client_stage","type":"string","desc":"Current stage of the client in Sprout's client lifecycle."},{"name":"Client_status","type":"string","desc":"Current client status — Active | Churned | Prospect."},{"name":"Client_type","type":"string","desc":"Client type classification"},{"name":"Account_tier","type":"string","desc":"Account tier classification — Tier 1 | Tier 2 | Tier 3."},{"name":"Next_renewal_date","type":"date","desc":"Next contract renewal date."},{"name":"Churn_effectivity_date","type":"date","desc":"Date churn takes effect — only populated for churned accounts."},{"name":"Project_handover_date","type":"date","desc":"Project handover date (hand_over_date)"},{"name":"Last_activity_date","type":"timestamp","desc":"Date of last notes / activity update (notes_last_updated)"},{"name":"Netsuite_id","type":"string","desc":"NetSuite customer ID — use for Finance cross-system linking."},{"name":"Target_account","type":"string","desc":"Whether this is a target account (hs_is_target_account)"},{"name":"Strategic_account","type":"string","desc":"Whether this is a strategic account"},{"name":"Department_source","type":"string","desc":"Raw department source for the company"},{"name":"Churn_reason","type":"string","desc":"Reason for churn (reason_of_churn)"},{"name":"Lead_status","type":"string","desc":"HubSpot lead status (hs_lead_status)"},{"name":"Website_url","type":"string","desc":"Company website URL"},{"name":"Sprout_hr_url","type":"string","desc":"Sprout HR URL for this company"},{"name":"Payroll_company_code","type":"string","desc":"Payroll system company code"},{"name":"Create_date","type":"timestamp","desc":"Company creation date — already PH timezone (+8)."},{"name":"Sales_Consultant","type":"string","desc":"Primary sales consultant assigned (hrtc owner)"},{"name":"Sales_Consultant_2","type":"string","desc":"Secondary sales consultant (hrtc_2_ owner)"},{"name":"Inbound_lead_source_caller","type":"string","desc":"Inbound lead source caller name (inbound_lead_source owner)"},{"name":"Lead_gen_data_miner","type":"string","desc":"Lead generation data miner name (lead_gen owner)"},{"name":"Customer_Success_Manager","type":"string","desc":"Assigned CSM full name (customer_success_manager owner)."}]},{"name":"silver_deals","layer":"Silver","color":"#0984E3","description":"All HubSpot deals across 4 pipelines. Pre-computed MRR splits, client journey stage from deal_stage_mapping, department source clean, deal tags exploded and aggregated. Excludes renewal deals and test DealIds.","grain":"1 row per deal","refresh":"Daily","best_for":"Deal-level analysis, pipeline snapshots, rep performance, at-risk deals","fields":[{"name":"deal_id","type":"string","desc":"Unique HubSpot deal ID (primary key)"},{"name":"deal_name","type":"string","desc":"Deal name from HubSpot"},{"name":"pipeline_name","type":"string","desc":"Sales Pipeline | TH Sales Pipeline | Unified Channel Pipeline | PH Upsell Pipeline"},{"name":"deal_type","type":"string","desc":"New Business | Upsell Deals | TH Deals"},{"name":"stage_label","type":"string","desc":"Readable stage name from DealPipelineStage"},{"name":"client_journey_stage","type":"string","desc":"MQL | Opportunity | Customer | Closed Lost. Primary lifecycle filter."},{"name":"create_date","type":"timestamp","desc":"PH timezone (+8). Use for QL and SQL metrics (create_date basis)."},{"name":"close_date","type":"timestamp","desc":"PH timezone (+8). Use for Won / Lost / MRR metrics (close_date basis)."},{"name":"projected_close_date","type":"date","desc":"Sales rep projected close date. Use for pipeline / TMRR metrics."},{"name":"deal_velocity_days","type":"int","desc":"DATEDIFF(close_date, create_date) — days from creation to close."},{"name":"days_to_close","type":"double","desc":"Days to close from HubSpot field"},{"name":"deal_duration","type":"string","desc":"Deal duration label from HubSpot"},{"name":"amount","type":"double","desc":"Total deal amount from HubSpot (source for won_amount in gold)"},{"name":"mrr","type":"double","desc":"PRIMARY MRR. Line-item rollup: term ≥ 12 months, non-OTP, excl Instacash/Ready."},{"name":"ef_mrr","type":"double","desc":"Embedded Finance MRR — ReadyCash + ReadyWage only, term ≥ 12 months."},{"name":"otp_only","type":"double","desc":"One-time payment revenue excluding Instacash, Ready, and Implementation products."},{"name":"mrr_lt_12","type":"double","desc":"unit_price × term for contracts with 1–11 month terms."},{"name":"implem_fee","type":"double","desc":"OTP line items where product name contains \"Implementation\"."},{"name":"tcv","type":"double","desc":"Total contract value from HubSpot (hs_tcv)."},{"name":"arr","type":"double","desc":"Annual recurring revenue from HubSpot (hs_arr)."},{"name":"payment_terms","type":"string","desc":"Payment terms agreed for the deal"},{"name":"sales_rep","type":"string","desc":"Deal owner full name (FirstName + LastName)."},{"name":"inbound_lead","type":"string","desc":"Inbound lead owner full name"},{"name":"co_owner","type":"string","desc":"Co-owner full name"},{"name":"deal_split_owner_names","type":"string","desc":"Comma-separated names of all split deal owners"},{"name":"hubspot_team","type":"string","desc":"HubSpot team of the deal owner (from owner.Teams field)."},{"name":"company_id","type":"string","desc":"Join to silver_company.Company_id"},{"name":"segment","type":"string","desc":"SME | ENT | Channels (MICRO remapped to SME)."},{"name":"city_municipality_province","type":"string","desc":"City / municipality / province of the associated company"},{"name":"headcount","type":"string","desc":"Company headcount at time of deal"},{"name":"client_type","type":"string","desc":"Client type classification"},{"name":"department_source_raw","type":"string","desc":"Raw department_source value before cleaning logic is applied."},{"name":"department_source_clean","type":"string","desc":"MKT Inbound | LDU Outbound | Sales Outbound | Channels | CSM Inbound | Upsell Outbound. Always use this field."},{"name":"campaign_id","type":"string","desc":"Associated HubSpot campaign ID"},{"name":"original_channel_source","type":"string","desc":"Original channel source from HubSpot deal properties"},{"name":"original_source_of_awareness","type":"string","desc":"How the prospect first heard about Sprout (for offline / direct sources)."},{"name":"analytics_source","type":"string","desc":"hs_analytics_source — HubSpot analytics source"},{"name":"analytics_source_data_1","type":"string","desc":"hs_analytics_source_data_1 — first-level analytics attribution"},{"name":"analytics_source_data_2","type":"string","desc":"hs_analytics_source_data_2 — second-level analytics attribution"},{"name":"demo_date","type":"timestamp","desc":"Date the demo was held"},{"name":"disco_demo_date","type":"timestamp","desc":"Discovery / demo date (disco__demo_date)"},{"name":"demo_scheduled","type":"string","desc":"Whether a demo is currently scheduled"},{"name":"disco_demo_status","type":"string","desc":"Status of the discovery/demo stage"},{"name":"demo_rescheduled_1","type":"timestamp","desc":"First rescheduled demo date"},{"name":"demo_rescheduled_2","type":"timestamp","desc":"Second rescheduled demo date"},{"name":"initial_proposal_send_date","type":"timestamp","desc":"Date the initial proposal was sent to the prospect"},{"name":"complete_client_documents","type":"string","desc":"Client document completion status"},{"name":"qualified_lead","type":"string","desc":"Yes | No. Filter = Yes for ALL MQL and SQL metrics."},{"name":"reasons_for_lost_deal","type":"string","desc":"Detailed reasons for losing the deal"},{"name":"deal_revival","type":"string","desc":"Whether the deal was revived after being lost"},{"name":"pain_point_1","type":"string","desc":"Primary pain point identified during discovery"},{"name":"pain_point_2","type":"string","desc":"Secondary pain point"},{"name":"pain_point_3","type":"string","desc":"Third pain point"},{"name":"name_of_competitors","type":"string","desc":"Competitors mentioned during the sales process"},{"name":"buyer_role","type":"string","desc":"Role of the primary buyer / decision maker"},{"name":"looking_for_product_main_services","type":"string","desc":"Products the prospect is looking for"},{"name":"product_needed_main_services","type":"string","desc":"Products identified as needed based on discovery"},{"name":"products_availed_main_services","type":"string","desc":"Products the client ultimately availed"},{"name":"ldu_upsell","type":"string","desc":"LDU upsell flag"},{"name":"ldu_probability_to_buy_score","type":"string","desc":"LDU BANT probability-to-buy score (new_ldu_probability_to_buy_score)"},{"name":"ldu_budget","type":"string","desc":"LDU budget assessment (new_ldu_budget)"},{"name":"ldu_needs","type":"string","desc":"LDU needs assessment (new_ldu_needs)"},{"name":"ldu_needs_against_competitors","type":"string","desc":"LDU needs vs competitors (new_ldu_needs_against_competitors)"},{"name":"ldu_timeline_against_need","type":"string","desc":"LDU timeline vs need (new_ldu_timeline_against_need)"},{"name":"partner_on_record","type":"string","desc":"Partner associated with the deal"},{"name":"revenue_share","type":"double","desc":"Revenue share amount for channel / partner deals"},{"name":"deal_tags","type":"string","desc":"HIGH RISK | MEDIUM RISK | LOW RISK | CRITICAL | Supported | Fully Accepted | etc. Aggregated from deal_tag_mapping."},{"name":"tag_categories","type":"string","desc":"Tag categories: LDU | Engagement | Status | Product | Channel | Risk"},{"name":"type_of_deal","type":"string","desc":"Type of deal classification (type_of_deal field)"},{"name":"notes","type":"string","desc":"Deal notes"},{"name":"with_notes","type":"string","desc":"Flag indicating whether the deal has notes"}]},{"name":"silver_line_items","layer":"Silver","color":"#0984E3","description":"All HubSpot line items linked to deals. Cleaned column names, parent_product grouping, billing term parsed, PH timezone applied.","grain":"1 row per line item","refresh":"Daily","best_for":"Product mix, attach rate, MRR by product, pipeline MRR via hs_mrr","fields":[{"name":"line_item_id","type":"string","desc":"Unique line item ID (primary key)"},{"name":"record_id","type":"string","desc":"HubSpot hs_object_id record ID"},{"name":"deal_id","type":"string","desc":"Join to silver_deals.deal_id"},{"name":"product_name","type":"string","desc":"Full product name as entered in HubSpot"},{"name":"parent_product","type":"string","desc":"Grouped product family: JazzHR | Olivia Expense | Performance+ | Britana | Disprz | HR and Payroll | etc."},{"name":"product_category","type":"string","desc":"Product category from HubSpot"},{"name":"product_group","type":"string","desc":"Product group from HubSpot"},{"name":"product_status","type":"string","desc":"Availed | Not Availed. Filter = Availed for won deal counts."},{"name":"business_unit","type":"string","desc":"PH Sprout | TH Sprout"},{"name":"price_type","type":"string","desc":"Pricing model type (e.g. Per User, Flat Fee)"},{"name":"recurring_billing_frequency","type":"string","desc":"Monthly | Annually | One Time Payment"},{"name":"quantity","type":"double","desc":"Number of units purchased"},{"name":"number_of_users","type":"double","desc":"Number of users for this line item"},{"name":"unit_price","type":"double","desc":"Unit price of the product"},{"name":"amount","type":"double","desc":"Total line item amount (quantity × unit_price)"},{"name":"discount","type":"double","desc":"Discount applied to this line item"},{"name":"total_discount","type":"double","desc":"Total discount including all applied discounts"},{"name":"mrr","type":"double","desc":"hs_mrr — monthly recurring revenue for this line item"},{"name":"arr","type":"double","desc":"hs_arr — annual recurring revenue"},{"name":"acv","type":"double","desc":"hs_acv — annual contract value"},{"name":"tcv","type":"double","desc":"hs_tcv — total contract value"},{"name":"revenue_share","type":"double","desc":"Revenue share amount for this line item"},{"name":"billing_term_months","type":"int","desc":"Parsed from hs_recurring_billing_period (e.g. P12M → 12)"},{"name":"contract_term_months","type":"double","desc":"≥12 = MRR eligible, 1-11 = mrr_lt_12"},{"name":"create_date","type":"timestamp","desc":"Line item creation date — already PH timezone (+8)"},{"name":"last_modified_date","type":"timestamp","desc":"Last modified date — PH timezone (+8)"}]}];
+
+const METRICS = [{"id":"REV_NRR_001","name":"NET REVENUE RETENTION","category":"Finance","definition":"Measures how much recurring revenue is retained from existing customers over time, including expansions and contractions.","business_question":"Are we growing revenue from our existing customers, even after churn and downgrades?","formula":"Monthly = Σ (Starting MRR, Upsell, Expansion, Contraction, Lost Clients MRR) ÷ Starting MRR\n\n12 months rolling = Σ (Beginning MRR, Net MRR Change) ÷ Beginning MRR","sql":"-- Requires finance waterfall. Proxy:\nSELECT metric_month, SUM(won_mrr) AS new_mrr\nFROM shared.revops.gold_monthly_exec_summary\nGROUP BY 1","filters":"","exclusions":"","sources":"2026 SaaS Metrics Static\nHubspot\nPowerBI","status":"Approved","notes":""},{"id":"REV_QUICK_RATIO_001","name":"QUICK RATIO","category":"Finance","definition":"Indicates how efficiently the company is growing recurring revenue relative to revenue losses.","business_question":"Is our revenue growth strong enough to offset churn and contraction?","formula":"Σ (Starting MRR, Upsell, Expansion MRR) ÷ Σ (Contraction, Lost Clients, Implem Churn)","sql":"","filters":"","exclusions":"","sources":"2026 SaaS Metrics Static\nHubspot\nPowerBI","status":"Approved","notes":""},{"id":"REV_MAGIC_001","name":"SAAS MAGIC NUMBER","category":"Finance","definition":"Evaluates how effectively sales and marketing spend is converted into new recurring revenue.","business_question":"Are our sales and marketing investments generating efficient revenue growth?","formula":"Σ (Starting MRR, Upsell, Expansion MRR) ÷ Σ (Contraction, Lost Clients, Implem Churn)","sql":"","filters":"","exclusions":"","sources":"2026 SaaS Metrics Static\nHubspot\nPowerBI","status":"Approved","notes":""},{"id":"REV_NETNEW_MRR_001","name":"NET NEW MRR","category":"Finance","definition":"The net change in monthly recurring revenue during a period.","business_question":"How valuable is an average customer to our business today?","formula":"Σ (New, Upsell, Expansion, Contractions, Lost clients and Implem churn MRR)","sql":"SELECT DATE_TRUNC('month', close_date) AS month, SUM(mrr)+SUM(ef_mrr) AS combined_mrr\nFROM shared.revops.silver_deals\nWHERE client_journey_stage='Customer' AND LOWER(deal_name) NOT LIKE '%renewal%'\nGROUP BY 1","filters":"","exclusions":"","sources":"2026 SaaS Metrics Static\nHubspot\nPowerBI","status":"Approved","notes":""},{"id":"REV_ARPA_TOTAL_001","name":"AVERAGE MRR PER TOTAL CLIENT","category":"Finance","definition":"The average recurring revenue generated per active customer.","business_question":"How valuable is an average customer to our business today?","formula":"Ending Balance Organic MRR ÷ Count of Ending Clients","sql":"SELECT ROUND(SUM(sd.mrr)/NULLIF(COUNT(DISTINCT sc.Company_id),0),2) AS arpa_total\nFROM shared.revops.silver_deals sd\nCROSS JOIN (SELECT COUNT(DISTINCT Company_id) AS cnt FROM shared.revops.silver_company WHERE Client_status='Active') sc\nWHERE sd.client_journey_stage='Customer' AND LOWER(sd.deal_name) NOT LIKE '%renewal%'","filters":"","exclusions":"","sources":"2026 SaaS Metrics Static\nHubspot\nPowerBI","status":"Approved","notes":""},{"id":"REV_ARPA_NEW_001","name":"AVERAGE MRR PER NEW CLIENT","category":"Finance","definition":"Average recurring revenue generated by newly acquired customers.","business_question":"Are we acquiring high-value customers?","formula":"Σ New Clients MRR ÷ Σ Count of New Clients","sql":"SELECT DATE_TRUNC('month', close_date) AS month,\n  ROUND(SUM(mrr)/NULLIF(COUNT(DISTINCT deal_id),0),2) AS arpa_new\nFROM shared.revops.silver_deals\nWHERE client_journey_stage='Customer' AND deal_type='New Business'\n  AND LOWER(deal_name) NOT LIKE '%renewal%'\nGROUP BY 1","filters":"","exclusions":"","sources":"2026 SaaS Metrics Static\nHubspot\nPowerBI","status":"Approved","notes":""},{"id":"CUST_CHURN_001","name":"% CUSTOMER CHURN","category":"Finance","definition":"Percentage of customers lost during a given period.","business_question":"How many customers are we losing over time?","formula":"Lost Clients ÷ AVERAGE (Beginning client, Ending client)","sql":"","filters":"","exclusions":"","sources":"2026 SaaS Metrics Static\nHubspot\nPowerBI","status":"Approved","notes":""},{"id":"REV_MRR_CHURN_001","name":"% MRR CHURN","category":"Finance","definition":"Percentage of recurring revenue lost from churned customers.","business_question":"How much recurring revenue are we losing due to churn?","formula":"Lost clients MRR ÷ Beginning MRR","sql":"","filters":"","exclusions":"","sources":"2026 SaaS Metrics Static\nHubspot\nPowerBI","status":"Approved","notes":""},{"id":"LTV_CAC_RATIO_001","name":"LTV: CAC","category":"Finance","definition":"Compares customer lifetime value to acquisition cost.","business_question":"Are customers worth more than what it costs to acquire them?","formula":"Average LTV ÷ Average CAC","sql":"","filters":"","exclusions":"","sources":"2026 SaaS Metrics Static\nHubspot\nPowerBI","status":"Approved","notes":""},{"id":"CAC_PAYBACK_001","name":"CAC PAYBACK","category":"Finance","definition":"Time required to recover customer acquisition costs.","business_question":"How long does it take to break even on customer acquisition?","formula":"(Average CAC ÷ Average MRR per New Client) x Gross Profit","sql":"","filters":"","exclusions":"","sources":"2026 SaaS Metrics Static\nHubspot\nPowerBI","status":"Approved","notes":""},{"id":"","name":"Marketing Qualified Leads (MQL)","category":"Funnel","definition":"Leads qualified by Marketing using BANT with Probability to Buy ≥ 40","business_question":"How many marketing leads are sales-ready?","formula":"DISTINCT COUNT (Deal IDs)","sql":"SELECT DATE_TRUNC('month', create_date) AS month, pipeline_name,\n  COUNT(DISTINCT deal_id) AS mql_count\nFROM shared.revops.silver_deals\nWHERE client_journey_stage='MQL' AND qualified_lead='Yes'\n  AND LOWER(deal_name) NOT LIKE '%renewal%'\nGROUP BY 1,2","filters":"qualified_lead = Yes\nDepartment Source = MKT Inbound","exclusions":"","sources":"shared.revops.silver_deals","status":"Approved","notes":""},{"id":"","name":"Outbound Qualified Leads (OQL)","category":"Funnel","definition":"Leads qualified by LDU Outbound using BANT with Probability to Buy ≥ 40","business_question":"How many outbound leads are qualified?","formula":"DISTINCT COUNT (Deal IDs)","sql":"SELECT DATE_TRUNC('month', create_date) AS month, department_source_clean,\n  COUNT(DISTINCT deal_id) AS oql_count\nFROM shared.revops.silver_deals\nWHERE qualified_lead='Yes'\n  AND department_source_clean IN ('LDU Outbound','Sales Outbound','Upsell Outbound')\n  AND LOWER(deal_name) NOT LIKE '%renewal%'\nGROUP BY 1,2","filters":"qualified_lead = Yes\nDepartment Source = LDU Outbound","exclusions":"","sources":"shared.revops.silver_deals","status":"Approved","notes":""},{"id":"","name":"Sales Qualified Leads (SQL)","category":"Funnel","definition":"Leads that the Sales team will work on to convert them into clients.","business_question":"How many leads did Sales accept to work on?","formula":"DISTINCT COUNT (Deal IDs)","sql":"SELECT DATE_TRUNC('month', create_date) AS month, pipeline_name, department_source_clean,\n  COUNT(DISTINCT deal_id) AS sql_count\nFROM shared.revops.silver_deals\nWHERE qualified_lead='Yes' AND client_journey_stage<>'MQL'\n  AND LOWER(deal_name) NOT LIKE '%renewal%'\nGROUP BY 1,2,3","filters":"qualified_lead = Yes\nclient_journey_stage <> MQL","exclusions":"","sources":"shared.revops.silver_deals","status":"Approved","notes":""},{"id":"","name":"SQL Conversion Rate","category":"Funnel","definition":"% of Qualified Leads that become SQL","business_question":"How effective is lead handoff to Sales?","formula":"Sales Qualified Leads ÷ Qualified Leads","sql":"SELECT DATE_TRUNC('month', create_date) AS month,\n  ROUND(COUNT(DISTINCT CASE WHEN client_journey_stage<>'MQL' AND qualified_lead='Yes' THEN deal_id END)*100.0\n  / NULLIF(COUNT(DISTINCT CASE WHEN qualified_lead='Yes' THEN deal_id END),0),2) AS sql_pct\nFROM shared.revops.silver_deals\nWHERE LOWER(deal_name) NOT LIKE '%renewal%'\nGROUP BY 1","filters":"qualified_lead = Yes","exclusions":"","sources":"shared.revops.gold_monthly_exec_summary","status":"Approved","notes":""},{"id":"","name":"Sales Disqualified","category":"Funnel","definition":"Deals disqualified by Sales during demo stage","business_question":"Are Sales rejecting poor-quality SQLs?","formula":"DISTINCT COUNT (Deal IDs)","sql":"SELECT DATE_TRUNC('month', close_date) AS month, pipeline_name,\n  COUNT(DISTINCT deal_id) AS dq_leads\nFROM shared.revops.silver_deals\nWHERE stage_label='Disqualified' AND qualified_lead='Yes'\n  AND LOWER(deal_name) NOT LIKE '%renewal%'\nGROUP BY 1,2","filters":"stage_label = Disqualified\nqualified_lead = Yes","exclusions":"","sources":"shared.revops.silver_deals","status":"Approved","notes":""},{"id":"","name":"DQ Rate","category":"Funnel","definition":"% of leads marked Disqualified","business_question":"Are we targeting the wrong audience?","formula":"DQ Leads ÷ Total Leads","sql":"SELECT DATE_TRUNC('month', close_date) AS month,\n  ROUND(COUNT(DISTINCT CASE WHEN stage_label='Disqualified' THEN deal_id END)*100.0\n  / NULLIF(COUNT(DISTINCT CASE WHEN qualified_lead='Yes' THEN deal_id END),0),2) AS dq_rate\nFROM shared.revops.silver_deals\nWHERE LOWER(deal_name) NOT LIKE '%renewal%'\nGROUP BY 1","filters":"stage_label = Disqualified\nqualified_lead = Yes","exclusions":"","sources":"shared.revops.gold_monthly_exec_summary","status":"Approved","notes":""},{"id":"","name":"WON/ SQL","category":"Funnel","definition":"Percentage of SQL/ACTIVE that converted into Closed-Won deals.","business_question":"Of the active qualified pipeline this month, how many converted into paying customers?","formula":"Won Deals (Month) ÷ SQL/ACTIVE","sql":"SELECT DATE_TRUNC('month', close_date) AS month,\n  ROUND(COUNT(DISTINCT CASE WHEN client_journey_stage='Customer' THEN deal_id END)*1.0\n  / NULLIF(COUNT(DISTINCT CASE WHEN qualified_lead='Yes' AND client_journey_stage<>'MQL' THEN deal_id END),0),4) AS won_sql_rate\nFROM shared.revops.silver_deals\nWHERE LOWER(deal_name) NOT LIKE '%renewal%'\nGROUP BY 1","filters":"Won deals + SQL deals in same period","exclusions":"","sources":"shared.revops.silver_deals","status":"Approved","notes":""},{"id":"","name":"Lead to Won Conversion %","category":"Funnel","definition":"Percentage of total leads that convert into Closed-Won deals.","business_question":"How effective is the full funnel from lead to revenue?","formula":"Won Leads ÷ Total Leads","sql":"SELECT DATE_TRUNC('month', create_date) AS month,\n  ROUND(COUNT(DISTINCT CASE WHEN client_journey_stage='Customer' THEN deal_id END)*100.0\n  / NULLIF(COUNT(DISTINCT CASE WHEN qualified_lead='Yes' THEN deal_id END),0),2) AS lead_to_won_pct\nFROM shared.revops.silver_deals WHERE LOWER(deal_name) NOT LIKE '%renewal%' GROUP BY 1","filters":"qualified_lead = Yes\nclient_journey_stage = Customer","exclusions":"","sources":"shared.revops.silver_deals","status":"Approved","notes":""},{"id":"","name":"Won Deals","category":"Sales_Productivity","definition":"Deals completed with a signed proposal","business_question":"How many deals were successfully closed?","formula":"DISTINCT COUNT (Deal IDs)","sql":"SELECT DATE_TRUNC('month', sd.close_date) AS month, sd.pipeline_name, sd.segment_official,\n  COUNT(DISTINCT sd.deal_id) AS won_deals\nFROM shared.revops.silver_deals sd\nINNER JOIN (SELECT DISTINCT DealId FROM shared.revops.silver_line_items WHERE product_status='Availed') li ON sd.deal_id=li.DealId\nWHERE sd.client_journey_stage='Customer' AND LOWER(sd.deal_name) NOT LIKE '%renewal%'\nGROUP BY 1,2,3","filters":"client_journey_stage = Customer\nproduct_status = Availed","exclusions":"","sources":"shared.revops.silver_deals + silver_line_items","status":"Approved","notes":""},{"id":"","name":"Lost Deals","category":"Sales_Productivity","definition":"A deal pursued by sales but did not successfully close.","business_question":"Why are we losing deals?","formula":"DISTINCT COUNT (Deal IDs)","sql":"SELECT DATE_TRUNC('month', close_date) AS month, pipeline_name, segment_official,\n  COUNT(DISTINCT deal_id) AS lost_deals\nFROM shared.revops.silver_deals\nWHERE client_journey_stage='Closed Lost' AND LOWER(deal_name) NOT LIKE '%renewal%'\nGROUP BY 1,2,3","filters":"client_journey_stage = Closed Lost","exclusions":"","sources":"shared.revops.silver_deals","status":"Approved","notes":""},{"id":"","name":"WON/ CLOSED","category":"Sales_Productivity","definition":"% of won deals against all closed deals","business_question":"How effective is Sales at closing deals?","formula":"Won ÷ (Won + Lost)","sql":"SELECT DATE_TRUNC('month', close_date) AS month, segment_official,\n  ROUND(COUNT(DISTINCT CASE WHEN client_journey_stage='Customer' THEN deal_id END)*100.0\n  / NULLIF(COUNT(DISTINCT CASE WHEN client_journey_stage IN ('Customer','Closed Lost') THEN deal_id END),0),2) AS win_rate\nFROM shared.revops.silver_deals\nWHERE LOWER(deal_name) NOT LIKE '%renewal%'\nGROUP BY 1,2","filters":"client_journey_stage IN (Customer, Closed Lost)","exclusions":"","sources":"shared.revops.gold_monthly_exec_summary","status":"Approved","notes":""},{"id":"","name":"Average Deal Size (ADS)","category":"Sales_Productivity","definition":"Average MRR of won deals","business_question":"What is the average revenue per won deal?","formula":"Total MRR ÷ Won Deals","sql":"SELECT DATE_TRUNC('month', close_date) AS month, segment_official,\n  ROUND(SUM(mrr)/NULLIF(COUNT(DISTINCT deal_id),0),2) AS avg_deal_size\nFROM shared.revops.silver_deals\nWHERE client_journey_stage='Customer' AND LOWER(deal_name) NOT LIKE '%renewal%'\nGROUP BY 1,2","filters":"client_journey_stage = Customer","exclusions":"","sources":"shared.revops.gold_monthly_exec_summary","status":"Approved","notes":""},{"id":"","name":"Average Deal Velocity (ADV)","category":"Sales_Productivity","definition":"Average days from deal creation to close.","business_question":"How long does it take, on average, to close a deal?","formula":"Average of (Close Date − Create Date) for won deals","sql":"SELECT DATE_TRUNC('month', close_date) AS month, pipeline_name,\n  ROUND(AVG(deal_velocity_days),1) AS avg_velocity_days\nFROM shared.revops.silver_deals\nWHERE client_journey_stage='Customer' AND deal_velocity_days IS NOT NULL\n  AND LOWER(deal_name) NOT LIKE '%renewal%'\nGROUP BY 1,2","filters":"client_journey_stage = Customer\ndeal_velocity_days NOT NULL","exclusions":"","sources":"shared.revops.gold_monthly_exec_summary","status":"Approved","notes":""},{"id":"","name":"Coverage Ratio","category":"Sales_Productivity","definition":"Health of the sales pipeline relative to target. Industry standard: 5X for full year, 3X for quarter.","business_question":"Do we have enough pipeline to hit target?","formula":"Active Pipeline MRR ÷ Target","sql":"SELECT DATE_TRUNC('month', projected_close_date) AS proj_month, pipeline_name, segment_official,\n  SUM(deal_mrr) AS pipeline_mrr\nFROM shared.revops.silver_deals\nWHERE client_journey_stage='Opportunity' AND projected_close_date IS NOT NULL\n  AND LOWER(deal_name) NOT LIKE '%renewal%'\nGROUP BY 1,2,3","filters":"client_journey_stage = Opportunity\nprojected_close_date (future)","exclusions":"","sources":"shared.revops.silver_deals + gold_targets","status":"Approved","notes":""},{"id":"","name":"Pipeline MRR","category":"Sales_Productivity","definition":"Total MRR of all active pipeline deals","business_question":"How large is our potential recurring pipeline?","formula":"Sum of MRR for active stages","sql":"SELECT DATE_TRUNC('month', projected_close_date) AS proj_month, pipeline_name, segment_official,\n  SUM(deal_mrr) AS pipeline_mrr\nFROM shared.revops.silver_deals\nWHERE client_journey_stage='Opportunity' AND projected_close_date IS NOT NULL\n  AND LOWER(deal_name) NOT LIKE '%renewal%'\nGROUP BY 1,2,3","filters":"client_journey_stage = Opportunity\nprojected_close_date IS NOT NULL","exclusions":"","sources":"shared.revops.silver_deals","status":"Approved","notes":""},{"id":"","name":"Quota Attainment %","category":"Sales_Productivity","definition":"Percentage of assigned quota achieved by a rep or team.","business_question":"Are reps hitting their revenue targets?","formula":"Actual Revenue ÷ Quota","sql":"SELECT g.metric_month, g.pipeline_name, g.segment_official,\n  g.won_mrr, t.target_value AS mrr_target,\n  ROUND(g.won_mrr / NULLIF(t.target_value,0) * 100, 2) AS attainment_pct\nFROM shared.revops.gold_monthly_exec_summary g\nLEFT JOIN shared.revops.gold_targets t\n  ON g.metric_month = t.metric_month\n  AND g.pipeline_name = t.pipeline_name\n  AND g.segment_official = t.segment_official\n  AND t.target_type = 'MRR'","filters":"client_journey_stage = Customer","exclusions":"","sources":"shared.revops.gold_monthly_exec_summary + gold_targets","status":"Approved","notes":""},{"id":"","name":"Monthly Recurring Revenue (MRR)","category":"Revenue","definition":"Monthly recurring revenue from signed proposal. Recognized only if contract term ≥ 12 months.","business_question":"How much recurring revenue are we generating monthly?","formula":"Sum of MRR where Term ≥ 12 months","sql":"SELECT DATE_TRUNC('month', close_date) AS month, pipeline_name, segment_official, SUM(mrr) AS mrr\nFROM shared.revops.silver_deals\nWHERE client_journey_stage = 'Customer'\n  AND LOWER(deal_name) NOT LIKE '%renewal%'\nGROUP BY 1,2,3","filters":"client_journey_stage = Customer","exclusions":"","sources":"shared.revops.silver_deals","status":"Approved","notes":""},{"id":"","name":"Annual Recurring Revenue (ARR)","category":"Revenue","definition":"Expected yearly recurring revenue from signed clients","business_question":"How much recurring revenue are we generating annually?","formula":"Sum of ARR OR MRR × 12","sql":"SELECT DATE_TRUNC('month', close_date) AS month, segment_official, SUM(mrr)*12 AS arr\nFROM shared.revops.silver_deals\nWHERE client_journey_stage='Customer' AND LOWER(deal_name) NOT LIKE '%renewal%'\nGROUP BY 1,2","filters":"client_journey_stage = Customer","exclusions":"","sources":"shared.revops.silver_deals","status":"Approved","notes":""},{"id":"","name":"Total Contract Value (TCV)","category":"Revenue","definition":"Full contract value inclusive of recurring & one-time","business_question":"What is total signed revenue?","formula":"(MRR × Term) + One-time Fees","sql":"SELECT DATE_TRUNC('month', close_date) AS month, SUM(tcv) AS total_tcv\nFROM shared.revops.silver_deals\nWHERE client_journey_stage='Customer' AND LOWER(deal_name) NOT LIKE '%renewal%'\nGROUP BY 1","filters":"client_journey_stage = Customer","exclusions":"","sources":"shared.revops.silver_deals","status":"Approved","notes":""},{"id":"","name":"OTP (One-Time Payment)","category":"Revenue","definition":"One-Time Payment represents revenue from line items billed as \"One Time Payment\" and non-OTP products with contract terms less than 12 months, treated as one-time equivalent revenue.","business_question":"How much one-time or short-term revenue was generated from eligible line items?","formula":"True one-time payment amount + Sum of MRR where Term < 12 months","sql":"SELECT DATE_TRUNC('month', close_date) AS month, pipeline_name, segment,\n  SUM(otp_only) + SUM(mrr_lt_12) AS total_otp\nFROM shared.revops.silver_deals\nWHERE client_journey_stage = 'Customer'\n  AND LOWER(deal_name) NOT LIKE '%renewal%'\nGROUP BY 1,2,3","filters":"client_journey_stage = Customer\nBilling Freq = One Time Payment OR Term < 12 months","exclusions":"Renewals","sources":"shared.revops.silver_deals","status":"Approved","notes":""},{"id":"","name":"Cost per Lead (CPL)","category":"Marketing_Efficiency","definition":"Average marketing cost per lead generated","business_question":"How much do we spend per lead?","formula":"Marketing Spend ÷ Leads","sql":"","filters":"","exclusions":"","sources":"","status":"Approved","notes":""},{"id":"","name":"Attach Rate (Product → Product)","category":"Product_Performance","definition":"Percentage of companies that purchased Product B among companies that purchased Product A.","business_question":"If a customer buys Product A, how likely are they to also buy Product B?","formula":"Companies with Product A & B ÷ Companies with Product A","sql":"SELECT a.parent_product AS product_a, b.parent_product AS product_b,\n  ROUND(COUNT(DISTINCT b.deal_id)*1.0/NULLIF(COUNT(DISTINCT a.deal_id),0),4) AS attach_rate\nFROM shared.revops.silver_line_items a\nINNER JOIN shared.revops.silver_line_items b ON a.deal_id=b.deal_id AND a.parent_product<>b.parent_product\nWHERE a.product_status='Availed' AND b.product_status='Availed'\nGROUP BY 1,2 ORDER BY 3 DESC","filters":"Product Status = Availed, MRR > 0","exclusions":"","sources":"shared.revops.silver_line_items","status":"Approved","notes":""},{"id":"","name":"Sales Churn Rate","category":"Sales_Productivity","definition":"% of Contract Signed deals that did not proceed to Implementation within 60 days.","business_question":"How much revenue is lost due to stalled onboarding?","formula":"Churned Deals ÷ Total Contract Signed Deals","sql":"SELECT DATE_TRUNC('month', close_date) AS month,\n  COUNT(DISTINCT CASE WHEN stage_label='Sales Churn' THEN deal_id END) AS churned_deals\nFROM shared.revops.silver_deals WHERE LOWER(deal_name) NOT LIKE '%renewal%' GROUP BY 1","filters":"client_journey_stage = Customer\nWithin 60 days of Contract Signed","exclusions":"","sources":"shared.revops.silver_deals","status":"Approved","notes":""},{"id":"","name":"Upsell Rate","category":"Sales_Productivity","definition":"% of existing customers that purchased additional products.","business_question":"How effective are we at expanding revenue within existing accounts?","formula":"Customers with Upsell ÷ Total Active Customers","sql":"SELECT DATE_TRUNC('month', close_date) AS month, segment_official,\n  COUNT(DISTINCT deal_id) AS upsell_won, SUM(mrr) AS upsell_mrr\nFROM shared.revops.silver_deals\nWHERE pipeline_name='PH Upsell Pipeline' AND client_journey_stage='Customer'\n  AND LOWER(deal_name) NOT LIKE '%renewal%'\nGROUP BY 1,2","filters":"pipeline_name = PH Upsell Pipeline\nclient_journey_stage = Customer","exclusions":"","sources":"shared.revops.silver_deals","status":"Approved","notes":""}];
+
+const CL={Finance:'Finance',Funnel:'Funnel',Sales_Productivity:'Sales',Revenue:'Revenue',Customer_Health:'CS',Marketing_Efficiency:'Marketing',Revenue_Risk:'Rev Risk',Product_Performance:'Product'};
+const DC={Finance:'#8E44AD',Funnel:'#B7770D',Sales_Productivity:'#1A5276',Revenue:'#0F6E56',Customer_Health:'#C0392B',Marketing_Efficiency:'#1A5276',Revenue_Risk:'#B7770D',Product_Performance:'#935116'};
+
+// ── STEP CONTENT ──
+const STEPS = {
+  powerbi: {
+    title: '⚡ Power BI — Connect via Azure Databricks Connector',
+    html: `
+      ${step(1,'Install the Databricks Connector','In Power BI Desktop, go to <strong>Get Data → More → Azure → Azure Databricks</strong>. If not listed, download the connector from <strong>aka.ms/databricks-powerbi</strong> and place it in your Power BI custom connectors folder.',null)}
+      ${step(2,'Get Your Connection Details','In Databricks, go to <strong>SQL Warehouses → RevOps_SQL → Connection Details</strong>. Copy the Server Hostname and HTTP Path.',`Server: adb-xxxxxxxxx.azuredatabricks.net\nHTTP Path: /sql/1.0/warehouses/xxxxxxxxxxxxxxxx`)}
+      ${step(3,'Enter Connection Details','In Power BI, paste your Server Hostname and HTTP Path. Set the catalog to <strong>hive_metastore</strong> or your Unity Catalog name.',null)}
+      ${step(4,'Authenticate with Personal Access Token','Select <strong>Token</strong> authentication. Generate a PAT in Databricks under <strong>Settings → Developer → Access Tokens → Generate New Token</strong>. Paste it into Power BI.',null)}
+      ${step(5,'Select Your Tables','Navigate to <strong>shared.revops</strong> schema. Select <strong>gold_monthly_exec_summary</strong> for standard KPI dashboards, or silver tables for custom drill-downs.',null)}
+      ${step(6,'Choose Import or Direct Query','Use <strong>Import</strong> for faster performance on historical dashboards. Use <strong>Direct Query</strong> for near-real-time data — note this increases Databricks compute usage.',null)}
+      <div class="step-note"><strong>💡 Recommended starting table:</strong> <code>gold_monthly_exec_summary</code> — all KPIs pre-computed, just filter by metric_month, pipeline_name, and segment_official.</div>`
+  },
+  databricks: {
+    title: '📊 Databricks SQL Editor — Query Directly',
+    html: `
+      ${step(1,'Open the SQL Editor','In the Databricks workspace, click <strong>SQL Editor</strong> in the left sidebar (look for the grid/table icon). If you don\'t see it, make sure you\'re in the SQL persona — click the persona switcher at the top left.',null)}
+      ${step(2,'Select the RevOps Warehouse','In the SQL Editor toolbar, open the warehouse dropdown and select <strong>RevOps_SQL</strong>. If it\'s stopped, it will auto-start on first query (takes ~30 seconds).',null)}
+      ${step(3,'Set Catalog and Schema','Set your default catalog and schema in the editor toolbar or run these commands to scope your queries:',`USE CATALOG hive_metastore;\nUSE SCHEMA shared.revops;`)}
+      ${step(4,'Run Your First Query','Paste and run this query to verify access and preview the gold table:',`SELECT *\nFROM shared.revops.gold_monthly_exec_summary\nORDER BY metric_month DESC\nLIMIT 50;`)}
+      ${step(5,'Save and Share','Click <strong>Save</strong> to store your query. Use <strong>Share</strong> to give teammates view or edit access. You can also schedule queries to run automatically and alert on results.',null)}
+      <div class="step-note"><strong>💡 Tip:</strong> Use <strong>Cmd+Shift+F</strong> (Mac) or <strong>Ctrl+Shift+F</strong> (Windows) to auto-format your SQL. Hit <strong>Cmd/Ctrl+Enter</strong> to run.</div>`
+  },
+  excel: {
+    title: '📗 Excel — Connect via ODBC',
+    html: `
+      ${step(1,'Install the Simba ODBC Driver','Download the <strong>Databricks ODBC Driver</strong> from <strong>databricks.com/spark/odbc-driver-download</strong>. Run the installer and restart your machine.',null)}
+      ${step(2,'Get Your Connection Details','In Databricks, go to <strong>SQL Warehouses → RevOps_SQL → Connection Details</strong>. Note the Server Hostname, Port (443), and HTTP Path.',`Host: adb-xxxxxxxxx.azuredatabricks.net\nPort: 443\nHTTP Path: /sql/1.0/warehouses/xxxxxxxx`)}
+      ${step(3,'Create an ODBC Data Source','Open <strong>ODBC Data Source Administrator</strong> (Windows) or use the driver manager on Mac. Add a new DSN, select the Simba Databricks driver, and enter your connection details + PAT token.',null)}
+      ${step(4,'Connect from Excel','In Excel, go to <strong>Data → Get Data → From Other Sources → From ODBC</strong>. Select your DSN, authenticate, then browse to <strong>shared → revops</strong> and select your table.',null)}
+      ${step(5,'Load and Refresh','Click <strong>Load</strong> to pull the data into Excel. To set up auto-refresh, go to <strong>Data → Queries & Connections → Properties</strong> and configure refresh interval.',null)}
+      <div class="step-note"><strong>💡 Tip:</strong> For large tables, apply filters in the Power Query editor before loading to avoid pulling millions of rows into Excel.</div>`
+  },
+  other: {
+    title: '🔗 Other BI Tools — Tableau, Looker, Metabase & More',
+    html: `
+      ${step(1,'Get Your Databricks Connection Details','In Databricks, go to <strong>SQL Warehouses → RevOps_SQL → Connection Details</strong>. Copy the Server Hostname, Port, and HTTP Path. You\'ll need these for every BI tool.',`Host: adb-xxxxxxxxx.azuredatabricks.net\nPort: 443\nHTTP Path: /sql/1.0/warehouses/xxxxxxxx\nDatabase: shared`)}
+      ${step(2,'Generate a Personal Access Token','In Databricks, go to <strong>Settings → Developer → Access Tokens → Generate New Token</strong>. Set a meaningful name and expiry. Copy and store securely — you won\'t see it again.',null)}
+      ${step(3,'Find the Databricks Connector in Your Tool','Most major BI tools have a built-in Databricks or Spark connector:<br><strong>Tableau:</strong> Connect → To a Server → Databricks<br><strong>Looker:</strong> Admin → Database → Add Connection → Databricks<br><strong>Metabase:</strong> Admin → Databases → Add Database → Databricks<br><strong>Superset:</strong> Data → Databases → + Database → Databricks',null)}
+      ${step(4,'Enter Credentials and Authenticate','Use <strong>token</strong> as the username and your PAT as the password. Set the schema to <strong>shared.revops</strong>. Test the connection before saving.',null)}
+      ${step(5,'Select Tables and Build','Once connected, browse to <strong>shared.revops</strong> and select your tables. Start with <strong>gold_monthly_exec_summary</strong> for pre-built KPIs, or join silver tables for custom metrics.',null)}
+      <div class="step-note"><strong>💡 JDBC connection string (for tools that need it):</strong><br><code style="font-size:10px">jdbc:spark://adb-xxxxxxx.azuredatabricks.net:443/default;transportMode=http;ssl=1;httpPath=/sql/1.0/warehouses/xxxxxxx;AuthMech=3;UID=token;PWD=&lt;your-pat&gt;</code></div>`
+  },
+  ai: {
+    title: '🤖 AI Tools — Let Claude Build Your Live Dashboard',
+    html: `
+      <div style="color:#B2BEC3;font-size:12px;line-height:1.6;margin-bottom:16px;">Use <strong style="color:#fd79a8">Claude</strong> to generate a fully working HTML + JavaScript dashboard that connects <strong style="color:#fff">live to your Databricks tables</strong> via the SQL REST API — no static data, no manual exports. The dashboard auto-refreshes every time it loads.</div>
+
+      <div class="section-divider">What you need before starting</div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
+        <div style="background:rgba(255,255,255,.05);border-radius:8px;padding:11px 14px;font-size:12px;color:#DFE6E9;line-height:1.7">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#fd79a8;margin-bottom:6px">🔑 Required Credentials</div>
+          <div><strong>Server Hostname</strong><br><span style="color:#B2BEC3;font-size:11px">From SQL Warehouses → RevOps_SQL → Connection Details</span></div><br>
+          <div><strong>HTTP Path</strong><br><span style="color:#B2BEC3;font-size:11px">From SQL Warehouses → RevOps_SQL → Connection Details</span></div><br>
+          <div><strong>Personal Access Token (PAT)</strong><br><span style="color:#B2BEC3;font-size:11px">Settings → Developer → Access Tokens → Generate New Token</span></div>
+        </div>
+        <div style="background:rgba(255,255,255,.05);border-radius:8px;padding:11px 14px;font-size:12px;color:#DFE6E9;line-height:1.7">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#fd79a8;margin-bottom:6px">✅ Requirements</div>
+          <div>• <strong>Claude.ai</strong> account (claude.ai)</div><br>
+          <div>• Read access to <strong>shared.revops</strong> schema in Databricks</div><br>
+          <div>• A browser to open the generated HTML file</div><br>
+          <div>• No coding experience needed</div>
+        </div>
+      </div>
+
+      <div class="section-divider">How it works</div>
+
+      ${stepAI(1,'Gather your connection details','Go to <strong>Databricks → SQL Warehouses → RevOps_SQL → Connection Details</strong>. Copy your Server Hostname and HTTP Path. Then generate a PAT under <strong>Settings → Developer → Access Tokens</strong>.',`Server Hostname: adb-xxxxxxxxxxxxxxxxx.azuredatabricks.net\nHTTP Path:       /sql/1.0/warehouses/xxxxxxxxxxxxxxxx\nPAT Token:       dapi••••••••••••••••••••••••••••`)}
+      ${stepAI(2,'Get the table schema to share with Claude','In the Databricks SQL Editor, run this to get the column list for the table you want to visualize. Copy the output — you\'ll paste it into Claude.',`-- Run this for any table you want to visualize\nDESCRIBE TABLE shared.revops.gold_monthly_exec_summary;\n\n-- Or get a quick sample\nSELECT * FROM shared.revops.gold_monthly_exec_summary LIMIT 5;`)}
+      ${stepAI(3,'Open Claude and paste the prompt below','Go to <strong>claude.ai</strong>, start a new chat, and use the prompt template below. Fill in your table name, column list, and describe the charts you want.',null)}
+
+      <div class="section-divider">Copy this prompt into Claude</div>
+
+      ${promptBox(`I want you to build me a live HTML + JavaScript dashboard that connects directly to Databricks via the SQL REST API.
+
+Here are my connection details (I will fill these in):
+- Server Hostname: [YOUR_SERVER_HOSTNAME]
+- HTTP Path: [YOUR_HTTP_PATH]
+- Personal Access Token: [YOUR_PAT]
+- Table: shared.revops.[TABLE_NAME]
+
+Here is the table schema:
+[PASTE YOUR DESCRIBE TABLE OUTPUT HERE]
+
+Requirements:
+- Use Chart.js for visualizations
+- Query Databricks SQL REST API directly from the browser using fetch()
+- Show a loading state while data is fetching
+- Auto-load data when the page opens
+- Include a manual Refresh button
+- Make it look clean and professional with a dark theme
+- Show [DESCRIBE THE CHARTS YOU WANT — e.g. "monthly MRR as a bar chart, win rate as a line chart, and a summary KPI row at the top"]`)}
+
+      ${stepAI(4,'Save the generated file and open in browser','Claude will return a complete HTML file. Copy the code, paste it into a text editor (Notepad, VS Code, etc.), and save it as <strong>dashboard.html</strong>. Open it in Chrome or Edge.',null)}
+      ${stepAI(5,'Fill in your credentials in the file','At the top of the generated file, Claude will place a config section. Replace the placeholder values with your actual Server Hostname, HTTP Path, and PAT. Save and refresh.',`const CONFIG = {\n  host:      'adb-xxxxxxxxx.azuredatabricks.net',\n  httpPath:  '/sql/1.0/warehouses/xxxxxxxx',\n  token:     'dapi••••••••••••••••',\n  schema:    'shared.revops'\n};`)}
+
+      <div class="section-divider">Tips for better results</div>
+
+      <div style="display:grid;gap:8px;margin-top:2px">
+        <div style="background:rgba(255,255,255,.05);border-radius:8px;padding:11px 14px;font-size:12px;color:#DFE6E9;line-height:1.6"><strong style="color:#a29bfe">📋 Always paste the schema</strong><br>Claude needs the real column names to write correct SQL. Run <code>DESCRIBE TABLE</code> in Databricks and paste the output — this prevents hallucinated column names.</div>
+        <div style="background:rgba(255,255,255,.05);border-radius:8px;padding:11px 14px;font-size:12px;color:#DFE6E9;line-height:1.6"><strong style="color:#a29bfe">🎯 Be specific about the charts you want</strong><br>Instead of "make a dashboard", say "a bar chart of MRR by month, a donut chart of deals by segment, and 3 KPI cards for total won deals, win rate, and avg deal size".</div>
+        <div style="background:rgba(255,255,255,.05);border-radius:8px;padding:11px 14px;font-size:12px;color:#DFE6E9;line-height:1.6"><strong style="color:#a29bfe">🔁 Iterate if something looks off</strong><br>Paste the error message or describe what's wrong back to Claude. It will fix the code. Most issues resolve in 1–2 follow-ups.</div>
+        <div style="background:rgba(255,255,255,.05);border-radius:8px;padding:11px 14px;font-size:12px;color:#DFE6E9;line-height:1.6"><strong style="color:#a29bfe">🔒 Keep your PAT secure</strong><br>Don't share your HTML file publicly — it contains your PAT. For team sharing, ask your admin to set up a shared service account token instead.</div>
+      </div>
+      <div class="step-note-ai" style="margin-top:14px"><strong>💡 Best table to start with:</strong> Use <code>gold_monthly_exec_summary</code> — all KPIs are pre-aggregated so the queries Claude generates will be simpler, faster, and less error-prone.</div>`
+  }
+};
+
+function step(n, title, desc, code) {
+  return `<div class="step-item">
+    <div class="step-num">${n}</div>
+    <div class="step-body">
+      <div class="step-title">${title}</div>
+      ${desc ? `<div class="step-desc">${desc}</div>` : ''}
+      ${code ? `<div class="step-code"><button class="cpb2" onclick="cpCode(this)">Copy</button>${code}</div>` : ''}
+    </div>
+  </div>`;
+}
+
+function stepAI(n, title, desc, code) {
+  return `<div class="step-item">
+    <div class="step-num ai-num">${n}</div>
+    <div class="step-body">
+      <div class="step-title">${title}</div>
+      ${desc ? `<div class="step-desc">${desc}</div>` : ''}
+      ${code ? `<div class="step-code"><button class="cpb2" onclick="cpCode(this)">Copy</button>${code}</div>` : ''}
+    </div>
+  </div>`;
+}
+
+function promptBox(text) {
+  return `<div class="prompt-box"><button class="cpb2" onclick="cpCode(this)">Copy</button>${text}</div>`;
+}
+
+function cpCode(btn) {
+  const box = btn.parentElement;
+  const txt = box.innerText.replace('Copy','').trim();
+  navigator.clipboard.writeText(txt).then(() => {
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy', 1500);
+  });
+}
+
+let activeCard = null;
+function showSteps(key) {
+  // toggle off if same card clicked
+  if (activeCard === key) { hideSteps(); return; }
+  activeCard = key;
+
+  // update card active states
+  document.querySelectorAll('.conn-card').forEach(c => c.classList.remove('active-card'));
+  document.getElementById('card-' + key).classList.add('active-card');
+
+  const panel = document.getElementById('steps-panel');
+  const s = STEPS[key];
+  document.getElementById('steps-title').textContent = s.title;
+  document.getElementById('steps-content').innerHTML = s.html;
+  panel.style.display = 'block';
+
+  // scroll into view smoothly
+  setTimeout(() => panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
+}
+
+function hideSteps() {
+  document.getElementById('steps-panel').style.display = 'none';
+  document.querySelectorAll('.conn-card').forEach(c => c.classList.remove('active-card'));
+  activeCard = null;
+}
+
+function switchTab(t) {
+  document.querySelectorAll('.section').forEach(s => { s.classList.remove('active'); s.style.display='none'; });
+  document.querySelectorAll('.nav-tab').forEach(x => x.classList.remove('active'));
+  const sec = document.getElementById('section-' + t);
+  sec.classList.add('active');
+  sec.style.display = 'block';
+  document.getElementById('tab-' + t).classList.add('active');
+}
+
+// ── DATABASE ──
+let activeLayer = '';
+function setLayer(l) {
+  activeLayer = l;
+  document.querySelectorAll('.lb').forEach(b => b.classList.remove('active'));
+  document.getElementById(l ? 'layer-' + l : 'layer-all').classList.add('active');
+  filterTables();
+}
+function filterTables() {
+  const q = document.getElementById('db-search').value.toLowerCase();
+  const f = TABLES.filter(t => {
+    const ml = !activeLayer || t.layer === activeLayer;
+    const mq = !q || t.name.toLowerCase().includes(q) || t.description.toLowerCase().includes(q) || t.fields.some(x => x.name.toLowerCase().includes(q) || x.desc.toLowerCase().includes(q));
+    return ml && mq;
+  });
+  renderTables(f);
+  document.getElementById('db-count').textContent = f.length + ' table' + (f.length !== 1 ? 's' : '');
+}
+function renderTables(tables) {
+  document.getElementById('tables-grid').innerHTML = tables.map((t, i) => {
+    const uid = 'tc' + i;
+    const snip = 'SELECT *\nFROM shared.revops.' + t.name + '\nLIMIT 100;';
+    const rows = t.fields.map(f => `<tr><td><span class="field-name">${f.name}</span></td><td><span class="field-type">${f.type}</span></td><td class="field-desc">${f.desc}</td></tr>`).join('');
+    return `<div class="tcard" id="${uid}">
+<div class="tc-header" onclick="toggleT('${uid}')">
+<div class="tc-left">
+<div class="tc-top"><span class="layer-badge layer-${t.layer}">${t.layer}</span><span class="grain-badge">${t.grain}</span></div>
+<div class="tc-name">📋 ${t.name}</div>
+<div class="tc-desc">${t.description}</div>
+<div class="tc-meta"><span class="tc-pill">🔄 <strong>${t.refresh}</strong></span><span class="tc-pill">📊 <strong>${t.fields.length}</strong> columns</span></div>
+</div><span class="expand-btn">▾</span></div>
+<div class="fields-section">
+<div class="best-for"><span class="bf-label">Best for</span><span class="bf-value">${t.best_for}</span></div>
+<div class="fields-search"><input type="text" placeholder="Filter columns..." oninput="filterF(event,'${uid}')"></div>
+<table class="fields-table"><thead><tr><th>Column</th><th>Type</th><th>Description</th></tr></thead><tbody id="tb-${uid}">${rows}</tbody></table>
+<div class="copy-snippet"><div class="cs-label">Quick Start SQL</div><div class="snippet" id="snip-${uid}"><button class="cpb" onclick="cpSnip(event,'${uid}')">Copy</button>${snip}</div></div>
+</div></div>`;
+  }).join('');
+}
+function toggleT(uid) { const c = document.getElementById(uid); const w = c.classList.contains('exp'); document.querySelectorAll('.tcard.exp').forEach(x => x.classList.remove('exp')); if (!w) c.classList.add('exp'); }
+function filterF(e, uid) { const q = e.target.value.toLowerCase(); document.getElementById('tb-' + uid).querySelectorAll('tr').forEach(r => { r.style.display = !q || r.textContent.toLowerCase().includes(q) ? '' : 'none'; }); }
+function cpSnip(e, uid) { e.stopPropagation(); const el = document.getElementById('snip-' + uid); const t = el.innerText.replace('Copy', '').trim(); navigator.clipboard.writeText(t).then(() => { const b = el.querySelector('.cpb'); b.textContent = 'Copied!'; setTimeout(() => b.textContent = 'Copy', 1500); }); }
+
+// ── DATAPEDIA ──
+let activeCat = '';
+const cats = [...new Set(METRICS.map(m => m.category))].sort();
+const cf = document.getElementById('cat-filters');
+const ab = document.createElement('button');
+ab.className = 'fb active'; ab.textContent = 'All';
+ab.onclick = () => { activeCat = ''; document.querySelectorAll('.fb').forEach(b => b.classList.remove('active')); ab.classList.add('active'); filterMetrics(); };
+cf.appendChild(ab);
+cats.forEach(cat => {
+  const b = document.createElement('button');
+  b.className = 'fb'; b.textContent = CL[cat] || cat;
+  b.onclick = () => { activeCat = cat; document.querySelectorAll('.fb').forEach(b => b.classList.remove('active')); b.classList.add('active'); filterMetrics(); };
+  cf.appendChild(b);
+});
+function filterMetrics() {
+  const q = document.getElementById('dp-search').value.toLowerCase();
+  const f = METRICS.filter(m => {
+    const mc = !activeCat || m.category === activeCat;
+    const mq = !q || [m.name, m.definition, m.business_question, m.formula, m.category].some(x => x && x.toLowerCase().includes(q));
+    return mc && mq;
+  });
+  renderMetrics(f);
+  document.getElementById('dp-count').textContent = f.length + ' metrics';
+  renderStats(f);
+}
+function renderStats(f) {
+  const cc = {}; f.forEach(m => { cc[m.category] = (cc[m.category] || 0) + 1; });
+  document.getElementById('stats-bar').innerHTML = Object.entries(cc).map(([c, n]) => `<div class="si2"><div class="sdot" style="background:${DC[c] || '#636'}"></div>${CL[c] || c}: <strong>${n}</strong></div>`).join('');
+}
+function renderMetrics(metrics) {
+  const grid = document.getElementById('metrics-grid');
+  if (!metrics.length) { grid.innerHTML = '<div class="empty-state"><div style="font-size:44px">🔍</div><h3>No metrics found</h3><p>Try a different search or filter</p></div>'; return; }
+  grid.innerHTML = metrics.map((m, i) => {
+    const uid = 'mc' + i;
+    return `<div class="mcard" id="${uid}" onclick="toggleM('${uid}')">
+<div class="mc-header">
+<div class="mc-top">
+<div class="mc-badges"><span class="cat-badge cat-${m.category}">${CL[m.category] || m.category}</span><span class="approved-pill">✅ Approved</span></div>
+<span class="mc-expand">▾</span>
+</div>
+${m.id ? `<div class="mc-id">${m.id}</div>` : ''}
+<div class="mc-name">${m.name}</div>
+<div class="mc-bq">${m.business_question || ''}</div>
+</div>
+<div class="mc-detail">
+${m.definition ? `<div class="detail-row"><div class="dl">Definition</div><div class="dv">${m.definition}</div></div>` : ''}
+${m.formula ? `<div class="detail-row"><div class="dl">Formula</div><div class="dv">${m.formula}</div></div>` : ''}
+${m.filters ? `<div class="detail-row"><div class="dl">Filters / Inclusions</div><div class="fchips">${m.filters.split('\n').filter(Boolean).map(x => `<span class="chip">${x}</span>`).join('')}</div></div>` : ''}
+${m.exclusions ? `<div class="detail-row"><div class="dl">Exclusions</div><div class="dv">${m.exclusions}</div></div>` : ''}
+${m.sources ? `<div class="detail-row"><div class="dl">Data Sources</div><div class="dv" style="font-size:11px;color:#636">${m.sources.replace(/\n/g, ', ')}</div></div>` : ''}
+${m.notes ? `<div class="detail-row"><div class="dl">Notes</div><div class="dv" style="font-style:italic;color:#636">${m.notes}</div></div>` : ''}
+</div></div>`;
+  }).join('');
+}
+function toggleM(uid) { const c = document.getElementById(uid); const w = c.classList.contains('exp'); document.querySelectorAll('.mcard.exp').forEach(x => x.classList.remove('exp')); if (!w) c.classList.add('exp'); }
+
+filterTables();
+filterMetrics();
+
+// ── LIVE CONNECT ──
+const LC = {
+  connected: false,
+  host: '',
+  path: '',
+  token: '',
+
+  load() {
+    this.host  = localStorage.getItem('radar_db_host')  || '';
+    this.path  = localStorage.getItem('radar_db_path')  || '';
+    this.token = localStorage.getItem('radar_db_token') || '';
+    this.connected = !!(this.host && this.path && this.token);
+  },
+
+  save(host, path, token) {
+    localStorage.setItem('radar_db_host',  host);
+    localStorage.setItem('radar_db_path',  path);
+    localStorage.setItem('radar_db_token', token);
+    this.host = host; this.path = path; this.token = token;
+    this.connected = true;
+  },
+
+  clear() {
+    ['radar_db_host','radar_db_path','radar_db_token'].forEach(k => localStorage.removeItem(k));
+    this.connected = false; this.host = this.path = this.token = '';
+  },
+
+  warehouseId() {
+    const m = this.path.match(/warehouses\/([^/]+)/);
+    return m ? m[1] : '';
+  }
+};
+
+// ── DATABRICKS SQL API ──
+async function dbQuery(sql, timeout) {
+  timeout = timeout || 30;
+  if (!LC.connected) throw new Error('Not connected to Databricks.');
+  const warehouseId = LC.warehouseId();
+  if (!warehouseId) throw new Error('Could not parse warehouse ID from HTTP Path.');
+
+  const url = 'https://' + LC.host + '/api/2.0/sql/statements';
+  const body = {
+    statement: sql,
+    warehouse_id: warehouseId,
+    wait_timeout: timeout + 's',
+    on_wait_timeout: 'CONTINUE',
+    format: 'JSON_ARRAY'
+  };
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + LC.token,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(body)
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || ('HTTP ' + res.status));
+  }
+
+  let data = await res.json();
+
+  // Poll if still running
+  let polls = 0;
+  while (['PENDING','RUNNING'].includes(data.status && data.status.state) && polls < 60) {
+    await new Promise(function(r) { setTimeout(r, 1500); });
+    const pollRes = await fetch('https://' + LC.host + '/api/2.0/sql/statements/' + data.statement_id, {
+      headers: { 'Authorization': 'Bearer ' + LC.token }
+    });
+    data = await pollRes.json();
+    polls++;
+  }
+
+  if (!data.status || data.status.state !== 'SUCCEEDED') {
+    const msg = (data.status && data.status.error && data.status.error.message) || (data.status && data.status.state) || 'Unknown error';
+    throw new Error('Query failed: ' + msg);
+  }
+
+  const cols = data.manifest.schema.columns.map(function(c) { return c.name.toLowerCase(); });
+  const rows = (data.result && data.result.data_array || []).map(function(row) {
+    const obj = {};
+    cols.forEach(function(c, i) { obj[c] = row[i] != null ? row[i] : ''; });
+    return obj;
+  });
+  return rows;
+}
+
+// ── CONNECTION MODAL ──
+function openConnModal() {
+  LC.load();
+  document.getElementById('cm-host').value  = LC.host;
+  document.getElementById('cm-path').value  = LC.path;
+  document.getElementById('cm-token').value = LC.token;
+  document.getElementById('cm-connected-as').textContent = LC.connected ? LC.host : '—';
+  setConnMsg('', '');
+  document.getElementById('conn-modal-overlay').classList.add('open');
+}
+function closeConnModal() {
+  document.getElementById('conn-modal-overlay').classList.remove('open');
+}
+function setConnMsg(text, type) {
+  const el = document.getElementById('conn-status-msg');
+  el.textContent = text;
+  el.className = 'conn-status-msg' + (type ? ' ' + type : '');
+}
+async function testConnection() {
+  const host  = document.getElementById('cm-host').value.trim();
+  const path  = document.getElementById('cm-path').value.trim();
+  const token = document.getElementById('cm-token').value.trim();
+  if (!host || !path || !token) { setConnMsg('Please fill in all fields.', 'err'); return; }
+  setConnMsg('Testing connection…', 'info');
+  // Temporarily use entered values
+  const orig = { host: LC.host, path: LC.path, token: LC.token, connected: LC.connected };
+  LC.host = host; LC.path = path; LC.token = token; LC.connected = true;
+  try {
+    await dbQuery('SELECT 1 AS ping', 10);
+    setConnMsg('✅ Connection successful!', 'ok');
+  } catch(e) {
+    setConnMsg('❌ ' + e.message, 'err');
+  } finally {
+    LC.host = orig.host; LC.path = orig.path; LC.token = orig.token; LC.connected = orig.connected;
+  }
+}
+function saveConnection() {
+  const host  = document.getElementById('cm-host').value.trim();
+  const path  = document.getElementById('cm-path').value.trim();
+  const token = document.getElementById('cm-token').value.trim();
+  if (!host || !path || !token) { setConnMsg('Please fill in all fields.', 'err'); return; }
+  LC.save(host, path, token);
+  updateConnBadge();
+  document.getElementById('cm-connected-as').textContent = host;
+  setConnMsg('✅ Saved! You can now sync DataPedia and Database tabs.', 'ok');
+}
+function disconnectDatabricks() {
+  LC.clear();
+  updateConnBadge();
+  setConnMsg('Disconnected.', 'info');
+}
+function updateConnBadge() {
+  const badge = document.getElementById('conn-badge');
+  const dot   = document.getElementById('conn-dot');
+  const text  = document.getElementById('conn-badge-text');
+  if (LC.connected) {
+    badge.classList.add('live');
+    dot.style.background = '#00B894';
+    text.textContent = 'Live';
+  } else {
+    badge.classList.remove('live');
+    dot.style.background = '#636E72';
+    text.textContent = 'Not Connected';
+  }
+}
+
+// ── SYNC BAR HELPER ──
+function setSyncBar(id, text, type) {
+  const el = document.getElementById(id);
+  el.textContent = text;
+  el.className = 'sync-bar' + (type ? ' ' + type : '') + (text ? ' show' : '');
+}
+
+// ── REFRESH DATAPEDIA ──
+async function refreshDatapedia() {
+  if (!LC.connected) { openConnModal(); return; }
+  const btn = document.getElementById('dp-refresh-btn');
+  btn.classList.add('spinning'); btn.disabled = true;
+  setSyncBar('dp-sync-bar', '⟳ Syncing from shared.revops.gold_metrics_datapedia…', '');
+  try {
+    const rows = await dbQuery('SELECT * FROM shared.revops.gold_metrics_datapedia ORDER BY category, metric_name');
+    if (!rows.length) { setSyncBar('dp-sync-bar', '⚠ No rows returned from gold_metrics_datapedia.', 'err'); return; }
+
+    const mapped = rows.map(function(r) {
+      return {
+        id:                r.metric_id         || r.id              || '',
+        name:              r.metric_name       || r.name            || '',
+        category:          r.category          || '',
+        definition:        r.definition        || '',
+        business_question: r.business_question || '',
+        formula:           r.formula           || '',
+        sql:               r.sql_template      || r.sql             || '',
+        filters:           r.filter_inclusions || r.filters         || '',
+        exclusions:        r.filter_exclusions || r.exclusions      || '',
+        sources:           r.data_sources      || r.sources         || '',
+        status:            r.status            || 'Approved',
+        notes:             r.notes             || ''
+      };
+    });
+
+    window._LIVE_METRICS = mapped;
+    filterMetrics();
+    setSyncBar('dp-sync-bar', '✅ Synced ' + mapped.length + ' metrics from Databricks — ' + new Date().toLocaleTimeString(), 'ok');
+    document.getElementById('dp-count').textContent = mapped.length + ' metrics';
+    document.getElementById('approved-count').textContent = mapped.length;
+  } catch(e) {
+    let msg = e.message || 'Unknown error';
+    if (msg === 'Failed to fetch' || msg.includes('NetworkError') || msg.includes('CORS')) {
+      msg = 'Failed to fetch — check that: (1) your credentials are saved via the connection badge, (2) your Databricks hostname is correct, (3) your workspace allows browser API calls.';
+    } else if (msg.includes('401') || msg.includes('Unauthorized')) {
+      msg = 'Unauthorized (401) — your Personal Access Token may be expired or incorrect. Update it via the connection badge.';
+    } else if (msg.includes('403')) {
+      msg = 'Access denied (403) — your token does not have permission to query this table.';
+    }
+    setSyncBar('dp-sync-bar', '❌ ' + msg, 'err');
+  } finally {
+    btn.classList.remove('spinning'); btn.disabled = false;
+  }
+}
+
+// ── REFRESH DATABASE SCHEMA ──
+async function refreshDatabase() {
+  if (!LC.connected) { openConnModal(); return; }
+  const btn = document.getElementById('db-refresh-btn');
+  btn.classList.add('spinning'); btn.disabled = true;
+  setSyncBar('db-sync-bar', '⟳ Syncing schema from shared.information_schema.columns…', '');
+  try {
+    const sql = [
+      'SELECT table_name, column_name, full_data_type AS data_type, comment',
+      'FROM shared.information_schema.columns',
+      "WHERE table_schema = 'revops' AND table_catalog = 'shared'",
+      'ORDER BY table_name, ordinal_position'
+    ].join(' ');
+    const rows = await dbQuery(sql);
+    if (!rows.length) { setSyncBar('db-sync-bar', '⚠ No columns returned from information_schema.', 'err'); return; }
+
+    const tableMap = {};
+    rows.forEach(function(r) {
+      const tname = r.table_name;
+      if (!tableMap[tname]) tableMap[tname] = [];
+      tableMap[tname].push({ name: r.column_name, type: r.data_type || 'string', desc: r.comment || '' });
+    });
+
+    const tableNames = Object.keys(tableMap).sort();
+    const liveTables = tableNames.map(function(tname) {
+      const existing = TABLES.find(function(t) { return t.name === tname; }) || {};
+      const layer = tname.startsWith('gold') ? 'Gold' : tname.startsWith('silver') ? 'Silver' : 'Bronze';
+      return {
+        name:        tname,
+        layer:       existing.layer       || layer,
+        grain:       existing.grain       || '1 row per deal',
+        description: existing.description || '',
+        refresh:     existing.refresh     || 'Daily',
+        best_for:    existing.best_for    || '',
+        fields:      tableMap[tname]
+      };
+    });
+
+    window._LIVE_TABLES = liveTables;
+    filterTables();
+    setSyncBar('db-sync-bar', '✅ Synced ' + liveTables.length + ' tables (' + rows.length + ' columns) — ' + new Date().toLocaleTimeString(), 'ok');
+    document.getElementById('db-count').textContent = liveTables.length + ' tables';
+  } catch(e) {
+    setSyncBar('db-sync-bar', '❌ ' + e.message, 'err');
+  } finally {
+    btn.classList.remove('spinning'); btn.disabled = false;
+  }
+}
+
+// ── PATCH filterTables / filterMetrics to prefer live data ──
+const _origFilterTables  = filterTables;
+const _origFilterMetrics = filterMetrics;
+
+filterTables = function() {
+  if (window._LIVE_TABLES) {
+    const q = (document.getElementById('db-search') && document.getElementById('db-search').value || '').toLowerCase();
+    const f = window._LIVE_TABLES.filter(function(t) {
+      const ml = !activeLayer || t.layer === activeLayer;
+      const mq = !q || t.name.toLowerCase().includes(q) || (t.description || '').toLowerCase().includes(q) || t.fields.some(function(x) { return (x.name || '').toLowerCase().includes(q); });
+      return ml && mq;
+    });
+    renderTables(f);
+    document.getElementById('db-count').textContent = f.length + ' table' + (f.length !== 1 ? 's' : '');
+    return;
+  }
+  _origFilterTables();
+};
+
+filterMetrics = function() {
+  if (window._LIVE_METRICS) {
+    const q = (document.getElementById('dp-search') && document.getElementById('dp-search').value || '').toLowerCase();
+    const active = document.querySelector('.cat-btn.active');
+    const cat = active ? active.dataset.cat : '';
+    const f = window._LIVE_METRICS.filter(function(m) {
+      const mc = !cat || m.category === cat;
+      const mq = !q || m.name.toLowerCase().includes(q) || (m.definition || '').toLowerCase().includes(q) || (m.business_question || '').toLowerCase().includes(q);
+      return mc && mq;
+    });
+    renderMetrics(f);
+    document.getElementById('dp-count').textContent = f.length + ' metric' + (f.length !== 1 ? 's' : '');
+    return;
+  }
+  _origFilterMetrics();
+};
+
+// ── INIT ──
+LC.load();
+updateConnBadge();
+
+
+
+
+// ── LOGIN ──
+function radarLogin() {
+  const email = (document.getElementById('login-email').value || '').trim().toLowerCase();
+  const errEl = document.getElementById('login-error');
+  if (!email) { errEl.textContent = 'Please enter your email address.'; return; }
+  if (!email.endsWith('@sprout.ph')) { errEl.textContent = 'Access restricted to Sprout users only.'; return; }
+  localStorage.setItem('radar_user_email', email);
+  errEl.textContent = '';
+  document.getElementById('login-overlay').style.display = 'none';
+  document.getElementById('app-root').style.display = 'block';
+  document.getElementById('user-email-display').textContent = email;
+}
+
+function radarLogout() {
+  localStorage.removeItem('radar_user_email');
+  document.getElementById('app-root').style.display = 'none';
+  document.getElementById('login-overlay').style.display = 'flex';
+  document.getElementById('login-email').value = '';
+  document.getElementById('login-error').textContent = '';
+}
+
+// Check session on load
+(function() {
+  const stored = localStorage.getItem('radar_user_email');
+  if (stored && stored.endsWith('@sprout.ph')) {
+    document.getElementById('login-overlay').style.display = 'none';
+    document.getElementById('app-root').style.display = 'block';
+    document.getElementById('user-email-display').textContent = stored;
+  }
+})();
+
+// ── PLAN TABS ──
+function setPlanTab(key) {
+  document.querySelectorAll('.plan-subtab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.plan-section').forEach(s => s.classList.remove('active'));
+  document.getElementById('ptab-' + key).classList.add('active');
+  document.getElementById('plan-' + key).classList.add('active');
+}
+
+// ── DASHBOARD SQL BLOCKS ──
+const SQL_BLOCKS = [
+  { title: 'Q1 · MQL TMRR by Projected Close Month', sql: `SELECT
+  DATE_TRUNC('month', projected_close_date) AS metric_month,
+  pipeline_name,
+  CASE WHEN UPPER(segment) = 'MICRO' THEN 'SME' ELSE segment END AS segment,
+  department_source_clean,
+  SUM(COALESCE(mrr, 0)) AS mql_tmrr
+FROM shared.revops.silver_deals
+WHERE projected_close_date IS NOT NULL
+  AND LOWER(COALESCE(deal_name, '')) NOT LIKE '%renewal%'
+  AND stage_label IN (
+    'Appointment Scheduled','Initial Demo Done','Solutioning',
+    'Commercial Negotiation','Committed Accounts'
+  )
+GROUP BY 1,2,3,4
+ORDER BY 1 DESC;` },
+  { title: 'Q2 · MQL TMRR vs Target', sql: `WITH actuals AS (
+  SELECT
+    DATE_TRUNC('month', projected_close_date) AS metric_month,
+    pipeline_name,
+    CASE WHEN UPPER(segment)='MICRO' THEN 'SME' ELSE segment END AS segment,
+    department_source_clean,
+    SUM(COALESCE(mrr,0)) AS actual_mql_tmrr
+  FROM shared.revops.silver_deals
+  WHERE projected_close_date IS NOT NULL
+    AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%'
+    AND stage_label IN ('Appointment Scheduled','Initial Demo Done',
+      'Solutioning','Commercial Negotiation','Committed Accounts')
+  GROUP BY 1,2,3,4
+),
+targets AS (
+  SELECT metric_month, pipeline_name,
+    CASE WHEN UPPER(segment_official)='MICRO' THEN 'SME' ELSE segment_official END AS segment,
+    department_source_clean, SUM(target_value) AS target_mql_tmrr
+  FROM shared.revops.gold_targets
+  WHERE target_type IN ('MQL TMRR','Pipeline MRR','TMRR')
+  GROUP BY 1,2,3,4
+)
+SELECT a.metric_month, a.pipeline_name, a.segment, a.department_source_clean,
+  a.actual_mql_tmrr, t.target_mql_tmrr,
+  ROUND(a.actual_mql_tmrr / NULLIF(t.target_mql_tmrr,0)*100,2) AS attainment_pct
+FROM actuals a
+LEFT JOIN targets t ON a.metric_month=t.metric_month AND a.pipeline_name=t.pipeline_name
+  AND a.segment=t.segment
+  AND COALESCE(a.department_source_clean,'')=COALESCE(t.department_source_clean,'')
+ORDER BY a.metric_month DESC;` },
+  { title: 'Q3 · SQL TMRR by Projected Close Month', sql: `SELECT
+  DATE_TRUNC('month', projected_close_date) AS metric_month,
+  pipeline_name,
+  CASE WHEN UPPER(segment)='MICRO' THEN 'SME' ELSE segment END AS segment,
+  department_source_clean,
+  SUM(COALESCE(mrr,0)) AS sql_tmrr
+FROM shared.revops.silver_deals
+WHERE projected_close_date IS NOT NULL
+  AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%'
+  AND client_journey_stage = 'Opportunity'
+GROUP BY 1,2,3,4
+ORDER BY 1 DESC;` },
+  { title: 'Q4 · Won MRR vs Target', sql: `WITH actuals AS (
+  SELECT DATE_TRUNC('month', close_date) AS metric_month, pipeline_name,
+    CASE WHEN UPPER(segment)='MICRO' THEN 'SME' ELSE segment END AS segment,
+    department_source_clean, SUM(COALESCE(mrr,0)) AS won_mrr
+  FROM shared.revops.silver_deals
+  WHERE close_date IS NOT NULL AND client_journey_stage='Customer'
+    AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%'
+  GROUP BY 1,2,3,4
+),
+targets AS (
+  SELECT metric_month, pipeline_name,
+    CASE WHEN UPPER(segment_official)='MICRO' THEN 'SME' ELSE segment_official END AS segment,
+    department_source_clean, SUM(target_value) AS mrr_target
+  FROM shared.revops.gold_targets
+  WHERE target_type IN ('MRR','Won MRR')
+  GROUP BY 1,2,3,4
+)
+SELECT a.metric_month, a.pipeline_name, a.segment, a.department_source_clean,
+  a.won_mrr, t.mrr_target,
+  ROUND(a.won_mrr / NULLIF(t.mrr_target,0)*100,2) AS attainment_pct
+FROM actuals a
+LEFT JOIN targets t ON a.metric_month=t.metric_month AND a.pipeline_name=t.pipeline_name
+  AND a.segment=t.segment
+  AND COALESCE(a.department_source_clean,'')=COALESCE(t.department_source_clean,'')
+ORDER BY a.metric_month DESC;` },
+  { title: 'Q5 · EmFi MRR', sql: `SELECT
+  DATE_TRUNC('month', close_date) AS metric_month,
+  pipeline_name,
+  CASE WHEN UPPER(segment)='MICRO' THEN 'SME' ELSE segment END AS segment,
+  department_source_clean,
+  SUM(COALESCE(ef_mrr,0)) AS emfi_mrr
+FROM shared.revops.silver_deals
+WHERE close_date IS NOT NULL AND client_journey_stage='Customer'
+  AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%'
+GROUP BY 1,2,3,4
+ORDER BY 1 DESC;` },
+  { title: 'Q6 · Closed-Won Revenue', sql: `SELECT
+  DATE_TRUNC('month', close_date) AS metric_month,
+  pipeline_name,
+  CASE WHEN UPPER(segment)='MICRO' THEN 'SME' ELSE segment END AS segment,
+  department_source_clean,
+  SUM(COALESCE(amount,0)) AS closed_won_revenue,
+  SUM(COALESCE(tcv,0))    AS closed_won_tcv,
+  SUM(COALESCE(mrr,0))    AS closed_won_mrr
+FROM shared.revops.silver_deals
+WHERE close_date IS NOT NULL AND client_journey_stage='Customer'
+  AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%'
+GROUP BY 1,2,3,4
+ORDER BY 1 DESC;` },
+  { title: 'Q7 · Average Deal Value', sql: `SELECT
+  DATE_TRUNC('month', close_date) AS metric_month,
+  pipeline_name,
+  CASE WHEN UPPER(segment)='MICRO' THEN 'SME' ELSE segment END AS segment,
+  department_source_clean,
+  COUNT(DISTINCT deal_id) AS won_deal_count,
+  ROUND(SUM(COALESCE(mrr,0))    / NULLIF(COUNT(DISTINCT deal_id),0),2) AS avg_deal_value_mrr,
+  ROUND(SUM(COALESCE(amount,0)) / NULLIF(COUNT(DISTINCT deal_id),0),2) AS avg_deal_value_amount
+FROM shared.revops.silver_deals
+WHERE close_date IS NOT NULL AND client_journey_stage='Customer'
+  AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%'
+GROUP BY 1,2,3,4
+ORDER BY 1 DESC;` },
+  { title: 'Q8 · Created Leads / MQL by Channel Source', sql: `WITH channel_base AS (
+  SELECT
+    DATE_TRUNC('month', create_date) AS metric_month, pipeline_name,
+    CASE WHEN UPPER(segment)='MICRO' THEN 'SME' ELSE segment END AS segment,
+    department_source_clean,
+    CASE
+      WHEN original_traffic_source = 'Offline Sources'
+        THEN COALESCE(original_source_of_awareness,'Offline Sources - Unspecified')
+      ELSE COALESCE(original_traffic_source,'Unknown')
+    END AS channel_source,
+    deal_id
+  FROM shared.revops.silver_deals
+  WHERE create_date IS NOT NULL
+    AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%'
+)
+SELECT metric_month, pipeline_name, segment, department_source_clean,
+  channel_source, COUNT(DISTINCT deal_id) AS created_mql_count
+FROM channel_base
+GROUP BY 1,2,3,4,5
+ORDER BY metric_month DESC, created_mql_count DESC;` },
+  { title: 'Q9 · MQL to SQL Conversion Rate', sql: `WITH base AS (
+  SELECT DATE_TRUNC('month', create_date) AS metric_month, pipeline_name,
+    CASE WHEN UPPER(segment)='MICRO' THEN 'SME' ELSE segment END AS segment,
+    department_source_clean, deal_id, stage_label, client_journey_stage
+  FROM shared.revops.silver_deals
+  WHERE create_date IS NOT NULL
+    AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%'
+)
+SELECT metric_month, pipeline_name, segment, department_source_clean,
+  COUNT(DISTINCT CASE WHEN stage_label IN (
+    'Appointment Scheduled','Initial Demo Done','Solutioning',
+    'Commercial Negotiation','Committed Accounts') THEN deal_id END) AS mql_count,
+  COUNT(DISTINCT CASE WHEN client_journey_stage='Opportunity' THEN deal_id END) AS sql_count,
+  ROUND(
+    COUNT(DISTINCT CASE WHEN client_journey_stage='Opportunity' THEN deal_id END)
+    / NULLIF(COUNT(DISTINCT CASE WHEN stage_label IN (
+        'Appointment Scheduled','Initial Demo Done','Solutioning',
+        'Commercial Negotiation','Committed Accounts') THEN deal_id END),0)*100,2
+  ) AS mql_to_sql_pct
+FROM base
+GROUP BY 1,2,3,4
+ORDER BY metric_month DESC;` },
+  { title: 'Q10 · SQL to Won Conversion Rate', sql: `WITH base AS (
+  SELECT DATE_TRUNC('month', create_date) AS metric_month, pipeline_name,
+    CASE WHEN UPPER(segment)='MICRO' THEN 'SME' ELSE segment END AS segment,
+    department_source_clean, deal_id, client_journey_stage
+  FROM shared.revops.silver_deals
+  WHERE create_date IS NOT NULL
+    AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%'
+)
+SELECT metric_month, pipeline_name, segment, department_source_clean,
+  COUNT(DISTINCT CASE WHEN client_journey_stage='Opportunity' THEN deal_id END) AS sql_count,
+  COUNT(DISTINCT CASE WHEN client_journey_stage='Customer'    THEN deal_id END) AS won_count,
+  ROUND(
+    COUNT(DISTINCT CASE WHEN client_journey_stage='Customer' THEN deal_id END)
+    / NULLIF(COUNT(DISTINCT CASE WHEN client_journey_stage='Opportunity' THEN deal_id END),0)*100,2
+  ) AS sql_to_won_pct
+FROM base
+GROUP BY 1,2,3,4
+ORDER BY metric_month DESC;` },
+  { title: 'Q11 · Deal Velocity', sql: `SELECT
+  DATE_TRUNC('month', create_date) AS metric_month,
+  pipeline_name,
+  CASE WHEN UPPER(segment)='MICRO' THEN 'SME' ELSE segment END AS segment,
+  department_source_clean, sales_rep, hubspot_team,
+  ROUND(AVG(deal_velocity_days),1) AS avg_deal_velocity_days,
+  COUNT(DISTINCT deal_id)          AS won_deals
+FROM shared.revops.silver_deals
+WHERE create_date IS NOT NULL AND client_journey_stage='Customer'
+  AND deal_velocity_days IS NOT NULL
+  AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%'
+GROUP BY 1,2,3,4,5,6
+ORDER BY metric_month DESC;` }
+,
+  { title: "Q12 · OTP Revenue (One-Time Payment)", sql: `-- OTP = otp_only (true one-time) + mrr_lt_12 (short-term contracts < 12 months)
+SELECT
+  DATE_TRUNC('month', close_date)                                          AS metric_month,
+  pipeline_name,
+  CASE WHEN UPPER(segment) = 'MICRO' THEN 'SME' ELSE segment END          AS segment,
+  department_source_clean,
+  SUM(COALESCE(otp_only,  0))                                              AS otp_revenue,
+  SUM(COALESCE(mrr_lt_12, 0))                                              AS short_term_mrr,
+  SUM(COALESCE(otp_only,  0)) + SUM(COALESCE(mrr_lt_12, 0))               AS total_otp
+FROM shared.revops.silver_deals
+WHERE client_journey_stage = 'Customer'
+  AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%'
+GROUP BY 1,2,3,4
+ORDER BY metric_month DESC;` },
+  { title: "Q13 · Pipeline MRR (Active Opportunity Stage)", sql: `SELECT
+  DATE_TRUNC('month', projected_close_date)                                AS metric_month,
+  pipeline_name,
+  CASE WHEN UPPER(segment) = 'MICRO' THEN 'SME' ELSE segment END          AS segment,
+  department_source_clean,
+  stage_label,
+  SUM(COALESCE(mrr, 0))                                                    AS pipeline_mrr,
+  COUNT(DISTINCT deal_id)                                                  AS deal_count
+FROM shared.revops.silver_deals
+WHERE client_journey_stage = 'Opportunity'
+  AND projected_close_date IS NOT NULL
+  AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%'
+GROUP BY 1,2,3,4,5
+ORDER BY metric_month DESC;` },
+  { title: "Q14 · Pipeline Coverage Ratio", sql: `-- Coverage Ratio = Pipeline MRR / MRR Target (industry standard: 3-5×)
+WITH pipeline AS (
+  SELECT
+    DATE_TRUNC('month', projected_close_date) AS metric_month,
+    pipeline_name,
+    CASE WHEN UPPER(segment) = 'MICRO' THEN 'SME' ELSE segment END AS segment,
+    department_source_clean,
+    SUM(COALESCE(mrr, 0)) AS pipeline_mrr
+  FROM shared.revops.silver_deals
+  WHERE client_journey_stage = 'Opportunity'
+    AND projected_close_date >= CURRENT_DATE
+    AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%'
+  GROUP BY 1,2,3,4
+),
+targets AS (
+  SELECT metric_month, pipeline_name, segment, department_source_clean,
+         mrr_target
+  FROM shared.revops.gold_targets
+)
+SELECT
+  p.metric_month,
+  p.pipeline_name,
+  p.segment,
+  p.department_source_clean,
+  p.pipeline_mrr,
+  t.mrr_target,
+  ROUND(p.pipeline_mrr / NULLIF(t.mrr_target, 0), 2) AS coverage_ratio
+FROM pipeline p
+LEFT JOIN targets t
+  ON p.metric_month = t.metric_month
+ AND p.pipeline_name = t.pipeline_name
+ AND p.segment = t.segment
+ AND p.department_source_clean = t.department_source_clean
+ORDER BY p.metric_month DESC;` },
+  { title: "Q15 · Qualified Leads (MQL) Count by Department Source", sql: `SELECT
+  DATE_TRUNC('month', create_date)                                         AS metric_month,
+  pipeline_name,
+  CASE WHEN UPPER(segment) = 'MICRO' THEN 'SME' ELSE segment END          AS segment,
+  department_source_clean,
+  COUNT(DISTINCT deal_id)                                                  AS qualified_leads
+FROM shared.revops.silver_deals
+WHERE qualified_lead = 'Yes'
+  AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%'
+GROUP BY 1,2,3,4
+ORDER BY metric_month DESC;` },
+  { title: "Q16 · SQL Count (Sales Qualified Leads)", sql: `SELECT
+  DATE_TRUNC('month', create_date)                                         AS metric_month,
+  pipeline_name,
+  CASE WHEN UPPER(segment) = 'MICRO' THEN 'SME' ELSE segment END          AS segment,
+  department_source_clean,
+  COUNT(DISTINCT deal_id)                                                  AS sql_count
+FROM shared.revops.silver_deals
+WHERE qualified_lead = 'Yes'
+  AND client_journey_stage <> 'MQL'
+  AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%'
+GROUP BY 1,2,3,4
+ORDER BY metric_month DESC;` },
+  { title: "Q17 · Lost Deals Count", sql: `SELECT
+  DATE_TRUNC('month', close_date)                                          AS metric_month,
+  pipeline_name,
+  CASE WHEN UPPER(segment) = 'MICRO' THEN 'SME' ELSE segment END          AS segment,
+  department_source_clean,
+  COUNT(DISTINCT deal_id)                                                  AS lost_deals,
+  reasons_for_lost_deal
+FROM shared.revops.silver_deals
+WHERE client_journey_stage = 'Closed Lost'
+  AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%'
+GROUP BY 1,2,3,4,6
+ORDER BY metric_month DESC;` },
+  { title: "Q18 · DQ Rate (Disqualification Rate)", sql: `WITH base AS (
+  SELECT
+    DATE_TRUNC('month', create_date) AS metric_month,
+    pipeline_name,
+    CASE WHEN UPPER(segment) = 'MICRO' THEN 'SME' ELSE segment END AS segment,
+    department_source_clean,
+    COUNT(DISTINCT deal_id)                                          AS total_ql,
+    COUNT(DISTINCT CASE WHEN stage_label = 'Disqualified' THEN deal_id END) AS dq_count
+  FROM shared.revops.silver_deals
+  WHERE qualified_lead = 'Yes'
+    AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%'
+  GROUP BY 1,2,3,4
+)
+SELECT *,
+  ROUND(dq_count * 100.0 / NULLIF(total_ql, 0), 1) AS dq_rate_pct
+FROM base
+ORDER BY metric_month DESC;` },
+  { title: "Q19 · Win Rate (Won vs All Closed)", sql: `WITH closed AS (
+  SELECT
+    DATE_TRUNC('month', close_date) AS metric_month,
+    pipeline_name,
+    CASE WHEN UPPER(segment) = 'MICRO' THEN 'SME' ELSE segment END AS segment,
+    department_source_clean,
+    COUNT(DISTINCT CASE WHEN client_journey_stage = 'Customer'    THEN deal_id END) AS won_deals,
+    COUNT(DISTINCT CASE WHEN client_journey_stage = 'Closed Lost' THEN deal_id END) AS lost_deals
+  FROM shared.revops.silver_deals
+  WHERE client_journey_stage IN ('Customer', 'Closed Lost')
+    AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%'
+  GROUP BY 1,2,3,4
+)
+SELECT *,
+  won_deals + lost_deals                                    AS total_closed,
+  ROUND(won_deals * 100.0 / NULLIF(won_deals + lost_deals, 0), 1) AS win_rate_pct
+FROM closed
+ORDER BY metric_month DESC;` },
+  { title: "Q20 · Won / SQL Rate", sql: `WITH monthly AS (
+  SELECT
+    DATE_TRUNC('month', create_date) AS metric_month,
+    pipeline_name,
+    CASE WHEN UPPER(segment) = 'MICRO' THEN 'SME' ELSE segment END AS segment,
+    department_source_clean,
+    COUNT(DISTINCT CASE WHEN qualified_lead = 'Yes' AND client_journey_stage <> 'MQL'
+                        THEN deal_id END)           AS sql_count,
+    COUNT(DISTINCT CASE WHEN qualified_lead = 'Yes' AND client_journey_stage = 'Customer'
+                        THEN deal_id END)           AS won_count
+  FROM shared.revops.silver_deals
+  WHERE LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%'
+  GROUP BY 1,2,3,4
+)
+SELECT *,
+  ROUND(won_count * 100.0 / NULLIF(sql_count, 0), 1) AS won_sql_rate_pct
+FROM monthly
+ORDER BY metric_month DESC;` },
+  { title: "Q21 · Upsell MRR & Won Deals", sql: `SELECT
+  DATE_TRUNC('month', close_date)                                          AS metric_month,
+  CASE WHEN UPPER(segment) = 'MICRO' THEN 'SME' ELSE segment END          AS segment,
+  department_source_clean,
+  COUNT(DISTINCT deal_id)                                                  AS upsell_won_deals,
+  SUM(COALESCE(mrr, 0))                                                    AS upsell_mrr,
+  SUM(COALESCE(ef_mrr, 0))                                                 AS upsell_ef_mrr
+FROM shared.revops.silver_deals
+WHERE pipeline_name = 'PH Upsell Pipeline'
+  AND client_journey_stage = 'Customer'
+  AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%'
+GROUP BY 1,2,3
+ORDER BY metric_month DESC;` },
+  { title: "Q22 · Gold Summary — All KPIs Pre-Aggregated (Use This First)", sql: `-- Fastest query — all KPIs pre-computed, renewal-excluded, funnel-aligned
+SELECT
+  metric_month,
+  pipeline_name,
+  segment,
+  department_source_clean,
+  qualified_leads,
+  sales_qualified_leads,
+  won_deals,
+  lost_deals,
+  dq_leads,
+  won_mrr,
+  won_ef_mrr,
+  won_amount,
+  avg_deal_size,
+  avg_deal_velocity,
+  mrr_in_pipeline
+FROM shared.revops.gold_monthly_exec_summary
+ORDER BY metric_month DESC, pipeline_name, segment;` }];
+
+(function renderSqlBlocks() {
+  const c = document.getElementById('sql-blocks-container');
+  if (!c) return;
+  c.innerHTML = SQL_BLOCKS.map(b => `
+    <div class="sql-block-wrap">
+      <div class="sql-block-header">
+        <span class="sql-block-title">${b.title}</span>
+        <button class="sql-copy-btn" onclick="cpSqlBlock(this)">Copy</button>
+      </div>
+      <div class="sql-code">${b.sql.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+    </div>`).join('');
+})();
+
+function cpSqlBlock(btn) {
+  const wrap = btn.closest('.sql-block-wrap') || btn.closest('.sql-block-wrap');
+  const code = btn.parentElement.nextElementSibling;
+  const txt  = code ? code.innerText.trim() : '';
+  navigator.clipboard.writeText(txt).then(() => {
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy', 1600);
+  });
+}
+
+function cpPrompt(id) {
+  const el = document.getElementById(id);
+  const text = el.innerText.trim();
+  navigator.clipboard.writeText(text).then(() => {
+    const header = el.parentElement.querySelector('.prompt-header');
+    const btn = header ? header.querySelector('.prompt-copy-btn') : null;
+    if (btn) { btn.textContent = '✓ Copied!'; setTimeout(() => btn.textContent = 'Copy Prompt', 2000); }
+  });
+}
+
+function cpGithub(btn) {
+  const box = btn.parentElement;
+  const txt = box.innerText.replace('Copy','').trim();
+  navigator.clipboard.writeText(txt).then(() => {
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy', 1600);
+  });
+}
+
+// ── FILTER CARDS DATA ──
+const FILTERS = [
+  { name:'Date Range',          desc:'Start/end date picker. Applies to the relevant date basis for each section.', field:'create_date / close_date / projected_close_date' },
+  { name:'Pipeline Name',       desc:'Filter by sales pipeline (Sales Pipeline, Upsell Pipeline, Channel Pipeline, TH Pipeline).', field:'pipeline_name' },
+  { name:'Segment',             desc:'SME / ENT (MICRO mapped to SME). Use the CASE remapping in queries.', field:'segment' },
+  { name:'Department Source',   desc:'MKT Inbound · LDU Outbound · Sales Outbound · Channels · Upsell Outbound.', field:'department_source_clean' },
+  { name:'Channel Source',      desc:'Original traffic source. If Offline Sources, shows original_source_of_awareness.', field:'original_traffic_source' },
+  { name:'Sales Rep',           desc:'Deal owner. Filter by individual rep for performance views.', field:'sales_rep' },
+  { name:'HubSpot Team',        desc:'Team the sales rep belongs to in HubSpot.', field:'hubspot_team' },
+  { name:'Deal Type',           desc:'New Business / Upsell Deals.', field:'deal_type' },
+  { name:'Stage Label',         desc:'Current deal stage. Use for pipeline stage breakdowns.', field:'stage_label' },
+  { name:'Client Journey Stage',desc:'MQL / Opportunity / Customer / Closed Lost. Primary lifecycle filter.', field:'client_journey_stage' },
+];
+
+(function renderFilterCards() {
+  const c = document.getElementById('filter-cards-container');
+  if (!c) return;
+  c.innerHTML = FILTERS.map(f => `
+    <div class="filter-card">
+      <div class="filter-card-name">${f.name}</div>
+      <div class="filter-card-desc">${f.desc}</div>
+      <span class="filter-card-field">${f.field}</span>
+    </div>`).join('');
+})();
+</script>
+<!-- CONNECTION MODAL -->
+<div class="conn-modal-overlay" id="conn-modal-overlay" onclick="if(event.target===this)closeConnModal()">
+  <div class="conn-modal">
+    <h2>&#9889; Databricks Connection</h2>
+    <p class="cm-sub">Credentials saved to your browser only — never sent anywhere except Databricks.</p>
+    <div class="conn-field"><label>Server Hostname</label><input id="cm-host" type="text" placeholder="adb-xxxxxxxxxxxx.azuredatabricks.net"></div>
+    <div class="conn-field"><label>HTTP Path</label><input id="cm-path" type="text" placeholder="/sql/1.0/warehouses/xxxxxxxxxxxxxxxxx"></div>
+    <div class="conn-field"><label>Personal Access Token</label><input id="cm-token" type="password" placeholder="dapi…"></div>
+    <div id="conn-status-msg" class="conn-status-msg"></div>
+    <div class="conn-btns">
+      <button class="btn-test" onclick="testConnection()">Test</button>
+      <button class="btn-connect" onclick="saveConnection()">Save &amp; Connect</button>
+      <button class="btn-cancel" onclick="closeConnModal()">Cancel</button>
+    </div>
+    <div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.08);display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:11px;color:#636E72">Connected to: <span id="cm-connected-as" style="color:#B2BEC3">—</span></span>
+      <button onclick="disconnectDatabricks()" style="background:none;border:none;color:#FF7675;font-size:11px;cursor:pointer">Disconnect</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>
