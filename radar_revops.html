@@ -633,125 +633,90 @@ CONNECTION DETAILS (fill in locally — do not share):
 
     <!-- ── GITHUB GUIDE ── -->
     <div class="plan-section" id="plan-github">
-      <div class="plan-h2">🐙 GitHub Pages Publishing Guide</div>
-      <p style="font-size:12px;color:#636E72;margin-bottom:20px">Publish RADAR as a public (or private) web app using GitHub Pages — no server, no cost, accessible from any browser.</p>
+      <div class="plan-h2">🐙 Publish Your Dashboard to GitHub Pages</div>
+      <p style="font-size:12px;color:#636E72;margin-bottom:20px">Once Claude generates your HTML dashboard, follow these steps to publish it as a shareable web app — no server, no cost, accessible from any browser.</p>
 
-      <div class="plan-h3">Step-by-Step</div>
+      <div class="info-box"><strong>How it works:</strong> Claude generates a single <code>.html</code> file. You upload it to GitHub and enable GitHub Pages — it becomes a live URL you can share with your team. Anyone with the link can open it, enter their Databricks credentials, and see live data.</div>
+
+      <div class="plan-h3">Step 1 — Generate your dashboard</div>
 
       <div class="github-step">
         <div class="github-num">1</div>
         <div class="github-body">
-          <div class="github-title">Create a GitHub account (if needed)</div>
-          <div class="github-desc">Go to <strong>github.com</strong> and sign up. Use your @sprout.ph email for the team account.</div>
+          <div class="github-title">Copy the Claude Prompt</div>
+          <div class="github-desc">Go to the <strong>Claude Prompt</strong> tab → click <strong>Copy Prompt</strong>. Open a new Claude conversation and paste it.</div>
         </div>
       </div>
 
       <div class="github-step">
         <div class="github-num">2</div>
         <div class="github-body">
-          <div class="github-title">Create a new repository</div>
-          <div class="github-desc">Click <strong>+ → New repository</strong>. Name it <code>radar-revops</code>. Set visibility to <strong>Private</strong> (recommended — PAT tokens should not be in public repos). Initialize with a README.</div>
+          <div class="github-title">Ask Claude to build your dashboard</div>
+          <div class="github-desc">Tell Claude what you need, e.g.: <em>"Build a monthly MRR and funnel dashboard by segment and pipeline."</em> Claude will return a complete HTML file.</div>
         </div>
       </div>
 
       <div class="github-step">
         <div class="github-num">3</div>
         <div class="github-body">
-          <div class="github-title">Add your HTML file as index.html</div>
-          <div class="github-desc">Rename <code>radar_revops.html</code> to <code>index.html</code>. In the repo, click <strong>Add file → Upload files</strong> and upload it. Also upload <code>revops_dashboard_queries.sql</code> for reference.</div>
+          <div class="github-title">Save the HTML file</div>
+          <div class="github-desc">Copy Claude's output → paste into a text editor (VS Code or Notepad) → save as <code>index.html</code>.</div>
         </div>
       </div>
+
+      <div class="plan-h3">Step 2 — Publish to GitHub Pages</div>
 
       <div class="github-step">
         <div class="github-num">4</div>
         <div class="github-body">
-          <div class="github-title">Enable GitHub Pages</div>
-          <div class="github-desc">Go to <strong>Settings → Pages</strong>. Under Source, select <strong>Deploy from a branch</strong>. Choose branch <strong>main</strong>, folder <strong>/ (root)</strong>. Click Save.</div>
+          <div class="github-title">Create a GitHub repository</div>
+          <div class="github-desc">Go to <strong>github.com → + → New repository</strong>. Give it a name (e.g. <code>revops-dashboard</code>). Set visibility to <strong>Private</strong> if your team has a paid GitHub plan, otherwise <strong>Public</strong>. Initialize with a README.</div>
         </div>
       </div>
 
       <div class="github-step">
         <div class="github-num">5</div>
         <div class="github-body">
-          <div class="github-title">Get your Pages URL</div>
-          <div class="github-desc">After ~1 minute, your app is live at:<br>
-          <div class="github-code" style="margin-top:6px"><button class="github-copy" onclick="cpGithub(this)">Copy</button>https://[your-username].github.io/radar-revops/</div></div>
+          <div class="github-title">Upload your index.html</div>
+          <div class="github-desc">In the repo, click <strong>Add file → Upload files</strong>. Upload <code>index.html</code>. Commit the changes.</div>
         </div>
       </div>
 
       <div class="github-step">
         <div class="github-num">6</div>
         <div class="github-body">
-          <div class="github-title">Update the app (after changes)</div>
-          <div class="github-desc">Re-upload the updated <code>index.html</code>. GitHub Pages auto-republishes within ~1 minute.</div>
+          <div class="github-title">Enable GitHub Pages</div>
+          <div class="github-desc">Go to <strong>Settings → Pages</strong>. Under Source, select <strong>Deploy from a branch → main → / (root)</strong>. Click Save.</div>
+        </div>
+      </div>
+
+      <div class="github-step">
+        <div class="github-num">7</div>
+        <div class="github-body">
+          <div class="github-title">Share your live URL</div>
+          <div class="github-desc">After ~1 minute your dashboard is live at:
+          <div class="github-code" style="margin-top:6px"><button class="github-copy" onclick="cpGithub(this)">Copy</button>https://[your-username].github.io/[repo-name]/</div>
+          Share this link with your team. Each person enters their own Databricks credentials on first visit — saved to their browser only.</div>
+        </div>
+      </div>
+
+      <div class="plan-h3">Step 3 — Update your dashboard</div>
+
+      <div class="github-step">
+        <div class="github-num">8</div>
+        <div class="github-body">
+          <div class="github-title">Push updates anytime</div>
+          <div class="github-desc">When you generate an improved version from Claude, replace <code>index.html</code> in the repo. GitHub Pages republishes automatically within ~1 minute.</div>
           <div class="github-code"><button class="github-copy" onclick="cpGithub(this)">Copy</button>git add index.html
-git commit -m "Update RADAR dashboard"
+git commit -m "Update dashboard"
 git push origin main</div>
         </div>
       </div>
 
-      <div class="warn-box"><strong>Private repos and GitHub Pages:</strong> GitHub Pages on private repos requires a paid GitHub plan (Team or Enterprise). For a free option, use a <em>public</em> repo — but remove any hard-coded PAT tokens first. Use the login gate to restrict access.</div>
+      <div class="warn-box"><strong>⚠️ Security note:</strong> Never hard-code your Databricks PAT token inside the HTML file. The generated dashboard stores credentials in <code>localStorage</code> on the user's own browser — this means the PAT is never exposed in the source code. For team-wide access, each user connects with their own PAT.</div>
 
-      <div class="plan-h3">README.md Content</div>
-      <div class="sql-block-wrap">
-        <div class="sql-block-header">
-          <span class="sql-block-title">README.md — copy this into your repo</span>
-          <button class="sql-copy-btn" onclick="cpSqlBlock(this)">Copy</button>
-        </div>
-        <div class="sql-code"># RADAR — RevOps Analytics, Data &amp; Reporting
+      <div class="info-box"><strong>💡 Tip — Auto-refresh:</strong> The generated dashboard includes a <strong>🔄 Refresh Data</strong> button and an optional <strong>auto-refresh every 30 minutes</strong> toggle. Users can enable it to keep their dashboard live without manually reloading.</div>
 
-RADAR is Sprout Solutions' internal RevOps data portal.
-It provides access to the shared.revops Databricks data
-layer: table schemas, metric definitions (DataPedia),
-and a full dashboard plan for the RevOps Analytics Dashboard.
-
-## Data Sources
-
-| Table | Layer | Purpose |
-|---|---|---|
-| gold_monthly_exec_summary | Gold | Pre-aggregated monthly KPIs |
-| gold_targets | Gold | Monthly quota targets |
-| silver_deals | Silver | Deal-level HubSpot data |
-| silver_line_items | Silver | Product line items per deal |
-| silver_company | Silver | Company/account attributes |
-| gold_metrics_datapedia | Gold | Metric definitions glossary |
-| datapedia_approved | Gold | Approved metric definitions |
-
-## Access Requirements
-
-- Read access to catalog: shared
-- Read access to schema: revops
-- Access to a Databricks SQL Warehouse
-- Server Hostname and HTTP Path (from SQL Warehouses > Connection Details)
-
-## Run Locally
-
-1. Download index.html
-2. Open in Chrome or Edge
-3. Login with your @sprout.ph email
-4. No server required — runs entirely in the browser
-
-## Publish to GitHub Pages
-
-1. Create repo: radar-revops
-2. Upload index.html
-3. Settings > Pages > Branch: main / Folder: / (root)
-4. Access at: https://[username].github.io/radar-revops/
-
-## Security
-
-RADAR uses a lightweight email-only login gate (localStorage).
-Only @sprout.ph email addresses can access the app.
-This is NOT secure authentication — it is a front-end gate only.
-
-For production: implement Google OAuth restricted to @sprout.ph domain,
-or use Sprout SSO.
-
-## Maintainer
-
-RevOps Analytics Team · Sprout Solutions
-</div>
-      </div>
     </div><!-- /plan-github -->
 
   </div><!-- /plan-body -->
