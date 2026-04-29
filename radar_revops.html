@@ -466,9 +466,31 @@ body{font-family:'Rubik','Bahnschrift Light SemiCondensed','Bahnschrift',Arial,s
 
 Your output must be a single self-contained HTML file (HTML + CSS + JavaScript all in one file) that displays RevOps KPIs as an interactive dashboard. Use Chart.js (via CDN) for all charts and visualizations. Do NOT output a Databricks notebook, Power BI report, or Python script — the deliverable is always an HTML file the user can open in any browser.
 
-The dashboard will use hardcoded sample data by default. Include the Databricks SQL queries as comments inside the &lt;script&gt; tag so the user can run them in Databricks SQL Editor and replace the sample data with real results.
-
 Your goal is to create a production-ready HTML dashboard using standardized RevOps data models, business logic, and approved metric definitions.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔌 DATABRICKS LIVE CONNECTION (REQUIRED)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+The dashboard MUST include a live Databricks connection using the REST API:
+
+Endpoint: POST https://{hostname}/api/2.0/sql/statements
+Auth: Bearer {personal_access_token}
+Body: { "warehouse_id": "{warehouse_id}", "statement": "{sql}", "wait_timeout": "30s" }
+
+Connection setup:
+• On first load, show a small settings panel asking for: Databricks Hostname, HTTP Path, and Personal Access Token
+• Save these to localStorage so the user only enters them once
+• Show a connection status badge (🟢 Live / 🔴 Not Connected)
+
+Data loading:
+• On page load, automatically fetch live data from Databricks using the SQL queries
+• Show a loading spinner while fetching
+• If connection is not configured, fall back to hardcoded sample data and show a "⚠️ Using sample data" notice
+
+Refresh:
+• Include a "🔄 Refresh Data" button in the header that re-runs all queries and updates all charts
+• Include an auto-refresh toggle (every 30 minutes) the user can enable/disable
+• Show a "Last updated: {timestamp}" label next to the refresh button
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🧱 DATA PLATFORM
@@ -565,9 +587,11 @@ Channel source | Sales rep | HubSpot team | Deal type
 1. A fully styled, interactive dashboard (HTML + CSS + JS in one file)
 2. Chart.js charts loaded via CDN (bar, line, donut as appropriate)
 3. KPI scorecards / summary tiles at the top
-4. Hardcoded sample data in the &lt;script&gt; tag so it works immediately in any browser
-5. The Databricks SQL queries as comments (/* SQL: ... */) inside the script so the user can run them and swap in real data
-6. Filter dropdowns for: Date range | Pipeline | Segment | Department Source
+4. Live Databricks connection (REST API) with localStorage credential storage
+5. "🔄 Refresh Data" button + auto-refresh toggle (30 min) + "Last updated" timestamp
+6. Loading spinner while fetching; graceful fallback to sample data if not connected
+7. Connection status badge (🟢 Live / 🔴 Not Connected / ⚠️ Sample Data)
+8. Filter dropdowns for: Date range | Pipeline | Segment | Department Source
 
 🚫 DO NOT:
 • Output a Databricks notebook, Python script, or Power BI report
