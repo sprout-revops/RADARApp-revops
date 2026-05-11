@@ -243,6 +243,47 @@ body{font-family:'Rubik','Bahnschrift Light SemiCondensed','Bahnschrift',Arial,s
 .warn-box strong{color:#E67E22}
 .info-box{background:#ECFDF5;border-left:3px solid #10B981;border-radius:0 8px 8px 0;padding:10px 14px;font-size:12px;color:#065F46;line-height:1.6;margin:14px 0}
 .info-box strong{color:#10B981}
+/* ── DASHBOARDS ── */
+.dg-hero{background:linear-gradient(135deg,#0B1E10 0%,#122A18 100%);padding:24px 28px;color:#fff;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.dg-hero h1{font-size:20px;font-weight:700;margin-bottom:4px}
+.dg-hero p{color:#B2BEC3;font-size:13px;margin-top:4px}
+.submit-dash-btn{background:#1DB954;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;transition:background .2s;white-space:nowrap;font-family:'Rubik','Bahnschrift Light SemiCondensed',Arial,sans-serif}
+.submit-dash-btn:hover{background:#18A348}
+.dg-controls{background:#fff;padding:12px 24px;border-bottom:1px solid #DFE6E9;display:flex;gap:10px;flex-wrap:wrap;align-items:center;position:sticky;top:0;z-index:10;box-shadow:0 2px 6px rgba(0,0,0,.06)}
+.dg-grid{padding:20px 24px;display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+.dg-card{background:#fff;border-radius:12px;border:1.5px solid #DFE6E9;overflow:hidden;transition:all .2s;display:flex;flex-direction:column}
+.dg-card:hover{box-shadow:0 4px 18px rgba(29,185,84,.12);border-color:#1DB954;transform:translateY(-2px)}
+.dg-card-top{padding:16px 18px 12px;flex:1}
+.dg-card-tags{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px}
+.dg-tag{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;text-transform:uppercase;letter-spacing:.5px}
+.dg-tag-Finance{background:#F4ECF7;color:#8E44AD}
+.dg-tag-Funnel{background:#FEF9E7;color:#B7770D}
+.dg-tag-Revenue{background:#ECFDF5;color:#065F46}
+.dg-tag-Sales{background:#EAF2FB;color:#1A5276}
+.dg-tag-Marketing{background:#EBF5FB;color:#1A5276}
+.dg-tag-Product{background:#FDEBD0;color:#935116}
+.dg-tag-Executive{background:#E8DAEF;color:#6C3483}
+.dg-tag-Pipeline{background:#E8F4F8;color:#1A6E8A}
+.dg-card-title{font-size:15px;font-weight:700;color:#1E1E2E;margin-bottom:5px;line-height:1.3}
+.dg-card-desc{font-size:12px;color:#636E72;line-height:1.5;margin-bottom:10px}
+.dg-card-meta{display:flex;align-items:center;gap:10px;font-size:11px;color:#B2BEC3;flex-wrap:wrap}
+.dg-card-footer{padding:12px 18px;border-top:1px solid #F0F2F5;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.dg-open-btn{background:#1DB954;color:#fff;border:none;border-radius:6px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:5px;transition:background .2s;font-family:'Rubik','Bahnschrift Light SemiCondensed',Arial,sans-serif}
+.dg-open-btn:hover{background:#18A348}
+.dg-empty{grid-column:1/-1;text-align:center;padding:60px 24px;color:#B2BEC3}
+.dg-empty h3{font-size:16px;color:#636E72;margin-bottom:6px}
+.submit-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9000;display:none;align-items:center;justify-content:center}
+.submit-modal-overlay.open{display:flex}
+.submit-modal{background:#fff;border-radius:14px;padding:28px 32px;width:520px;max-width:95vw;box-shadow:0 24px 60px rgba(0,0,0,.2)}
+.submit-modal h2{font-size:17px;font-weight:700;color:#1E1E2E;margin-bottom:4px}
+.submit-modal .sm-sub{color:#636E72;font-size:12px;margin-bottom:20px}
+.sm-step{display:flex;gap:10px;margin-bottom:12px;align-items:flex-start}
+.sm-num{background:#1DB954;color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:2px}
+.sm-body{font-size:12px;color:#2D3436;line-height:1.6}
+.sm-body strong{color:#1E1E2E}
+.sm-footer{display:flex;gap:10px;margin-top:20px;justify-content:flex-end}
+.sm-close-btn{background:#F0F2F5;color:#636E72;border:none;border-radius:8px;padding:8px 20px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Rubik','Bahnschrift Light SemiCondensed',Arial,sans-serif}
+.sm-close-btn:hover{background:#DFE6E9}
 /* ── CONNECTION MODAL ── */
 .conn-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9000;display:none;align-items:center;justify-content:center}
 .conn-modal-overlay.open{display:flex}
@@ -321,6 +362,7 @@ body{font-family:'Rubik','Bahnschrift Light SemiCondensed','Bahnschrift',Arial,s
     <div class="sidebar-tab active" id="tab-db" onclick="switchTab('db')">🗄️ Database</div>
     <div class="sidebar-tab" id="tab-dp" onclick="switchTab('dp')">📖 DataPedia</div>
     <div class="sidebar-tab" id="tab-dash" onclick="switchTab('dash')">📊 Dashboard Plan</div>
+    <div class="sidebar-tab" id="tab-dashboards" onclick="switchTab('dashboards')">📱 Dashboards</div>
   </div>
   <div class="content-area">
 
@@ -722,8 +764,42 @@ git push origin main</div>
   </div><!-- /plan-body -->
 </div><!-- /section-dash -->
 
+<!-- PART 4 — DASHBOARDS -->
+<div class="section" id="section-dashboards">
+  <div class="dg-hero">
+    <div>
+      <h1>📱 Team Dashboards</h1>
+      <p>Dashboards built by the team using <strong>shared.revops</strong> data — browse, explore, and share yours.</p>
+    </div>
+    <button class="submit-dash-btn" onclick="openSubmitModal()">➕ Submit Your Dashboard</button>
+  </div>
+  <div class="dg-controls">
+    <div class="search-box">
+      <span class="sicon">🔍</span>
+      <input type="text" id="dg-search" placeholder="Search dashboards, creators, tags..." oninput="filterDashboards()">
+    </div>
+    <div class="filter-group" id="dg-cat-filters"></div>
+    <span id="dg-count" style="font-size:12px;color:#636E72;white-space:nowrap"></span>
+  </div>
+  <div class="dg-grid" id="dg-grid"></div>
+</div>
+
   </div><!-- /content-area -->
 </div><!-- /app-layout -->
+
+<!-- Submit Dashboard Modal -->
+<div class="submit-modal-overlay" id="submit-modal-overlay" onclick="if(event.target===this)closeSubmitModal()">
+  <div class="submit-modal">
+    <h2>➕ Submit Your Dashboard</h2>
+    <p class="sm-sub">Share your dashboard with the team — it will be added to the gallery after review by the RevOps team.</p>
+    <div class="sm-step"><div class="sm-num">1</div><div class="sm-body"><strong>Generate your dashboard</strong> — go to the <strong>Dashboard Plan → Claude Prompt</strong> tab, copy the prompt, and ask Claude to build your dashboard.</div></div>
+    <div class="sm-step"><div class="sm-num">2</div><div class="sm-body"><strong>Publish to GitHub Pages</strong> — follow the steps in the <strong>Dashboard Plan → GitHub Guide</strong> tab to get a live URL.</div></div>
+    <div class="sm-step"><div class="sm-num">3</div><div class="sm-body"><strong>Send the following details to the RevOps team:</strong><br>• Dashboard name &amp; short description<br>• Your GitHub Pages URL<br>• Your name / team<br>• Metric categories covered (e.g. Finance, Funnel, Revenue)</div></div>
+    <div class="sm-step"><div class="sm-num">4</div><div class="sm-body"><strong>RevOps will add it to this gallery</strong> — usually within 1–2 business days.</div></div>
+    <div class="info-box" style="margin-top:14px">📩 Send submissions to: <strong>revops@sprout.ph</strong></div>
+    <div class="sm-footer"><button class="sm-close-btn" onclick="closeSubmitModal()">Close</button></div>
+  </div>
+</div>
 
 </div><!-- /app-root -->
 
@@ -1801,6 +1877,93 @@ const FILTERS = [
       <span class="filter-card-field">${f.field}</span>
     </div>`).join('');
 })();
+
+// ── DASHBOARDS ──
+const DASHBOARDS = [
+  {
+    title: "RevOps Executive Summary",
+    desc: "Monthly MRR, QL, SQL, and Won Deals by segment and pipeline. Executive-level KPI scorecard connected to gold_monthly_exec_summary.",
+    creator: "RevOps Analytics Team",
+    date: "May 2026",
+    tags: ["Executive","Revenue","Funnel"],
+    url: "https://lelei0624.github.io/RADARApp-revops/",
+    status: "live"
+  },
+  {
+    title: "Marketing Funnel Tracker",
+    desc: "MQL, OQL, SQL, DQ Rate, and Lead-to-Won conversion by department source and month. Tracks full funnel from lead to closed deal.",
+    creator: "Marketing Team",
+    date: "—",
+    tags: ["Funnel","Marketing"],
+    url: "",
+    status: "sample"
+  },
+  {
+    title: "Pipeline & Coverage Dashboard",
+    desc: "Active pipeline MRR, weighted pipeline, coverage ratio vs target. Broken down by pipeline name and segment.",
+    creator: "Sales Team",
+    date: "—",
+    tags: ["Pipeline","Sales"],
+    url: "",
+    status: "sample"
+  }
+];
+
+function renderDashboards() {
+  const grid = document.getElementById('dg-grid');
+  if (!grid) return;
+  const search = (document.getElementById('dg-search')?.value || '').toLowerCase();
+  const activeCat = document.querySelector('.dg-fb.active')?.dataset.cat || '';
+  const filtered = DASHBOARDS.filter(d => {
+    const matchSearch = !search || d.title.toLowerCase().includes(search) || d.desc.toLowerCase().includes(search) || d.creator.toLowerCase().includes(search) || d.tags.some(t => t.toLowerCase().includes(search));
+    const matchCat = !activeCat || d.tags.includes(activeCat);
+    return matchSearch && matchCat;
+  });
+  document.getElementById('dg-count').textContent = filtered.length + ' dashboard' + (filtered.length !== 1 ? 's' : '');
+  if (!filtered.length) {
+    grid.innerHTML = '<div class="dg-empty"><h3>No dashboards found</h3><p>Try a different search or submit the first one!</p></div>';
+    return;
+  }
+  grid.innerHTML = filtered.map(d => `
+    <div class="dg-card">
+      <div class="dg-card-top">
+        <div class="dg-card-tags">${d.tags.map(t => `<span class="dg-tag dg-tag-${t}">${t}</span>`).join('')}</div>
+        <div class="dg-card-title">${d.title}</div>
+        <div class="dg-card-desc">${d.desc}</div>
+        <div class="dg-card-meta">
+          <span>👤 ${d.creator}</span>
+          <span>📅 ${d.date}</span>
+          ${d.status === 'live' ? '<span style="color:#1DB954;font-weight:600">🟢 Live</span>' : '<span style="color:#F39C12;font-weight:600">⚠️ Coming Soon</span>'}
+        </div>
+      </div>
+      <div class="dg-card-footer">
+        ${d.url ? `<a class="dg-open-btn" href="${d.url}" target="_blank">🔗 Open Dashboard</a>` : `<span style="font-size:11px;color:#B2BEC3;font-style:italic">Not yet published</span>`}
+      </div>
+    </div>`).join('');
+}
+
+function filterDashboards() { renderDashboards(); }
+
+function buildDgFilters() {
+  const cats = [...new Set(DASHBOARDS.flatMap(d => d.tags))].sort();
+  const wrap = document.getElementById('dg-cat-filters');
+  if (!wrap) return;
+  wrap.innerHTML = `<button class="fb dg-fb active" data-cat="" onclick="setDgCat(this)">All</button>` +
+    cats.map(c => `<button class="fb dg-fb" data-cat="${c}" onclick="setDgCat(this)">${c}</button>`).join('');
+}
+
+function setDgCat(el) {
+  document.querySelectorAll('.dg-fb').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  renderDashboards();
+}
+
+function openSubmitModal() { document.getElementById('submit-modal-overlay').classList.add('open'); }
+function closeSubmitModal() { document.getElementById('submit-modal-overlay').classList.remove('open'); }
+
+// Init dashboards on load
+buildDgFilters();
+renderDashboards();
 </script>
 <!-- CONNECTION MODAL -->
 <div class="conn-modal-overlay" id="conn-modal-overlay" onclick="if(event.target===this)closeConnModal()">
