@@ -459,8 +459,6 @@ body{font-family:'Rubik','Bahnschrift Light SemiCondensed','Bahnschrift',Arial,s
   <div class="plan-subtabs">
     <div class="plan-subtab" id="ptab-sql" class="plan-subtab active" onclick="setPlanTab('sql')">💾 SQL Templates</div>
     <div class="plan-subtab" id="ptab-filters" onclick="setPlanTab('filters')">🔧 Filters</div>
-    <div class="plan-subtab" id="ptab-prompt"  onclick="setPlanTab('prompt')">🤖 Claude Prompt</div>
-    <div class="plan-subtab" id="ptab-github"  onclick="setPlanTab('github')">🐙 GitHub Guide</div>
     <div class="plan-subtab" id="ptab-build"   onclick="setPlanTab('build')">🏗️ How to Build</div>
   </div>
 
@@ -495,8 +493,20 @@ body{font-family:'Rubik','Bahnschrift Light SemiCondensed','Bahnschrift',Arial,s
       <div class="warn-box"><strong>Important:</strong> Do not mix date bases in a single visual. Each metric section has its own date basis. Mixing them produces incorrect cohort counts.</div>
     </div><!-- /plan-filters -->
 
-    <!-- ── CLAUDE PROMPT ── -->
+    <!-- ── CLAUDE PROMPT (merged into How to Build) ── -->
     <div class="plan-section" id="plan-prompt">
+      <div class="plan-h2">🤖 Claude Prompt — RevOps Dashboard Builder</div>
+      <p style="font-size:12px;color:#636E72;margin-bottom:16px">This tab has moved — see <strong>🏗️ How to Build → Step 4</strong> for the updated Claude prompt and publishing guide.</p>
+    </div><!-- /plan-prompt -->
+
+    <!-- ── GITHUB GUIDE (merged into How to Build) ── -->
+    <div class="plan-section" id="plan-github">
+      <div class="plan-h2">🐙 GitHub Guide</div>
+      <p style="font-size:12px;color:#636E72;margin-bottom:16px">This tab has moved — see <strong>🏗️ How to Build</strong> for the full step-by-step guide including GitHub setup, publishing, and auto-refresh.</p>
+    </div><!-- /plan-github -->
+
+    <!-- ── HOW TO BUILD (unused legacy block start) ── -->
+    <div class="plan-section" id="plan-prompt-UNUSED" style="display:none!important">
       <div class="plan-h2">🤖 Claude Prompt — RevOps Dashboard Builder</div>
       <p style="font-size:12px;color:#636E72;margin-bottom:16px">Copy this prompt into Claude to generate a live HTML dashboard connected to your Databricks tables.</p>
 
@@ -920,12 +930,175 @@ python fetch_data.py</div>
         </div>
       </div>
 
-      <div class="plan-h3">Step 4 — Build dashboard.html</div>
+      <div class="plan-h3">Step 4 — Generate dashboard.html with Claude</div>
       <div class="github-step">
         <div class="github-num">8</div>
         <div class="github-body">
-          <div class="github-title">Create <code>dashboard.html</code> — the entire dashboard in one file</div>
-          <div class="github-desc">The dashboard reads <code>data/dashboard.json</code> on load and computes everything in JavaScript — no backend needed. You can use Claude (🤖 Claude Prompt tab) to generate a first version, then customise these sections for your team:</div>
+          <div class="github-title">Paste this prompt into Claude — it will generate your complete dashboard file</div>
+          <div class="github-desc" style="margin-bottom:10px">Open a new Claude conversation, paste the prompt below (filling in your own pipeline name, columns, and KPIs), and Claude will return a single <code>dashboard.html</code> file. Save Claude's output as <code>dashboard.html</code> in your project root.</div>
+          <div class="prompt-wrap" id="build-prompt-wrap">
+            <div class="prompt-header">
+              <span class="prompt-label">📋 RevOps Dashboard Prompt — paste into Claude</span>
+              <button class="prompt-copy-btn" onclick="cpPrompt('build-prompt-text')">Copy Prompt</button>
+            </div>
+            <div class="prompt-text" id="build-prompt-text">You are a RevOps Data Analytics Engineer building a STANDALONE HTML DASHBOARD FILE for Sprout Solutions.
+
+Your output must be a single self-contained HTML file (HTML + CSS + JavaScript all in one file) that displays RevOps KPIs as an interactive dashboard. Use Chart.js (via CDN) for all charts and visualizations. Do NOT output a Databricks notebook, Power BI report, or Python script — the deliverable is always an HTML file the user can open in any browser.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📁 DATA SOURCE — Static JSON File (NOT live Databricks)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+The dashboard reads a pre-fetched JSON file — it does NOT call Databricks directly from the browser (CORS prevents this). A Python script (fetch_data.py) runs on a schedule, queries Databricks, and saves raw records to data/dashboard.json in the same repo.
+
+Load data on page start:
+  fetch('data/dashboard.json')
+    .then(r => r.json())
+    .then(json => {
+      S.allRecords = json.records;
+      applyComputed(computeFromRecords(S.allRecords, S.filters));
+      setStatus('live', '🟢 Live');
+    })
+    .catch(() => applySample()); // fallback if file not yet available
+
+JSON structure (produced by fetch_data.py):
+{
+  "refreshed_at": "2026-05-11T08:30:00Z",
+  "team": "Your Team Name",
+  "records": [
+    { "col_1": "...", "date_col_1": "2026-01-15", "metric_col_1": 5000, ... },
+    ...
+  ]
+}
+
+DO NOT include a Databricks credentials panel, settings modal, or localStorage credential storage — the HTML file never talks to Databricks directly.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚙️ CLIENT-SIDE KPI COMPUTATION (REQUIRED)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+All KPIs, charts, and tables MUST be computed in JavaScript from the raw records array. This enables full date + segment filtering without re-querying Databricks.
+
+Required function:
+  function computeFromRecords(records, filters) {
+    const { startDate, endDate, segment } = filters;
+    // 1. Filter records by date range + segment
+    // 2. Compute current-period KPIs
+    // 3. Compute last-year comparison (shift startDate/endDate back 1 year)
+    // 4. Build chart data (e.g. Won MRR by month, funnel by month)
+    // 5. Build table rows (won deals, leads, SQLs, etc.)
+    return { kpi, trend, funnel, tables };
+  }
+
+When the user changes Start Date / End Date / Segment → re-call computeFromRecords() with new filters.
+DO NOT re-fetch data on every filter change — just re-compute from the in-memory records array.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🏗️ DATE-COLUMN SEPARATION (STRICT — DataPedia rule)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Use different date columns for different metric types — never mix them:
+  Funnel / Lead counts  → create_date
+  Won / Revenue metrics → close_date
+  Pipeline (TMRR)       → projected_close_date
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🧱 DATA PLATFORM
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+USE CATALOG shared;
+USE SCHEMA revops;
+
+🥇 GOLD TABLES (PRIMARY — ALWAYS USE FIRST)
+• shared.revops.gold_monthly_exec_summary → pre-aggregated KPIs
+• shared.revops.gold_targets → targets (MRR, QL, Won, EF MRR)
+• shared.revops.gold_metrics_datapedia → approved metric definitions
+
+🥈 SILVER TABLES (ONLY FOR DRILLDOWN OR MISSING METRICS)
+• shared.revops.silver_deals → 1 row per deal
+• shared.revops.silver_line_items → product-level MRR
+• shared.revops.silver_company → company attributes
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚙️ CORE DATA RULES (STRICT)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. EXCLUDE RENEWALS (always):
+   WHERE LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%'
+
+2. SEGMENT STANDARDIZATION:
+   CASE WHEN UPPER(segment) = 'MICRO' THEN 'SME' ELSE segment END
+
+3. LEAD-BASED FUNNEL LOGIC (FINAL):
+   MQL (Leads)  → qualified_lead = 'Yes'
+   SQL          → qualified_lead = 'Yes' AND client_journey_stage = 'Opportunity'
+   Won Leads    → qualified_lead = 'Yes' AND client_journey_stage = 'Customer'
+   Lost Leads   → qualified_lead = 'Yes' AND client_journey_stage = 'Closed Lost'
+   ⚠️ MQL is NOT stage-based — always use DISTINCT deal_id for counts
+
+4. MRR LOGIC:
+   mrr    → recurring revenue
+   ef_mrr → Embedded Finance (ReadyCash + ReadyWage)
+
+5. DEPARTMENT SOURCE: Always use department_source_clean (NOT raw department_source)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🧠 APPROVED METRIC DEFINITIONS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• MQL          → COUNT(DISTINCT deal_id) WHERE qualified_lead = 'Yes'
+• SQL          → COUNT(DISTINCT deal_id) WHERE qualified_lead = 'Yes' AND stage = 'Opportunity'
+• Won Leads    → COUNT(DISTINCT deal_id) WHERE qualified_lead = 'Yes' AND stage = 'Customer'
+• Won MRR      → SUM(mrr) WHERE stage = 'Customer', using close_date
+• EmFi MRR     → SUM(ef_mrr) WHERE stage = 'Customer'
+• Pipeline MRR → SUM(mrr) using projected_close_date
+• Avg Deal Val  → won_mrr ÷ won_deals
+• Deal Velocity → AVG(deal_velocity_days)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎨 OUTPUT FORMAT — Return ONE standalone HTML file:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Fully styled, interactive dashboard (HTML + CSS + JS in one file)
+2. Chart.js via CDN — bar, line, donut as appropriate
+3. KPI scorecards — each shows current value, LY comparison, % change
+4. fetch('data/dashboard.json') on load → store records → compute all KPIs client-side
+5. Start Date + End Date inputs + Segment dropdown
+6. Apply Filters button → re-calls computeFromRecords() with new filters (no re-fetch)
+7. Status badge: 🟢 Live (JSON loaded) / ⚠️ Sample Data (file not found)
+8. "Last refreshed: {refreshed_at}" timestamp from the JSON
+9. Fallback SAMPLE data object with realistic dummy values
+10. Tabbed views for charts and detail tables
+11. CSV export button
+
+🚫 DO NOT:
+• Include a Databricks credentials panel or localStorage credential storage
+• Call the Databricks REST API from the browser
+• Re-fetch on every filter change — re-compute from in-memory array
+• Mix date columns across metric types
+• Include renewal deals
+• Ignore the qualified_lead filter
+• Use raw department_source field
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TELL CLAUDE YOUR SPECIFICS (fill in before pasting):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Pipeline name: [e.g. "Unified Channel Pipeline"]
+• Segments to show: [e.g. SME, ENT, All]
+• Key metrics: [list your top 5–8 KPIs]
+• Paste your fetch_data.py SELECT columns so Claude knows the exact JSON field names
+• Any drilldown tables needed: [e.g. Won deals by rep, Leads by channel]</div>
+          </div>
+          <div class="warn-box" style="margin-top:10px"><strong>Security:</strong> The HTML file never connects to Databricks. All Databricks credentials stay in your local <code>.env</code> and GitHub Secrets — never in the HTML.</div>
+          <div class="plan-h3" style="margin-top:16px;margin-bottom:8px">Tips for Best Results</div>
+          <div class="filter-grid">
+            <div class="filter-card"><div class="filter-card-name">Paste your SELECT columns</div><div class="filter-card-desc">Tell Claude the exact column names from your fetch_data.py SQL. This prevents hallucinated field names in the JavaScript.</div></div>
+            <div class="filter-card"><div class="filter-card-name">Paste DESCRIBE TABLE output</div><div class="filter-card-desc">Run DESCRIBE TABLE in Databricks SQL Editor and paste the result — Claude uses real column names, not guesses.</div></div>
+            <div class="filter-card"><div class="filter-card-name">Be specific about charts</div><div class="filter-card-desc">Say "bar chart of Won MRR by month, line for target" instead of "make a dashboard." Specificity = accuracy.</div></div>
+            <div class="filter-card"><div class="filter-card-name">Use gold tables first</div><div class="filter-card-desc">Reference gold_monthly_exec_summary for pre-aggregated KPIs. Include the DataPedia definitions so Claude uses correct business logic.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="plan-h3">Step 5 — Customize dashboard.html</div>
+      <div class="github-step">
+        <div class="github-num">9</div>
+        <div class="github-body">
+          <div class="github-title">Adjust Claude's output for your team</div>
+          <div class="github-desc">The dashboard reads <code>data/dashboard.json</code> on load and computes everything in JavaScript — no backend needed. Customize these sections after Claude generates the first version:</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
             <div style="background:#F8F9FA;border-radius:6px;padding:10px 12px;font-size:11px;color:#636E72;line-height:1.7;border:1px solid #DFE6E9">
               <div style="font-weight:700;color:#0B1E10;margin-bottom:4px">HTML sections to change</div>
@@ -953,9 +1126,9 @@ python fetch_data.py</div>
         </div>
       </div>
 
-      <div class="plan-h3">Step 5 — Commit & Push</div>
+      <div class="plan-h3">Step 6 — Commit & Push</div>
       <div class="github-step">
-        <div class="github-num">9</div>
+        <div class="github-num">10</div>
         <div class="github-body">
           <div class="github-title">Push your first version to GitHub</div>
           <div class="github-desc"><code>data/dashboard.json</code> must be committed — GitHub Pages serves it to the browser. <code>.env</code> must never be committed.</div>
@@ -965,9 +1138,9 @@ git push origin master</div>
         </div>
       </div>
 
-      <div class="plan-h3">Step 6 — Enable GitHub Pages (Free Hosting)</div>
+      <div class="plan-h3">Step 7 — Enable GitHub Pages (Free Hosting)</div>
       <div class="github-step">
-        <div class="github-num">10</div>
+        <div class="github-num">11</div>
         <div class="github-body">
           <div class="github-title">Turn on GitHub Pages</div>
           <div class="github-desc">
@@ -977,15 +1150,15 @@ git push origin master</div>
             4. Click <strong>Save</strong>
           </div>
           <div class="github-code" style="margin-top:8px"><button class="github-copy" onclick="cpGithub(this)">Copy</button>https://YOUR-USERNAME.github.io/YOUR-REPO-NAME/</div>
-          <div class="github-desc" style="margin-top:6px">Your dashboard is live after ~2 minutes.</div>
+          <div class="github-desc" style="margin-top:6px">Your dashboard is live after ~2 minutes. Share this link with your team.</div>
         </div>
       </div>
 
-      <div class="plan-h3">Step 7 — Set Up Auto-Refresh (Data stays current)</div>
+      <div class="plan-h3">Step 8 — Set Up Auto-Refresh (Data stays current)</div>
       <p style="font-size:12px;color:#636E72;margin-bottom:14px;line-height:1.6">Use <strong>both options</strong> — they back each other up. Windows Task Scheduler runs from your local machine; GitHub Actions runs from the cloud even when your laptop is off.</p>
 
       <div class="github-step">
-        <div class="github-num">11</div>
+        <div class="github-num">12</div>
         <div class="github-body">
           <div class="github-title">Option A — Windows Task Scheduler (local, primary)</div>
           <div class="github-desc">Create <code>refresh_and_push.bat</code> in the project root:</div>
@@ -1008,7 +1181,7 @@ echo [%date% %time%] Done. >> refresh_log.txt</div>
       </div>
 
       <div class="github-step">
-        <div class="github-num">12</div>
+        <div class="github-num">13</div>
         <div class="github-body">
           <div class="github-title">Option B — GitHub Actions (cloud, backup)</div>
           <div class="github-desc">Create <code>.github/workflows/refresh.yml</code>:</div>
@@ -1048,9 +1221,9 @@ jobs:
         </div>
       </div>
 
-      <div class="plan-h3">Step 8 — Verify It's Working</div>
+      <div class="plan-h3">Step 9 — Verify It's Working</div>
       <div class="github-step">
-        <div class="github-num">13</div>
+        <div class="github-num">14</div>
         <div class="github-body">
           <div class="github-title">Test end-to-end</div>
           <div class="github-desc">
@@ -1111,8 +1284,8 @@ jobs:
   <div class="submit-modal">
     <h2>➕ Submit Your Dashboard</h2>
     <p class="sm-sub">Share your dashboard with the team — it will be added to the gallery after review by the RevOps team.</p>
-    <div class="sm-step"><div class="sm-num">1</div><div class="sm-body"><strong>Generate your dashboard</strong> — go to the <strong>Dashboard Plan → Claude Prompt</strong> tab, copy the prompt, and ask Claude to build your dashboard.</div></div>
-    <div class="sm-step"><div class="sm-num">2</div><div class="sm-body"><strong>Publish to GitHub Pages</strong> — follow the steps in the <strong>Dashboard Plan → GitHub Guide</strong> tab to get a live URL.</div></div>
+    <div class="sm-step"><div class="sm-num">1</div><div class="sm-body"><strong>Generate your dashboard</strong> — go to the <strong>Dashboard Plan → 🏗️ How to Build → Step 4</strong>, copy the Claude prompt, and ask Claude to build your dashboard.</div></div>
+    <div class="sm-step"><div class="sm-num">2</div><div class="sm-body"><strong>Publish to GitHub Pages</strong> — follow <strong>Steps 6–7</strong> in the <strong>Dashboard Plan → 🏗️ How to Build</strong> tab to get a live URL.</div></div>
     <div class="sm-step"><div class="sm-num">3</div><div class="sm-body"><strong>Send the following details to the RevOps team:</strong><br>• Dashboard name &amp; short description<br>• Your GitHub Pages URL<br>• Your name / team<br>• Metric categories covered (e.g. Finance, Funnel, Revenue)</div></div>
     <div class="sm-step"><div class="sm-num">4</div><div class="sm-body"><strong>RevOps will add it to this gallery</strong> — usually within 1–2 business days.</div></div>
     <div class="info-box" style="margin-top:14px">📩 Send submissions to: <strong>revops@sprout.ph</strong></div>
