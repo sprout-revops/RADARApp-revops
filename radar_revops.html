@@ -461,6 +461,7 @@ body{font-family:'Rubik','Bahnschrift Light SemiCondensed','Bahnschrift',Arial,s
     <div class="plan-subtab" id="ptab-filters" onclick="setPlanTab('filters')">🔧 Filters</div>
     <div class="plan-subtab" id="ptab-prompt"  onclick="setPlanTab('prompt')">🤖 Claude Prompt</div>
     <div class="plan-subtab" id="ptab-github"  onclick="setPlanTab('github')">🐙 GitHub Guide</div>
+    <div class="plan-subtab" id="ptab-build"   onclick="setPlanTab('build')">🏗️ How to Build</div>
   </div>
 
   <div class="plan-body">
@@ -760,6 +761,322 @@ git push origin main</div>
       <div class="info-box"><strong>💡 Tip — Auto-refresh:</strong> The generated dashboard includes a <strong>🔄 Refresh Data</strong> button and an optional <strong>auto-refresh every 30 minutes</strong> toggle. Users can enable it to keep their dashboard live without manually reloading.</div>
 
     </div><!-- /plan-github -->
+
+    <!-- ── HOW TO BUILD ── -->
+    <div class="plan-section" id="plan-build">
+      <div class="plan-h2">🏗️ How to Build a Dashboard — Step by Step</div>
+      <p style="font-size:12px;color:#636E72;margin-bottom:16px;line-height:1.6">This is the exact process used to build the <strong>Channels Dashboard</strong>. Follow these steps to create a live, filterable dashboard hosted on GitHub Pages — no servers, no BI licensing, no CORS issues. Any team can replicate this.</p>
+
+      <div class="info-box" style="margin-bottom:20px">
+        <strong>Architecture:</strong> A Python script fetches raw deal records from Databricks and saves them as a JSON file committed to GitHub. The browser reads the JSON file and computes all KPIs, charts, and tables in JavaScript. Filters (date range, segment) re-compute everything instantly — no re-query needed.
+        <br><br>
+        <strong>Reference implementation:</strong> <a href="https://lelei0624.github.io/channels-dashboard/" target="_blank" style="color:#10B981">Channels Dashboard ↗</a> — 619 deals, 3-year history, refreshed 3× daily.
+      </div>
+
+      <div class="plan-h3">Before You Start — What You Need</div>
+      <div class="filter-grid" style="margin-bottom:20px">
+        <div class="filter-card"><div class="filter-card-name">Python 3.8+</div><div class="filter-card-desc">Download from python.org. Check "Add to PATH" during install.</div><div class="filter-card-field">pip install requests</div></div>
+        <div class="filter-card"><div class="filter-card-name">Git</div><div class="filter-card-desc">Download from git-scm.com. Used to push data to GitHub.</div></div>
+        <div class="filter-card"><div class="filter-card-name">GitHub Account</div><div class="filter-card-desc">Free at github.com. Hosts your dashboard and data file.</div></div>
+        <div class="filter-card"><div class="filter-card-name">Databricks Access</div><div class="filter-card-desc">HTTP Path + Personal Access Token from your warehouse.</div><div class="filter-card-field">SQL Warehouses → Connection Details</div></div>
+      </div>
+
+      <div class="plan-h3">Step 1 — Create a GitHub Repository</div>
+      <div class="github-step">
+        <div class="github-num">1</div>
+        <div class="github-body">
+          <div class="github-title">Create a new repo on GitHub</div>
+          <div class="github-desc">Go to <strong>github.com → + → New repository</strong>. Name it e.g. <code>channels-dashboard</code>. Set to <strong>Private</strong>. Check "Add a README file". Click <strong>Create repository</strong>.</div>
+        </div>
+      </div>
+      <div class="github-step">
+        <div class="github-num">2</div>
+        <div class="github-body">
+          <div class="github-title">Clone to your computer</div>
+          <div class="github-desc">Open PowerShell and run:</div>
+          <div class="github-code"><button class="github-copy" onclick="cpGithub(this)">Copy</button>git clone https://github.com/YOUR-USERNAME/YOUR-REPO-NAME.git
+cd YOUR-REPO-NAME</div>
+        </div>
+      </div>
+
+      <div class="plan-h3">Step 2 — Set Up Project Files</div>
+      <div class="github-step">
+        <div class="github-num">3</div>
+        <div class="github-body">
+          <div class="github-title">Create required folders</div>
+          <div class="github-code"><button class="github-copy" onclick="cpGithub(this)">Copy</button>mkdir data
+mkdir .github\workflows</div>
+        </div>
+      </div>
+      <div class="github-step">
+        <div class="github-num">4</div>
+        <div class="github-body">
+          <div class="github-title">Create <code>.gitignore</code></div>
+          <div class="github-desc">Create a plain text file named <code>.gitignore</code> in the project root — this prevents credentials from being committed:</div>
+          <div class="github-code"><button class="github-copy" onclick="cpGithub(this)">Copy</button>.env
+node_modules/
+__pycache__/
+*.pyc</div>
+        </div>
+      </div>
+      <div class="github-step">
+        <div class="github-num">5</div>
+        <div class="github-body">
+          <div class="github-title">Create <code>.env</code> with your Databricks credentials</div>
+          <div class="github-desc">Create a plain text file named <code>.env</code> in the project root. <strong>Never commit this file.</strong></div>
+          <div class="github-code"><button class="github-copy" onclick="cpGithub(this)">Copy</button>DATABRICKS_HOST=adb-XXXXXXXXXXXXXXXX.XX.azuredatabricks.net
+DATABRICKS_HTTP_PATH=/sql/1.0/warehouses/XXXXXXXXXXXXXXXXX
+DATABRICKS_TOKEN=dapi...your-personal-access-token...</div>
+          <div class="github-desc" style="margin-top:8px">Get these from: <strong>Databricks → SQL Warehouses → your warehouse → Connection Details</strong>. Generate a PAT under <strong>Settings → Developer → Access Tokens</strong>.</div>
+        </div>
+      </div>
+
+      <div class="plan-h3">Step 3 — Write fetch_data.py</div>
+      <div class="github-step">
+        <div class="github-num">6</div>
+        <div class="github-body">
+          <div class="github-title">Create <code>fetch_data.py</code> — queries Databricks and saves raw records</div>
+          <div class="github-desc">Key principle: <strong>fetch raw rows, not aggregates</strong>. The browser will compute all KPIs client-side — this enables full date + segment filtering without re-querying.</div>
+          <div class="github-code" style="max-height:340px;overflow-y:auto"><button class="github-copy" onclick="cpGithub(this)">Copy</button>import os, json, time, requests
+from datetime import date
+
+# Load .env (utf-8-sig handles BOM added by PowerShell)
+_env = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env')
+if os.path.exists(_env):
+    with open(_env, encoding='utf-8-sig') as _f:
+        for line in _f:
+            line = line.strip()
+            if line and not line.startswith('#') and '=' in line:
+                k, v = line.split('=', 1)
+                os.environ.setdefault(k.strip(), v.strip())
+
+HOST         = os.environ['DATABRICKS_HOST'].strip().lstrip('https://')
+HTTP_PATH    = os.environ['DATABRICKS_HTTP_PATH'].strip()
+TOKEN        = os.environ['DATABRICKS_TOKEN'].strip()
+WAREHOUSE_ID = HTTP_PATH.split('/')[-1]
+
+HEADERS = {'Authorization': f'Bearer {TOKEN}', 'Content-Type': 'application/json'}
+API_URL = f'https://{HOST}/api/2.0/sql/statements'
+TODAY   = date.today()
+
+def db_query(label, sql):
+    print(f"  Running: {label}...", end=' ', flush=True)
+    r = requests.post(API_URL, headers=HEADERS, json={
+        'warehouse_id': WAREHOUSE_ID, 'statement': sql,
+        'wait_timeout': '50s', 'on_wait_timeout': 'CONTINUE', 'format': 'JSON_ARRAY'
+    }, timeout=180)
+    if not r.ok:
+        raise Exception(f"HTTP {r.status_code}: {r.text[:500]}")
+    body = r.json()
+    polls = 0
+    while body.get('status', {}).get('state') in ['PENDING', 'RUNNING']:
+        time.sleep(3); polls += 1
+        body = requests.get(f"{API_URL}/{body['statement_id']}", headers=HEADERS, timeout=30).json()
+    if body.get('status', {}).get('state') == 'FAILED':
+        raise Exception(body.get('status', {}).get('error', {}).get('message', 'Unknown'))
+    cols = [c['name'] for c in body.get('manifest', {}).get('schema', {}).get('columns', [])]
+    rows = [dict(zip(cols, row)) for row in body.get('result', {}).get('data_array', [])]
+    print(f"{len(rows)} rows ({polls} polls)")
+    return rows
+
+# Edit this query for your pipeline
+RAW_SQL = """
+SELECT
+  deal_id, deal_name, deal_type, create_date, close_date, projected_close_date,
+  client_journey_stage, stage_label, qualified_lead, mrr, ef_mrr, otp_only,
+  implem_fee, mrr_lt_12, deal_velocity_days, sales_rep, partner_on_record,
+  CASE WHEN department_source_clean = 'MICRO' THEN 'SME'
+       ELSE department_source_clean END AS segment,
+  original_channel_source
+FROM shared.revops.silver_deals
+WHERE pipeline_name = 'YOUR PIPELINE NAME'
+  AND deal_type NOT IN ('Renewal', 'renewal', 'Upsell - Renewal')
+  AND LOWER(deal_name) NOT LIKE '%renewal%'
+  AND (
+    create_date             >= ADD_MONTHS(CURRENT_DATE, -36)
+    OR close_date           >= ADD_MONTHS(CURRENT_DATE, -36)
+    OR projected_close_date >= ADD_MONTHS(CURRENT_DATE, -36)
+  )
+ORDER BY create_date DESC
+"""
+
+records = db_query('All Records', RAW_SQL)
+os.makedirs('data', exist_ok=True)
+with open('data/dashboard.json', 'w') as f:
+    json.dump({'refreshed_at': TODAY.isoformat() + 'T' + time.strftime('%H:%M:%S') + 'Z',
+               'pipeline': 'YOUR PIPELINE NAME', 'deals': records}, f)
+print(f"Done! Saved {len(records)} records to data/dashboard.json")</div>
+        </div>
+      </div>
+      <div class="github-step">
+        <div class="github-num">7</div>
+        <div class="github-body">
+          <div class="github-title">Test it locally</div>
+          <div class="github-code"><button class="github-copy" onclick="cpGithub(this)">Copy</button>pip install requests
+python fetch_data.py</div>
+          <div class="github-desc" style="margin-top:6px">Expected output: <code>Running: All Records... 619 rows (0 polls) → Done! Saved 619 records to data/dashboard.json</code></div>
+        </div>
+      </div>
+
+      <div class="plan-h3">Step 4 — Build dashboard.html</div>
+      <div class="github-step">
+        <div class="github-num">8</div>
+        <div class="github-body">
+          <div class="github-title">Create <code>dashboard.html</code> — the entire dashboard in one file</div>
+          <div class="github-desc">The dashboard reads <code>data/dashboard.json</code> on load and computes everything in JavaScript. Sections to customise for your team:</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+            <div style="background:#F8F9FA;border-radius:6px;padding:10px 12px;font-size:11px;color:#636E72;line-height:1.7;border:1px solid #DFE6E9">
+              <div style="font-weight:700;color:#0B1E10;margin-bottom:4px">HTML sections to change</div>
+              <div>• <code>&lt;title&gt;</code> — your team name</div>
+              <div>• KPI card blocks — your metric names</div>
+              <div>• Table <code>&lt;thead&gt;</code> — your column headers</div>
+            </div>
+            <div style="background:#F8F9FA;border-radius:6px;padding:10px 12px;font-size:11px;color:#636E72;line-height:1.7;border:1px solid #DFE6E9">
+              <div style="font-weight:700;color:#0B1E10;margin-bottom:4px">JavaScript to change</div>
+              <div>• <code>PIPELINE_DEFAULT</code> constant</div>
+              <div>• <code>computeFromDeals()</code> — KPI formulas</div>
+              <div>• <code>renderWon()</code> — table row mapping</div>
+              <div>• <code>SAMPLE</code> data — dummy values</div>
+            </div>
+          </div>
+          <div style="background:#ECFDF5;border-left:3px solid #10B981;border-radius:0 6px 6px 0;padding:8px 12px;font-size:12px;color:#065F46;margin-top:8px;line-height:1.6">
+            <strong>Tip:</strong> Copy the Channels Dashboard <code>dashboard.html</code> as your starting template. The framework (dark theme, KPI cards, charts, tabs, filters, CSV export, status badge) is reusable as-is — only change the metric names and formulas.
+          </div>
+          <div style="margin-top:10px;font-size:11px;color:#636E72;line-height:1.8">
+            <strong style="color:#0B1E10">Date-column business rules</strong> (enforced in <code>computeFromDeals()</code>):<br>
+            QL / SQL / Funnel counts → <code>create_date</code><br>
+            Won / Lost / Revenue → <code>close_date</code><br>
+            Pipeline MRR → <code>projected_close_date</code>
+          </div>
+        </div>
+      </div>
+
+      <div class="plan-h3">Step 5 — Commit & Push</div>
+      <div class="github-step">
+        <div class="github-num">9</div>
+        <div class="github-body">
+          <div class="github-title">Push your first version to GitHub</div>
+          <div class="github-desc"><code>data/dashboard.json</code> must be committed — GitHub Pages serves it to the browser. <code>.env</code> must never be committed.</div>
+          <div class="github-code"><button class="github-copy" onclick="cpGithub(this)">Copy</button>git add dashboard.html fetch_data.py .gitignore data/dashboard.json
+git commit -m "Initial dashboard — first data fetch"
+git push origin master</div>
+        </div>
+      </div>
+
+      <div class="plan-h3">Step 6 — Enable GitHub Pages (Free Hosting)</div>
+      <div class="github-step">
+        <div class="github-num">10</div>
+        <div class="github-body">
+          <div class="github-title">Turn on GitHub Pages</div>
+          <div class="github-desc">
+            1. GitHub repo → <strong>Settings</strong> tab<br>
+            2. Left sidebar → <strong>Pages</strong><br>
+            3. Source: <strong>Deploy from a branch → master → / (root)</strong><br>
+            4. Click <strong>Save</strong>
+          </div>
+          <div class="github-code" style="margin-top:8px"><button class="github-copy" onclick="cpGithub(this)">Copy</button>https://YOUR-USERNAME.github.io/YOUR-REPO-NAME/</div>
+          <div class="github-desc" style="margin-top:6px">Your dashboard is live after ~2 minutes.</div>
+        </div>
+      </div>
+
+      <div class="plan-h3">Step 7 — Set Up Auto-Refresh (Data stays current)</div>
+      <p style="font-size:12px;color:#636E72;margin-bottom:14px;line-height:1.6">Use <strong>both options</strong> — they back each other up. Windows Task Scheduler runs from your local machine; GitHub Actions runs from the cloud even when your laptop is off.</p>
+
+      <div class="github-step">
+        <div class="github-num">11</div>
+        <div class="github-body">
+          <div class="github-title">Option A — Windows Task Scheduler (local, primary)</div>
+          <div class="github-desc">Create <code>refresh_and_push.bat</code> in the project root:</div>
+          <div class="github-code"><button class="github-copy" onclick="cpGithub(this)">Copy</button>@echo off
+cd /d "C:\path\to\your-dashboard"
+echo [%date% %time%] Starting refresh... >> refresh_log.txt
+python fetch_data.py >> refresh_log.txt 2>&1
+if errorlevel 1 ( echo FAILED >> refresh_log.txt & exit /b 1 )
+git add data/dashboard.json
+git commit -m "Auto-refresh %date% %time%"
+git push origin master
+echo [%date% %time%] Done. >> refresh_log.txt</div>
+          <div class="github-desc" style="margin-top:8px">
+            <strong>Schedule it:</strong> Open <strong>Task Scheduler → Create Task</strong><br>
+            • General: check <em>"Run whether user is logged on or not"</em> + <em>"Run with highest privileges"</em><br>
+            • Triggers: Daily, repeat every 8 hours — or set 3 specific times (8:30 AM, 1:30 PM, 5:15 PM)<br>
+            • Actions: Start a program → point to <code>refresh_and_push.bat</code>
+          </div>
+        </div>
+      </div>
+
+      <div class="github-step">
+        <div class="github-num">12</div>
+        <div class="github-body">
+          <div class="github-title">Option B — GitHub Actions (cloud, backup)</div>
+          <div class="github-desc">Create <code>.github/workflows/refresh.yml</code>:</div>
+          <div class="github-code" style="max-height:280px;overflow-y:auto"><button class="github-copy" onclick="cpGithub(this)">Copy</button>name: Refresh Dashboard Data
+on:
+  schedule:
+    # PHT = UTC+8. Runs at 8:30 AM, 1:30 PM, 5:15 PM PHT
+    - cron: '30 0 * * *'
+    - cron: '30 5 * * *'
+    - cron: '15 9 * * *'
+  workflow_dispatch:
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - run: pip install requests
+      - name: Fetch data from Databricks
+        env:
+          DATABRICKS_HOST:      ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_HTTP_PATH: ${{ secrets.DATABRICKS_HTTP_PATH }}
+          DATABRICKS_TOKEN:     ${{ secrets.DATABRICKS_TOKEN }}
+        run: python fetch_data.py
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/dashboard.json
+          git diff --staged --quiet || git commit -m "Auto-refresh $(date -u '+%Y-%m-%d %H:%M UTC')"
+          git push</div>
+          <div class="github-desc" style="margin-top:8px">
+            <strong>Add GitHub Secrets</strong> (repo → Settings → Secrets and variables → Actions → New repository secret):<br>
+            <code>DATABRICKS_HOST</code>, <code>DATABRICKS_HTTP_PATH</code>, <code>DATABRICKS_TOKEN</code>
+          </div>
+        </div>
+      </div>
+
+      <div class="plan-h3">Step 8 — Verify It's Working</div>
+      <div class="github-step">
+        <div class="github-num">13</div>
+        <div class="github-body">
+          <div class="github-title">Test end-to-end</div>
+          <div class="github-desc">
+            1. GitHub repo → <strong>Actions</strong> tab → <strong>Refresh Dashboard Data</strong> → <strong>Run workflow</strong><br>
+            2. Wait ~2 minutes for the run to complete<br>
+            3. Open your GitHub Pages URL<br>
+            4. Confirm <strong>🟢 Live</strong> status badge appears (not Sample Data)<br>
+            5. Change <strong>Start Date / End Date</strong> and click <strong>Apply Filters</strong> — KPIs should update instantly with no loading
+          </div>
+        </div>
+      </div>
+
+      <div class="plan-h3">Common Issues</div>
+      <table class="kpi-def-table" style="margin-bottom:20px">
+        <thead><tr><th>Symptom</th><th>Cause</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr><td class="kpi-name-cell">Dashboard shows Sample Data</td><td><code>data/dashboard.json</code> not committed</td><td>Run <code>python fetch_data.py</code> and <code>git push</code></td></tr>
+          <tr><td class="kpi-name-cell">HTTP 401 from Databricks</td><td>PAT expired</td><td>Generate a new token; update <code>.env</code> and GitHub Secrets</td></tr>
+          <tr><td class="kpi-name-cell"><code>wait_timeout</code> error</td><td>Value out of range</td><td>Must be <code>5s</code> to <code>50s</code> (use <code>50s</code>)</td></tr>
+          <tr><td class="kpi-name-cell"><code>.env</code> key has ﻿ prefix</td><td>BOM in file (PowerShell Out-File)</td><td>Open <code>.env</code> with <code>encoding='utf-8-sig'</code> in Python</td></tr>
+          <tr><td class="kpi-name-cell">Filters don't update KPIs</td><td>Old pre-aggregated JSON format</td><td>Re-run <code>fetch_data.py</code> to generate raw-deals format</td></tr>
+          <tr><td class="kpi-name-cell">GitHub Pages shows old version</td><td>Browser cache</td><td>Hard refresh: <code>Ctrl + Shift + R</code></td></tr>
+        </tbody>
+      </table>
+
+      <div class="warn-box"><strong>⚠️ Security:</strong> Never commit <code>.env</code>. Never hardcode your PAT in any file that goes to GitHub. GitHub Secrets are the safe way to store credentials for GitHub Actions.</div>
+
+    </div><!-- /plan-build -->
 
   </div><!-- /plan-body -->
 </div><!-- /section-dash -->
