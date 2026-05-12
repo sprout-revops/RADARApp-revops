@@ -817,10 +817,44 @@ FILES TO GENERATE:
 • Use utf-8-sig encoding to handle BOM added by PowerShell Out-File
 • Call Databricks REST API: POST /api/2.0/sql/statements
 • Poll until complete (handle PENDING/RUNNING states with 3s sleep)
-• Fetch RAW ROWS — not aggregates. The browser computes all KPIs client-side.
-• Save output to data/dashboard.json:
-  { "refreshed_at": "YYYY-MM-DDTHH:MM:SSZ", "team": "...", "records": [...] }
+• Run 3 separate queries — one per table — and save ALL results to data/dashboard.json
 • Use a 3-year rolling window so users can slice any date range
+
+QUERIES TO RUN:
+
+Query 1 — silver_deals (raw deal rows, all deal-level metrics):
+  SELECT deal_id, deal_name, deal_type, create_date, close_date, projected_close_date,
+         client_journey_stage, stage_label, qualified_lead, mrr, ef_mrr, otp_only,
+         implem_fee, mrr_lt_12, deal_velocity_days, sales_rep, partner_on_record,
+         CASE WHEN UPPER(department_source_clean)='MICRO' THEN 'SME'
+              ELSE department_source_clean END AS segment,
+         original_channel_source
+  FROM shared.revops.silver_deals
+  WHERE pipeline_name = '[YOUR PIPELINE]'
+    AND deal_type NOT IN ('Renewal','renewal','Upsell - Renewal')
+    AND LOWER(deal_name) NOT LIKE '%renewal%'
+    AND (create_date >= ADD_MONTHS(CURRENT_DATE,-36)
+         OR close_date >= ADD_MONTHS(CURRENT_DATE,-36)
+         OR projected_close_date >= ADD_MONTHS(CURRENT_DATE,-36))
+
+Query 2 — gold_monthly_exec_summary (pre-aggregated monthly KPIs for charts/targets):
+  SELECT * FROM shared.revops.gold_monthly_exec_summary
+  WHERE pipeline_name = '[YOUR PIPELINE]'
+    AND metric_month >= ADD_MONTHS(CURRENT_DATE,-36)
+
+Query 3 — gold_targets (monthly targets for MRR, QL, Won):
+  SELECT * FROM shared.revops.gold_targets
+  WHERE pipeline_name = '[YOUR PIPELINE]'
+    AND metric_month >= ADD_MONTHS(CURRENT_DATE,-36)
+
+OUTPUT — save as data/dashboard.json:
+{
+  "refreshed_at": "YYYY-MM-DDTHH:MM:SSZ",
+  "team": "Your Team Name",
+  "deals":   [...],   // raw rows from silver_deals
+  "summary": [...],   // rows from gold_monthly_exec_summary
+  "targets": [...]    // rows from gold_targets
+}
 
 .env structure the user will create locally:
 DATABRICKS_HOST=adb-XXXXXXXX.azuredatabricks.net
@@ -836,22 +870,52 @@ DATA LOADING — static JSON only, never call Databricks from browser:
   fetch('data/dashboard.json')
     .then(r => r.json())
     .then(json => {
-      S.allRecords = json.records;
-      applyComputed(computeFromRecords(S.allRecords, S.filters));
+      S.deals   = json.deals   || [];   // raw deal rows (silver_deals)
+      S.summary = json.summary || [];   // monthly pre-aggregated (gold_monthly_exec_summary)
+      S.targets = json.targets || [];   // monthly targets (gold_targets)
+      applyComputed(computeFromRecords(S, S.filters));
       setStatus('live', '🟢 Live · Last refreshed: ' + json.refreshed_at);
     })
     .catch(() => applySample());
 
 CLIENT-SIDE KPI COMPUTATION (required):
-  function computeFromRecords(records, filters) {
+  function computeFromRecords(S, filters) {
     const { startDate, endDate, segment } = filters;
-    // 1. Filter by date range (correct column per metric type — see below)
-    // 2. Filter by segment
-    // 3. Compute current-period KPIs
-    // 4. Compute last-year comparison (shift dates back 1 year)
-    // 5. Build monthly chart data (trend, funnel)
-    // 6. Build detail table rows
-    return { kpi, trend, funnel, tables };
+    const deals = S.deals;
+
+    // Separate deal subsets by date column (NEVER mix):
+    const byCreate = deals.filter(d => segMatch(d) && inRange(d.create_date, startDate, endDate));
+    const byClose  = deals.filter(d => segMatch(d) && inRange(d.close_date,  startDate, endDate));
+    const byProj   = deals.filter(d => segMatch(d) && inRange(d.projected_close_date, startDate, endDate));
+
+    // Won / Lost subsets (always qualified_lead = 'Yes')
+    const wonRows  = byClose.filter(d => d.qualified_lead==='Yes' && d.client_journey_stage==='Customer');
+    const lostRows = byClose.filter(d => d.qualified_lead==='Yes' && d.client_journey_stage==='Closed Lost');
+    const sqlRows  = byCreate.filter(d => d.qualified_lead==='Yes' && d.client_journey_stage==='Opportunity');
+    const mqlRows  = byCreate.filter(d => d.qualified_lead==='Yes');
+
+    // KPIs — compute current period + last year (shift dates -1 year for LY)
+    const kpi = {
+      mql:         mqlRows.length,
+      sql:         sqlRows.length,
+      sqlPct:      mqlRows.length ? (sqlRows.length / mqlRows.length * 100) : 0,   // SQL%
+      wonLeads:    wonRows.length,
+      lostLeads:   lostRows.length,
+      winRate:     (wonRows.length + lostRows.length) ? (wonRows.length / (wonRows.length + lostRows.length) * 100) : 0,
+      wonMRR:      sum(wonRows, 'mrr'),
+      emfiMRR:     sum(wonRows, 'ef_mrr'),
+      combinedMRR: sum(wonRows, 'mrr') + sum(wonRows, 'ef_mrr'),
+      otp:         sum(wonRows, 'otp_only'),
+      implemFee:   sum(wonRows, 'implem_fee'),
+      combinedOTP: sum(wonRows, 'otp_only') + sum(wonRows, 'implem_fee'),
+      pipelineMRR: sum(byProj, 'mrr'),
+      avgDealVal:  wonRows.length ? sum(wonRows,'mrr') / wonRows.length : 0,
+      dealVelocity:wonRows.length ? avg(wonRows,'deal_velocity_days') : 0,
+    };
+
+    // Use S.summary for monthly chart series; S.targets for target lines
+    return { kpi, trend: buildTrend(S.summary, filters), targets: buildTargets(S.targets, filters),
+             wonTable: wonRows, leadsTable: mqlRows, sqlTable: sqlRows };
   }
 
 FILTERS: Start Date + End Date inputs + Segment dropdown
@@ -903,24 +967,47 @@ The HTML file never talks to Databricks directly.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🧠 APPROVED METRIC DEFINITIONS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FUNNEL (use create_date for date filter):
 MQL          → COUNT DISTINCT deal_id WHERE qualified_lead='Yes'
 SQL          → COUNT DISTINCT WHERE qualified_lead='Yes' AND stage='Opportunity'
 Won Leads    → COUNT DISTINCT WHERE qualified_lead='Yes' AND stage='Customer'
-Won MRR      → SUM(mrr) WHERE stage='Customer', filtered on close_date
-Pipeline MRR → SUM(mrr) filtered on projected_close_date
+Lost Leads   → COUNT DISTINCT WHERE qualified_lead='Yes' AND stage='Closed Lost'
+SQL%         → SQL ÷ MQL × 100  (conversion rate from lead to opportunity)
+Win Rate     → Won Leads ÷ (Won Leads + Lost Leads) × 100
+
+REVENUE (use close_date for date filter):
+Won MRR      → SUM(mrr) WHERE stage='Customer'
 EmFi MRR     → SUM(ef_mrr) WHERE stage='Customer'
+Combined MRR → SUM(mrr + ef_mrr) WHERE stage='Customer'  (Won MRR + EmFi MRR)
+OTP          → SUM(otp_only) WHERE stage='Customer'       (one-time payments, from silver_deals)
+Implem Fee   → SUM(implem_fee) WHERE stage='Customer'     (implementation fees, from silver_deals)
+Combined OTP → SUM(otp_only + implem_fee) WHERE stage='Customer'
 Avg Deal Val  → won_mrr ÷ won_deals
 Deal Velocity → AVG(deal_velocity_days)
+
+PIPELINE (use projected_close_date for date filter):
+Pipeline MRR → SUM(mrr) WHERE stage NOT IN ('Customer','Closed Lost')
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🎨 dashboard.html REQUIRED ELEMENTS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• KPI scorecards — current value + LY comparison + % change arrow
-• Chart.js: bar (monthly MRR/leads), line (trend vs target), donut (segment split)
-• Start Date / End Date / Segment → Apply Filters → instant re-compute
-• 🟢 Live / ⚠️ Sample Data status badge + "Last refreshed" timestamp
-• Detail tables: won deals, leads, SQLs — with CSV export button
-• Fallback SAMPLE object with realistic dummy values
+KPI SCORECARDS (each card: current value + LY comparison + % change arrow):
+  Won MRR | Combined MRR | EmFi MRR | OTP | Implem Fee | Combined OTP
+  MQL | SQL | SQL% | Won Leads | Win Rate | Pipeline MRR | Deal Velocity | Avg Deal Value
+
+CHARTS (Chart.js via CDN):
+  • Bar: monthly Won MRR + Combined OTP stacked, with target line from gold_targets
+  • Line: monthly MQL vs SQL trend (use gold_monthly_exec_summary for smoothness)
+  • Bar: monthly Win Rate % and SQL% over time
+  • Donut: Combined MRR by segment
+
+FILTERS: Start Date + End Date inputs + Segment dropdown
+  Apply Filters → re-calls computeFromRecords() — NO re-fetch, instant.
+
+STATUS: 🟢 Live (JSON loaded) / ⚠️ Sample Data (file missing)
+SAMPLE fallback: realistic dummy values (₱ amounts for MRR/OTP/fees, % for rates)
+Detail tables: won deals (with OTP + Implem Fee columns), leads, SQLs — CSV export
+"Last refreshed" timestamp from json.refreshed_at
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📋 FILES 3–5: TEMPLATES
@@ -940,13 +1027,13 @@ Run pip install requests, python fetch_data.py, then git commit + push.
 ✏️ FILL IN BEFORE PASTING — YOUR SPECIFICS:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 • Team / Dashboard name: [e.g. "Channels Dashboard"]
-• Pipeline name filter: [e.g. "Unified Channel Pipeline"]
-• Databricks table: [e.g. shared.revops.silver_deals]
+• Pipeline name filter: [e.g. "Unified Channel Pipeline"]  ← used in all 3 queries
 • Segments to show: [e.g. SME, ENT, All]
-• Key metrics (list 5–8): [e.g. Won MRR, SQL count, Pipeline MRR, Deal Velocity]
-• SELECT columns from your table (paste exact names so Claude uses them in JS):
-  [paste your column list here]
-• Drilldown tables needed: [e.g. "Won deals by rep", "Leads by channel source"]</div>
+• KPIs to show on scorecards (pick from the approved list above):
+  [e.g. Combined MRR, OTP, Implem Fee, Combined OTP, SQL%, Win Rate, MQL, Pipeline MRR]
+• Charts to include: [e.g. "monthly Won MRR vs target bar chart, Win Rate trend line"]
+• Drilldown tables: [e.g. "Won deals table with OTP + Implem Fee columns, by sales rep"]
+• Any extra filter dimensions: [e.g. channel source, sales rep, deal type]</div>
           </div>
           <div class="warn-box" style="margin-top:10px"><strong>Security:</strong> The HTML dashboard never connects to Databricks. Credentials stay in your local <code>.env</code> and GitHub Secrets — never in any file that goes to GitHub.</div>
           <div class="plan-h3" style="margin-top:16px;margin-bottom:8px">Tips for Best Results</div>
