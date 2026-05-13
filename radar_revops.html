@@ -24,6 +24,10 @@ body{font-family:'Rubik','Bahnschrift Light SemiCondensed','Bahnschrift',Arial,s
 .section{display:none;min-height:100%}
 .section.active{display:block}
 
+/* ── HOME PAGE — full-width, no sidebar ── */
+.app-layout.home-mode .sidebar{display:none}
+.app-layout.home-mode .content-area{width:100%}
+
 /* ── HOME PAGE ── */
 #section-home{background:#0B1E10;min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 32px}
 .home-brand{text-align:center;margin-bottom:48px}
@@ -378,7 +382,7 @@ body{font-family:'Rubik','Bahnschrift Light SemiCondensed','Bahnschrift',Arial,s
   </div>
 </div>
 
-<div class="app-layout">
+<div class="app-layout home-mode">
   <div class="sidebar">
     <div class="sidebar-tab active" id="tab-home" onclick="switchTab('home')">🏠 Home</div>
     <div class="sidebar-tab" id="tab-db" onclick="switchTab('db')">🗄️ Database</div>
@@ -1495,6 +1499,9 @@ function switchTab(t) {
   if (sec) { sec.classList.add('active'); sec.style.display = 'block'; }
   const tab = document.getElementById('tab-' + t);
   if (tab) tab.classList.add('active');
+  // Hide sidebar on Home, show on all other sections
+  const layout = document.querySelector('.app-layout');
+  if (layout) layout.classList.toggle('home-mode', t === 'home');
 }
 
 // ── DATABASE ──
