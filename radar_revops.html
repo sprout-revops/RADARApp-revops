@@ -17,9 +17,10 @@ body{font-family:'Rubik','Bahnschrift Light SemiCondensed','Bahnschrift',Arial,s
 .header-title{color:#fff;font-weight:600;font-size:14px}
 .app-layout{display:flex;height:calc(100vh - 56px)}
 .sidebar{width:180px;background:#0B1E10;display:flex;flex-direction:column;padding:12px 0;flex-shrink:0;border-right:1px solid rgba(255,255,255,.08)}
-.sidebar-tab{padding:12px 20px;cursor:pointer;display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;color:#B2BEC3;border-left:3px solid transparent;transition:all .2s;white-space:nowrap}
-.sidebar-tab:hover{color:#fff;background:rgba(255,255,255,.05)}
-.sidebar-tab.active{color:#fff;border-left-color:#1DB954;background:rgba(29,185,84,.12)}
+.sidebar-tab{padding:11px 16px;margin:3px 10px;cursor:pointer;display:flex;align-items:center;gap:10px;font-size:12px;font-weight:600;color:#B2BEC3;border-left:none;border-radius:10px;transition:all .15s ease;white-space:nowrap;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);box-shadow:0 3px 0 rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.06);position:relative}
+.sidebar-tab:hover{color:#fff;background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.12);box-shadow:0 3px 0 rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.1);transform:translateY(-1px)}
+.sidebar-tab:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.5),inset 0 1px 3px rgba(0,0,0,.3)}
+.sidebar-tab.active{color:#fff;background:linear-gradient(135deg,rgba(29,185,84,.25) 0%,rgba(29,185,84,.12) 100%);border-color:rgba(29,185,84,.4);box-shadow:0 3px 0 rgba(0,90,40,.6),0 0 16px rgba(29,185,84,.2),inset 0 1px 0 rgba(255,255,255,.12);text-shadow:0 0 12px rgba(29,185,84,.6)}
 .content-area{flex:1;overflow-y:auto}
 .section{display:none;min-height:100%}
 .section.active{display:block}
@@ -29,25 +30,35 @@ body{font-family:'Rubik','Bahnschrift Light SemiCondensed','Bahnschrift',Arial,s
 .app-layout.home-mode .content-area{width:100%}
 
 /* ── HOME PAGE ── */
-#section-home{background:#0B1E10;min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 32px}
-.home-brand{text-align:center;margin-bottom:48px}
-.home-logo{font-size:48px;font-weight:800;color:#1DB954;letter-spacing:6px;line-height:1}
-.home-tagline{font-size:13px;color:#636E72;margin-top:8px;letter-spacing:1.5px;text-transform:uppercase;font-weight:500}
-.home-sub{font-size:14px;color:#B2BEC3;margin-top:12px;max-width:480px;line-height:1.6;text-align:center}
-.home-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;max-width:720px;width:100%}
-.home-card{background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:16px;padding:28px 24px;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;gap:10px}
-.home-card:hover{background:rgba(29,185,84,.12);border-color:rgba(29,185,84,.5);transform:translateY(-3px);box-shadow:0 8px 28px rgba(29,185,84,.15)}
-.home-card-icon{font-size:32px;line-height:1}
-.home-card-title{font-size:16px;font-weight:700;color:#fff}
-.home-card-desc{font-size:12px;color:#B2BEC3;line-height:1.6;flex:1}
-.home-card-arrow{font-size:11px;color:#1DB954;font-weight:700;letter-spacing:.5px;margin-top:4px}
-.home-card.card-dashboards:hover{background:rgba(108,92,231,.12);border-color:rgba(108,92,231,.5);box-shadow:0 8px 28px rgba(108,92,231,.15)}
+#section-home{background:#030712;min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 32px;position:relative;overflow:hidden}
+#home-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+.home-glow-orb{position:absolute;border-radius:50%;filter:blur(80px);pointer-events:none;z-index:0}
+.home-glow-orb.g1{width:500px;height:500px;background:radial-gradient(circle,rgba(29,185,84,.12) 0%,transparent 70%);top:-100px;left:50%;transform:translateX(-50%)}
+.home-glow-orb.g2{width:300px;height:300px;background:radial-gradient(circle,rgba(108,92,231,.1) 0%,transparent 70%);bottom:60px;left:10%}
+.home-glow-orb.g3{width:250px;height:250px;background:radial-gradient(circle,rgba(0,184,212,.08) 0%,transparent 70%);bottom:80px;right:10%}
+.home-content{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;width:100%}
+.home-brand{text-align:center;margin-bottom:52px}
+.home-logo{font-size:56px;font-weight:800;letter-spacing:8px;line-height:1;background:linear-gradient(135deg,#1DB954 0%,#00e5a0 40%,#00cec9 80%,#6c5ce7 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:logo-pulse 4s ease-in-out infinite;filter:drop-shadow(0 0 24px rgba(29,185,84,.5))}
+@keyframes logo-pulse{0%,100%{filter:drop-shadow(0 0 18px rgba(29,185,84,.4))}50%{filter:drop-shadow(0 0 40px rgba(29,185,84,.75)) drop-shadow(0 0 80px rgba(0,229,160,.25))}}
+.home-tagline{font-size:12px;color:rgba(255,255,255,.35);margin-top:10px;letter-spacing:3px;text-transform:uppercase;font-weight:500}
+.home-sub{font-size:14px;color:rgba(255,255,255,.5);margin-top:14px;max-width:460px;line-height:1.7;text-align:center}
+.home-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;max-width:740px;width:100%;perspective:1200px}
+.home-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:18px;padding:30px 26px;cursor:pointer;transition:transform .25s ease,box-shadow .25s ease,border-color .25s ease,background .25s ease;display:flex;flex-direction:column;gap:10px;box-shadow:0 5px 0 rgba(0,0,0,.7),0 10px 40px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.06);transform-style:preserve-3d;position:relative;overflow:hidden}
+.home-card::before{content:'';position:absolute;inset:0;border-radius:18px;background:linear-gradient(135deg,rgba(255,255,255,.04) 0%,transparent 60%);pointer-events:none}
+.home-card:hover{transform:translateY(-8px) rotateX(5deg) rotateY(-1deg);background:rgba(29,185,84,.07);border-color:rgba(29,185,84,.35);box-shadow:0 16px 0 rgba(0,0,0,.5),0 24px 60px rgba(29,185,84,.2),inset 0 1px 0 rgba(255,255,255,.1)}
+.home-card:active{transform:translateY(-2px) rotateX(1deg);box-shadow:0 4px 0 rgba(0,0,0,.7),0 8px 24px rgba(29,185,84,.15)}
+.home-card-icon{font-size:34px;line-height:1;filter:drop-shadow(0 2px 8px rgba(0,0,0,.4))}
+.home-card-title{font-size:16px;font-weight:700;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.5)}
+.home-card-desc{font-size:12px;color:rgba(255,255,255,.45);line-height:1.65;flex:1}
+.home-card-arrow{font-size:11px;color:#1DB954;font-weight:700;letter-spacing:.8px;margin-top:4px;transition:letter-spacing .2s}
+.home-card:hover .home-card-arrow{letter-spacing:2px}
+.home-card.card-dashboards:hover{background:rgba(108,92,231,.08);border-color:rgba(108,92,231,.4);box-shadow:0 16px 0 rgba(0,0,0,.5),0 24px 60px rgba(108,92,231,.2),inset 0 1px 0 rgba(255,255,255,.1)}
 .home-card.card-dashboards .home-card-arrow{color:#a29bfe}
-.home-card.card-dp:hover{background:rgba(0,184,212,.1);border-color:rgba(0,184,212,.4);box-shadow:0 8px 28px rgba(0,184,212,.12)}
+.home-card.card-dp:hover{background:rgba(0,184,212,.06);border-color:rgba(0,184,212,.35);box-shadow:0 16px 0 rgba(0,0,0,.5),0 24px 60px rgba(0,184,212,.18),inset 0 1px 0 rgba(255,255,255,.1)}
 .home-card.card-dp .home-card-arrow{color:#00cec9}
-.home-card.card-dash:hover{background:rgba(253,121,168,.1);border-color:rgba(253,121,168,.4);box-shadow:0 8px 28px rgba(253,121,168,.12)}
+.home-card.card-dash:hover{background:rgba(253,121,168,.06);border-color:rgba(253,121,168,.35);box-shadow:0 16px 0 rgba(0,0,0,.5),0 24px 60px rgba(253,121,168,.18),inset 0 1px 0 rgba(255,255,255,.1)}
 .home-card.card-dash .home-card-arrow{color:#fd79a8}
-.home-version{margin-top:40px;font-size:11px;color:#2d4a35;letter-spacing:.5px}
+.home-version{margin-top:44px;font-size:10px;color:rgba(255,255,255,.15);letter-spacing:1.5px;text-transform:uppercase}
 
 /* ── DB PART ── */
 .db-hero{background:linear-gradient(135deg,#0B1E10 0%,#122A18 100%);padding:28px 28px;color:#fff}
@@ -393,43 +404,49 @@ body{font-family:'Rubik','Bahnschrift Light SemiCondensed','Bahnschrift',Arial,s
 
 <!-- HOME LANDING PAGE -->
 <div class="section active" id="section-home">
-  <div class="home-brand">
-    <div class="home-logo">RADAR</div>
-    <div class="home-tagline">RevOps Data &amp; Analytics Resource</div>
-    <div class="home-sub">Your central hub for Databricks data, metric definitions, dashboard templates, and live team dashboards.</div>
+  <canvas id="home-canvas"></canvas>
+  <div class="home-glow-orb g1"></div>
+  <div class="home-glow-orb g2"></div>
+  <div class="home-glow-orb g3"></div>
+  <div class="home-content">
+    <div class="home-brand">
+      <div class="home-logo">RADAR</div>
+      <div class="home-tagline">RevOps Data &amp; Analytics Resource</div>
+      <div class="home-sub">Your central hub for Databricks data, metric definitions, dashboard templates, and live team dashboards.</div>
+    </div>
+
+    <div class="home-cards">
+      <div class="home-card" onclick="switchTab('db')">
+        <div class="home-card-icon">🗄️</div>
+        <div class="home-card-title">Database Explorer</div>
+        <div class="home-card-desc">Browse all <code style="font-size:11px;background:rgba(255,255,255,.08);padding:1px 5px;border-radius:4px;color:#1DB954">shared.revops</code> tables, explore schemas, and connect your Databricks workspace. Gold, silver, and lookup layers all in one place.</div>
+        <div class="home-card-arrow">EXPLORE TABLES →</div>
+      </div>
+
+      <div class="home-card card-dp" onclick="switchTab('dp')">
+        <div class="home-card-icon">📖</div>
+        <div class="home-card-title">DataPedia</div>
+        <div class="home-card-desc">Official metric definitions, business rules, date-column logic, and approved KPIs. The single source of truth for how every number is calculated across all dashboards.</div>
+        <div class="home-card-arrow">VIEW DEFINITIONS →</div>
+      </div>
+
+      <div class="home-card card-dash" onclick="switchTab('dash')">
+        <div class="home-card-icon">📊</div>
+        <div class="home-card-title">Dashboard Plan</div>
+        <div class="home-card-desc">Build a new dashboard from scratch — SQL templates, filter references, and a step-by-step Claude prompt that generates all project files instantly.</div>
+        <div class="home-card-arrow">START BUILDING →</div>
+      </div>
+
+      <div class="home-card card-dashboards" onclick="switchTab('dashboards')">
+        <div class="home-card-icon">📱</div>
+        <div class="home-card-title">Team Dashboards</div>
+        <div class="home-card-desc">Browse all live dashboards built by the team — Channels, Marketing, Pipeline, and more. Click any card to open the dashboard directly.</div>
+        <div class="home-card-arrow">BROWSE DASHBOARDS →</div>
+      </div>
+    </div>
+
+    <div class="home-version">RADAR v2.0 · shared.revops · Databricks</div>
   </div>
-
-  <div class="home-cards">
-    <div class="home-card" onclick="switchTab('db')">
-      <div class="home-card-icon">🗄️</div>
-      <div class="home-card-title">Database Explorer</div>
-      <div class="home-card-desc">Browse all <code style="font-size:11px;background:rgba(255,255,255,.1);padding:1px 5px;border-radius:4px">shared.revops</code> tables, explore schemas, and connect your Databricks workspace. Gold, silver, and lookup layers all in one place.</div>
-      <div class="home-card-arrow">EXPLORE TABLES →</div>
-    </div>
-
-    <div class="home-card card-dp" onclick="switchTab('dp')">
-      <div class="home-card-icon">📖</div>
-      <div class="home-card-title">DataPedia</div>
-      <div class="home-card-desc">Official metric definitions, business rules, date-column logic, and approved KPIs. The single source of truth for how every number is calculated across all dashboards.</div>
-      <div class="home-card-arrow">VIEW DEFINITIONS →</div>
-    </div>
-
-    <div class="home-card card-dash" onclick="switchTab('dash')">
-      <div class="home-card-icon">📊</div>
-      <div class="home-card-title">Dashboard Plan</div>
-      <div class="home-card-desc">Build a new dashboard from scratch — SQL templates, filter references, and a step-by-step Claude prompt that generates all project files instantly.</div>
-      <div class="home-card-arrow">START BUILDING →</div>
-    </div>
-
-    <div class="home-card card-dashboards" onclick="switchTab('dashboards')">
-      <div class="home-card-icon">📱</div>
-      <div class="home-card-title">Team Dashboards</div>
-      <div class="home-card-desc">Browse all live dashboards built by the team — Channels, Marketing, Pipeline, and more. Click any card to open the dashboard directly.</div>
-      <div class="home-card-arrow">BROWSE DASHBOARDS →</div>
-    </div>
-  </div>
-
-  <div class="home-version">RADAR v2.0 · shared.revops · Databricks</div>
 </div>
 
 <!-- PART 1 — DATABASE -->
@@ -2495,6 +2512,128 @@ function closeSubmitModal() { document.getElementById('submit-modal-overlay').cl
 // Init dashboards on load
 buildDgFilters();
 renderDashboards();
+
+// ── NEURAL NETWORK PARTICLE BACKGROUND ──
+(function(){
+  const canvas = document.getElementById('home-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let W, H, particles, animId;
+
+  const COLORS = ['#1DB954','#00e5a0','#00cec9','#6c5ce7','#a29bfe'];
+  const COUNT  = 72;
+  const MAX_DIST = 130;
+  const SPEED  = 0.35;
+
+  function resize() {
+    const sec = document.getElementById('section-home');
+    W = canvas.width  = sec ? sec.offsetWidth  : window.innerWidth;
+    H = canvas.height = sec ? sec.offsetHeight : window.innerHeight;
+  }
+
+  function rand(min,max){ return Math.random()*(max-min)+min; }
+
+  function initParticles() {
+    particles = Array.from({length:COUNT}, () => ({
+      x:  rand(0, W), y: rand(0, H),
+      vx: rand(-SPEED, SPEED), vy: rand(-SPEED, SPEED),
+      r:  rand(1.5, 3),
+      color: COLORS[Math.floor(Math.random()*COLORS.length)],
+      alpha: rand(0.4, 0.85)
+    }));
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // draw connections
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i+1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const d  = Math.sqrt(dx*dx + dy*dy);
+        if (d < MAX_DIST) {
+          const opacity = (1 - d/MAX_DIST) * 0.25;
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = `rgba(29,185,84,${opacity})`;
+          ctx.lineWidth = 0.7;
+          ctx.stroke();
+        }
+      }
+    }
+
+    // draw nodes
+    particles.forEach(p => {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+      ctx.fillStyle = p.color;
+      ctx.globalAlpha = p.alpha;
+      ctx.fill();
+
+      // glow
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r*2.5, 0, Math.PI*2);
+      const g = ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r*2.5);
+      g.addColorStop(0, p.color.replace(')',',0.3)').replace('rgb','rgba').replace('#',''));
+      g.addColorStop(1, 'transparent');
+      ctx.fillStyle = p.color + '18';
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    });
+
+    // move
+    particles.forEach(p => {
+      p.x += p.vx; p.y += p.vy;
+      if (p.x < 0) p.x = W; if (p.x > W) p.x = 0;
+      if (p.y < 0) p.y = H; if (p.y > H) p.y = 0;
+    });
+
+    animId = requestAnimationFrame(draw);
+  }
+
+  function start() {
+    cancelAnimationFrame(animId);
+    resize();
+    initParticles();
+    draw();
+  }
+
+  function stop() { cancelAnimationFrame(animId); }
+
+  window.addEventListener('resize', () => { resize(); initParticles(); });
+
+  // Start when home is visible, stop when hidden
+  const homeObs = new MutationObserver(() => {
+    const sec = document.getElementById('section-home');
+    if (sec && (sec.classList.contains('active') || sec.style.display !== 'none')) {
+      start();
+    } else {
+      stop();
+    }
+  });
+  const sec = document.getElementById('section-home');
+  if (sec) {
+    homeObs.observe(sec, {attributes:true, attributeFilter:['class','style']});
+    if (sec.classList.contains('active')) start();
+  }
+})();
+
+// ── 3D CARD TILT ──
+document.querySelectorAll('.home-card').forEach(card => {
+  card.addEventListener('mousemove', e => {
+    const r  = card.getBoundingClientRect();
+    const cx = r.left + r.width  / 2;
+    const cy = r.top  + r.height / 2;
+    const dx = (e.clientX - cx) / (r.width  / 2);
+    const dy = (e.clientY - cy) / (r.height / 2);
+    card.style.transform = `translateY(-8px) rotateY(${dx*6}deg) rotateX(${-dy*5}deg)`;
+  });
+  card.addEventListener('mouseleave', () => {
+    card.style.transform = '';
+  });
+});
 </script>
 <!-- CONNECTION MODAL -->
 <div class="conn-modal-overlay" id="conn-modal-overlay" onclick="if(event.target===this)closeConnModal()">
