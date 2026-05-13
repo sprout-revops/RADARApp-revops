@@ -24,6 +24,27 @@ body{font-family:'Rubik','Bahnschrift Light SemiCondensed','Bahnschrift',Arial,s
 .section{display:none;min-height:100%}
 .section.active{display:block}
 
+/* ── HOME PAGE ── */
+#section-home{background:#0B1E10;min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 32px}
+.home-brand{text-align:center;margin-bottom:48px}
+.home-logo{font-size:48px;font-weight:800;color:#1DB954;letter-spacing:6px;line-height:1}
+.home-tagline{font-size:13px;color:#636E72;margin-top:8px;letter-spacing:1.5px;text-transform:uppercase;font-weight:500}
+.home-sub{font-size:14px;color:#B2BEC3;margin-top:12px;max-width:480px;line-height:1.6;text-align:center}
+.home-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;max-width:720px;width:100%}
+.home-card{background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:16px;padding:28px 24px;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;gap:10px}
+.home-card:hover{background:rgba(29,185,84,.12);border-color:rgba(29,185,84,.5);transform:translateY(-3px);box-shadow:0 8px 28px rgba(29,185,84,.15)}
+.home-card-icon{font-size:32px;line-height:1}
+.home-card-title{font-size:16px;font-weight:700;color:#fff}
+.home-card-desc{font-size:12px;color:#B2BEC3;line-height:1.6;flex:1}
+.home-card-arrow{font-size:11px;color:#1DB954;font-weight:700;letter-spacing:.5px;margin-top:4px}
+.home-card.card-dashboards:hover{background:rgba(108,92,231,.12);border-color:rgba(108,92,231,.5);box-shadow:0 8px 28px rgba(108,92,231,.15)}
+.home-card.card-dashboards .home-card-arrow{color:#a29bfe}
+.home-card.card-dp:hover{background:rgba(0,184,212,.1);border-color:rgba(0,184,212,.4);box-shadow:0 8px 28px rgba(0,184,212,.12)}
+.home-card.card-dp .home-card-arrow{color:#00cec9}
+.home-card.card-dash:hover{background:rgba(253,121,168,.1);border-color:rgba(253,121,168,.4);box-shadow:0 8px 28px rgba(253,121,168,.12)}
+.home-card.card-dash .home-card-arrow{color:#fd79a8}
+.home-version{margin-top:40px;font-size:11px;color:#2d4a35;letter-spacing:.5px}
+
 /* ── DB PART ── */
 .db-hero{background:linear-gradient(135deg,#0B1E10 0%,#122A18 100%);padding:28px 28px;color:#fff}
 .db-hero h1{font-size:20px;font-weight:700;margin-bottom:6px}
@@ -359,12 +380,54 @@ body{font-family:'Rubik','Bahnschrift Light SemiCondensed','Bahnschrift',Arial,s
 
 <div class="app-layout">
   <div class="sidebar">
-    <div class="sidebar-tab active" id="tab-db" onclick="switchTab('db')">🗄️ Database</div>
+    <div class="sidebar-tab active" id="tab-home" onclick="switchTab('home')">🏠 Home</div>
+    <div class="sidebar-tab" id="tab-db" onclick="switchTab('db')">🗄️ Database</div>
     <div class="sidebar-tab" id="tab-dp" onclick="switchTab('dp')">📖 DataPedia</div>
     <div class="sidebar-tab" id="tab-dash" onclick="switchTab('dash')">📊 Dashboard Plan</div>
     <div class="sidebar-tab" id="tab-dashboards" onclick="switchTab('dashboards')">📱 Dashboards</div>
   </div>
   <div class="content-area">
+
+<!-- HOME LANDING PAGE -->
+<div class="section active" id="section-home">
+  <div class="home-brand">
+    <div class="home-logo">RADAR</div>
+    <div class="home-tagline">RevOps Data &amp; Analytics Resource</div>
+    <div class="home-sub">Your central hub for Databricks data, metric definitions, dashboard templates, and live team dashboards.</div>
+  </div>
+
+  <div class="home-cards">
+    <div class="home-card" onclick="switchTab('db')">
+      <div class="home-card-icon">🗄️</div>
+      <div class="home-card-title">Database Explorer</div>
+      <div class="home-card-desc">Browse all <code style="font-size:11px;background:rgba(255,255,255,.1);padding:1px 5px;border-radius:4px">shared.revops</code> tables, explore schemas, and connect your Databricks workspace. Gold, silver, and lookup layers all in one place.</div>
+      <div class="home-card-arrow">EXPLORE TABLES →</div>
+    </div>
+
+    <div class="home-card card-dp" onclick="switchTab('dp')">
+      <div class="home-card-icon">📖</div>
+      <div class="home-card-title">DataPedia</div>
+      <div class="home-card-desc">Official metric definitions, business rules, date-column logic, and approved KPIs. The single source of truth for how every number is calculated across all dashboards.</div>
+      <div class="home-card-arrow">VIEW DEFINITIONS →</div>
+    </div>
+
+    <div class="home-card card-dash" onclick="switchTab('dash')">
+      <div class="home-card-icon">📊</div>
+      <div class="home-card-title">Dashboard Plan</div>
+      <div class="home-card-desc">Build a new dashboard from scratch — SQL templates, filter references, and a step-by-step Claude prompt that generates all project files instantly.</div>
+      <div class="home-card-arrow">START BUILDING →</div>
+    </div>
+
+    <div class="home-card card-dashboards" onclick="switchTab('dashboards')">
+      <div class="home-card-icon">📱</div>
+      <div class="home-card-title">Team Dashboards</div>
+      <div class="home-card-desc">Browse all live dashboards built by the team — Channels, Marketing, Pipeline, and more. Click any card to open the dashboard directly.</div>
+      <div class="home-card-arrow">BROWSE DASHBOARDS →</div>
+    </div>
+  </div>
+
+  <div class="home-version">RADAR v2.0 · shared.revops · Databricks</div>
+</div>
 
 <!-- PART 1 — DATABASE -->
 <div class="section active" id="section-db">
@@ -1429,9 +1492,9 @@ function switchTab(t) {
   document.querySelectorAll('.section').forEach(s => { s.classList.remove('active'); s.style.display='none'; });
   document.querySelectorAll('.sidebar-tab').forEach(x => x.classList.remove('active'));
   const sec = document.getElementById('section-' + t);
-  sec.classList.add('active');
-  sec.style.display = 'block';
-  document.getElementById('tab-' + t).classList.add('active');
+  if (sec) { sec.classList.add('active'); sec.style.display = 'block'; }
+  const tab = document.getElementById('tab-' + t);
+  if (tab) tab.classList.add('active');
 }
 
 // ── DATABASE ──
