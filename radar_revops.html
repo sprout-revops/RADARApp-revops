@@ -369,7 +369,7 @@ body{font-family:'Rubik','Bahnschrift Light SemiCondensed','Bahnschrift',Arial,s
 
 <div class="header">
   <div class="header-left">
-    <div class="logo">RADAR</div>
+    <div class="logo" onclick="switchTab('home')" style="cursor:pointer;user-select:none" title="Back to Home">RADAR</div>
     <div>
       <div class="header-title">RevOps Analytics, Data &amp; Reporting</div>
       <div class="header-sub">Sprout Solutions · shared.revops · Databricks</div>
@@ -384,7 +384,6 @@ body{font-family:'Rubik','Bahnschrift Light SemiCondensed','Bahnschrift',Arial,s
 
 <div class="app-layout home-mode">
   <div class="sidebar">
-    <div class="sidebar-tab active" id="tab-home" onclick="switchTab('home')">🏠 Home</div>
     <div class="sidebar-tab" id="tab-db" onclick="switchTab('db')">🗄️ Database</div>
     <div class="sidebar-tab" id="tab-dp" onclick="switchTab('dp')">📖 DataPedia</div>
     <div class="sidebar-tab" id="tab-dash" onclick="switchTab('dash')">📊 Dashboard Plan</div>
