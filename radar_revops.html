@@ -1934,11 +1934,35 @@ updateConnBadge();
 
 
 // ── LOGIN ──
+const ALLOWED_EMAILS = new Set([
+  'apanares@sprout.ph',
+  'nvicente@sprout.ph',
+  'mcpartosa@sprout.ph',
+  'jsayseng@sprout.ph',
+  'rbelardo@sprout.ph',
+  'fibrahim@sprout.ph',
+  'lurbina@sprout.ph',
+  'rrayos@sprout.ph',
+  'louieb@sprout.ph',
+  'jmchumacera@sprout.ph',
+  'crysteli@sprout.ph',
+  'jllopez@sprout.ph',
+  'shairaa@sprout.ph',
+  'jvillanueva@sprout.ph',
+  'amagalona@sprout.ph',
+  'fguasque@sprout.ph',
+  'dpomento@sprout.ph',
+  'mpulido@sprout.ph',
+  'katryns@sprout.ph',
+  'mgaluego@sprout.ph',
+  'rnjaranilla@sprout.ph',
+]);
+
 function radarLogin() {
   const email = (document.getElementById('login-email').value || '').trim().toLowerCase();
   const errEl = document.getElementById('login-error');
   if (!email) { errEl.textContent = 'Please enter your email address.'; return; }
-  if (!email.endsWith('@sprout.ph')) { errEl.textContent = 'Access restricted to Sprout users only.'; return; }
+  if (!ALLOWED_EMAILS.has(email)) { errEl.textContent = 'Access denied. Contact RevOps to request access.'; return; }
   localStorage.setItem('radar_user_email', email);
   errEl.textContent = '';
   document.getElementById('login-overlay').style.display = 'none';
@@ -1957,7 +1981,7 @@ function radarLogout() {
 // Check session on load
 (function() {
   const stored = localStorage.getItem('radar_user_email');
-  if (stored && stored.endsWith('@sprout.ph')) {
+  if (stored && ALLOWED_EMAILS.has(stored)) {
     document.getElementById('login-overlay').style.display = 'none';
     document.getElementById('app-root').style.display = 'block';
     document.getElementById('user-email-display').textContent = stored;
