@@ -1678,132 +1678,22 @@ DATABRICKS_TOKEN</div>
 
       <!-- Sub Filters -->
       <div class="bd-section">
-        <div class="bd-section-title">Sub Filters <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:10px;color:rgba(255,255,255,.3)">Optional breakdown dimensions for the dashboard</span></div>
-        <div class="bd-filters-grid">
-
-          <div class="bd-filter-box">
-            <div class="bd-filter-box-title">Segment <span class="bd-col-tag">segment · silver_company</span></div>
-            <div class="bd-check-list" id="bd-segment-group">
-              <label class="bd-check-item"><input type="checkbox" value="SME"> SME</label>
-              <label class="bd-check-item"><input type="checkbox" value="ENT"> Enterprise (ENT)</label>
-              <label class="bd-check-item"><input type="checkbox" value="Channels"> Channels</label>
-            </div>
-          </div>
-
-          <div class="bd-filter-box">
-            <div class="bd-filter-box-title">Deal Stage <span class="bd-col-tag">stage_label</span></div>
-            <div class="bd-check-list" id="bd-stage-group">
-              <label class="bd-check-item"><input type="checkbox" value="MQL"> MQL</label>
-              <label class="bd-check-item"><input type="checkbox" value="Initial Discovery Done"> Initial Discovery Done</label>
-              <label class="bd-check-item"><input type="checkbox" value="Solutioning"> Solutioning</label>
-              <label class="bd-check-item"><input type="checkbox" value="Commercial Negotiation"> Commercial Negotiation</label>
-              <label class="bd-check-item"><input type="checkbox" value="Committed Accounts"> Committed Accounts</label>
-              <label class="bd-check-item"><input type="checkbox" value="Contract Signed"> Contract Signed</label>
-              <label class="bd-check-item"><input type="checkbox" value="Project Handover"> Project Handover</label>
-              <label class="bd-check-item"><input type="checkbox" value="Closed Lost"> Closed Lost</label>
-              <label class="bd-check-item"><input type="checkbox" value="Disqualified"> Disqualified</label>
-              <label class="bd-check-item"><input type="checkbox" value="Sales Churn"> Sales Churn</label>
-            </div>
-          </div>
-
-          <div class="bd-filter-box">
-            <div class="bd-filter-box-title">Industry <span class="bd-col-tag">Industry · silver_company</span></div>
-            <div class="bd-check-list" id="bd-industry-group">
-              <label class="bd-check-item"><input type="checkbox" value="Retail"> Retail</label>
-              <label class="bd-check-item"><input type="checkbox" value="Services"> Services</label>
-              <label class="bd-check-item"><input type="checkbox" value="Manufacturing"> Manufacturing</label>
-              <label class="bd-check-item"><input type="checkbox" value="Healthcare"> Healthcare</label>
-              <label class="bd-check-item"><input type="checkbox" value="F&amp;B"> F&amp;B</label>
-              <label class="bd-check-item"><input type="checkbox" value="Technology"> Technology</label>
-              <label class="bd-check-item"><input type="checkbox" value="Education"> Education</label>
-              <label class="bd-check-item"><input type="checkbox" value="Financial Services"> Financial Services</label>
-              <label class="bd-check-item"><input type="checkbox" value="Real Estate"> Real Estate</label>
-              <label class="bd-check-item"><input type="checkbox" value="Logistics"> Logistics</label>
-              <label class="bd-check-item"><input type="checkbox" value="Construction"> Construction</label>
-              <label class="bd-check-item"><input type="checkbox" value="BPO"> BPO</label>
-              <label class="bd-check-item"><input type="checkbox" value="Government"> Government</label>
-              <label class="bd-check-item"><input type="checkbox" value="Media &amp; Entertainment"> Media &amp; Entertainment</label>
-            </div>
-          </div>
-
-          <div class="bd-filter-box">
-            <div class="bd-filter-box-title">Sub-Industry <span class="bd-col-tag">Sub_industry · silver_company</span></div>
-            <input class="builder-input" id="bd-sub-industry" type="text" placeholder="e.g. Fast Food, Clinic, E-commerce" style="font-size:12px">
-          </div>
-
-          <div class="bd-filter-box">
-            <div class="bd-filter-box-title">Sales Rep <span class="bd-col-tag">sales_rep</span></div>
-            <select class="bd-select-multi" id="bd-rep" multiple size="6">
-              <option value="Katryn Saldajeno">Katryn Saldajeno</option>
-              <option value="Ferdie Salvosa">Ferdie Salvosa</option>
-              <option value="Nica Vicente">Nica Vicente</option>
-              <option value="Ryan Rayos">Ryan Rayos</option>
-              <option value="Jhon Chumacera">Jhon Chumacera</option>
-              <option value="Crystel Ibanez">Crystel Ibanez</option>
-              <option value="Jade Lopez">Jade Lopez</option>
-              <option value="Shiara Arenas">Shiara Arenas</option>
-              <option value="Jessa Villanueva">Jessa Villanueva</option>
-              <option value="Alyssa Magalona">Alyssa Magalona</option>
-              <option value="Francis Guasque">Francis Guasque</option>
-              <option value="Donna Pomento">Donna Pomento</option>
-              <option value="Mark Pulido">Mark Pulido</option>
-              <option value="Noel Duran">Noel Duran</option>
-              <option value="Joyce Losbanos">Joyce Losbanos</option>
-            </select>
-            <div style="font-size:10px;color:rgba(255,255,255,.3);margin-top:4px">Hold Ctrl / Cmd to select multiple</div>
-          </div>
-
-          <div class="bd-filter-box">
-            <div class="bd-filter-box-title">Team <span class="bd-col-tag">hubspot_team</span></div>
-            <select class="bd-select-multi" id="bd-team" multiple size="6">
-              <option value="PH SME Sales">PH SME Sales</option>
-              <option value="PH ENT Sales">PH ENT Sales</option>
-              <option value="TH Sales">TH Sales</option>
-              <option value="Channels">Channels</option>
-              <option value="Upsell">Upsell</option>
-              <option value="LDU">LDU</option>
-              <option value="CSM">CSM</option>
-            </select>
-            <div style="font-size:10px;color:rgba(255,255,255,.3);margin-top:4px">Hold Ctrl / Cmd to select multiple</div>
-          </div>
-
-          <div class="bd-filter-box">
-            <div class="bd-filter-box-title">Client Type <span class="bd-col-tag">client_type</span></div>
-            <div class="bd-check-list" id="bd-clienttype-group">
-              <label class="bd-check-item"><input type="checkbox" value="New Business"> New Business</label>
-              <label class="bd-check-item"><input type="checkbox" value="Upsell Deals"> Upsell Deals</label>
-              <label class="bd-check-item"><input type="checkbox" value="TH Deals"> TH Deals</label>
-            </div>
-          </div>
-
-          <div class="bd-filter-box">
-            <div class="bd-filter-box-title">Analytics Source <span class="bd-col-tag">analytics_source</span></div>
-            <div class="bd-check-list" id="bd-analytics-group">
-              <label class="bd-check-item"><input type="checkbox" value="ORGANIC_SEARCH"> Organic Search</label>
-              <label class="bd-check-item"><input type="checkbox" value="DIRECT_TRAFFIC"> Direct Traffic</label>
-              <label class="bd-check-item"><input type="checkbox" value="REFERRALS"> Referrals</label>
-              <label class="bd-check-item"><input type="checkbox" value="SOCIAL_MEDIA"> Social Media</label>
-              <label class="bd-check-item"><input type="checkbox" value="EMAIL_MARKETING"> Email Marketing</label>
-              <label class="bd-check-item"><input type="checkbox" value="PAID_SEARCH"> Paid Search</label>
-              <label class="bd-check-item"><input type="checkbox" value="PAID_SOCIAL"> Paid Social</label>
-              <label class="bd-check-item"><input type="checkbox" value="OTHER_CAMPAIGNS"> Other Campaigns</label>
-            </div>
-          </div>
-
-          <div class="bd-filter-box">
-            <div class="bd-filter-box-title">Product Category <span class="bd-col-tag">product_category · silver_line_items</span></div>
-            <input class="builder-input" id="bd-product-cat" type="text" placeholder="e.g. HR, Payroll, Embedded Finance" style="font-size:12px">
-          </div>
-
-          <div class="bd-filter-box">
-            <div class="bd-filter-box-title">Product Group <span class="bd-col-tag">product_group · silver_line_items</span></div>
-            <input class="builder-input" id="bd-product-grp" type="text" placeholder="e.g. Core HR, Payroll Add-ons" style="font-size:12px">
-          </div>
-
+        <div class="bd-section-title">Sub Filters <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:10px;color:rgba(255,255,255,.3)">Select which filters to add to the dashboard</span></div>
+        <div class="bd-check-list" id="bd-subfilter-group" style="display:flex;flex-wrap:wrap;gap:8px 16px">
+          <label class="bd-check-item"><input type="checkbox" value="Segment (segment_official)"> Segment <span class="bd-col-tag">segment_official</span></label>
+          <label class="bd-check-item"><input type="checkbox" value="Deal Stage (stage_label)"> Deal Stage <span class="bd-col-tag">stage_label</span></label>
+          <label class="bd-check-item"><input type="checkbox" value="Industry (industry)"> Industry <span class="bd-col-tag">industry</span></label>
+          <label class="bd-check-item"><input type="checkbox" value="Sub-Industry (Sub_industry)"> Sub-Industry <span class="bd-col-tag">Sub_industry</span></label>
+          <label class="bd-check-item"><input type="checkbox" value="Sales Rep (sales_rep)"> Sales Rep <span class="bd-col-tag">sales_rep</span></label>
+          <label class="bd-check-item"><input type="checkbox" value="Team (hubspot_team)"> Team <span class="bd-col-tag">hubspot_team</span></label>
+          <label class="bd-check-item"><input type="checkbox" value="Client Type (client_type)"> Client Type <span class="bd-col-tag">client_type</span></label>
+          <label class="bd-check-item"><input type="checkbox" value="Analytics Source (analytics_source)"> Analytics Source <span class="bd-col-tag">analytics_source</span></label>
+          <label class="bd-check-item"><input type="checkbox" value="Product Category (product_category)"> Product Category <span class="bd-col-tag">product_category</span></label>
+          <label class="bd-check-item"><input type="checkbox" value="Product Group (product_group)"> Product Group <span class="bd-col-tag">product_group</span></label>
         </div>
       </div>
 
-            <!-- Views to Include -->
+                  <!-- Views to Include -->
       <div class="bd-section">
         <div class="bd-section-title">Views to Include <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:10px;color:rgba(255,255,255,.25)">(select all that apply)</span></div>
         <div class="bd-views-grid" id="bd-views-group">
@@ -3473,30 +3363,16 @@ function _builderRenderPrompt() {
     }
   }
   // _dateScope === 'all' -> fromDate and toDate stay empty (no date filter)
-  // Sales Rep: multi-select
-  var repEl = document.getElementById('bd-rep');
-  var rep = repEl ? Array.from(repEl.selectedOptions).map(function(o){return o.value;}).join(', ') : '';
-  // Team: multi-select
-  var teamEl = document.getElementById('bd-team');
-  var team = teamEl ? Array.from(teamEl.selectedOptions).map(function(o){return o.value;}).join(', ') : '';
-
   function getChecked(groupId) {
     var vals = [];
     var grp = document.getElementById(groupId);
     if (grp) grp.querySelectorAll('input[type=checkbox]:checked').forEach(function(cb){ vals.push(cb.value); });
     return vals;
   }
-  var pipelines   = getChecked('bd-pipeline-group');
-  var sources     = getChecked('bd-source-group');
-  var segments    = getChecked('bd-segment-group');
-  var stages      = getChecked('bd-stage-group');
-  var industries  = getChecked('bd-industry-group');
-  var clienttypes = getChecked('bd-clienttype-group');
-  var analytics   = getChecked('bd-analytics-group');
-  var subIndustry = (document.getElementById('bd-sub-industry')||{}).value || '';
-  var productCat  = (document.getElementById('bd-product-cat')||{}).value || '';
-  var productGrp  = (document.getElementById('bd-product-grp')||{}).value || '';
-  var views       = getChecked('bd-views-group');
+  var pipelines  = getChecked('bd-pipeline-group');
+  var sources    = getChecked('bd-source-group');
+  var subFilters = getChecked('bd-subfilter-group');
+  var views      = getChecked('bd-views-group');
 
   // ── Build SQL filter block ──
   var dateSQL = fromDate && toDate
@@ -3509,21 +3385,7 @@ function _builderRenderPrompt() {
     ? "pipeline_name IN ('" + pipelines.join("','") + "')"
     : "pipeline_name IN ('Sales Pipeline','PH Upsell Pipeline','Unified Channel Pipeline','TH Sales Pipeline')";
 
-  var segSQL      = segments.length    ? "AND segment IN ('" + segments.join("','") + "')" : '';
-  var sourceSQL   = sources.length     ? "AND department_source_clean IN ('" + sources.join("','") + "')" : '';
-  var stageSQL    = stages.length      ? "AND stage_label IN ('" + stages.join("','") + "')" : '';
-  var indSQL      = industries.length  ? "AND industry IN ('" + industries.join("','") + "')" : '';
-  var subIndSQL   = subIndustry.trim() ? "AND Sub_industry = '" + subIndustry.trim() + "'" : '';
-  var ctypeSQL    = clienttypes.length ? "AND client_type IN ('" + clienttypes.join("','") + "')" : '';
-  var analyticsSQL= analytics.length   ? "AND analytics_source IN ('" + analytics.join("','") + "')" : '';
-  var prodCatSQL  = productCat.trim()  ? "AND product_category = '" + productCat.trim() + "'" : '';
-  var prodGrpSQL  = productGrp.trim()  ? "AND product_group = '" + productGrp.trim() + "'" : '';
-  var repSQL      = rep.trim()
-    ? "AND sales_rep IN ('" + rep.split(',').map(function(r){return r.trim();}).join("','") + "')"
-    : '';
-  var teamSQL     = team.trim()
-    ? "AND hubspot_team IN ('" + team.split(',').map(function(t){return t.trim();}).join("','") + "')"
-    : '';
+  var sourceSQL = sources.length ? "AND department_source_clean IN ('" + sources.join("','") + "')" : '';
 
   // ── Get selected metrics from DOM ──
   var _selectedNames = [];
@@ -3568,35 +3430,16 @@ function _builderRenderPrompt() {
     + '- Dashboard Name: ' + name + '\n'
     + (fromDate ? '- Date From: ' + fromDate + '\n' : '')
     + (toDate   ? '- Date To:   ' + toDate   + '\n' : '')
-    + (pipelines.length   ? '- Pipelines: '      + pipelines.join(', ')   + '\n' : '- Pipelines: All\n')
-    + (sources.length     ? '- Dept Source: '    + sources.join(', ')     + '\n' : '')
-    + (segments.length    ? '- Segments: '       + segments.join(', ')    + '\n' : '')
-    + (stages.length      ? '- Deal Stages: '    + stages.join(', ')      + '\n' : '')
-    + (industries.length  ? '- Industries: '     + industries.join(', ')  + '\n' : '')
-    + (subIndustry.trim() ? '- Sub-Industry: '   + subIndustry            + '\n' : '')
-    + (rep.trim()         ? '- Sales Reps: '     + rep                    + '\n' : '')
-    + (team.trim()        ? '- Teams: '          + team                   + '\n' : '')
-    + (clienttypes.length ? '- Client Type: '    + clienttypes.join(', ') + '\n' : '')
-    + (analytics.length   ? '- Analytics Source: '+ analytics.join(', ')  + '\n' : '')
-    + (productCat.trim()  ? '- Product Category: '+ productCat            + '\n' : '')
-    + (productGrp.trim()  ? '- Product Group: '  + productGrp             + '\n' : '')
+    + (pipelines.length  ? '- Pipelines: '    + pipelines.join(', ')  + '\n' : '- Pipelines: All\n')
+    + (sources.length    ? '- Dept Source: '  + sources.join(', ')    + '\n' : '')
+    + (subFilters.length ? '- Sub Filters to add to dashboard: ' + subFilters.join(', ') + '\n' : '')
     + '\n## Views to Include\n' + viewList + '\n\n'
     + '## Metrics to Include\n\n' + mBlock + '\n\n'
     + '## Global SQL Filters (apply to ALL queries)\n'
     + '```sql\n'
     + '-- Date filter\n' + dateSQL + '\n'
     + '-- Pipeline\n' + pipeSQL + '\n'
-    + (segSQL       ? '-- Segment\n'          + segSQL       + '\n' : '')
-    + (sourceSQL    ? '-- Dept Source\n'      + sourceSQL    + '\n' : '')
-    + (stageSQL     ? '-- Deal Stage\n'       + stageSQL     + '\n' : '')
-    + (indSQL       ? '-- Industry\n'         + indSQL       + '\n' : '')
-    + (subIndSQL    ? '-- Sub-Industry\n'     + subIndSQL    + '\n' : '')
-    + (ctypeSQL     ? '-- Client Type\n'      + ctypeSQL     + '\n' : '')
-    + (analyticsSQL ? '-- Analytics Source\n' + analyticsSQL + '\n' : '')
-    + (repSQL       ? '-- Sales Rep\n'        + repSQL       + '\n' : '')
-    + (teamSQL      ? '-- Team\n'             + teamSQL      + '\n' : '')
-    + (prodCatSQL   ? '-- Product Category\n' + prodCatSQL   + '\n' : '')
-    + (prodGrpSQL   ? '-- Product Group\n'    + prodGrpSQL   + '\n' : '')
+    + (sourceSQL ? '-- Dept Source\n' + sourceSQL + '\n' : '')
     + "-- Exclude renewals (always)\nAND deal_type NOT IN ('Renewal','Upsell - Renewal') AND LOWER(deal_name) NOT LIKE '%renewal%'\n```\n\n"
     + '## Build Instructions\n'
     + '1. Use Databricks SQL: USE CATALOG shared; USE SCHEMA revops;\n'
