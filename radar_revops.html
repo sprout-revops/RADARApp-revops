@@ -1576,20 +1576,31 @@ DATABRICKS_TOKEN</div>
       <div class="bd-section">
         <div class="bd-section-title">Date Filter <span class="bd-col-tag">create_date / close_date</span></div>
 
-        <!-- Mode selector -->
+        <!-- Step 1: Scope -->
         <div class="bd-date-mode-row">
           <label class="bd-date-mode-btn">
-            <input type="radio" name="bd-date-mode" value="all" checked onchange="bdDateMode('all')">
+            <input type="radio" name="bd-date-scope" value="all" checked onchange="bdDateScope('all')">
             <span>All Data</span>
           </label>
           <label class="bd-date-mode-btn">
-            <input type="radio" name="bd-date-mode" value="range" onchange="bdDateMode('range')">
-            <span>Date Range</span>
+            <input type="radio" name="bd-date-scope" value="specific" onchange="bdDateScope('specific')">
+            <span>Specific Date Range</span>
           </label>
-          <label class="bd-date-mode-btn">
-            <input type="radio" name="bd-date-mode" value="monthly" onchange="bdDateMode('monthly')">
-            <span>Monthly</span>
-          </label>
+        </div>
+
+        <!-- Step 2: How to filter (shown only when Specific is selected) -->
+        <div id="bd-date-type-row" style="display:none;margin-top:4px">
+          <div style="font-size:11px;color:rgba(255,255,255,.35);margin-bottom:8px;letter-spacing:.3px">How do you want to filter?</div>
+          <div class="bd-date-mode-row" style="margin-bottom:12px">
+            <label class="bd-date-mode-btn">
+              <input type="radio" name="bd-date-type" value="range" onchange="bdDateMode('range')">
+              <span>Date Between</span>
+            </label>
+            <label class="bd-date-mode-btn">
+              <input type="radio" name="bd-date-type" value="monthly" onchange="bdDateMode('monthly')">
+              <span>Monthly</span>
+            </label>
+          </div>
         </div>
 
         <!-- Date Range inputs -->
@@ -3402,6 +3413,17 @@ function _builderRenderChips() {
 }
 
 
+function bdDateScope(scope) {
+  var typeRow = document.getElementById('bd-date-type-row');
+  if (scope === 'all') {
+    typeRow.style.display = 'none';
+    document.getElementById('bd-date-range').style.display = 'none';
+    document.getElementById('bd-date-monthly').style.display = 'none';
+    document.querySelectorAll('input[name="bd-date-type"]').forEach(function(r){ r.checked = false; });
+  } else {
+    typeRow.style.display = 'block';
+  }
+}
 function bdDateMode(mode) {
   document.getElementById('bd-date-range').style.display   = mode === 'range'   ? 'flex' : 'none';
   document.getElementById('bd-date-monthly').style.display = mode === 'monthly' ? 'flex' : 'none';
@@ -3432,22 +3454,25 @@ function _builderDateSQL(val,from,to) {
 function _builderRenderPrompt() {
   // ── Read all config fields ──
   var name     = (document.getElementById('bd-name')||{}).value || 'RevOps Dashboard';
-  // Date filter — read based on selected mode
-  var _dateMode = (document.querySelector('input[name="bd-date-mode"]:checked')||{}).value || 'all';
+  // Date filter — two-step: scope then type
+  var _dateScope = (document.querySelector('input[name="bd-date-scope"]:checked')||{}).value || 'all';
+  var _dateType  = (document.querySelector('input[name="bd-date-type"]:checked')||{}).value || '';
   var fromDate = '', toDate = '';
-  if (_dateMode === 'range') {
-    fromDate = (document.getElementById('bd-from')||{}).value || '';
-    toDate   = (document.getElementById('bd-to')||{}).value || '';
-  } else if (_dateMode === 'monthly') {
-    var _mo = (document.getElementById('bd-month')||{}).value || '';
-    var _yr = (document.getElementById('bd-year')||{}).value || '';
-    if (_mo && _yr) {
-      var _lastDay = new Date(_yr, parseInt(_mo), 0).getDate();
-      fromDate = _yr + '-' + _mo + '-01';
-      toDate   = _yr + '-' + _mo + '-' + _lastDay;
+  if (_dateScope === 'specific') {
+    if (_dateType === 'range') {
+      fromDate = (document.getElementById('bd-from')||{}).value || '';
+      toDate   = (document.getElementById('bd-to')||{}).value || '';
+    } else if (_dateType === 'monthly') {
+      var _mo = (document.getElementById('bd-month')||{}).value || '';
+      var _yr = (document.getElementById('bd-year')||{}).value || '';
+      if (_mo && _yr) {
+        var _lastDay = new Date(_yr, parseInt(_mo), 0).getDate();
+        fromDate = _yr + '-' + _mo + '-01';
+        toDate   = _yr + '-' + _mo + '-' + _lastDay;
+      }
     }
   }
-  // _dateMode === 'all' -> fromDate and toDate stay empty (no date filter)
+  // _dateScope === 'all' -> fromDate and toDate stay empty (no date filter)
   // Sales Rep: multi-select
   var repEl = document.getElementById('bd-rep');
   var rep = repEl ? Array.from(repEl.selectedOptions).map(function(o){return o.value;}).join(', ') : '';
