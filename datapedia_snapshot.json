@@ -797,5 +797,22 @@
     "status": "Approved",
     "last_updated": null,
     "notes": null
+  },
+  {
+    "metric_id": null,
+    "metric_name": "Implementation Fee",
+    "category": "Revenue",
+    "definition": "One time payment revenue generated from Implementation fee",
+    "business_question": "How much implementation fee we collect for the year?",
+    "formula_logic": "Sum of Implem Fee",
+    "sql_or_dax_formula": null,
+    "filters_inclusions": "Closed Won; Product Name contains \"Implem\"",
+    "exclusions": null,
+    "data_sources": null,
+    "owner": null,
+    "validated_by": null,
+    "status": "Approved",
+    "last_updated": null,
+    "notes": null
   }
 ]
