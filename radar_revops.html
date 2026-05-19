@@ -987,297 +987,22 @@ git push origin main</div>
       <p style="font-size:12px;color:#636E72;margin-bottom:16px;line-height:1.6">Built your dashboard with Claude? Follow these steps to publish it as a live shareable URL — for free, using GitHub Pages or Vercel — then submit it to RevOps to be added to the Dashboards gallery.</p>
 
       <div class="info-box" style="margin-bottom:20px">
-        <strong>How it works:</strong> Claude writes <code>fetch_data.py</code> (queries Databricks on a schedule), <code>dashboard.html</code> (reads the data and shows KPIs), and all the automation files. You paste in your credentials, run one command to test, push to GitHub — and your dashboard becomes a live shareable URL that auto-refreshes daily.<br><br>
-        <strong>Why this approach?</strong> No CORS issues (browser never calls Databricks directly) · No backend to maintain · GitHub Pages hosting is free · Full date + segment filtering with no re-querying.
+        ✅ <strong>Already built your dashboard?</strong> Good — you're in the right place. This tab covers how to get it live on the internet so anyone on the team can open it from a browser link, no setup required.<br><br>
+        📌 <strong>Haven't built it yet?</strong> Go to <strong>🛠️ DIY Dashboard</strong> first — pick your metrics, generate the Claude prompt, and download your project files. Then come back here.
       </div>
 
       <div class="plan-h3">Before You Start — What You Need</div>
       <div class="filter-grid" style="margin-bottom:20px">
+        <div class="filter-card"><div class="filter-card-name">Your project files</div><div class="filter-card-desc">The files Claude generated: <code>fetch_data.py</code>, <code>dashboard.html</code>, <code>.env</code>, <code>.gitignore</code>, <code>refresh_and_push.bat</code>, and the <code>data/</code> folder.</div></div>
         <div class="filter-card"><div class="filter-card-name">Python 3.8+</div><div class="filter-card-desc">Download from python.org. Check "Add to PATH" during install.</div><div class="filter-card-field">pip install requests</div></div>
         <div class="filter-card"><div class="filter-card-name">Git</div><div class="filter-card-desc">Download from git-scm.com. Used to push files to GitHub.</div></div>
-        <div class="filter-card"><div class="filter-card-name">GitHub Account</div><div class="filter-card-desc">Free at github.com. Hosts your dashboard and data file.</div></div>
-        <div class="filter-card"><div class="filter-card-name">Databricks Credentials</div><div class="filter-card-desc">HTTP Path + Personal Access Token from your warehouse.</div><div class="filter-card-field">SQL Warehouses → Connection Details</div></div>
+        <div class="filter-card"><div class="filter-card-name">GitHub Account</div><div class="filter-card-desc">Free at github.com. Hosts your dashboard as a shareable URL.</div></div>
       </div>
 
-      <div class="plan-h3">Step 1 — Generate All Project Files with Claude</div>
-      <div class="github-step">
-        <div class="github-num">1</div>
-        <div class="github-body">
-          <div class="github-title">Fill in your specifics below, then paste the prompt into Claude</div>
-          <div class="github-desc" style="margin-bottom:10px">Claude will create all 6 project files as <strong>downloadable artifacts</strong> — not pasted in the chat. You download each file and drop them into your project folder. Fill in your specifics at the bottom before pasting.</div>
-          <div class="prompt-wrap" id="build-prompt-wrap">
-            <div class="prompt-header">
-              <span class="prompt-label">📋 RevOps Dashboard Builder — paste into Claude</span>
-              <button class="prompt-copy-btn" onclick="cpPrompt('build-prompt-text')">Copy Prompt</button>
-            </div>
-            <div class="prompt-text" id="build-prompt-text">You are a RevOps Data Analytics Engineer at Sprout Solutions.
+      <!-- build-prompt-text kept hidden for JS compat -->
+      <div id="build-prompt-wrap" style="display:none"><textarea id="build-prompt-text"></textarea></div>
 
-⚠️  OUTPUT FORMAT — IMPORTANT:
-Do NOT paste file contents in the chat. Instead, create each file as a separate artifact/downloadable so the user can download the whole project folder. Use Claude's artifact feature for each file. Label every artifact with its exact filename.
-
-FILES TO CREATE (as downloadable artifacts, one artifact per file):
-1. fetch_data.py             — queries Databricks, saves raw records to data/dashboard.json
-2. dashboard.html            — standalone HTML dashboard, reads data/dashboard.json client-side
-3. .env                      — credentials template the user fills in (NEVER hardcoded)
-4. .gitignore                — prevents .env and credentials from being committed
-5. refresh_and_push.bat      — Windows batch file for scheduled local refresh
-6. .github/workflows/refresh.yml — GitHub Actions for cloud auto-refresh
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📁 FILE 1: fetch_data.py — Requirements
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Read credentials from a local .env file (never hardcoded)
-• Use utf-8-sig encoding to handle BOM added by PowerShell Out-File
-• Call Databricks REST API: POST /api/2.0/sql/statements
-• Poll until complete (handle PENDING/RUNNING states with 3s sleep)
-• Run 3 separate queries — one per table — and save ALL results to data/dashboard.json
-• Use a 3-year rolling window so users can slice any date range
-
-QUERIES TO RUN:
-
-Query 1 — silver_deals (raw deal rows, all deal-level metrics):
-  SELECT deal_id, deal_name, deal_type, create_date, close_date, projected_close_date,
-         client_journey_stage, stage_label, qualified_lead, mrr, ef_mrr, otp_only,
-         implem_fee, mrr_lt_12, deal_velocity_days, sales_rep, partner_on_record,
-         CASE WHEN UPPER(department_source_clean)='MICRO' THEN 'SME'
-              ELSE department_source_clean END AS segment,
-         original_channel_source
-  FROM shared.revops.silver_deals
-  WHERE pipeline_name = '[YOUR PIPELINE]'
-    AND deal_type NOT IN ('Renewal','renewal','Upsell - Renewal')
-    AND LOWER(deal_name) NOT LIKE '%renewal%'
-    AND (create_date >= ADD_MONTHS(CURRENT_DATE,-36)
-         OR close_date >= ADD_MONTHS(CURRENT_DATE,-36)
-         OR projected_close_date >= ADD_MONTHS(CURRENT_DATE,-36))
-
-Query 2 — gold_monthly_exec_summary (pre-aggregated monthly KPIs for charts/targets):
-  SELECT * FROM shared.revops.gold_monthly_exec_summary
-  WHERE pipeline_name = '[YOUR PIPELINE]'
-    AND metric_month >= ADD_MONTHS(CURRENT_DATE,-36)
-
-Query 3 — gold_targets (monthly targets for MRR, QL, Won):
-  SELECT * FROM shared.revops.gold_targets
-  WHERE pipeline_name = '[YOUR PIPELINE]'
-    AND metric_month >= ADD_MONTHS(CURRENT_DATE,-36)
-
-OUTPUT — save as data/dashboard.json:
-{
-  "refreshed_at": "YYYY-MM-DDTHH:MM:SSZ",
-  "team": "Your Team Name",
-  "deals":   [...],   // raw rows from silver_deals
-  "summary": [...],   // rows from gold_monthly_exec_summary
-  "targets": [...]    // rows from gold_targets
-}
-
-.env structure the user will create locally:
-DATABRICKS_HOST=adb-XXXXXXXX.azuredatabricks.net
-DATABRICKS_HTTP_PATH=/sql/1.0/warehouses/XXXXXXXXXX
-DATABRICKS_TOKEN=dapi...
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📁 FILE 2: dashboard.html — Requirements
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Single standalone HTML file (HTML + CSS + JS). Use Chart.js via CDN.
-
-DATA LOADING — static JSON only, never call Databricks from browser:
-  fetch('data/dashboard.json')
-    .then(r => r.json())
-    .then(json => {
-      S.deals   = json.deals   || [];   // raw deal rows (silver_deals)
-      S.summary = json.summary || [];   // monthly pre-aggregated (gold_monthly_exec_summary)
-      S.targets = json.targets || [];   // monthly targets (gold_targets)
-      applyComputed(computeFromRecords(S, S.filters));
-      setStatus('live', '🟢 Live · Last refreshed: ' + json.refreshed_at);
-    })
-    .catch(() => applySample());
-
-CLIENT-SIDE KPI COMPUTATION (required):
-  function computeFromRecords(S, filters) {
-    const { startDate, endDate, segment } = filters;
-    const deals = S.deals;
-
-    // Separate deal subsets by date column (NEVER mix):
-    const byCreate = deals.filter(d => segMatch(d) && inRange(d.create_date, startDate, endDate));
-    const byClose  = deals.filter(d => segMatch(d) && inRange(d.close_date,  startDate, endDate));
-    const byProj   = deals.filter(d => segMatch(d) && inRange(d.projected_close_date, startDate, endDate));
-
-    // Won / Lost subsets (always qualified_lead = 'Yes')
-    const wonRows  = byClose.filter(d => d.qualified_lead==='Yes' && d.client_journey_stage==='Customer');
-    const lostRows = byClose.filter(d => d.qualified_lead==='Yes' && d.client_journey_stage==='Closed Lost');
-    const sqlRows  = byCreate.filter(d => d.qualified_lead==='Yes' && d.client_journey_stage==='Opportunity');
-    const mqlRows  = byCreate.filter(d => d.qualified_lead==='Yes');
-
-    // KPIs — compute current period + last year (shift dates -1 year for LY)
-    const kpi = {
-      mql:         mqlRows.length,
-      sql:         sqlRows.length,
-      sqlPct:      mqlRows.length ? (sqlRows.length / mqlRows.length * 100) : 0,   // SQL%
-      wonLeads:    wonRows.length,
-      lostLeads:   lostRows.length,
-      winRate:     (wonRows.length + lostRows.length) ? (wonRows.length / (wonRows.length + lostRows.length) * 100) : 0,
-      wonMRR:      sum(wonRows, 'mrr'),
-      emfiMRR:     sum(wonRows, 'ef_mrr'),
-      combinedMRR: sum(wonRows, 'mrr') + sum(wonRows, 'ef_mrr'),
-      otp:         sum(wonRows, 'otp_only'),
-      implemFee:   sum(wonRows, 'implem_fee'),
-      combinedOTP: sum(wonRows, 'otp_only') + sum(wonRows, 'implem_fee'),
-      pipelineMRR: sum(byProj, 'mrr'),
-      avgDealVal:  wonRows.length ? sum(wonRows,'mrr') / wonRows.length : 0,
-      dealVelocity:wonRows.length ? avg(wonRows,'deal_velocity_days') : 0,
-    };
-
-    // Use S.summary for monthly chart series; S.targets for target lines
-    return { kpi, trend: buildTrend(S.summary, filters), targets: buildTargets(S.targets, filters),
-             wonTable: wonRows, leadsTable: mqlRows, sqlTable: sqlRows };
-  }
-
-FILTERS: Start Date + End Date inputs + Segment dropdown
-Apply Filters → re-calls computeFromRecords() — NO re-fetch, instant.
-
-STATUS: 🟢 Live (JSON loaded) / ⚠️ Sample Data (file missing or not yet generated)
-SAMPLE fallback: realistic dummy values so the dashboard always shows something
-
-DATE-COLUMN RULES — never mix:
-  Funnel / Lead counts  → create_date
-  Won / Revenue metrics → close_date
-  Pipeline (TMRR)       → projected_close_date
-
-DO NOT include a credentials panel, settings modal, or localStorage credentials.
-The HTML file never talks to Databricks directly.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🧱 DATA PLATFORM (shared.revops)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🥇 GOLD TABLES (use first):
-• shared.revops.gold_monthly_exec_summary → pre-aggregated KPIs
-• shared.revops.gold_targets → targets (MRR, QL, Won)
-• shared.revops.datapedia_approved → approved definitions
-
-🥈 SILVER (drilldown only):
-• shared.revops.silver_deals → 1 row per deal
-• shared.revops.silver_line_items → product MRR
-• shared.revops.silver_company → company attributes
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-⚙️ CORE DATA RULES (STRICT — always apply)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-1. EXCLUDE RENEWALS:
-   WHERE LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%'
-
-2. SEGMENT STANDARDIZATION:
-   CASE WHEN UPPER(segment) = 'MICRO' THEN 'SME' ELSE segment END
-
-3. LEAD-BASED FUNNEL (MKT Inbound — all metrics by create_date):
-   MQL  → dept = 'MKT Inbound' AND qualified_lead = 'Yes' AND pipeline IN ('Sales Pipeline','Unified Channel Pipeline')
-   SQL  → MQL base WHERE client_journey_stage <> 'MQL'
-   Won  → MQL base WHERE client_journey_stage = 'Customer'
-   Lost → MQL base WHERE client_journey_stage = 'Closed Lost'
-   UQL  → dept = 'MKT Inbound' AND pipeline = 'PH Upsell Pipeline' (no qualified_lead filter)
-   ⚠️ Always DISTINCT deal_id for counts
-   ⚠️ MQL = MKT Inbound. SQL ≠ Opportunity stage — it is any stage past MQL.
-
-4. MRR: mrr = recurring revenue · ef_mrr = Embedded Finance (ReadyCash + ReadyWage)
-5. Always use department_source_clean (NOT raw department_source)
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🧠 APPROVED METRIC DEFINITIONS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-FUNNEL (use create_date for date filter):
-MQL          → COUNT DISTINCT deal_id WHERE qualified_lead='Yes'
-SQL          → COUNT DISTINCT WHERE qualified_lead='Yes' AND stage='Opportunity'
-Won Leads    → COUNT DISTINCT WHERE qualified_lead='Yes' AND stage='Customer'
-Lost Leads   → COUNT DISTINCT WHERE qualified_lead='Yes' AND stage='Closed Lost'
-SQL%         → SQL ÷ MQL × 100  (conversion rate from lead to opportunity)
-Win Rate     → Won Leads ÷ (Won Leads + Lost Leads) × 100
-
-REVENUE (use close_date for date filter):
-Won MRR      → SUM(mrr) WHERE stage='Customer'
-EmFi MRR     → SUM(ef_mrr) WHERE stage='Customer'
-Combined MRR → SUM(mrr + ef_mrr) WHERE stage='Customer'  (Won MRR + EmFi MRR)
-OTP          → SUM(otp_only) WHERE stage='Customer'       (one-time payments, from silver_deals)
-Implem Fee   → SUM(implem_fee) WHERE stage='Customer'     (implementation fees, from silver_deals)
-Combined OTP → SUM(otp_only + implem_fee) WHERE stage='Customer'
-Avg Deal Val  → won_mrr ÷ won_deals
-Deal Velocity → AVG(deal_velocity_days)
-
-PIPELINE (use projected_close_date for date filter):
-Pipeline MRR → SUM(mrr) WHERE stage NOT IN ('Customer','Closed Lost')
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🎨 dashboard.html REQUIRED ELEMENTS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-KPI SCORECARDS (each card: current value + LY comparison + % change arrow):
-  Won MRR | Combined MRR | EmFi MRR | OTP | Implem Fee | Combined OTP
-  MQL | SQL | SQL% | Won Leads | Win Rate | Pipeline MRR | Deal Velocity | Avg Deal Value
-
-CHARTS (Chart.js via CDN):
-  • Bar: monthly Won MRR + Combined OTP stacked, with target line from gold_targets
-  • Line: monthly MQL vs SQL trend (use gold_monthly_exec_summary for smoothness)
-  • Bar: monthly Win Rate % and SQL% over time
-  • Donut: Combined MRR by segment
-
-FILTERS: Start Date + End Date inputs + Segment dropdown
-  Apply Filters → re-calls computeFromRecords() — NO re-fetch, instant.
-
-STATUS: 🟢 Live (JSON loaded) / ⚠️ Sample Data (file missing)
-SAMPLE fallback: realistic dummy values (₱ amounts for MRR/OTP/fees, % for rates)
-Detail tables: won deals (with OTP + Implem Fee columns), leads, SQLs — CSV export
-"Last refreshed" timestamp from json.refreshed_at
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📁 FILE 3: .env — Credentials Template
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Create as a plain text file named exactly ".env" in the project root.
-⚠️  Already in .gitignore — will NEVER be committed to GitHub.
-The user fills in their own values below.
-
-# ─────────────────────────────────────────────────────────────
-# Databricks Connection — get from: SQL Warehouses → RevOps_SQL → Connection Details
-# ─────────────────────────────────────────────────────────────
-DATABRICKS_HOST=adb-XXXXXXXXXXXXXXXX.XX.azuredatabricks.net
-DATABRICKS_HTTP_PATH=/sql/1.0/warehouses/XXXXXXXXXXXXXXXXX
-
-# Personal Access Token — generate at: Settings → Developer → Access Tokens
-DATABRICKS_TOKEN=dapi...
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📋 FILES 4–6: TEMPLATES
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-.gitignore → include: .env, __pycache__/, *.pyc, node_modules/, refresh_log.txt
-
-refresh_and_push.bat → cd to project folder, run python fetch_data.py,
-git add data/dashboard.json, commit with timestamp, git push origin master.
-Log output to refresh_log.txt. Exit on error.
-
-.github/workflows/refresh.yml → schedule at 8:30 AM, 1:30 PM, 5:15 PM PHT
-(PHT = UTC+8, so cron: 30 0, 30 5, 15 9), plus workflow_dispatch.
-Use secrets: DATABRICKS_HOST, DATABRICKS_HTTP_PATH, DATABRICKS_TOKEN.
-Run pip install requests, python fetch_data.py, then git commit + push.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✏️ FILL IN BEFORE PASTING — YOUR SPECIFICS:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Team / Dashboard name: [e.g. "Channels Dashboard"]
-• Pipeline name filter: [e.g. "Unified Channel Pipeline"]  ← used in all 3 queries
-• Segments to show: [e.g. SME, ENT, All]
-• KPIs to show on scorecards (pick from the approved list above):
-  [e.g. Combined MRR, OTP, Implem Fee, Combined OTP, SQL%, Win Rate, MQL, Pipeline MRR]
-• Charts to include: [e.g. "monthly Won MRR vs target bar chart, Win Rate trend line"]
-• Drilldown tables: [e.g. "Won deals table with OTP + Implem Fee columns, by sales rep"]
-• Any extra filter dimensions: [e.g. channel source, sales rep, deal type]</div>
-          </div>
-          <div class="warn-box" style="margin-top:10px"><strong>Security:</strong> The HTML dashboard never connects to Databricks. Credentials stay in your local <code>.env</code> and GitHub Secrets — never in any file that goes to GitHub.</div>
-          <div class="plan-h3" style="margin-top:16px;margin-bottom:8px">Tips for Best Results</div>
-          <div class="filter-grid">
-            <div class="filter-card"><div class="filter-card-name">Paste your column list</div><div class="filter-card-desc">Run DESCRIBE TABLE in Databricks SQL Editor and paste the output — Claude uses real column names, no guessing.</div></div>
-            <div class="filter-card"><div class="filter-card-name">Name your KPIs explicitly</div><div class="filter-card-desc">Say "Won MRR, SQL count, Pipeline MRR, Deal Velocity" — the more specific, the more accurate the JS formulas Claude writes.</div></div>
-            <div class="filter-card"><div class="filter-card-name">Request chart types</div><div class="filter-card-desc">Say "bar chart of Won MRR by month, donut by segment" — Claude won't guess your preferred visualizations.</div></div>
-            <div class="filter-card"><div class="filter-card-name">Iterate with Claude</div><div class="filter-card-desc">First run gives a working base. Follow up: "add a partners table" or "show LY comparison on KPI cards." Claude updates just what you ask.</div></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="plan-h3">Step 2 — Create a GitHub Repository</div>
+      <div class="plan-h3">Step 1 — Create a GitHub Repository</div>
       <div class="github-step">
         <div class="github-num">2</div>
         <div class="github-body">
@@ -1295,7 +1020,7 @@ cd YOUR-REPO-NAME</div>
         </div>
       </div>
 
-      <div class="plan-h3">Step 3 — Drop In the Generated Files</div>
+      <div class="plan-h3">Step 2 — Drop In the Generated Files</div>
       <div class="github-step">
         <div class="github-num">4</div>
         <div class="github-body">
@@ -1332,7 +1057,7 @@ DATABRICKS_TOKEN=dapi...your-personal-access-token...</div>
         </div>
       </div>
 
-      <div class="plan-h3">Step 4 — Test Locally</div>
+      <div class="plan-h3">Step 3 — Test Locally First</div>
       <div class="github-step">
         <div class="github-num">6</div>
         <div class="github-body">
@@ -1343,7 +1068,7 @@ python fetch_data.py</div>
         </div>
       </div>
 
-      <div class="plan-h3">Step 5 — Commit &amp; Push</div>
+      <div class="plan-h3">Step 4 — Commit &amp; Push</div>
       <div class="github-step">
         <div class="github-num">7</div>
         <div class="github-body">
@@ -1355,7 +1080,7 @@ git push origin master</div>
         </div>
       </div>
 
-      <div class="plan-h3">Step 6 — Enable GitHub Pages (Free Hosting)</div>
+      <div class="plan-h3">Step 5 — Enable GitHub Pages (Free Hosting)</div>
       <div class="github-step">
         <div class="github-num">8</div>
         <div class="github-body">
@@ -1371,7 +1096,7 @@ git push origin master</div>
         </div>
       </div>
 
-      <div class="plan-h3">Step 7 — Activate Auto-Refresh</div>
+      <div class="plan-h3">Step 6 — Activate Auto-Refresh</div>
       <p style="font-size:12px;color:#636E72;margin-bottom:14px;line-height:1.6">Claude already generated both automation files. Use <strong>both options</strong> — they back each other up. Windows Task Scheduler runs from your machine; GitHub Actions runs from the cloud even when your laptop is off.</p>
 
       <div class="github-step">
@@ -1405,7 +1130,7 @@ DATABRICKS_TOKEN</div>
         </div>
       </div>
 
-      <div class="plan-h3">Step 8 — Verify It's Working</div>
+      <div class="plan-h3">Step 7 — Verify It's Working</div>
       <div class="github-step">
         <div class="github-num">11</div>
         <div class="github-body">
