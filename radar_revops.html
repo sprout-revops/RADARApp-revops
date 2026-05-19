@@ -497,7 +497,7 @@ body{font-family:'Rubik','Bahnschrift Light SemiCondensed','Bahnschrift',Arial,s
     <div class="sidebar-tab" id="tab-dp" onclick="switchTab('dp')">📖 DataPedia</div>
     <div class="sidebar-tab" id="tab-dash" onclick="switchTab('dash')">📊 Dashboard Plan</div>
     <div class="sidebar-tab" id="tab-dashboards" onclick="switchTab('dashboards')">📱 Dashboards</div>
-    <div class="sidebar-tab" id="tab-builder" onclick="switchTab('builder')">🏗️ Dashboard Builder</div>
+    
   </div>
   <div class="content-area">
 
@@ -543,10 +543,10 @@ body{font-family:'Rubik','Bahnschrift Light SemiCondensed','Bahnschrift',Arial,s
         <div class="home-card-arrow">BROWSE DASHBOARDS →</div>
       </div>
 
-      <div class="home-card" onclick="switchTab('builder')">
-        <div class="home-card-icon">🏗️</div>
-        <div class="home-card-title">Dashboard Builder</div>
-        <div class="home-card-desc">Select metrics and generate a ready-to-use Claude prompt</div>
+      <div class="home-card" onclick="switchTab('dash');setTimeout(function(){setPlanTab('diy');},50)">
+        <div class="home-card-icon">🛠️</div>
+        <div class="home-card-title">DIY Dashboard</div>
+        <div class="home-card-desc">Build your own dashboard — select metrics, configure, get Claude prompt, then publish.</div>
         <div class="home-card-arrow">BUILD DASHBOARD →</div>
       </div>
     </div>
@@ -651,7 +651,8 @@ body{font-family:'Rubik','Bahnschrift Light SemiCondensed','Bahnschrift',Arial,s
   <div class="plan-subtabs">
     <div class="plan-subtab" id="ptab-sql" class="plan-subtab active" onclick="setPlanTab('sql')">💾 SQL Templates</div>
     <div class="plan-subtab" id="ptab-filters" onclick="setPlanTab('filters')">🔧 Filters</div>
-    <div class="plan-subtab" id="ptab-build"   onclick="setPlanTab('build')">🏗️ How to Build</div>
+    <div class="plan-subtab" id="ptab-diy" onclick="setPlanTab('diy')">🛠️ DIY Dashboard</div>
+    <div class="plan-subtab" id="ptab-build" onclick="setPlanTab('build')">📤 How to Publish</div>
   </div>
 
   <div class="plan-body">
@@ -982,8 +983,8 @@ git push origin main</div>
 
     <!-- ── HOW TO BUILD ── -->
     <div class="plan-section" id="plan-build">
-      <div class="plan-h2">🏗️ How to Build a Dashboard — Step by Step</div>
-      <p style="font-size:12px;color:#636E72;margin-bottom:16px;line-height:1.6">Start with Claude — it generates every file you need. Then set up GitHub, paste in your credentials, and your dashboard is live. No prior coding experience required beyond copying commands.</p>
+      <div class="plan-h2">📤 How to Publish Your Dashboard</div>
+      <p style="font-size:12px;color:#636E72;margin-bottom:16px;line-height:1.6">Built your dashboard with Claude? Follow these steps to publish it as a live shareable URL — for free, using GitHub Pages or Vercel — then submit it to RevOps to be added to the Dashboards gallery.</p>
 
       <div class="info-box" style="margin-bottom:20px">
         <strong>How it works:</strong> Claude writes <code>fetch_data.py</code> (queries Databricks on a schedule), <code>dashboard.html</code> (reads the data and shows KPIs), and all the automation files. You paste in your credentials, run one command to test, push to GitHub — and your dashboard becomes a live shareable URL that auto-refreshes daily.<br><br>
@@ -1413,36 +1414,59 @@ DATABRICKS_TOKEN</div>
 
       <div class="warn-box"><strong>⚠️ Security:</strong> Never commit <code>.env</code>. Never hardcode your PAT in any file that goes to GitHub. GitHub Secrets are the safe way to store credentials for GitHub Actions.</div>
 
+
+      <div style="margin-top:32px">
+        <div class="plan-h3" style="display:flex;align-items:center;gap:8px">📤 Vercel — Alternative to GitHub Pages <span style="font-size:11px;font-weight:400;color:rgba(255,255,255,.4);text-transform:none;letter-spacing:0">(no Git required)</span></div>
+        <div class="info-box" style="margin-bottom:16px"><strong>When to use Vercel:</strong> If you don't want to set up Git, Vercel lets you drag-and-drop your dashboard files and get a live URL in under 2 minutes. Free tier is more than enough.</div>
+        <div class="github-steps">
+          <div class="github-step"><div class="github-num">1</div><div class="github-body"><div class="github-title">Go to <a href="https://vercel.com" target="_blank" style="color:#1DB954">vercel.com</a> and sign up free</div><div class="github-desc">Sign up with your GitHub, GitLab, or email. No credit card required.</div></div></div>
+          <div class="github-step"><div class="github-num">2</div><div class="github-body"><div class="github-title">Create a new project → drag your project folder</div><div class="github-desc">Drag your entire project folder (containing <code>dashboard.html</code>, <code>data/</code>, etc.) into the Vercel dashboard.</div></div></div>
+          <div class="github-step"><div class="github-num">3</div><div class="github-body"><div class="github-title">Set the root to your project folder, deploy</div><div class="github-desc">Vercel auto-detects it as a static site. Click Deploy — you'll get a <code>yourproject.vercel.app</code> URL in seconds.</div></div></div>
+          <div class="github-step"><div class="github-num">4</div><div class="github-body"><div class="github-title">Re-deploy whenever you refresh data</div><div class="github-desc">Run <code>python fetch_data.py</code> locally to update <code>data/dashboard.json</code>, then re-upload via Vercel CLI (<code>vercel --prod</code>) or re-drag to the dashboard.</div></div></div>
+        </div>
+      </div>
+
+      <div style="margin-top:32px;padding:24px;background:rgba(29,185,84,.06);border:1px solid rgba(29,185,84,.2);border-radius:12px">
+        <div class="plan-h3" style="color:#1DB954;margin-bottom:4px">➕ Submit to RADAR — Get Listed in the Dashboards Tab</div>
+        <p style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:20px">Once your dashboard is live, submit the link to RevOps. After a quick review, it'll be added to the 📱 Dashboards gallery so the whole team can access it.</p>
+        <div style="display:grid;gap:12px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div class="builder-field">
+              <label class="builder-label">Dashboard Name *</label>
+              <input class="builder-input" id="submit-dash-name" type="text" placeholder="e.g. Sales Pipeline Tracker">
+            </div>
+            <div class="builder-field">
+              <label class="builder-label">Your Name / Team *</label>
+              <input class="builder-input" id="submit-dash-team" type="text" placeholder="e.g. Lara Urbina — RevOps">
+            </div>
+          </div>
+          <div class="builder-field">
+            <label class="builder-label">Live Dashboard URL * <span style="font-weight:400;color:rgba(255,255,255,.35);font-size:10px">(GitHub Pages or Vercel link)</span></label>
+            <input class="builder-input" id="submit-dash-url" type="url" placeholder="https://yourusername.github.io/my-dashboard">
+          </div>
+          <div class="builder-field">
+            <label class="builder-label">Short Description</label>
+            <input class="builder-input" id="submit-dash-desc" type="text" placeholder="e.g. Monthly MRR and funnel metrics for the LDU team">
+          </div>
+          <div class="builder-field">
+            <label class="builder-label">Metrics / Categories Covered</label>
+            <input class="builder-input" id="submit-dash-cats" type="text" placeholder="e.g. MRR, Win Rate, Funnel, Pipeline">
+          </div>
+        </div>
+        <div style="margin-top:16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+          <button onclick="submitDashboardRequest()" style="background:#1DB954;color:#000;font-weight:700;font-size:13px;padding:10px 24px;border:none;border-radius:8px;cursor:pointer;letter-spacing:.3px">📨 Send to RevOps</button>
+          <span style="font-size:11px;color:rgba(255,255,255,.3)">Opens your email client with all details pre-filled</span>
+        </div>
+        <div id="submit-dash-msg" style="display:none;margin-top:12px;padding:10px 14px;background:rgba(29,185,84,.1);border:1px solid rgba(29,185,84,.3);border-radius:8px;font-size:12px;color:#1DB954"></div>
+      </div>
+
     </div><!-- /plan-build -->
 
-  </div><!-- /plan-body -->
-</div><!-- /section-dash -->
-
-<!-- PART 4 — DASHBOARDS -->
-<div class="section" id="section-dashboards">
-  <div class="dg-hero">
-    <div>
-      <h1>📱 Team Dashboards</h1>
-      <p>Dashboards built by the team using <strong>shared.revops</strong> data — browse, explore, and share yours.</p>
-    </div>
-    <button class="submit-dash-btn" onclick="openSubmitModal()">➕ Submit Your Dashboard</button>
-  </div>
-  <div class="dg-controls">
-    <div class="search-box">
-      <span class="sicon">🔍</span>
-      <input type="text" id="dg-search" placeholder="Search dashboards, creators, tags..." oninput="filterDashboards()">
-    </div>
-    <div class="filter-group" id="dg-cat-filters"></div>
-    <span id="dg-count" style="font-size:12px;color:#636E72;white-space:nowrap"></span>
-  </div>
-  <div class="dg-grid" id="dg-grid"></div>
-</div>
-
-<!-- PART 5 — DASHBOARD BUILDER -->
-<div class="section" id="section-builder" style="display:none">
+  
+    <div class="plan-section" id="plan-diy">
   <div class="builder-hero">
-    <h1>🏗️ Dashboard Builder</h1>
-    <p>Select the metrics you need, configure your dashboard settings, and get a ready-to-use Claude prompt with exact DataPedia definitions, SQL templates, and filters.</p>
+    <h1>🛠️ DIY Dashboard Builder</h1>
+    <p>Select the metrics you need, configure your dashboard settings, and get a ready-to-use Claude prompt with exact DataPedia definitions, SQL templates, and filters — then publish it to GitHub Pages or Vercel.</p>
   </div>
 
   <!-- Step Indicator -->
@@ -1726,7 +1750,33 @@ DATABRICKS_TOKEN</div>
       </div>
     </div>
   </div>
-</div><!-- /section-builder -->
+
+    </div><!-- /plan-diy -->
+
+  </div><!-- /plan-body -->
+</div><!-- /section-dash -->
+
+<!-- PART 4 — DASHBOARDS -->
+<div class="section" id="section-dashboards">
+  <div class="dg-hero">
+    <div>
+      <h1>📱 Team Dashboards</h1>
+      <p>Dashboards built by the team using <strong>shared.revops</strong> data — browse, explore, and share yours.</p>
+    </div>
+    <button class="submit-dash-btn" onclick="openSubmitModal()">➕ Submit Your Dashboard</button>
+  </div>
+  <div class="dg-controls">
+    <div class="search-box">
+      <span class="sicon">🔍</span>
+      <input type="text" id="dg-search" placeholder="Search dashboards, creators, tags..." oninput="filterDashboards()">
+    </div>
+    <div class="filter-group" id="dg-cat-filters"></div>
+    <span id="dg-count" style="font-size:12px;color:#636E72;white-space:nowrap"></span>
+  </div>
+  <div class="dg-grid" id="dg-grid"></div>
+</div>
+
+
 
   </div><!-- /content-area -->
 </div><!-- /app-layout -->
@@ -1736,8 +1786,8 @@ DATABRICKS_TOKEN</div>
   <div class="submit-modal">
     <h2>➕ Submit Your Dashboard</h2>
     <p class="sm-sub">Share your dashboard with the team — it will be added to the gallery after review by the RevOps team.</p>
-    <div class="sm-step"><div class="sm-num">1</div><div class="sm-body"><strong>Generate your dashboard</strong> — go to the <strong>Dashboard Plan → 🏗️ How to Build → Step 4</strong>, copy the Claude prompt, and ask Claude to build your dashboard.</div></div>
-    <div class="sm-step"><div class="sm-num">2</div><div class="sm-body"><strong>Publish to GitHub Pages</strong> — follow <strong>Steps 6–7</strong> in the <strong>Dashboard Plan → 🏗️ How to Build</strong> tab to get a live URL.</div></div>
+    <div class="sm-step"><div class="sm-num">1</div><div class="sm-body"><strong>Generate your dashboard</strong> — go to <strong>Dashboard Plan → 🛠️ DIY Dashboard</strong>, copy the Claude prompt, and ask Claude to build your dashboard.</div></div>
+    <div class="sm-step"><div class="sm-num">2</div><div class="sm-body"><strong>Publish to GitHub Pages</strong> — follow the steps in <strong>Dashboard Plan → 📤 How to Publish</strong> to get a live URL.</div></div>
     <div class="sm-step"><div class="sm-num">3</div><div class="sm-body"><strong>Send the following details to the RevOps team:</strong><br>• Dashboard name &amp; short description<br>• Your GitHub Pages URL<br>• Your name / team<br>• Metric categories covered (e.g. Finance, Funnel, Revenue)</div></div>
     <div class="sm-step"><div class="sm-num">4</div><div class="sm-body"><strong>RevOps will add it to this gallery</strong> — usually within 1–2 business days.</div></div>
     <div class="info-box" style="margin-top:14px">📩 Send submissions to: <strong>revops@sprout.ph</strong></div>
@@ -1934,8 +1984,6 @@ function switchTab(t) {
   // Hide sidebar on Home, show on all other sections
   const layout = document.querySelector('.app-layout');
   if (layout) layout.classList.toggle('home-mode', t === 'home');
-  // Initialize Dashboard Builder (lazy fallback if DOMContentLoaded already fired)
-  if (t === 'builder') _builderInitAll();
 }
 
 // ── DATABASE ──
@@ -2478,12 +2526,37 @@ function showFallbackBtn() {
   }
 })();
 
+
+function submitDashboardRequest() {
+  var name = (document.getElementById('submit-dash-name')||{}).value || '';
+  var team = (document.getElementById('submit-dash-team')||{}).value || '';
+  var url  = (document.getElementById('submit-dash-url')||{}).value || '';
+  var desc = (document.getElementById('submit-dash-desc')||{}).value || '';
+  var cats = (document.getElementById('submit-dash-cats')||{}).value || '';
+  if (!name || !team || !url) {
+    var msg = document.getElementById('submit-dash-msg');
+    if (msg) { msg.style.display='block'; msg.style.color='#F87171'; msg.textContent='⚠️ Please fill in Dashboard Name, Your Name/Team, and the Live URL before submitting.'; }
+    return;
+  }
+  var body = 'Hi RevOps Team,%0A%0APlease add the following dashboard to the RADAR Dashboards gallery:%0A%0A'
+    + '📋 Dashboard Name: ' + encodeURIComponent(name) + '%0A'
+    + '👤 Submitted by: ' + encodeURIComponent(team) + '%0A'
+    + '🔗 Live URL: ' + encodeURIComponent(url) + '%0A'
+    + (desc ? '📝 Description: ' + encodeURIComponent(desc) + '%0A' : '')
+    + (cats ? '📊 Metrics Covered: ' + encodeURIComponent(cats) + '%0A' : '')
+    + '%0AThank you!';
+  window.location.href = 'mailto:revops@sprout.ph?subject=' + encodeURIComponent('Dashboard Submission: ' + name) + '&body=' + body;
+  var msg = document.getElementById('submit-dash-msg');
+  if (msg) { msg.style.display='block'; msg.style.color='#1DB954'; msg.textContent='✅ Your email client should open with all details pre-filled. Hit Send to submit!'; }
+}
+
 // ── PLAN TABS ──
 function setPlanTab(key) {
   document.querySelectorAll('.plan-subtab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.plan-section').forEach(s => s.classList.remove('active'));
   document.getElementById('ptab-' + key).classList.add('active');
   document.getElementById('plan-' + key).classList.add('active');
+  if (key === 'diy') _builderInitAll();
 }
 
 // ── DASHBOARD SQL BLOCKS ──
