@@ -1769,6 +1769,132 @@ DATABRICKS_TOKEN</div>
       <div class="builder-tip-box">
         💡 <strong>Tip:</strong> Paste this prompt into Claude. It includes the exact DataPedia definitions, SQL templates, and filters for each metric — Claude will build the dashboard correctly on the first try.
       </div>
+
+      <!-- ── WHAT TO DO AFTER CLAUDE BUILDS YOUR DASHBOARD ── -->
+      <div style="margin-top:28px;border-top:1px solid rgba(255,255,255,.07);padding-top:24px">
+
+        <!-- SECTION A: Connect to Databricks -->
+        <div style="margin-bottom:28px">
+          <div style="font-size:13px;font-weight:700;color:#e2e8f0;margin-bottom:4px;display:flex;align-items:center;gap:8px">
+            🔌 Step A — Connect to Databricks
+            <span style="font-size:10px;font-weight:400;color:rgba(255,255,255,.35);letter-spacing:.3px">After Claude sends you the files</span>
+          </div>
+          <p style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:14px;line-height:1.6">Download the artifacts Claude created, place them in a project folder, then run the data fetch script to connect to your Databricks warehouse.</p>
+
+          <div class="github-steps">
+            <div class="github-step">
+              <div class="github-num">1</div>
+              <div class="github-body">
+                <div class="github-title">Download all artifacts → place in your project folder</div>
+                <div class="github-desc">Save each file Claude created into one folder on your computer. Your folder should look like:</div>
+                <div class="github-code" style="margin-top:8px">my-dashboard/
+├── fetch_data.py
+├── dashboard.html
+├── .env               ← fill this in next
+├── .gitignore
+├── refresh_and_push.bat
+└── data/              ← create this empty folder</div>
+              </div>
+            </div>
+
+            <div class="github-step">
+              <div class="github-num">2</div>
+              <div class="github-body">
+                <div class="github-title">Open <code>.env</code> and fill in your Databricks credentials</div>
+                <div class="github-desc">Get these from <strong>Databricks → SQL Warehouses → RevOps_SQL → Connection Details</strong>. Generate your token at <strong>Settings → Developer → Access Tokens</strong>.</div>
+                <div class="github-code" style="margin-top:8px">DATABRICKS_HOST=adb-XXXXXXXXXXXXXXXX.XX.azuredatabricks.net
+DATABRICKS_HTTP_PATH=/sql/1.0/warehouses/XXXXXXXXXXXXXXXXX
+DATABRICKS_TOKEN=dapi...   ← paste your personal access token here</div>
+              </div>
+            </div>
+
+            <div class="github-step">
+              <div class="github-num">3</div>
+              <div class="github-body">
+                <div class="github-title">Run <code>python fetch_data.py</code> to pull live data</div>
+                <div class="github-desc">Open a terminal, navigate to your project folder, and run the script. It queries Databricks and saves <code>data/dashboard.json</code>. Takes ~10–30 seconds.</div>
+                <div class="github-code" style="margin-top:8px">cd my-dashboard
+python fetch_data.py
+
+# You should see something like:
+# ✅ silver_deals: 2,341 rows
+# ✅ gold_monthly_exec_summary: 144 rows
+# ✅ Saved to data/dashboard.json</div>
+              </div>
+            </div>
+
+            <div class="github-step">
+              <div class="github-num">4</div>
+              <div class="github-body">
+                <div class="github-title">Open <code>dashboard.html</code> in your browser — verify <span style="color:#1DB954">🟢 Live</span></div>
+                <div class="github-desc">Double-click <code>dashboard.html</code> to open it locally. The header should show <strong>🟢 Live</strong> and your real data. If it shows <strong>⚠️ Sample Data</strong>, the JSON file is missing — re-run Step 3.</div>
+              </div>
+            </div>
+
+            <div class="github-step">
+              <div class="github-num">5</div>
+              <div class="github-body">
+                <div class="github-title">Publish to GitHub Pages or Vercel</div>
+                <div class="github-desc">Ready to share? Go to <strong>Dashboard Plan → 📤 How to Publish</strong> for the full step-by-step publishing guide — including how to submit it to the RADAR Dashboards gallery.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION B: Update / Iterate -->
+        <div style="border-top:1px solid rgba(255,255,255,.07);padding-top:24px">
+          <div style="font-size:13px;font-weight:700;color:#e2e8f0;margin-bottom:4px;display:flex;align-items:center;gap:8px">
+            ✏️ Step B — Update Layouts, Add Metrics or Visuals
+            <span style="font-size:10px;font-weight:400;color:rgba(255,255,255,.35);letter-spacing:.3px">Iterate with Claude anytime</span>
+          </div>
+          <p style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:14px;line-height:1.6">Your dashboard is a living file — Claude can update layouts, add new charts, swap metrics, or redesign sections whenever you need it. Just tell it what to change.</p>
+
+          <div class="github-steps">
+            <div class="github-step">
+              <div class="github-num">1</div>
+              <div class="github-body">
+                <div class="github-title">Open a new Claude conversation</div>
+                <div class="github-desc">Start fresh. Say: <em>"I have an existing RevOps dashboard. I want to make some changes."</em> Then paste the full contents of your current <code>dashboard.html</code> into the chat.</div>
+              </div>
+            </div>
+
+            <div class="github-step">
+              <div class="github-num">2</div>
+              <div class="github-body">
+                <div class="github-title">Tell Claude exactly what to change</div>
+                <div class="github-desc">Be specific — Claude updates only what you ask and keeps everything else intact. Examples:</div>
+                <div class="github-code" style="margin-top:8px">"Add a bar chart showing Won MRR by month for the last 12 months"
+"Add a Sales Rep breakdown table below the KPI cards"
+"Add a Pipeline MRR scorecard next to the Win Rate card"
+"Change the layout to 2 columns on desktop"
+"Add a filter dropdown for Segment (SME / ENT)"
+"Show MRR in PHP format (₱) instead of plain numbers"</div>
+              </div>
+            </div>
+
+            <div class="github-step">
+              <div class="github-num">3</div>
+              <div class="github-body">
+                <div class="github-title">Download the updated <code>dashboard.html</code> artifact</div>
+                <div class="github-desc">Claude will return an updated file as an artifact. Download it and replace your existing <code>dashboard.html</code> in your project folder. No need to re-run <code>fetch_data.py</code> — the data file stays the same.</div>
+              </div>
+            </div>
+
+            <div class="github-step">
+              <div class="github-num">4</div>
+              <div class="github-body">
+                <div class="github-title">Hard refresh your browser to see the changes</div>
+                <div class="github-desc">Press <strong>Ctrl + Shift + R</strong> (Windows) or <strong>Cmd + Shift + R</strong> (Mac) to force a fresh load. If your dashboard is already on GitHub Pages, push the updated file and wait ~1 minute for the page to deploy.</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top:16px;padding:14px 16px;background:rgba(29,185,84,.05);border:1px solid rgba(29,185,84,.15);border-radius:10px;font-size:12px;color:rgba(255,255,255,.5);line-height:1.7">
+            💡 <strong style="color:rgba(255,255,255,.7)">Pro tip:</strong> When asking Claude to add a new metric, mention the DataPedia name (e.g. "Add SQL Conversion Rate as defined in our DataPedia") — Claude will use the correct formula automatically since it's already in the generated prompt context.
+          </div>
+        </div>
+
+      </div><!-- /what to do after -->
     </div>
   </div>
 
