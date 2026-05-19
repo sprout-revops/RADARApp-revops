@@ -3224,9 +3224,7 @@ function _builderInitAll() {
   if (grid) grid.addEventListener('click', _builderGridClick);
 }
 
-window._builderInit         = _builderInitAll;
-window._builderToggleMetric = builderToggleMetric;
-window._builderSetCat       = builderSetCat;
+window._builderInit = _builderInitAll;
 
 // Initialize builder immediately — HTML is already in DOM when this script runs
 _builderInitAll();
