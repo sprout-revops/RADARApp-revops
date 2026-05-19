@@ -1845,16 +1845,16 @@ python fetch_data.py
         <div style="border-top:1px solid rgba(255,255,255,.07);padding-top:24px">
           <div style="font-size:13px;font-weight:700;color:#e2e8f0;margin-bottom:4px;display:flex;align-items:center;gap:8px">
             ✏️ Step B — Update Layouts, Add Metrics or Visuals
-            <span style="font-size:10px;font-weight:400;color:rgba(255,255,255,.35);letter-spacing:.3px">Iterate with Claude anytime</span>
+            <span style="font-size:10px;font-weight:400;color:rgba(255,255,255,.35);letter-spacing:.3px">Continue in the same Claude conversation</span>
           </div>
-          <p style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:14px;line-height:1.6">Your dashboard is a living file — Claude can update layouts, add new charts, swap metrics, or redesign sections whenever you need it. Just tell it what to change.</p>
+          <p style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:14px;line-height:1.6">Stay in the <strong style="color:rgba(255,255,255,.6)">same Claude conversation</strong> where you pasted the original prompt — Claude already knows your table schemas, DataPedia definitions, metric formulas, and the dashboard code it just built. No need to re-explain anything.</p>
 
           <div class="github-steps">
             <div class="github-step">
               <div class="github-num">1</div>
               <div class="github-body">
-                <div class="github-title">Open a new Claude conversation</div>
-                <div class="github-desc">Start fresh. Say: <em>"I have an existing RevOps dashboard. I want to make some changes."</em> Then paste the full contents of your current <code>dashboard.html</code> into the chat.</div>
+                <div class="github-title">Stay in the same Claude conversation — just send a follow-up</div>
+                <div class="github-desc">Claude already has full context: your pipeline, metric definitions, table schemas, and the <code>dashboard.html</code> it generated. Just tell it what you want to change — no need to paste the file again or re-explain the data.</div>
               </div>
             </div>
 
@@ -1868,7 +1868,8 @@ python fetch_data.py
 "Add a Pipeline MRR scorecard next to the Win Rate card"
 "Change the layout to 2 columns on desktop"
 "Add a filter dropdown for Segment (SME / ENT)"
-"Show MRR in PHP format (₱) instead of plain numbers"</div>
+"Show MRR in ₱ PHP format instead of plain numbers"
+"Highlight any KPI card where actual is below target in red"</div>
               </div>
             </div>
 
@@ -1876,7 +1877,7 @@ python fetch_data.py
               <div class="github-num">3</div>
               <div class="github-body">
                 <div class="github-title">Download the updated <code>dashboard.html</code> artifact</div>
-                <div class="github-desc">Claude will return an updated file as an artifact. Download it and replace your existing <code>dashboard.html</code> in your project folder. No need to re-run <code>fetch_data.py</code> — the data file stays the same.</div>
+                <div class="github-desc">Claude returns an updated artifact. Download it and replace your existing <code>dashboard.html</code> in your project folder. No need to re-run <code>fetch_data.py</code> — the data file stays the same.</div>
               </div>
             </div>
 
@@ -1884,13 +1885,13 @@ python fetch_data.py
               <div class="github-num">4</div>
               <div class="github-body">
                 <div class="github-title">Hard refresh your browser to see the changes</div>
-                <div class="github-desc">Press <strong>Ctrl + Shift + R</strong> (Windows) or <strong>Cmd + Shift + R</strong> (Mac) to force a fresh load. If your dashboard is already on GitHub Pages, push the updated file and wait ~1 minute for the page to deploy.</div>
+                <div class="github-desc">Press <strong>Ctrl + Shift + R</strong> (Windows) or <strong>Cmd + Shift + R</strong> (Mac). If published on GitHub Pages, push the updated file and wait ~1 minute for the page to redeploy.</div>
               </div>
             </div>
           </div>
 
           <div style="margin-top:16px;padding:14px 16px;background:rgba(29,185,84,.05);border:1px solid rgba(29,185,84,.15);border-radius:10px;font-size:12px;color:rgba(255,255,255,.5);line-height:1.7">
-            💡 <strong style="color:rgba(255,255,255,.7)">Pro tip:</strong> When asking Claude to add a new metric, mention the DataPedia name (e.g. "Add SQL Conversion Rate as defined in our DataPedia") — Claude will use the correct formula automatically since it's already in the generated prompt context.
+            💡 <strong style="color:rgba(255,255,255,.7)">Why the same conversation?</strong> The original prompt you pasted includes your full table schemas, DataPedia metric definitions, SQL logic, and the generated <code>dashboard.html</code> — all of it lives in Claude's context. Continuing in the same thread means Claude already knows your business rules and won't make assumptions or break existing logic when you ask for changes.
           </div>
         </div>
 
