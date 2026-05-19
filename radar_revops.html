@@ -420,6 +420,27 @@ body{font-family:'Rubik','Bahnschrift Light SemiCondensed','Bahnschrift',Arial,s
 .builder-btn-copy:hover{transform:translateY(-1px);box-shadow:0 5px 0 rgba(0,0,0,.4),0 8px 20px rgba(29,185,84,.2)}
 .builder-tip-box{background:rgba(29,185,84,.07);border-left:3px solid #1DB954;border-radius:0 8px 8px 0;padding:12px 16px;font-size:12px;color:rgba(255,255,255,.65);line-height:1.65;margin-top:16px}
 .builder-tip-box strong{color:#1DB954}
+
+/* Builder Step 2 redesign */
+.bd-section{margin-bottom:22px}
+.bd-section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.35);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,.06)}
+.bd-date-row{display:flex;gap:12px;flex-wrap:wrap}
+.bd-date-row .builder-field{flex:1;min-width:160px}
+.bd-filters-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+.bd-filter-box{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:12px 14px}
+.bd-filter-box-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:rgba(255,255,255,.4);margin-bottom:8px}
+.bd-check-list{display:flex;flex-direction:column;gap:5px}
+.bd-check-item{display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(255,255,255,.65);cursor:pointer;padding:3px 0;user-select:none}
+.bd-check-item input[type=checkbox]{width:14px;height:14px;accent-color:#1DB954;cursor:pointer;flex-shrink:0}
+.bd-check-item:hover{color:#e2e8f0}
+.bd-views-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px}
+.bd-view-card{display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,.03);border:1.5px solid rgba(255,255,255,.07);border-radius:8px;cursor:pointer;transition:all .15s;user-select:none}
+.bd-view-card:hover{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.14)}
+.bd-view-card input[type=checkbox]{width:15px;height:15px;accent-color:#1DB954;cursor:pointer;flex-shrink:0}
+.bd-view-card.bd-view-checked{background:rgba(29,185,84,.07);border-color:rgba(29,185,84,.3)}
+.bd-view-icon{font-size:18px;line-height:1;flex-shrink:0}
+.bd-view-label{font-size:12px;font-weight:600;color:rgba(255,255,255,.7);line-height:1.3}
+.bd-full-width{grid-column:1/-1}
 </style>
 </head>
 <body>
@@ -1412,7 +1433,7 @@ DATABRICKS_TOKEN</div>
   </div>
 
   <!-- Step Indicator -->
-  <!-- BUILDER v20260519e -->
+  <!-- BUILDER v20260519f -->
   <div class="builder-steps-indicator">
     <div class="builder-step-dot active" id="bsi-1">
       <span class="bsi-num">1</span>
@@ -1434,7 +1455,7 @@ DATABRICKS_TOKEN</div>
   <div class="builder-step-panel active" id="builder-step-1">
     <div class="builder-panel-header">
       <div>
-        <div class="builder-panel-title">Step 1 of 3 — Select Metrics <span style="font-size:10px;opacity:.4;font-weight:400">v20260519e</span></div>
+        <div class="builder-panel-title">Step 1 of 3 — Select Metrics <span style="font-size:10px;opacity:.4;font-weight:400">v20260519f</span></div>
         <div class="builder-panel-sub">Choose the metrics to include in your dashboard. Selected metrics will be included with their exact definitions, formulas, and SQL logic.</div>
       </div>
       <div class="builder-selected-count" id="builder-selected-count">0 metrics selected</div>
@@ -1527,69 +1548,118 @@ DATABRICKS_TOKEN</div>
     <div class="builder-panel-header">
       <div>
         <div class="builder-panel-title">Step 2 of 3 — Configure Your Dashboard</div>
-        <div class="builder-panel-sub">Set the name, date range, pipeline, segment, and view type for your dashboard.</div>
+        <div class="builder-panel-sub">Set the dashboard name, date filter, apply data filters, and choose what views to include.</div>
       </div>
     </div>
 
     <div class="builder-config-body">
-      <div class="builder-form-grid">
-        <div class="builder-field">
-          <label class="builder-label">Dashboard Name</label>
-          <input class="builder-input" id="bd-name" type="text" placeholder="e.g. Marketing Funnel Dashboard">
-        </div>
-        <div class="builder-field">
-          <label class="builder-label">Date Range</label>
-          <select class="builder-select" id="bd-daterange" onchange="builderToggleCustomDates()">
-            <option value="MTD">MTD (Month to Date)</option>
-            <option value="QTD">QTD (Quarter to Date)</option>
-            <option value="YTD">YTD (Year to Date)</option>
-            <option value="Last 30 Days">Last 30 Days</option>
-            <option value="Last 90 Days">Last 90 Days</option>
-            <option value="Custom">Custom Range</option>
-          </select>
-        </div>
-        <div class="builder-field builder-custom-dates" id="bd-custom-dates" style="display:none">
-          <label class="builder-label">From Date</label>
-          <input class="builder-input" id="bd-from" type="date">
-        </div>
-        <div class="builder-field builder-custom-dates" id="bd-custom-dates-to" style="display:none">
-          <label class="builder-label">To Date</label>
-          <input class="builder-input" id="bd-to" type="date">
-        </div>
-        <div class="builder-field">
-          <label class="builder-label">Pipeline</label>
-          <select class="builder-select" id="bd-pipeline">
-            <option value="All Pipelines">All Pipelines</option>
-            <option value="Sales Pipeline">Sales Pipeline</option>
-            <option value="PH Upsell Pipeline">PH Upsell Pipeline</option>
-            <option value="Unified Channel Pipeline">Unified Channel Pipeline</option>
-            <option value="TH Sales Pipeline">TH Sales Pipeline</option>
-          </select>
-        </div>
-        <div class="builder-field">
-          <label class="builder-label">Segment</label>
-          <select class="builder-select" id="bd-segment">
-            <option value="All Segments">All Segments</option>
-            <option value="SME">SME</option>
-            <option value="ENT">ENT</option>
-            <option value="Channels">Channels</option>
-          </select>
-        </div>
-        <div class="builder-field">
-          <label class="builder-label">View Type</label>
-          <select class="builder-select" id="bd-viewtype">
-            <option value="KPI Cards + Charts">KPI Cards + Charts</option>
-            <option value="KPI Cards Only">KPI Cards Only</option>
-            <option value="Trend Charts Only">Trend Charts Only</option>
-            <option value="Full Report">Full Report</option>
-          </select>
+
+      <!-- Dashboard Name -->
+      <div class="bd-section">
+        <div class="bd-section-title">Dashboard Name</div>
+        <input class="builder-input" id="bd-name" type="text" placeholder="e.g. Leads Dashboard Q2 2026" style="max-width:480px">
+      </div>
+
+      <!-- Date Filter -->
+      <div class="bd-section">
+        <div class="bd-section-title">Date Filter</div>
+        <div class="bd-date-row">
+          <div class="builder-field">
+            <label class="builder-label">From</label>
+            <input class="builder-input" id="bd-from" type="date">
+          </div>
+          <div class="builder-field">
+            <label class="builder-label">To</label>
+            <input class="builder-input" id="bd-to" type="date">
+          </div>
         </div>
       </div>
 
+      <!-- Filters -->
+      <div class="bd-section">
+        <div class="bd-section-title">Filters <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:10px;color:rgba(255,255,255,.25)">(leave blank = include all)</span></div>
+        <div class="bd-filters-grid">
+
+          <div class="bd-filter-box">
+            <div class="bd-filter-box-title">Segment</div>
+            <div class="bd-check-list" id="bd-segment-group">
+              <label class="bd-check-item"><input type="checkbox" value="SME"> SME</label>
+              <label class="bd-check-item"><input type="checkbox" value="ENT"> Enterprise (ENT)</label>
+              <label class="bd-check-item"><input type="checkbox" value="Channels"> Channels</label>
+            </div>
+          </div>
+
+          <div class="bd-filter-box">
+            <div class="bd-filter-box-title">Pipeline</div>
+            <div class="bd-check-list" id="bd-pipeline-group">
+              <label class="bd-check-item"><input type="checkbox" value="Sales Pipeline"> Sales Pipeline</label>
+              <label class="bd-check-item"><input type="checkbox" value="PH Upsell Pipeline"> PH Upsell Pipeline</label>
+              <label class="bd-check-item"><input type="checkbox" value="Unified Channel Pipeline"> Unified Channel Pipeline</label>
+              <label class="bd-check-item"><input type="checkbox" value="TH Sales Pipeline"> TH Sales Pipeline</label>
+            </div>
+          </div>
+
+          <div class="bd-filter-box">
+            <div class="bd-filter-box-title">Lead Source / Department</div>
+            <div class="bd-check-list" id="bd-source-group">
+              <label class="bd-check-item"><input type="checkbox" value="Marketing"> Marketing</label>
+              <label class="bd-check-item"><input type="checkbox" value="LDU Outbound"> LDU Outbound</label>
+              <label class="bd-check-item"><input type="checkbox" value="LDU Inbound"> LDU Inbound</label>
+              <label class="bd-check-item"><input type="checkbox" value="Sales"> Sales</label>
+              <label class="bd-check-item"><input type="checkbox" value="Channels"> Channels</label>
+              <label class="bd-check-item"><input type="checkbox" value="CSM"> CSM</label>
+            </div>
+          </div>
+
+          <div class="bd-filter-box">
+            <div class="bd-filter-box-title">Industry</div>
+            <div class="bd-check-list" id="bd-industry-group">
+              <label class="bd-check-item"><input type="checkbox" value="Retail"> Retail</label>
+              <label class="bd-check-item"><input type="checkbox" value="Services"> Services</label>
+              <label class="bd-check-item"><input type="checkbox" value="Manufacturing"> Manufacturing</label>
+              <label class="bd-check-item"><input type="checkbox" value="Healthcare"> Healthcare</label>
+              <label class="bd-check-item"><input type="checkbox" value="F&amp;B"> F&amp;B</label>
+              <label class="bd-check-item"><input type="checkbox" value="Technology"> Technology</label>
+              <label class="bd-check-item"><input type="checkbox" value="Education"> Education</label>
+            </div>
+          </div>
+
+          <div class="bd-filter-box">
+            <div class="bd-filter-box-title">Sales Rep <span style="font-weight:400;text-transform:none">(type names)</span></div>
+            <input class="builder-input" id="bd-rep" type="text" placeholder="e.g. Katryn Saldajeno, Ferdie Salvosa" style="font-size:12px">
+          </div>
+
+          <div class="bd-filter-box">
+            <div class="bd-filter-box-title">Team <span style="font-weight:400;text-transform:none">(type team name)</span></div>
+            <input class="builder-input" id="bd-team" type="text" placeholder="e.g. Team A, PH Sales Team" style="font-size:12px">
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Views to Include -->
+      <div class="bd-section">
+        <div class="bd-section-title">Views to Include <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:10px;color:rgba(255,255,255,.25)">(select all that apply)</span></div>
+        <div class="bd-views-grid" id="bd-views-group">
+          <label class="bd-view-card bd-view-checked"><input type="checkbox" value="summary" checked onchange="bdViewToggle(this)"><span class="bd-view-icon">📊</span><span class="bd-view-label">Summary KPIs</span></label>
+          <label class="bd-view-card"><input type="checkbox" value="per_rep" onchange="bdViewToggle(this)"><span class="bd-view-icon">👤</span><span class="bd-view-label">Per Rep</span></label>
+          <label class="bd-view-card"><input type="checkbox" value="per_team" onchange="bdViewToggle(this)"><span class="bd-view-icon">👥</span><span class="bd-view-label">Per Team</span></label>
+          <label class="bd-view-card"><input type="checkbox" value="per_segment" onchange="bdViewToggle(this)"><span class="bd-view-icon">🎯</span><span class="bd-view-label">Per Segment</span></label>
+          <label class="bd-view-card"><input type="checkbox" value="per_pipeline" onchange="bdViewToggle(this)"><span class="bd-view-icon">🔀</span><span class="bd-view-label">Per Pipeline</span></label>
+          <label class="bd-view-card"><input type="checkbox" value="per_industry" onchange="bdViewToggle(this)"><span class="bd-view-icon">🏭</span><span class="bd-view-label">Per Industry</span></label>
+          <label class="bd-view-card"><input type="checkbox" value="trend" onchange="bdViewToggle(this)"><span class="bd-view-icon">📈</span><span class="bd-view-label">Trend / Time Series</span></label>
+          <label class="bd-view-card"><input type="checkbox" value="funnel" onchange="bdViewToggle(this)"><span class="bd-view-icon">🔽</span><span class="bd-view-label">Funnel Breakdown</span></label>
+          <label class="bd-view-card"><input type="checkbox" value="leaderboard" onchange="bdViewToggle(this)"><span class="bd-view-icon">🏆</span><span class="bd-view-label">Leaderboard</span></label>
+          <label class="bd-view-card"><input type="checkbox" value="comparison" onchange="bdViewToggle(this)"><span class="bd-view-icon">⚖️</span><span class="bd-view-label">MoM Comparison</span></label>
+        </div>
+      </div>
+
+      <!-- Selected Metrics Summary -->
       <div class="builder-selected-summary">
         <div class="builder-label" style="margin-bottom:8px">Selected Metrics</div>
         <div class="builder-chips" id="builder-chips"></div>
       </div>
+
     </div>
 
     <div class="builder-footer">
@@ -3174,6 +3244,11 @@ function _builderRenderChips() {
     : '<span style="color:rgba(255,255,255,.3);font-size:13px">No metrics selected</span>';
 }
 
+function bdViewToggle(cb) {
+  var card = cb.closest ? cb.closest('.bd-view-card') : cb.parentNode;
+  if (card) card.classList.toggle('bd-view-checked', cb.checked);
+}
+
 function builderToggleCustomDates() {
   var sel = document.getElementById('bd-daterange');
   var cd  = document.getElementById('bd-custom-dates');
@@ -3193,19 +3268,45 @@ function _builderDateSQL(val,from,to) {
 }
 
 function _builderRenderPrompt() {
-  var name     = (document.getElementById('bd-name')||{}).value||'RevOps Dashboard';
-  var dateVal  = (document.getElementById('bd-daterange')||{}).value||'MTD';
-  var fromDate = (document.getElementById('bd-from')||{}).value||'';
-  var toDate   = (document.getElementById('bd-to')||{}).value||'';
-  var pipeline = (document.getElementById('bd-pipeline')||{}).value||'All Pipelines';
-  var segment  = (document.getElementById('bd-segment')||{}).value||'All Segments';
-  var viewType = (document.getElementById('bd-viewtype')||{}).value||'KPI Cards + Charts';
-  var dateSQL  = _builderDateSQL(dateVal,fromDate,toDate);
-  var pipeSQL  = pipeline==='All Pipelines'
-    ? "pipeline_name IN ('Sales Pipeline','PH Upsell Pipeline','Unified Channel Pipeline','TH Sales Pipeline')"
-    : "pipeline_name = '"+pipeline+"'";
-  var segSQL   = segment==='All Segments' ? '' : "AND segment = '"+segment+"'";
-  // Get selected metric names from DOM (DOM is source of truth)
+  // ── Read all config fields ──
+  var name     = (document.getElementById('bd-name')||{}).value || 'RevOps Dashboard';
+  var fromDate = (document.getElementById('bd-from')||{}).value || '';
+  var toDate   = (document.getElementById('bd-to')||{}).value || '';
+  var rep      = (document.getElementById('bd-rep')||{}).value || '';
+  var team     = (document.getElementById('bd-team')||{}).value || '';
+
+  function getChecked(groupId) {
+    var vals = [];
+    var grp = document.getElementById(groupId);
+    if (grp) grp.querySelectorAll('input[type=checkbox]:checked').forEach(function(cb){ vals.push(cb.value); });
+    return vals;
+  }
+  var segments  = getChecked('bd-segment-group');
+  var pipelines = getChecked('bd-pipeline-group');
+  var sources   = getChecked('bd-source-group');
+  var industries= getChecked('bd-industry-group');
+  var views     = getChecked('bd-views-group');
+
+  // ── Build SQL filter block ──
+  var dateSQL = fromDate && toDate
+    ? "create_date >= '" + fromDate + "' AND create_date <= '" + toDate + "'"
+    : fromDate
+      ? "create_date >= '" + fromDate + "'"
+      : '-- no date filter applied';
+
+  var pipeSQL = pipelines.length
+    ? "pipeline_name IN ('" + pipelines.join("','") + "')"
+    : "pipeline_name IN ('Sales Pipeline','PH Upsell Pipeline','Unified Channel Pipeline','TH Sales Pipeline')";
+
+  var segSQL    = segments.length   ? "AND segment IN ('" + segments.join("','") + "')" : '';
+  var sourceSQL = sources.length    ? "AND lead_source IN ('" + sources.join("','") + "')" : '';
+  var indSQL    = industries.length ? "AND industry IN ('" + industries.join("','") + "')" : '';
+  var repSQL    = rep.trim()
+    ? "AND sales_rep IN ('" + rep.split(',').map(function(r){return r.trim();}).join("','") + "')"
+    : '';
+  var teamSQL   = team.trim() ? "AND team = '" + team.trim() + "'" : '';
+
+  // ── Get selected metrics from DOM ──
   var _selectedNames = [];
   document.querySelectorAll('#builder-metrics-grid .builder-mrow').forEach(function(row) {
     var cb = row.querySelector('input[type=checkbox]');
@@ -3216,39 +3317,125 @@ function _builderRenderPrompt() {
   });
 
   var mBlock = selected.map(function(m){
-    var lines = ['### '+m.name];
-    if(m.definition)        lines.push('- **Definition:** '+m.definition);
-    if(m.business_question) lines.push('- **Business Question:** '+m.business_question);
-    if(m.formula)           lines.push('- **Formula:** '+m.formula);
-    if(m.sql)               lines.push('- **SQL:**\n```sql\n'+m.sql+'\n```');
-    if(m.filters)           lines.push('- **Filters:** '+m.filters);
-    if(m.exclusions)        lines.push('- **Exclusions:** '+m.exclusions);
-    return lines.join('\n');
-  }).join('\n\n');
+    var lines = ['### ' + m.name];
+    if(m.definition)        lines.push('- **Definition:** ' + m.definition);
+    if(m.business_question) lines.push('- **Business Question:** ' + m.business_question);
+    if(m.formula)           lines.push('- **Formula:** ' + m.formula);
+    if(m.sql)               lines.push('- **SQL:**
+```sql
+' + m.sql + '
+```');
+    if(m.filters)           lines.push('- **Filters:** ' + m.filters);
+    if(m.exclusions)        lines.push('- **Exclusions:** ' + m.exclusions);
+    return lines.join('
+');
+  }).join('
 
-  var prompt = 'You are building a '+viewType+' RevOps dashboard called "'+name+'" for Sprout Solutions using Databricks SQL (shared.revops schema).\n\n'
-    +'## Dashboard Configuration\n'
-    +'- Date Range: '+dateVal+'\n'
-    +'- Pipeline: '+pipeline+'\n'
-    +'- Segment: '+segment+'\n'
-    +'- View Type: '+viewType+'\n\n'
-    +'## Metrics to Include\n\n'+mBlock+'\n\n'
-    +'## Global SQL Filters (apply to ALL queries)\n'
-    +'```sql\n'
-    +'-- Date\n'+dateSQL+'\n'
-    +'-- Pipeline\n'+pipeSQL+'\n'
-    +(segSQL ? '-- Segment\n'+segSQL+'\n' : '')
-    +"-- Exclude renewals (always)\nAND deal_type NOT IN ('Renewal','Upsell - Renewal') AND LOWER(deal_name) NOT LIKE '%renewal%'\n```\n\n"
-    +'## Build Instructions\n'
-    +'1. Use the exact SQL and filters above - do not change business logic\n'
-    +'2. Databricks SQL: USE CATALOG shared; USE SCHEMA revops;\n'
-    +'3. Apply all global filters to every query\n'
-    +'4. Build as a single self-contained HTML file:\n'
-    +'   - Dark theme (#030712 bg, #1DB954 accent, white text)\n'
-    +'   - Responsive grid layout (KPI cards + charts)\n'
-    +'   - Executive-level professional design\n'
-    +'   - Header showing dashboard name, date range, and filters applied\n'
-    +'5. Use Chart.js (CDN) for any charts';
+');
+
+  // ── View descriptions ──
+  var viewLabels = {
+    summary:      'Summary KPI Cards (top-level metrics)',
+    per_rep:      'Per Sales Rep breakdown table + charts',
+    per_team:     'Per Team breakdown table + charts',
+    per_segment:  'Per Segment breakdown (SME / ENT / Channels)',
+    per_pipeline: 'Per Pipeline breakdown',
+    per_industry: 'Per Industry breakdown',
+    trend:        'Trend / Time-series charts (MoM, WoW)',
+    funnel:       'Funnel visualization (lead → SQL → won)',
+    leaderboard:  'Leaderboard ranking (rep/team performance)',
+    comparison:   'Month-over-Month comparison table'
+  };
+  var viewList = views.length
+    ? views.map(function(v){ return '- ' + (viewLabels[v] || v); }).join('
+')
+    : '- Summary KPI Cards (default)';
+
+  var prompt = 'You are building a RevOps dashboard called "' + name + '" for Sprout Solutions using Databricks SQL (shared.revops schema).
+
+'
+    + '## Dashboard Configuration
+'
+    + '- Dashboard Name: ' + name + '
+'
+    + (fromDate ? '- Date From: ' + fromDate + '
+' : '')
+    + (toDate   ? '- Date To:   ' + toDate   + '
+' : '')
+    + (segments.length   ? '- Segments:  ' + segments.join(', ')   + '
+' : '')
+    + (pipelines.length  ? '- Pipelines: ' + pipelines.join(', ')  + '
+' : '- Pipelines: All
+')
+    + (sources.length    ? '- Lead Source: ' + sources.join(', ')  + '
+' : '')
+    + (industries.length ? '- Industries: ' + industries.join(', ') + '
+' : '')
+    + (rep.trim()        ? '- Sales Reps: ' + rep + '
+' : '')
+    + (team.trim()       ? '- Team: ' + team + '
+' : '')
+    + '
+## Views to Include
+' + viewList + '
+
+'
+    + '## Metrics to Include
+
+' + mBlock + '
+
+'
+    + '## Global SQL Filters (apply to ALL queries)
+'
+    + '```sql
+'
+    + '-- Date filter
+' + dateSQL + '
+'
+    + '-- Pipeline
+' + pipeSQL + '
+'
+    + (segSQL    ? '-- Segment
+'      + segSQL    + '
+' : '')
+    + (sourceSQL ? '-- Lead Source
+'  + sourceSQL + '
+' : '')
+    + (indSQL    ? '-- Industry
+'     + indSQL    + '
+' : '')
+    + (repSQL    ? '-- Sales Rep
+'    + repSQL    + '
+' : '')
+    + (teamSQL   ? '-- Team
+'         + teamSQL   + '
+' : '')
+    + "-- Exclude renewals (always)
+AND deal_type NOT IN ('Renewal','Upsell - Renewal') AND LOWER(deal_name) NOT LIKE '%renewal%'
+```
+
+"
+    + '## Build Instructions
+'
+    + '1. Use Databricks SQL: USE CATALOG shared; USE SCHEMA revops;
+'
+    + '2. Apply ALL global filters above to every query
+'
+    + '3. Build as a single self-contained HTML file:
+'
+    + '   - Dark theme (#030712 bg, #1DB954 accent, white text)
+'
+    + '   - Responsive grid layout
+'
+    + '   - Executive-level professional design
+'
+    + '   - Header showing dashboard name, date range, and filters applied
+'
+    + '4. Include each requested view as a clearly labeled section
+'
+    + '5. Use Chart.js (CDN) for charts
+'
+    + '6. Exact metric definitions and SQL are provided above — do not change business logic';
 
   var ta = document.getElementById('builder-prompt-output');
   if (ta) ta.value = prompt;
