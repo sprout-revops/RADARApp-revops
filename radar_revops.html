@@ -1143,7 +1143,8 @@ DATABRICKS_TOKEN</div>
       <table class="kpi-def-table" style="margin-bottom:20px">
         <thead><tr><th>Symptom</th><th>Cause</th><th>Fix</th></tr></thead>
         <tbody>
-          <tr><td class="kpi-name-cell">Dashboard shows Sample Data</td><td><code>data/dashboard.json</code> not committed</td><td>Run <code>python fetch_data.py</code> and <code>git push</code></td></tr>
+          <tr><td class="kpi-name-cell">Dashboard shows Sample Data</td><td><code>data/dashboard.json</code> not committed, or opened via <code>file://</code></td><td>Run <code>python fetch_data.py</code> and <code>git push</code>. Locally, always open via <code>serve.bat</code> — Chrome blocks <code>fetch()</code> on <code>file://</code> URLs</td></tr>
+          <tr><td class="kpi-name-cell">Currency shows <code>&amp;#8369;</code></td><td>HTML entity used in Chart.js label — Chart.js renders plain text, not HTML</td><td>Use the literal <code>₱</code> character in all Chart.js callbacks and tooltips</td></tr>
           <tr><td class="kpi-name-cell">HTTP 401 from Databricks</td><td>PAT expired</td><td>Generate a new token; update <code>.env</code> and GitHub Secrets</td></tr>
           <tr><td class="kpi-name-cell"><code>wait_timeout</code> error</td><td>Value out of range</td><td>Must be <code>5s</code> to <code>50s</code> (use <code>50s</code>)</td></tr>
           <tr><td class="kpi-name-cell"><code>.env</code> key has ﻿ prefix</td><td>BOM added by PowerShell Out-File</td><td>Open <code>.env</code> with <code>encoding='utf-8-sig'</code> in Python</td></tr>
@@ -3907,8 +3908,9 @@ function _builderRenderPromptInner() {
     + '2. dashboard.html            — standalone HTML dashboard, reads data/dashboard.json client-side\n'
     + '3. .env                      — credentials template the user fills in (tokens never hardcoded)\n'
     + '4. .gitignore                — prevents .env and credentials from being committed\n'
-    + '5. refresh_and_push.bat      — Windows batch file for scheduled local refresh\n'
-    + '6. .github/workflows/refresh.yml — GitHub Actions for cloud auto-refresh\n\n'
+    + '5. serve.bat                 — Windows batch to serve the dashboard locally via http.server (fixes Chrome file:// fetch block)\n'
+    + '6. refresh_and_push.bat      — Windows batch file for scheduled local refresh\n'
+    + '7. .github/workflows/refresh.yml — GitHub Actions for cloud auto-refresh\n\n'
     + '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n'
     + '⚠️  IMPORTANT — DATA CONTEXT\n'
     + '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n'
@@ -3975,6 +3977,14 @@ function _builderRenderPromptInner() {
     + '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n'
     + 'Single standalone HTML (HTML + CSS + JS). Use Chart.js via CDN.\n'
     + 'Load data: fetch(\'data/dashboard.json\') — NEVER call Databricks from browser.\n'
+    + '⚠️  BROWSER FETCH RULES:\n'
+    + '  • Chrome/Edge BLOCK fetch() on file:// URLs — dashboard must be opened via a local HTTP server, NOT by double-clicking the .html file.\n'
+    + '  • serve.bat handles this: it runs "python -m http.server 8080" and opens http://localhost:8080/dashboard.html automatically.\n'
+    + '  • Always instruct the user: open via serve.bat, not by double-clicking dashboard.html directly.\n\n'
+    + '⚠️  CURRENCY / SYMBOL RULES:\n'
+    + '  • Use the literal ₱ character for Philippine Peso — NOT the HTML entity &#8369;.\n'
+    + '  • Chart.js renders axis labels and tooltips as plain text, not HTML — HTML entities will appear as raw code (e.g. "&#8369;50K" instead of "₱50K").\n'
+    + '  • This applies to all string concatenation inside Chart.js callbacks (ticks, tooltips, datalabels, etc.).\n\n'
     + 'Status: 🟢 Live (JSON loaded) / ⚠️ Sample Data (file missing)\n'
     + 'Sample fallback: realistic dummy values so dashboard always renders.\n\n'
     + 'DATE-COLUMN RULES (STRICT — never mix):\n'
