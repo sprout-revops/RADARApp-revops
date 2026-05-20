@@ -1417,7 +1417,7 @@ DATABRICKS_TOKEN</div>
       <div class="bd-section">
         <div class="bd-section-title">Sub Filters <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:10px;color:rgba(255,255,255,.3)">Select which filters to add to the dashboard</span></div>
         <div class="bd-check-list" id="bd-subfilter-group" style="display:flex;flex-wrap:wrap;gap:8px 16px">
-          <label class="bd-check-item"><input type="checkbox" value="Segment (column: segment in silver_deals, segment_official in gold tables)"> Segment <span class="bd-col-tag">segment</span></label>
+          <label class="bd-check-item"><input type="checkbox" value="Segment (segment — SME and ENT only)"> Segment <span class="bd-col-tag">segment</span></label>
           <label class="bd-check-item"><input type="checkbox" value="Deal Stage (stage_label)"> Deal Stage <span class="bd-col-tag">stage_label</span></label>
           <label class="bd-check-item"><input type="checkbox" value="Industry (industry)"> Industry <span class="bd-col-tag">industry</span></label>
           <label class="bd-check-item"><input type="checkbox" value="Sub-Industry (Sub_industry)"> Sub-Industry <span class="bd-col-tag">Sub_industry</span></label>
@@ -3945,7 +3945,7 @@ function _builderRenderPromptInner() {
     + '  SELECT d.deal_id, d.deal_name, d.deal_type, d.create_date, d.close_date, d.projected_close_date,\n'
     + '         d.client_journey_stage, d.stage_label, d.qualified_lead, d.mrr, d.ef_mrr, d.otp_only,\n'
     + '         d.implem_fee, d.mrr_lt_12, d.deal_velocity_days, d.sales_rep, d.hubspot_team,\n'
-    + '         d.partner_on_record, d.company_id,\n'
+    + '         d.partner_on_record, d.company_id, d.amount,\n'
     + '         c.industry, c.sub_industry,\n'
     + '         CASE WHEN UPPER(d.department_source_clean)=\'MICRO\' THEN \'SME\'\n'
     + '              ELSE d.department_source_clean END AS department_source_clean,\n'
@@ -3955,7 +3955,7 @@ function _builderRenderPromptInner() {
     + '  LEFT JOIN shared.revops.silver_company c ON d.company_id = c.company_id\n'
     + '  WHERE (' + pipeSQL + ')\n'
     + '    AND d.deal_type NOT IN (\'Renewal\',\'Upsell - Renewal\')\n'
-    + '    AND LOWER(d.deal_name) NOT LIKE \'%renewal%\'\n'
+    + '    AND LOWER(COALESCE(d.deal_name,\'\')) NOT LIKE \'%renewal%\'\n'
     + '    AND (d.create_date >= ADD_MONTHS(CURRENT_DATE,-36)\n'
     + '         OR d.close_date >= ADD_MONTHS(CURRENT_DATE,-36)\n'
     + '         OR d.projected_close_date >= ADD_MONTHS(CURRENT_DATE,-36))\n\n'
@@ -3980,7 +3980,7 @@ function _builderRenderPromptInner() {
     + '  FROM shared.revops.silver_line_items li\n'
     + '  INNER JOIN shared.revops.silver_deals d ON li.deal_id = d.deal_id\n'
     + '  WHERE d.deal_type NOT IN (\'Renewal\',\'Upsell - Renewal\')\n'
-    + '    AND LOWER(d.deal_name) NOT LIKE \'%renewal%\'\n'
+    + '    AND LOWER(COALESCE(d.deal_name,\'\')) NOT LIKE \'%renewal%\'\n'
     + '    AND (d.create_date >= ADD_MONTHS(CURRENT_DATE,-36)\n'
     + '         OR d.close_date >= ADD_MONTHS(CURRENT_DATE,-36))\n\n'
     + 'Query 6 — active_reps (reps/teams active in the CURRENT CALENDAR YEAR, Sales+Channel+Upsell pipelines only):\n'
