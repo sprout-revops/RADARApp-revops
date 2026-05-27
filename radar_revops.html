@@ -1758,7 +1758,16 @@ python fetch_data.py
         <div class="connect-step-title">What data do you need from RADAR?</div>
       </div>
       <div class="connect-step-desc">Click to select the metrics you want to add. Select as many as you need.</div>
-      <div class="metric-chips" id="metric-chips"></div>
+      <div class="metric-chips" id="metric-chips">
+        <div class="metric-chip" data-id="mrr" onclick="this.classList.toggle('selected')"><div class="mc-label">MRR Won</div><div class="mc-sub">Monthly Recurring Revenue from closed-won deals</div></div>
+        <div class="metric-chip" data-id="pipeline" onclick="this.classList.toggle('selected')"><div class="mc-label">Pipeline Value</div><div class="mc-sub">Total MRR of open deals not yet closed</div></div>
+        <div class="metric-chip" data-id="winrate" onclick="this.classList.toggle('selected')"><div class="mc-label">Win Rate</div><div class="mc-sub">Percentage of deals won out of all closed deals</div></div>
+        <div class="metric-chip" data-id="dealcount" onclick="this.classList.toggle('selected')"><div class="mc-label">Deal Count</div><div class="mc-sub">Number of deals closed in the period</div></div>
+        <div class="metric-chip" data-id="avgdeal" onclick="this.classList.toggle('selected')"><div class="mc-label">Avg Deal Size</div><div class="mc-sub">Average MRR per closed-won deal</div></div>
+        <div class="metric-chip" data-id="attainment" onclick="this.classList.toggle('selected')"><div class="mc-label">Attainment vs Target</div><div class="mc-sub">Rep or team MRR won vs their monthly target</div></div>
+        <div class="metric-chip" data-id="velocity" onclick="this.classList.toggle('selected')"><div class="mc-label">Sales Cycle</div><div class="mc-sub">Average days from deal creation to close</div></div>
+        <div class="metric-chip" data-id="growth" onclick="this.classList.toggle('selected')"><div class="mc-label">MoM MRR Growth</div><div class="mc-sub">Month-over-month MRR growth percentage</div></div>
+      </div>
     </div>
 
     <!-- Step 2: Filters -->
@@ -4576,13 +4585,6 @@ let connectInitialized = false;
 function initConnectSection() {
   if (connectInitialized) return;
   connectInitialized = true;
-  const grid = document.getElementById('metric-chips');
-  if (!grid) return;
-  grid.innerHTML = RADAR_METRICS.map(m => `
-    <div class="metric-chip" data-id="${m.id}" onclick="this.classList.toggle('selected')">
-      <div class="mc-label">${m.label}</div>
-      <div class="mc-sub">${m.desc}</div>
-    </div>`).join('');
   document.querySelectorAll('#cf-segment .chip-opt, #cf-pipeline .chip-opt').forEach(c => {
     c.addEventListener('click', () => c.classList.toggle('active'));
   });
