@@ -293,6 +293,7 @@ body{font-family:'Rubik','Bahnschrift Light SemiCondensed','Bahnschrift',Arial,s
 .mc-label{font-size:12px;font-weight:700;color:#e2e8f0;margin-bottom:3px}
 .mc-sub{font-size:10px;color:rgba(255,255,255,.35);line-height:1.4}
 .metric-chip.selected .mc-label{color:#1DB954}
+.mc-group-label{grid-column:1/-1;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.3);margin-top:10px;margin-bottom:2px;padding-bottom:4px;border-bottom:1px solid rgba(255,255,255,.06)}.mc-group-label:first-child{margin-top:0}
 .connect-filter-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
 .connect-filter-item{display:flex;flex-direction:column;gap:6px}
 .cf-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:rgba(255,255,255,.3)}
@@ -1759,14 +1760,39 @@ python fetch_data.py
       </div>
       <div class="connect-step-desc">Click to select the metrics you want to add. Select as many as you need.</div>
       <div class="metric-chips" id="metric-chips">
+        <!-- Revenue -->
+        <div class="mc-group-label">💰 Revenue</div>
         <div class="metric-chip" data-id="mrr" onclick="this.classList.toggle('selected')"><div class="mc-label">MRR Won</div><div class="mc-sub">Monthly Recurring Revenue from closed-won deals</div></div>
-        <div class="metric-chip" data-id="pipeline" onclick="this.classList.toggle('selected')"><div class="mc-label">Pipeline Value</div><div class="mc-sub">Total MRR of open deals not yet closed</div></div>
-        <div class="metric-chip" data-id="winrate" onclick="this.classList.toggle('selected')"><div class="mc-label">Win Rate</div><div class="mc-sub">Percentage of deals won out of all closed deals</div></div>
-        <div class="metric-chip" data-id="dealcount" onclick="this.classList.toggle('selected')"><div class="mc-label">Deal Count</div><div class="mc-sub">Number of deals closed in the period</div></div>
-        <div class="metric-chip" data-id="avgdeal" onclick="this.classList.toggle('selected')"><div class="mc-label">Avg Deal Size</div><div class="mc-sub">Average MRR per closed-won deal</div></div>
-        <div class="metric-chip" data-id="attainment" onclick="this.classList.toggle('selected')"><div class="mc-label">Attainment vs Target</div><div class="mc-sub">Rep or team MRR won vs their monthly target</div></div>
-        <div class="metric-chip" data-id="velocity" onclick="this.classList.toggle('selected')"><div class="mc-label">Sales Cycle</div><div class="mc-sub">Average days from deal creation to close</div></div>
+        <div class="metric-chip" data-id="arr" onclick="this.classList.toggle('selected')"><div class="mc-label">ARR Won</div><div class="mc-sub">Annual Recurring Revenue (MRR × 12)</div></div>
+        <div class="metric-chip" data-id="new_mrr" onclick="this.classList.toggle('selected')"><div class="mc-label">New MRR</div><div class="mc-sub">MRR from new logos only (New Business pipeline)</div></div>
+        <div class="metric-chip" data-id="expansion_mrr" onclick="this.classList.toggle('selected')"><div class="mc-label">Expansion MRR</div><div class="mc-sub">MRR from upsell and cross-sell deals</div></div>
+        <div class="metric-chip" data-id="churn_mrr" onclick="this.classList.toggle('selected')"><div class="mc-label">Churn MRR</div><div class="mc-sub">MRR lost from churned accounts in the period</div></div>
+        <div class="metric-chip" data-id="net_new_mrr" onclick="this.classList.toggle('selected')"><div class="mc-label">Net New MRR</div><div class="mc-sub">New MRR + Expansion MRR − Churn MRR</div></div>
         <div class="metric-chip" data-id="growth" onclick="this.classList.toggle('selected')"><div class="mc-label">MoM MRR Growth</div><div class="mc-sub">Month-over-month MRR growth percentage</div></div>
+        <!-- Pipeline -->
+        <div class="mc-group-label">📊 Pipeline</div>
+        <div class="metric-chip" data-id="pipeline" onclick="this.classList.toggle('selected')"><div class="mc-label">Pipeline Value</div><div class="mc-sub">Total MRR of open deals not yet closed</div></div>
+        <div class="metric-chip" data-id="pipeline_by_stage" onclick="this.classList.toggle('selected')"><div class="mc-label">Pipeline by Stage</div><div class="mc-sub">Open pipeline broken down by deal stage</div></div>
+        <div class="metric-chip" data-id="pipeline_coverage" onclick="this.classList.toggle('selected')"><div class="mc-label">Pipeline Coverage</div><div class="mc-sub">Open pipeline value ÷ remaining target (coverage ratio)</div></div>
+        <div class="metric-chip" data-id="deals_created" onclick="this.classList.toggle('selected')"><div class="mc-label">Deals Created</div><div class="mc-sub">Number of new deals added to pipeline in the period</div></div>
+        <!-- Conversion & Efficiency -->
+        <div class="mc-group-label">⚡ Conversion & Efficiency</div>
+        <div class="metric-chip" data-id="winrate" onclick="this.classList.toggle('selected')"><div class="mc-label">Win Rate</div><div class="mc-sub">Percentage of deals won out of all closed deals</div></div>
+        <div class="metric-chip" data-id="dealcount" onclick="this.classList.toggle('selected')"><div class="mc-label">Deal Count</div><div class="mc-sub">Number of deals closed (won + lost) in the period</div></div>
+        <div class="metric-chip" data-id="avgdeal" onclick="this.classList.toggle('selected')"><div class="mc-label">Avg Deal Size</div><div class="mc-sub">Average MRR per closed-won deal</div></div>
+        <div class="metric-chip" data-id="velocity" onclick="this.classList.toggle('selected')"><div class="mc-label">Sales Cycle</div><div class="mc-sub">Average days from deal creation to close</div></div>
+        <div class="metric-chip" data-id="lost_deals" onclick="this.classList.toggle('selected')"><div class="mc-label">Lost Deal Analysis</div><div class="mc-sub">Count and MRR of deals lost, with loss reason breakdown</div></div>
+        <!-- Performance -->
+        <div class="mc-group-label">🎯 Performance & Attainment</div>
+        <div class="metric-chip" data-id="attainment" onclick="this.classList.toggle('selected')"><div class="mc-label">Rep Attainment</div><div class="mc-sub">MRR won vs monthly target per rep</div></div>
+        <div class="metric-chip" data-id="team_attainment" onclick="this.classList.toggle('selected')"><div class="mc-label">Team Attainment</div><div class="mc-sub">MRR won vs monthly target per team</div></div>
+        <div class="metric-chip" data-id="leaderboard" onclick="this.classList.toggle('selected')"><div class="mc-label">Rep Leaderboard</div><div class="mc-sub">Ranked list of reps by MRR won in the period</div></div>
+        <!-- Breakdown -->
+        <div class="mc-group-label">🔍 Breakdown & Segmentation</div>
+        <div class="metric-chip" data-id="by_segment" onclick="this.classList.toggle('selected')"><div class="mc-label">Revenue by Segment</div><div class="mc-sub">MRR split across SMB, Mid-Market, and Enterprise</div></div>
+        <div class="metric-chip" data-id="by_industry" onclick="this.classList.toggle('selected')"><div class="mc-label">Revenue by Industry</div><div class="mc-sub">MRR broken down by industry/vertical</div></div>
+        <div class="metric-chip" data-id="by_pipeline_type" onclick="this.classList.toggle('selected')"><div class="mc-label">Revenue by Pipeline</div><div class="mc-sub">MRR split across New Business, Upsell, and Channel</div></div>
+        <div class="metric-chip" data-id="by_team" onclick="this.classList.toggle('selected')"><div class="mc-label">Revenue by Team</div><div class="mc-sub">MRR won grouped by sales team</div></div>
       </div>
     </div>
 
@@ -4571,14 +4597,29 @@ document.querySelectorAll('.home-card').forEach(card => {
 
 // ── CONNECT TO RADAR ──────────────────────────────────────────────
 const RADAR_METRICS = [
-  { id:'mrr',        label:'MRR Won',              desc:'Monthly Recurring Revenue from closed-won deals',             sql:"SUM(mrr) WHERE is_won = true AND close_date falls within the selected period",                                   table:'silver_deals' },
-  { id:'pipeline',   label:'Pipeline Value',        desc:'Total MRR of open deals not yet closed',                     sql:"SUM(mrr) WHERE deal_stage NOT IN ('Closed Won','Closed Lost')",                                               table:'silver_deals' },
-  { id:'winrate',    label:'Win Rate',              desc:'Percentage of deals won out of all closed deals',            sql:"COUNT(*) FILTER(WHERE is_won=true) / NULLIF(COUNT(*) FILTER(WHERE deal_stage IN ('Closed Won','Closed Lost')),0)", table:'silver_deals' },
-  { id:'dealcount',  label:'Deal Count',            desc:'Number of deals closed in the period',                       sql:"COUNT(*) WHERE deal_stage IN ('Closed Won','Closed Lost')",                                                   table:'silver_deals' },
-  { id:'avgdeal',    label:'Avg Deal Size',         desc:'Average MRR per closed-won deal',                           sql:"AVG(mrr) WHERE is_won = true",                                                                               table:'silver_deals' },
-  { id:'attainment', label:'Attainment vs Target',  desc:'Rep or team MRR won vs their monthly target',               sql:"SUM(mrr won) / NULLIF(SUM(mrr_target), 0) — join silver_deals with gold_targets on rep_name + year_month",     table:'silver_deals + gold_targets' },
-  { id:'velocity',   label:'Sales Cycle',           desc:'Average days from deal creation to close',                  sql:"AVG(DATEDIFF(day, create_date, close_date)) WHERE is_won = true",                                            table:'silver_deals' },
-  { id:'growth',     label:'MoM MRR Growth',        desc:'Month-over-month MRR growth percentage',                    sql:"(current_month_mrr - prior_month_mrr) / NULLIF(prior_month_mrr, 0) — from gold_monthly_exec_summary",          table:'gold_monthly_exec_summary' },
+  { id:'mrr',             label:'MRR Won',             desc:'Monthly Recurring Revenue from closed-won deals',                sql:"SUM(mrr) WHERE is_won = true AND close_date within period",                                                          table:'silver_deals' },
+  { id:'arr',             label:'ARR Won',              desc:'Annual Recurring Revenue (MRR x 12)',                           sql:"SUM(mrr) * 12 WHERE is_won = true AND close_date within period",                                                    table:'silver_deals' },
+  { id:'new_mrr',         label:'New MRR',              desc:'MRR from new logos only (New Business pipeline)',               sql:"SUM(mrr) WHERE is_won = true AND pipeline_name = 'New Business' AND close_date within period",                      table:'silver_deals' },
+  { id:'expansion_mrr',   label:'Expansion MRR',        desc:'MRR from upsell and cross-sell deals',                         sql:"SUM(mrr) WHERE is_won = true AND pipeline_name IN ('Upsell','Cross-sell') AND close_date within period",             table:'silver_deals' },
+  { id:'churn_mrr',       label:'Churn MRR',            desc:'MRR lost from churned accounts in the period',                 sql:"Use gold_monthly_exec_summary.churn_mrr for the period",                                                            table:'gold_monthly_exec_summary' },
+  { id:'net_new_mrr',     label:'Net New MRR',          desc:'New MRR + Expansion MRR minus Churn MRR',                      sql:"new_mrr + expansion_mrr - churn_mrr — from gold_monthly_exec_summary",                                              table:'gold_monthly_exec_summary' },
+  { id:'growth',          label:'MoM MRR Growth',       desc:'Month-over-month MRR growth percentage',                       sql:"(current_month total_mrr - prior_month total_mrr) / NULLIF(prior_month total_mrr, 0)",                               table:'gold_monthly_exec_summary' },
+  { id:'pipeline',        label:'Pipeline Value',        desc:'Total MRR of open deals not yet closed',                      sql:"SUM(mrr) WHERE deal_stage NOT IN ('Closed Won','Closed Lost')",                                                      table:'silver_deals' },
+  { id:'pipeline_by_stage',label:'Pipeline by Stage',   desc:'Open pipeline broken down by deal stage',                      sql:"SUM(mrr) GROUP BY deal_stage WHERE deal_stage NOT IN ('Closed Won','Closed Lost')",                                  table:'silver_deals' },
+  { id:'pipeline_coverage',label:'Pipeline Coverage',   desc:'Open pipeline value divided by remaining target',              sql:"SUM(open pipeline mrr) / NULLIF(SUM(remaining mrr_target for the period), 0)",                                      table:'silver_deals + gold_targets' },
+  { id:'deals_created',   label:'Deals Created',         desc:'New deals added to pipeline in the period',                   sql:"COUNT(*) WHERE create_date within period",                                                                           table:'silver_deals' },
+  { id:'winrate',         label:'Win Rate',              desc:'Percentage of deals won out of all closed deals',             sql:"COUNT(*) FILTER(WHERE is_won=true) / NULLIF(COUNT(*) FILTER(WHERE deal_stage IN ('Closed Won','Closed Lost')),0)",    table:'silver_deals' },
+  { id:'dealcount',       label:'Deal Count',            desc:'Number of deals closed (won + lost) in the period',           sql:"COUNT(*) WHERE deal_stage IN ('Closed Won','Closed Lost') AND close_date within period",                             table:'silver_deals' },
+  { id:'avgdeal',         label:'Avg Deal Size',         desc:'Average MRR per closed-won deal',                             sql:"AVG(mrr) WHERE is_won = true AND close_date within period",                                                          table:'silver_deals' },
+  { id:'velocity',        label:'Sales Cycle',           desc:'Average days from deal creation to close',                    sql:"AVG(DATEDIFF(day, create_date, close_date)) WHERE is_won = true AND close_date within period",                       table:'silver_deals' },
+  { id:'lost_deals',      label:'Lost Deal Analysis',    desc:'Count and MRR of deals lost with loss reason breakdown',      sql:"COUNT(*) and SUM(mrr) WHERE is_won = false AND deal_stage = 'Closed Lost', GROUP BY loss_reason",                    table:'silver_deals' },
+  { id:'attainment',      label:'Rep Attainment',        desc:'MRR won vs monthly target per rep',                           sql:"SUM(mrr won) / NULLIF(SUM(mrr_target), 0) per rep — join silver_deals with gold_targets on rep_name + year_month",   table:'silver_deals + gold_targets' },
+  { id:'team_attainment', label:'Team Attainment',       desc:'MRR won vs monthly target per team',                          sql:"SUM(mrr won) / NULLIF(SUM(mrr_target), 0) per team — join silver_deals with gold_targets on team_name + year_month", table:'silver_deals + gold_targets' },
+  { id:'leaderboard',     label:'Rep Leaderboard',       desc:'Ranked list of reps by MRR won in the period',               sql:"SUM(mrr) WHERE is_won = true GROUP BY rep_name ORDER BY SUM(mrr) DESC",                                              table:'silver_deals' },
+  { id:'by_segment',      label:'Revenue by Segment',    desc:'MRR split across SMB, Mid-Market, and Enterprise',           sql:"SUM(mrr) WHERE is_won = true GROUP BY segment",                                                                      table:'silver_deals' },
+  { id:'by_industry',     label:'Revenue by Industry',   desc:'MRR broken down by industry or vertical',                    sql:"SUM(mrr) WHERE is_won = true GROUP BY industry",                                                                     table:'silver_deals' },
+  { id:'by_pipeline_type',label:'Revenue by Pipeline',   desc:'MRR split across New Business, Upsell, and Channel',         sql:"SUM(mrr) WHERE is_won = true GROUP BY pipeline_name",                                                                table:'silver_deals' },
+  { id:'by_team',         label:'Revenue by Team',       desc:'MRR won grouped by sales team',                              sql:"SUM(mrr) WHERE is_won = true GROUP BY team_name (from gold_targets or rep metadata)",                                 table:'silver_deals' },
 ];
 
 let connectInitialized = false;
