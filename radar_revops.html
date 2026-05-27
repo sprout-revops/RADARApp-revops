@@ -311,6 +311,15 @@ body{font-family:'Rubik','Bahnschrift Light SemiCondensed','Bahnschrift',Arial,s
 .cf-upload-icon{font-size:28px;margin-bottom:8px}
 .cf-upload-label{font-size:13px;font-weight:600;color:rgba(255,255,255,.55)}
 .cf-upload-sub{font-size:10px;color:rgba(255,255,255,.25);margin-top:4px;letter-spacing:.4px}
+.cf-filter-section{margin-bottom:16px}
+.cf-filter-section-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:rgba(255,255,255,.3);margin-bottom:8px}
+.cf-table-tabs{display:flex;gap:8px;margin:0 0 12px}
+.cf-table-tab{padding:6px 16px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,.09);color:rgba(255,255,255,.4);transition:all .15s;user-select:none}
+.cf-table-tab:hover{border-color:rgba(29,185,84,.4);color:rgba(255,255,255,.7)}
+.cf-table-tab.active{background:rgba(29,185,84,.1);border-color:#1DB954;color:#1DB954}
+.cf-field-row{display:flex;align-items:flex-start;gap:16px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.cf-field-row:last-child{border-bottom:none}
+.cf-field-name{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.3);width:90px;flex-shrink:0;padding-top:6px}
 .connect-generate-btn{background:linear-gradient(135deg,#1DB954,#00e5a0);color:#030712;border:none;border-radius:10px;padding:13px 36px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;transition:all .2s;box-shadow:0 4px 20px rgba(29,185,84,.3)}
 .connect-generate-btn:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(29,185,84,.45)}
 .connect-reset-btn{background:transparent;color:rgba(255,255,255,.35);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:13px 22px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s}
@@ -1803,45 +1812,153 @@ python fetch_data.py
       </div>
     </div>
 
-    <!-- Step 2: Filters -->
-    <div class="connect-step">
-      <div class="connect-step-header">
-        <div class="connect-step-num">2</div>
-        <div class="connect-step-title">How do you want to filter the data? <span class="optional-tag">Optional</span></div>
-      </div>
-      <div class="connect-step-desc">Leave blank to include all reps, all segments, and all pipelines.</div>
-      <div class="connect-filter-grid">
-        <div class="connect-filter-item">
-          <label class="cf-label">Team or Rep</label>
-          <input type="text" class="connect-input" id="cf-team" placeholder="e.g. ENT Builders, or leave blank for all">
-        </div>
-        <div class="connect-filter-item">
-          <label class="cf-label">Segment</label>
-          <div class="chip-select" id="cf-segment">
-            <div class="chip-opt" data-val="SME" onclick="this.classList.toggle('active')">SME</div>
-            <div class="chip-opt" data-val="Enterprise" onclick="this.classList.toggle('active')">Enterprise</div>
-          </div>
-        </div>
-        <div class="connect-filter-item">
-          <label class="cf-label">Pipeline</label>
-          <div class="chip-select" id="cf-pipeline">
-            <div class="chip-opt" data-val="Sales Pipeline" onclick="this.classList.toggle('active')">Sales Pipeline</div>
-            <div class="chip-opt" data-val="TH Sales Pipeline" onclick="this.classList.toggle('active')">TH Sales Pipeline</div>
-            <div class="chip-opt" data-val="PH Upsell Pipeline" onclick="this.classList.toggle('active')">PH Upsell Pipeline</div>
-            <div class="chip-opt" data-val="Unified Channel Pipeline" onclick="this.classList.toggle('active')">Unified Channel Pipeline</div>
-          </div>
-        </div>
-        <div class="connect-filter-item">
-          <label class="cf-label">Date Range</label>
-          <div class="chip-select" id="cf-date">
-            <div class="chip-opt active" data-val="YTD" onclick="this.classList.toggle('active')">YTD</div>
-            <div class="chip-opt" data-val="MTD" onclick="this.classList.toggle('active')">MTD</div>
-            <div class="chip-opt" data-val="QTD" onclick="this.classList.toggle('active')">QTD</div>
-            <div class="chip-opt" data-val="All Time" onclick="this.classList.toggle('active')">All Time</div>
-          </div>
-        </div>
+<!-- Step 2: Filters -->
+<div class="connect-step">
+  <div class="connect-step-header">
+    <div class="connect-step-num">2</div>
+    <div class="connect-step-title">How do you want to filter the data? <span class="optional-tag">Optional</span></div>
+  </div>
+  <div class="connect-step-desc">Select which fields and values to filter by. Switch between tables to build your filter set.</div>
+
+  <!-- Date Range -->
+  <div class="cf-filter-section">
+    <div class="cf-filter-section-label">📅 Date Range</div>
+    <div class="chip-select" id="cf-date">
+      <div class="chip-opt active" data-val="YTD" onclick="this.classList.toggle('active')">YTD</div>
+      <div class="chip-opt" data-val="MTD" onclick="this.classList.toggle('active')">MTD</div>
+      <div class="chip-opt" data-val="QTD" onclick="this.classList.toggle('active')">QTD</div>
+      <div class="chip-opt" data-val="All Time" onclick="this.classList.toggle('active')">All Time</div>
+    </div>
+  </div>
+
+  <!-- Table tabs -->
+  <div class="cf-table-tabs">
+    <div class="cf-table-tab active" onclick="switchFilterTable('deals',this)">📋 Deals</div>
+    <div class="cf-table-tab" onclick="switchFilterTable('companies',this)">🏢 Companies</div>
+    <div class="cf-table-tab" onclick="switchFilterTable('lineitems',this)">📦 Line Items</div>
+  </div>
+
+  <!-- DEALS -->
+  <div class="cf-table-panel" id="cf-panel-deals">
+    <div class="cf-field-row">
+      <div class="cf-field-name">Pipeline</div>
+      <div class="chip-select cf-field-chips" data-table="silver_deals" data-field="pipeline_name">
+        <div class="chip-opt" data-val="Sales Pipeline" onclick="this.classList.toggle('active')">Sales Pipeline</div>
+        <div class="chip-opt" data-val="TH Sales Pipeline" onclick="this.classList.toggle('active')">TH Sales Pipeline</div>
+        <div class="chip-opt" data-val="PH Upsell Pipeline" onclick="this.classList.toggle('active')">PH Upsell Pipeline</div>
+        <div class="chip-opt" data-val="Unified Channel Pipeline" onclick="this.classList.toggle('active')">Unified Channel Pipeline</div>
       </div>
     </div>
+    <div class="cf-field-row">
+      <div class="cf-field-name">Segment</div>
+      <div class="chip-select cf-field-chips" data-table="silver_deals" data-field="segment">
+        <div class="chip-opt" data-val="SME" onclick="this.classList.toggle('active')">SME</div>
+        <div class="chip-opt" data-val="Enterprise" onclick="this.classList.toggle('active')">Enterprise</div>
+      </div>
+    </div>
+    <div class="cf-field-row">
+      <div class="cf-field-name">Deal Stage</div>
+      <div class="chip-select cf-field-chips" data-table="silver_deals" data-field="stage_label">
+        <div class="chip-opt" data-val="Appointment Scheduled" onclick="this.classList.toggle('active')">Appointment Scheduled</div>
+        <div class="chip-opt" data-val="Initial Demo Done" onclick="this.classList.toggle('active')">Initial Demo Done</div>
+        <div class="chip-opt" data-val="Solutioning" onclick="this.classList.toggle('active')">Solutioning</div>
+        <div class="chip-opt" data-val="Commercial Negotiation" onclick="this.classList.toggle('active')">Commercial Negotiation</div>
+        <div class="chip-opt" data-val="Committed Accounts" onclick="this.classList.toggle('active')">Committed Accounts</div>
+        <div class="chip-opt" data-val="Closed Lost" onclick="this.classList.toggle('active')">Closed Lost</div>
+        <div class="chip-opt" data-val="Disqualified" onclick="this.classList.toggle('active')">Disqualified</div>
+      </div>
+    </div>
+    <div class="cf-field-row">
+      <div class="cf-field-name">Lead Source</div>
+      <div class="chip-select cf-field-chips" data-table="silver_deals" data-field="department_source_clean">
+        <div class="chip-opt" data-val="MKT Inbound" onclick="this.classList.toggle('active')">MKT Inbound</div>
+        <div class="chip-opt" data-val="LDU Outbound" onclick="this.classList.toggle('active')">LDU Outbound</div>
+        <div class="chip-opt" data-val="Sales Outbound" onclick="this.classList.toggle('active')">Sales Outbound</div>
+        <div class="chip-opt" data-val="Channels" onclick="this.classList.toggle('active')">Channels</div>
+        <div class="chip-opt" data-val="CSM Inbound" onclick="this.classList.toggle('active')">CSM Inbound</div>
+        <div class="chip-opt" data-val="Upsell Outbound" onclick="this.classList.toggle('active')">Upsell Outbound</div>
+      </div>
+    </div>
+    <div class="cf-field-row">
+      <div class="cf-field-name">Deal Type</div>
+      <div class="chip-select cf-field-chips" data-table="silver_deals" data-field="deal_type">
+        <div class="chip-opt" data-val="New Business" onclick="this.classList.toggle('active')">New Business</div>
+        <div class="chip-opt" data-val="Upsell Deals" onclick="this.classList.toggle('active')">Upsell Deals</div>
+        <div class="chip-opt" data-val="TH Deals" onclick="this.classList.toggle('active')">TH Deals</div>
+      </div>
+    </div>
+    <div class="cf-field-row">
+      <div class="cf-field-name">Team / Rep</div>
+      <input type="text" class="connect-input" id="cf-team" placeholder="e.g. ENT Builders, Maria Santos — leave blank for all" style="flex:1;margin-top:2px">
+    </div>
+  </div>
+
+  <!-- COMPANIES -->
+  <div class="cf-table-panel" id="cf-panel-companies" style="display:none">
+    <div class="cf-field-row">
+      <div class="cf-field-name">Segment</div>
+      <div class="chip-select cf-field-chips" data-table="silver_company" data-field="Segment">
+        <div class="chip-opt" data-val="SME" onclick="this.classList.toggle('active')">SME</div>
+        <div class="chip-opt" data-val="Enterprise" onclick="this.classList.toggle('active')">Enterprise</div>
+      </div>
+    </div>
+    <div class="cf-field-row">
+      <div class="cf-field-name">Client Status</div>
+      <div class="chip-select cf-field-chips" data-table="silver_company" data-field="Client_status">
+        <div class="chip-opt" data-val="Active" onclick="this.classList.toggle('active')">Active</div>
+        <div class="chip-opt" data-val="Churned" onclick="this.classList.toggle('active')">Churned</div>
+        <div class="chip-opt" data-val="Prospect" onclick="this.classList.toggle('active')">Prospect</div>
+      </div>
+    </div>
+    <div class="cf-field-row">
+      <div class="cf-field-name">Brand</div>
+      <div class="chip-select cf-field-chips" data-table="silver_company" data-field="Brands">
+        <div class="chip-opt" data-val="PH Sprout" onclick="this.classList.toggle('active')">PH Sprout</div>
+        <div class="chip-opt" data-val="TH Sprout" onclick="this.classList.toggle('active')">TH Sprout</div>
+      </div>
+    </div>
+    <div class="cf-field-row">
+      <div class="cf-field-name">Industry</div>
+      <input type="text" class="connect-input" id="cf-industry" placeholder="e.g. Manufacturing, BPO, Retail — leave blank for all" style="flex:1;margin-top:2px">
+    </div>
+  </div>
+
+  <!-- LINE ITEMS -->
+  <div class="cf-table-panel" id="cf-panel-lineitems" style="display:none">
+    <div class="cf-field-row">
+      <div class="cf-field-name">Product Status</div>
+      <div class="chip-select cf-field-chips" data-table="silver_line_items" data-field="product_status">
+        <div class="chip-opt" data-val="Availed" onclick="this.classList.toggle('active')">Availed</div>
+        <div class="chip-opt" data-val="Not Availed" onclick="this.classList.toggle('active')">Not Availed</div>
+      </div>
+    </div>
+    <div class="cf-field-row">
+      <div class="cf-field-name">Billing Freq</div>
+      <div class="chip-select cf-field-chips" data-table="silver_line_items" data-field="recurring_billing_frequency">
+        <div class="chip-opt" data-val="Monthly" onclick="this.classList.toggle('active')">Monthly</div>
+        <div class="chip-opt" data-val="Annually" onclick="this.classList.toggle('active')">Annually</div>
+        <div class="chip-opt" data-val="One Time Payment" onclick="this.classList.toggle('active')">One Time Payment</div>
+      </div>
+    </div>
+    <div class="cf-field-row">
+      <div class="cf-field-name">Business Unit</div>
+      <div class="chip-select cf-field-chips" data-table="silver_line_items" data-field="business_unit">
+        <div class="chip-opt" data-val="PH Sprout" onclick="this.classList.toggle('active')">PH Sprout</div>
+        <div class="chip-opt" data-val="TH Sprout" onclick="this.classList.toggle('active')">TH Sprout</div>
+      </div>
+    </div>
+    <div class="cf-field-row">
+      <div class="cf-field-name">Product</div>
+      <div class="chip-select cf-field-chips" data-table="silver_line_items" data-field="parent_product">
+        <div class="chip-opt" data-val="HR and Payroll" onclick="this.classList.toggle('active')">HR and Payroll</div>
+        <div class="chip-opt" data-val="JazzHR" onclick="this.classList.toggle('active')">JazzHR</div>
+        <div class="chip-opt" data-val="Disprz" onclick="this.classList.toggle('active')">Disprz</div>
+        <div class="chip-opt" data-val="Performance+" onclick="this.classList.toggle('active')">Performance+</div>
+        <div class="chip-opt" data-val="Olivia Expense" onclick="this.classList.toggle('active')">Olivia Expense</div>
+      </div>
+    </div>
+  </div>
+</div>
 
     <!-- Step 3: Description -->
     <div class="connect-step">
@@ -4618,44 +4735,15 @@ document.querySelectorAll('.home-card').forEach(card => {
   });
 });
 
-// ── CONNECT TO RADAR ──────────────────────────────────────────────
-var RADAR_METRICS = [
-  // ── Revenue ──────────────────────────────────────────────────────────────
-  { id:'won_mrr',         label:'MRR Won',               desc:'Monthly Recurring Revenue from closed-won deals. Formula: Sum of MRR where Term >= 12 months',                                   sql:"SELECT DATE_TRUNC('month',close_date) AS metric_month, pipeline_name, CASE WHEN UPPER(segment)='MICRO' THEN 'SME' ELSE segment END AS segment, SUM(COALESCE(mrr,0)) AS won_mrr FROM shared.revops.silver_deals WHERE close_date IS NOT NULL AND client_journey_stage='Customer' AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%' GROUP BY 1,2,3 ORDER BY 1 DESC",  table:'silver_deals' },
-  { id:'arr',             label:'ARR',                    desc:'Annual Recurring Revenue. Formula: Sum of ARR or MRR x 12',                                                                       sql:"SELECT DATE_TRUNC('month',close_date) AS metric_month, SUM(COALESCE(mrr,0))*12 AS arr FROM shared.revops.silver_deals WHERE close_date IS NOT NULL AND client_journey_stage='Customer' AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%' GROUP BY 1 ORDER BY 1 DESC",   table:'silver_deals' },
-  { id:'tcv',             label:'TCV',                    desc:'Total Contract Value — (MRR x Term) + One-time Fees',                                                                             sql:"SELECT DATE_TRUNC('month',close_date) AS metric_month, SUM(COALESCE(tcv,0)) AS total_contract_value FROM shared.revops.silver_deals WHERE close_date IS NOT NULL AND client_journey_stage='Customer' AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%' GROUP BY 1 ORDER BY 1 DESC", table:'silver_deals' },
-  { id:'ef_mrr',          label:'EF MRR',                 desc:'ReadyCash/ReadyWage MRR — recognized only if contract term >= 12 months',                                                         sql:"SELECT DATE_TRUNC('month',close_date) AS metric_month, SUM(COALESCE(ef_mrr,0)) AS emfi_mrr FROM shared.revops.silver_deals WHERE close_date IS NOT NULL AND client_journey_stage='Customer' AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%' GROUP BY 1 ORDER BY 1 DESC", table:'silver_deals' },
-  { id:'otp',             label:'One Time Payment (OTP)', desc:'Revenue from one-time billing items or contracts with term < 12 months',                                                          sql:"-- See Q12 in RADAR SQL Templates for full OTP logic (otp_only + mrr_lt_12). Table: shared.revops.silver_deals joined with shared.revops.silver_line_items",                           table:'silver_deals + silver_line_items' },
-  { id:'implem_fee',      label:'Implementation Fee',     desc:'One-time implementation fee from closed-won deals. Product name contains Implem',                                                 sql:"SELECT DATE_TRUNC('month',close_date) AS metric_month, SUM(COALESCE(amount,0)) AS implem_fee FROM shared.revops.silver_deals WHERE close_date IS NOT NULL AND client_journey_stage='Customer' AND LOWER(COALESCE(product_name,'')) LIKE '%implem%' GROUP BY 1 ORDER BY 1 DESC", table:'silver_deals' },
-  // Pipeline / Sales Productivity
-  { id:'pipeline_mrr',    label:'Pipeline MRR (TMRR)',    desc:'Total MRR of all active pipeline deals by projected close date',                                                                  sql:"SELECT DATE_TRUNC('month',projected_close_date) AS metric_month, pipeline_name, CASE WHEN UPPER(segment)='MICRO' THEN 'SME' ELSE segment END AS segment, SUM(COALESCE(mrr,0)) AS pipeline_mrr FROM shared.revops.silver_deals WHERE projected_close_date IS NOT NULL AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%' AND stage_label IN ('Appointment Scheduled','Initial Demo Done','Solutioning','Commercial Negotiation','Committed Accounts') GROUP BY 1,2,3 ORDER BY 1 DESC", table:'silver_deals' },
-  { id:'weighted_pipeline',label:'Weighted Pipeline MRR', desc:'Expected pipeline revenue based on deal probability. Formula: Sum(MRR x probability %)',                                          sql:"SELECT DATE_TRUNC('month',projected_close_date) AS metric_month, pipeline_name, SUM(COALESCE(mrr,0) * COALESCE(probability,0)/100.0) AS weighted_pipeline_mrr FROM shared.revops.silver_deals WHERE projected_close_date IS NOT NULL AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%' AND stage_label IN ('Appointment Scheduled','Initial Demo Done','Solutioning','Commercial Negotiation','Committed Accounts') GROUP BY 1,2 ORDER BY 1 DESC", table:'silver_deals' },
-  { id:'coverage_ratio',  label:'Coverage Ratio',         desc:'Active Pipeline MRR / Target. Industry standard: 5x for full year, 3x for quarter',                                              sql:"-- Join pipeline_mrr query with gold_targets. ROUND(SUM(pipeline_mrr) / NULLIF(SUM(target_value),0) * 100, 2) AS coverage_pct WHERE target_type IN ('MQL TMRR','Pipeline MRR','TMRR')",                                                                                           table:'silver_deals + gold_targets' },
-  // Sales Productivity
-  { id:'won_deals',       label:'Won Deals',              desc:'Count of deals successfully closed. Formula: DISTINCT COUNT(Deal IDs) where client_journey_stage = Customer',                    sql:"SELECT DATE_TRUNC('month',close_date) AS metric_month, pipeline_name, CASE WHEN UPPER(segment)='MICRO' THEN 'SME' ELSE segment END AS segment, COUNT(DISTINCT deal_id) AS won_deals FROM shared.revops.silver_deals WHERE close_date IS NOT NULL AND client_journey_stage='Customer' AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%' GROUP BY 1,2,3 ORDER BY 1 DESC", table:'silver_deals' },
-  { id:'lost_deals',      label:'Lost Deals',             desc:'Deals pursued but did not close. Formula: DISTINCT COUNT(Deal IDs) where stage_label = Closed Lost',                             sql:"SELECT DATE_TRUNC('month',close_date) AS metric_month, pipeline_name, COUNT(DISTINCT deal_id) AS lost_deals FROM shared.revops.silver_deals WHERE close_date IS NOT NULL AND stage_label='Closed Lost' AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%' GROUP BY 1,2 ORDER BY 1 DESC", table:'silver_deals' },
-  { id:'won_closed',      label:'WON/CLOSED (Win Rate)',  desc:'% of won deals against all closed deals. Formula: Won / (Won + Lost)',                                                            sql:"SELECT DATE_TRUNC('month',close_date) AS metric_month, COUNT(DISTINCT CASE WHEN client_journey_stage='Customer' THEN deal_id END) AS won, COUNT(DISTINCT CASE WHEN stage_label='Closed Lost' THEN deal_id END) AS lost, ROUND(COUNT(DISTINCT CASE WHEN client_journey_stage='Customer' THEN deal_id END) / NULLIF(COUNT(DISTINCT CASE WHEN stage_label IN ('Closed Lost') OR client_journey_stage='Customer' THEN deal_id END),0)*100,2) AS win_rate_pct FROM shared.revops.silver_deals WHERE close_date IS NOT NULL AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%' GROUP BY 1 ORDER BY 1 DESC", table:'silver_deals' },
-  { id:'ads',             label:'Average Deal Size (ADS)', desc:'Average MRR of won deals. Formula: Total MRR / Won Deals',                                                                       sql:"SELECT DATE_TRUNC('month',close_date) AS metric_month, pipeline_name, ROUND(SUM(COALESCE(mrr,0)) / NULLIF(COUNT(DISTINCT deal_id),0),2) AS avg_deal_size_mrr FROM shared.revops.silver_deals WHERE close_date IS NOT NULL AND client_journey_stage='Customer' AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%' GROUP BY 1,2 ORDER BY 1 DESC", table:'silver_deals' },
-  { id:'adv',             label:'Average Deal Velocity (ADV)', desc:'Average number of days from deal creation to close. Formula: AVG(Close Date - Create Date)',                               sql:"SELECT DATE_TRUNC('month',close_date) AS metric_month, pipeline_name, sales_rep, hubspot_team, ROUND(AVG(deal_velocity_days),1) AS avg_deal_velocity_days, COUNT(DISTINCT deal_id) AS won_deals FROM shared.revops.silver_deals WHERE close_date IS NOT NULL AND client_journey_stage='Customer' AND deal_velocity_days IS NOT NULL AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%' GROUP BY 1,2,3,4 ORDER BY 1 DESC", table:'silver_deals' },
-  { id:'sales_churn',     label:'Sales Churn Rate',       desc:'% of Contract Signed deals that did not proceed to Implementation within 60 days',                                               sql:"-- Deals with stage_label = 'Sales Churn' / Total deals with client_journey_stage = 'Customer'. See gold_monthly_exec_summary for pre-computed values.",                                 table:'silver_deals' },
-  { id:'upsell_rate',     label:'Upsell Rate',            desc:'% of existing customers that purchased additional products. Filter: Pipeline = PH Upsell Pipeline',                              sql:"SELECT DATE_TRUNC('month',close_date) AS metric_month, COUNT(DISTINCT deal_id) AS upsell_deals FROM shared.revops.silver_deals WHERE close_date IS NOT NULL AND client_journey_stage='Customer' AND pipeline_name LIKE '%Upsell%' AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%' GROUP BY 1 ORDER BY 1 DESC", table:'silver_deals' },
-  // Attainment
-  { id:'quota_attainment',label:'Quota Attainment %',     desc:'Actual Revenue / Quota per rep or team. Formula: Won MRR / mrr_target from gold_targets',                                        sql:"-- See Q4 in RADAR SQL Templates for full Won MRR vs Target query with attainment_pct by month, pipeline, segment, and department_source_clean",                                         table:'silver_deals + gold_targets' },
-  // Funnel
-  { id:'mql_count',       label:'MQL Count',              desc:'Marketing Qualified Leads — BANT qualified with Probability to Buy >= 40. Stage: Appointment Scheduled through Committed Accounts', sql:"SELECT DATE_TRUNC('month',create_date) AS metric_month, pipeline_name, department_source_clean, COUNT(DISTINCT CASE WHEN stage_label IN ('Appointment Scheduled','Initial Demo Done','Solutioning','Commercial Negotiation','Committed Accounts') THEN deal_id END) AS mql_count FROM shared.revops.silver_deals WHERE create_date IS NOT NULL AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%' GROUP BY 1,2,3 ORDER BY 1 DESC", table:'silver_deals' },
-  { id:'oql_count',       label:'OQL Count',              desc:'Outbound Qualified Leads by LDU Outbound. Filter: department_source_clean = LDU Outbound',                                       sql:"SELECT DATE_TRUNC('month',create_date) AS metric_month, COUNT(DISTINCT deal_id) AS oql_count FROM shared.revops.silver_deals WHERE create_date IS NOT NULL AND department_source_clean='LDU Outbound' AND stage_label IN ('Appointment Scheduled','Initial Demo Done','Solutioning','Commercial Negotiation','Committed Accounts') AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%' GROUP BY 1 ORDER BY 1 DESC", table:'silver_deals' },
-  { id:'sql_count',       label:'SQL Count',              desc:'Sales Qualified Leads — deals that Sales team will work on. Filter: client_journey_stage = Opportunity',                          sql:"SELECT DATE_TRUNC('month',create_date) AS metric_month, pipeline_name, COUNT(DISTINCT CASE WHEN client_journey_stage='Opportunity' THEN deal_id END) AS sql_count FROM shared.revops.silver_deals WHERE create_date IS NOT NULL AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%' GROUP BY 1,2 ORDER BY 1 DESC", table:'silver_deals' },
-  { id:'mql_to_sql',      label:'MQL to SQL Conversion',  desc:'SQL Conversion Rate — % of Qualified Leads that become SQL',                                                                     sql:"-- Q9 from RADAR: MQL count vs SQL count by month, pipeline, segment. See SQL Templates in RADAR Dashboard Studio.",                                                                    table:'silver_deals' },
-  { id:'sql_to_won',      label:'WON/SQL',                desc:'% of SQL/Active deals that converted to Closed-Won in the month',                                                               sql:"-- Q10 from RADAR: Won count / SQL count by create month. client_journey_stage = Customer / Opportunity",                                                                               table:'silver_deals' },
-  { id:'dq_rate',         label:'DQ Rate',                desc:'% of leads marked Disqualified. Formula: DQ Leads / Total Leads',                                                               sql:"SELECT DATE_TRUNC('month',create_date) AS metric_month, COUNT(DISTINCT CASE WHEN stage_label='Disqualified' THEN deal_id END)*1.0 / NULLIF(COUNT(DISTINCT deal_id),0) AS dq_rate FROM shared.revops.silver_deals WHERE create_date IS NOT NULL AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%' GROUP BY 1 ORDER BY 1 DESC", table:'silver_deals' },
-  { id:'lead_to_won',     label:'Lead to Won Conversion %', desc:'% of total leads that convert into Closed-Won deals. Formula: Won Leads / Total Leads',                                        sql:"SELECT DATE_TRUNC('month',create_date) AS metric_month, COUNT(DISTINCT CASE WHEN client_journey_stage='Customer' THEN deal_id END)*1.0 / NULLIF(COUNT(DISTINCT deal_id),0) AS lead_to_won_rate FROM shared.revops.silver_deals WHERE create_date IS NOT NULL AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%' GROUP BY 1 ORDER BY 1 DESC", table:'silver_deals' },
-  // ── Funnel (additions) ────────────────────────────────────────────────────
-  { id:'ql_count',        label:'Qualified Leads (QL)',    desc:'All leads qualified by Marketing, LDU, or Sales. Filter: Count as Qualified = Yes',                                               sql:"SELECT DATE_TRUNC('month',create_date) AS metric_month, pipeline_name, department_source_clean, COUNT(DISTINCT deal_id) AS ql_count FROM shared.revops.silver_deals WHERE create_date IS NOT NULL AND count_as_qualified = 'Yes' AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%' GROUP BY 1,2,3 ORDER BY 1 DESC", table:'silver_deals' },
-  { id:'uql_count',       label:'Upsell Qualified Leads (UQL)', desc:'Qualified upsell leads. Filter: Pipeline = PH Upsell Pipeline, Count as Qualified = Yes',                                   sql:"SELECT DATE_TRUNC('month',create_date) AS metric_month, COUNT(DISTINCT deal_id) AS uql_count FROM shared.revops.silver_deals WHERE create_date IS NOT NULL AND pipeline_name LIKE '%Upsell%' AND count_as_qualified = 'Yes' AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%' GROUP BY 1 ORDER BY 1 DESC", table:'silver_deals' },
-  { id:'sales_disqualified', label:'Sales Disqualified',   desc:'Deals disqualified by Sales during demo stage. Formula: DISTINCT COUNT(Deal IDs) where stage = Disqualified',                    sql:"SELECT DATE_TRUNC('month',create_date) AS metric_month, COUNT(DISTINCT deal_id) AS sales_disqualified FROM shared.revops.silver_deals WHERE create_date IS NOT NULL AND stage_label='Disqualified' AND count_as_qualified='Yes' AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%' GROUP BY 1 ORDER BY 1 DESC", table:'silver_deals' },
-];
 
 function initConnectSection() {}
+
+function switchFilterTable(name, el) {
+  document.querySelectorAll('.cf-table-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.cf-table-panel').forEach(p => p.style.display = 'none');
+  document.getElementById('cf-panel-' + name).style.display = 'block';
+}
 
 window._cfUploadedCode = '';
 
@@ -4699,8 +4787,14 @@ function resetConnectForm() {
   // Clear text inputs
   document.getElementById('cf-team').value = '';
   document.getElementById('cf-desc').value = '';
-  // Deactivate segment + pipeline chips
-  document.querySelectorAll('#cf-segment .chip-opt, #cf-pipeline .chip-opt').forEach(c => c.classList.remove('active'));
+  // Deactivate all field filter chips
+  document.querySelectorAll('.cf-field-chips .chip-opt').forEach(c => c.classList.remove('active'));
+  // Reset table tab to Deals
+  document.querySelectorAll('.cf-table-tab').forEach(t => t.classList.remove('active'));
+  const firstTab = document.querySelector('.cf-table-tab');
+  if (firstTab) { firstTab.classList.add('active'); switchFilterTable('deals', firstTab); }
+  // Clear industry input
+  const ind = document.getElementById('cf-industry'); if (ind) ind.value = '';
   // Reset date range — deselect all, re-select YTD
   document.querySelectorAll('#cf-date .chip-opt').forEach(c => c.classList.remove('active'));
   const ytd = document.querySelector('#cf-date .chip-opt[data-val="YTD"]');
@@ -4731,18 +4825,25 @@ function generateConnectPrompt() {
   }
   const metrics  = RADAR_METRICS.filter(m => selected.includes(m.id));
   const team     = document.getElementById('cf-team').value.trim();
-  const segments = [...document.querySelectorAll('#cf-segment .chip-opt.active')].map(x => x.dataset.val);
-  const pipelines= [...document.querySelectorAll('#cf-pipeline .chip-opt.active')].map(x => x.dataset.val);
+  const industry = (document.getElementById('cf-industry') || {}).value || '';
   const dateRangeArr = [...document.querySelectorAll('#cf-date .chip-opt.active')].map(x => x.dataset.val);
   const dateRange = dateRangeArr.length ? dateRangeArr.join(' + ') : 'YTD';
   const desc     = document.getElementById('cf-desc').value.trim();
   const code     = window._cfUploadedCode || '';
 
+  const fieldFilters = [];
+  document.querySelectorAll('.cf-field-chips').forEach(group => {
+    const tbl   = group.dataset.table;
+    const field = group.dataset.field;
+    const vals  = [...group.querySelectorAll('.chip-opt.active')].map(x => x.dataset.val);
+    if (vals.length) fieldFilters.push(`• ${tbl}.${field} IN (${vals.map(v => "'" + v + "'").join(', ')})`);
+  });
+  if (team)     fieldFilters.push(`• silver_deals.sales_rep / hubspot_team: ${team}`);
+  if (industry) fieldFilters.push(`• silver_company.Industry: ${industry}`);
+
   const filterLines = [
     `• Date Range: ${dateRange}`,
-    `• Team / Rep: ${team || 'All'}`,
-    `• Segment: ${segments.length ? segments.join(', ') : 'All'}`,
-    `• Pipeline: ${pipelines.length ? pipelines.join(', ') : 'All'}`,
+    ...(fieldFilters.length ? fieldFilters : ['• No additional filters — return all data']),
   ].join('\n');
 
   const metricBlock = metrics.map(m =>
@@ -4783,7 +4884,7 @@ Update my existing dashboard code (pasted below) to include live RADAR data:
 • Add a section or card for each metric listed above
 • Keep my existing layout, visual style, and color scheme
 • Use the exact SQL logic and table names specified above
-• Apply these filters to every query: ${dateRange}${team ? ', filtered to '+team : ''}${segments.length ? ', segment: '+segments.join('/') : ''}${pipelines.length ? ', pipeline: '+pipelines.join('/') : ''}
+• Apply these filters to every query: ${dateRange}${team ? ', filtered to '+team : ''}${fieldFilters.length ? '\n  Filters: ' + fieldFilters.join('; ') : ''}
 • Show a loading spinner while data is fetching
 • Show a clear error message if the Databricks connection fails
 • Add a 🔄 Refresh button that re-runs all queries and updates all values on click
@@ -4796,7 +4897,7 @@ Build a clean dashboard section that displays the RADAR metrics listed above:
 • Create a card or stat block for each metric
 • Use the Databricks REST API with credentials stored in localStorage
 • Use the exact SQL logic and table names specified above
-• Apply these filters: ${dateRange}${team ? ', filtered to '+team : ''}${segments.length ? ', segment: '+segments.join('/') : ''}${pipelines.length ? ', pipeline: '+pipelines.join('/') : ''}
+• Apply these filters: ${dateRange}${team ? ', filtered to '+team : ''}${fieldFilters.length ? '\n  Filters: ' + fieldFilters.join('; ') : ''}
 • Show a loading state while data fetches
 • Add a 🔄 Refresh button in the header that re-runs all queries and updates all values on click
 • Handle Databricks connection errors gracefully with a helpful message`;
@@ -4841,6 +4942,44 @@ function copyConnectPrompt() {
     setTimeout(() => { btn.textContent = orig; }, 2200);
   });
 }
+</script>
+<script>
+// ── CONNECT TO RADAR ──────────────────────────────────────────────
+var RADAR_METRICS = [
+  // ── Revenue ──────────────────────────────────────────────────────────────
+  { id:'won_mrr',         label:'MRR Won',               desc:'Monthly Recurring Revenue from closed-won deals. Formula: Sum of MRR where Term >= 12 months',                                   sql:"SELECT DATE_TRUNC('month',close_date) AS metric_month, pipeline_name, CASE WHEN UPPER(segment)='MICRO' THEN 'SME' ELSE segment END AS segment, SUM(COALESCE(mrr,0)) AS won_mrr FROM shared.revops.silver_deals WHERE close_date IS NOT NULL AND client_journey_stage='Customer' AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%' GROUP BY 1,2,3 ORDER BY 1 DESC",  table:'silver_deals' },
+  { id:'arr',             label:'ARR',                    desc:'Annual Recurring Revenue. Formula: Sum of ARR or MRR x 12',                                                                       sql:"SELECT DATE_TRUNC('month',close_date) AS metric_month, SUM(COALESCE(mrr,0))*12 AS arr FROM shared.revops.silver_deals WHERE close_date IS NOT NULL AND client_journey_stage='Customer' AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%' GROUP BY 1 ORDER BY 1 DESC",   table:'silver_deals' },
+  { id:'tcv',             label:'TCV',                    desc:'Total Contract Value — (MRR x Term) + One-time Fees',                                                                             sql:"SELECT DATE_TRUNC('month',close_date) AS metric_month, SUM(COALESCE(tcv,0)) AS total_contract_value FROM shared.revops.silver_deals WHERE close_date IS NOT NULL AND client_journey_stage='Customer' AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%' GROUP BY 1 ORDER BY 1 DESC", table:'silver_deals' },
+  { id:'ef_mrr',          label:'EF MRR',                 desc:'ReadyCash/ReadyWage MRR — recognized only if contract term >= 12 months',                                                         sql:"SELECT DATE_TRUNC('month',close_date) AS metric_month, SUM(COALESCE(ef_mrr,0)) AS emfi_mrr FROM shared.revops.silver_deals WHERE close_date IS NOT NULL AND client_journey_stage='Customer' AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%' GROUP BY 1 ORDER BY 1 DESC", table:'silver_deals' },
+  { id:'otp',             label:'One Time Payment (OTP)', desc:'Revenue from one-time billing items or contracts with term < 12 months',                                                          sql:"-- See Q12 in RADAR SQL Templates for full OTP logic (otp_only + mrr_lt_12). Table: shared.revops.silver_deals joined with shared.revops.silver_line_items",                           table:'silver_deals + silver_line_items' },
+  { id:'implem_fee',      label:'Implementation Fee',     desc:'One-time implementation fee from closed-won deals. Product name contains Implem',                                                 sql:"SELECT DATE_TRUNC('month',close_date) AS metric_month, SUM(COALESCE(amount,0)) AS implem_fee FROM shared.revops.silver_deals WHERE close_date IS NOT NULL AND client_journey_stage='Customer' AND LOWER(COALESCE(product_name,'')) LIKE '%implem%' GROUP BY 1 ORDER BY 1 DESC", table:'silver_deals' },
+  // Pipeline / Sales Productivity
+  { id:'pipeline_mrr',    label:'Pipeline MRR (TMRR)',    desc:'Total MRR of all active pipeline deals by projected close date',                                                                  sql:"SELECT DATE_TRUNC('month',projected_close_date) AS metric_month, pipeline_name, CASE WHEN UPPER(segment)='MICRO' THEN 'SME' ELSE segment END AS segment, SUM(COALESCE(mrr,0)) AS pipeline_mrr FROM shared.revops.silver_deals WHERE projected_close_date IS NOT NULL AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%' AND stage_label IN ('Appointment Scheduled','Initial Demo Done','Solutioning','Commercial Negotiation','Committed Accounts') GROUP BY 1,2,3 ORDER BY 1 DESC", table:'silver_deals' },
+  { id:'weighted_pipeline',label:'Weighted Pipeline MRR', desc:'Expected pipeline revenue based on deal probability. Formula: Sum(MRR x probability %)',                                          sql:"SELECT DATE_TRUNC('month',projected_close_date) AS metric_month, pipeline_name, SUM(COALESCE(mrr,0) * COALESCE(probability,0)/100.0) AS weighted_pipeline_mrr FROM shared.revops.silver_deals WHERE projected_close_date IS NOT NULL AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%' AND stage_label IN ('Appointment Scheduled','Initial Demo Done','Solutioning','Commercial Negotiation','Committed Accounts') GROUP BY 1,2 ORDER BY 1 DESC", table:'silver_deals' },
+  { id:'coverage_ratio',  label:'Coverage Ratio',         desc:'Active Pipeline MRR / Target. Industry standard: 5x for full year, 3x for quarter',                                              sql:"-- Join pipeline_mrr query with gold_targets. ROUND(SUM(pipeline_mrr) / NULLIF(SUM(target_value),0) * 100, 2) AS coverage_pct WHERE target_type IN ('MQL TMRR','Pipeline MRR','TMRR')",                                                                                           table:'silver_deals + gold_targets' },
+  // Sales Productivity
+  { id:'won_deals',       label:'Won Deals',              desc:'Count of deals successfully closed. Formula: DISTINCT COUNT(Deal IDs) where client_journey_stage = Customer',                    sql:"SELECT DATE_TRUNC('month',close_date) AS metric_month, pipeline_name, CASE WHEN UPPER(segment)='MICRO' THEN 'SME' ELSE segment END AS segment, COUNT(DISTINCT deal_id) AS won_deals FROM shared.revops.silver_deals WHERE close_date IS NOT NULL AND client_journey_stage='Customer' AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%' GROUP BY 1,2,3 ORDER BY 1 DESC", table:'silver_deals' },
+  { id:'lost_deals',      label:'Lost Deals',             desc:'Deals pursued but did not close. Formula: DISTINCT COUNT(Deal IDs) where stage_label = Closed Lost',                             sql:"SELECT DATE_TRUNC('month',close_date) AS metric_month, pipeline_name, COUNT(DISTINCT deal_id) AS lost_deals FROM shared.revops.silver_deals WHERE close_date IS NOT NULL AND stage_label='Closed Lost' AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%' GROUP BY 1,2 ORDER BY 1 DESC", table:'silver_deals' },
+  { id:'won_closed',      label:'WON/CLOSED (Win Rate)',  desc:'% of won deals against all closed deals. Formula: Won / (Won + Lost)',                                                            sql:"SELECT DATE_TRUNC('month',close_date) AS metric_month, COUNT(DISTINCT CASE WHEN client_journey_stage='Customer' THEN deal_id END) AS won, COUNT(DISTINCT CASE WHEN stage_label='Closed Lost' THEN deal_id END) AS lost, ROUND(COUNT(DISTINCT CASE WHEN client_journey_stage='Customer' THEN deal_id END) / NULLIF(COUNT(DISTINCT CASE WHEN stage_label IN ('Closed Lost') OR client_journey_stage='Customer' THEN deal_id END),0)*100,2) AS win_rate_pct FROM shared.revops.silver_deals WHERE close_date IS NOT NULL AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%' GROUP BY 1 ORDER BY 1 DESC", table:'silver_deals' },
+  { id:'ads',             label:'Average Deal Size (ADS)', desc:'Average MRR of won deals. Formula: Total MRR / Won Deals',                                                                       sql:"SELECT DATE_TRUNC('month',close_date) AS metric_month, pipeline_name, ROUND(SUM(COALESCE(mrr,0)) / NULLIF(COUNT(DISTINCT deal_id),0),2) AS avg_deal_size_mrr FROM shared.revops.silver_deals WHERE close_date IS NOT NULL AND client_journey_stage='Customer' AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%' GROUP BY 1,2 ORDER BY 1 DESC", table:'silver_deals' },
+  { id:'adv',             label:'Average Deal Velocity (ADV)', desc:'Average number of days from deal creation to close. Formula: AVG(Close Date - Create Date)',                               sql:"SELECT DATE_TRUNC('month',close_date) AS metric_month, pipeline_name, sales_rep, hubspot_team, ROUND(AVG(deal_velocity_days),1) AS avg_deal_velocity_days, COUNT(DISTINCT deal_id) AS won_deals FROM shared.revops.silver_deals WHERE close_date IS NOT NULL AND client_journey_stage='Customer' AND deal_velocity_days IS NOT NULL AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%' GROUP BY 1,2,3,4 ORDER BY 1 DESC", table:'silver_deals' },
+  { id:'sales_churn',     label:'Sales Churn Rate',       desc:'% of Contract Signed deals that did not proceed to Implementation within 60 days',                                               sql:"-- Deals with stage_label = 'Sales Churn' / Total deals with client_journey_stage = 'Customer'. See gold_monthly_exec_summary for pre-computed values.",                                 table:'silver_deals' },
+  { id:'upsell_rate',     label:'Upsell Rate',            desc:'% of existing customers that purchased additional products. Filter: Pipeline = PH Upsell Pipeline',                              sql:"SELECT DATE_TRUNC('month',close_date) AS metric_month, COUNT(DISTINCT deal_id) AS upsell_deals FROM shared.revops.silver_deals WHERE close_date IS NOT NULL AND client_journey_stage='Customer' AND pipeline_name LIKE '%Upsell%' AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%' GROUP BY 1 ORDER BY 1 DESC", table:'silver_deals' },
+  // Attainment
+  { id:'quota_attainment',label:'Quota Attainment %',     desc:'Actual Revenue / Quota per rep or team. Formula: Won MRR / mrr_target from gold_targets',                                        sql:"-- See Q4 in RADAR SQL Templates for full Won MRR vs Target query with attainment_pct by month, pipeline, segment, and department_source_clean",                                         table:'silver_deals + gold_targets' },
+  // Funnel
+  { id:'mql_count',       label:'MQL Count',              desc:'Marketing Qualified Leads — BANT qualified with Probability to Buy >= 40. Stage: Appointment Scheduled through Committed Accounts', sql:"SELECT DATE_TRUNC('month',create_date) AS metric_month, pipeline_name, department_source_clean, COUNT(DISTINCT CASE WHEN stage_label IN ('Appointment Scheduled','Initial Demo Done','Solutioning','Commercial Negotiation','Committed Accounts') THEN deal_id END) AS mql_count FROM shared.revops.silver_deals WHERE create_date IS NOT NULL AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%' GROUP BY 1,2,3 ORDER BY 1 DESC", table:'silver_deals' },
+  { id:'oql_count',       label:'OQL Count',              desc:'Outbound Qualified Leads by LDU Outbound. Filter: department_source_clean = LDU Outbound',                                       sql:"SELECT DATE_TRUNC('month',create_date) AS metric_month, COUNT(DISTINCT deal_id) AS oql_count FROM shared.revops.silver_deals WHERE create_date IS NOT NULL AND department_source_clean='LDU Outbound' AND stage_label IN ('Appointment Scheduled','Initial Demo Done','Solutioning','Commercial Negotiation','Committed Accounts') AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%' GROUP BY 1 ORDER BY 1 DESC", table:'silver_deals' },
+  { id:'sql_count',       label:'SQL Count',              desc:'Sales Qualified Leads — deals that Sales team will work on. Filter: client_journey_stage = Opportunity',                          sql:"SELECT DATE_TRUNC('month',create_date) AS metric_month, pipeline_name, COUNT(DISTINCT CASE WHEN client_journey_stage='Opportunity' THEN deal_id END) AS sql_count FROM shared.revops.silver_deals WHERE create_date IS NOT NULL AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%' GROUP BY 1,2 ORDER BY 1 DESC", table:'silver_deals' },
+  { id:'mql_to_sql',      label:'MQL to SQL Conversion',  desc:'SQL Conversion Rate — % of Qualified Leads that become SQL',                                                                     sql:"-- Q9 from RADAR: MQL count vs SQL count by month, pipeline, segment. See SQL Templates in RADAR Dashboard Studio.",                                                                    table:'silver_deals' },
+  { id:'sql_to_won',      label:'WON/SQL',                desc:'% of SQL/Active deals that converted to Closed-Won in the month',                                                               sql:"-- Q10 from RADAR: Won count / SQL count by create month. client_journey_stage = Customer / Opportunity",                                                                               table:'silver_deals' },
+  { id:'dq_rate',         label:'DQ Rate',                desc:'% of leads marked Disqualified. Formula: DQ Leads / Total Leads',                                                               sql:"SELECT DATE_TRUNC('month',create_date) AS metric_month, COUNT(DISTINCT CASE WHEN stage_label='Disqualified' THEN deal_id END)*1.0 / NULLIF(COUNT(DISTINCT deal_id),0) AS dq_rate FROM shared.revops.silver_deals WHERE create_date IS NOT NULL AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%' GROUP BY 1 ORDER BY 1 DESC", table:'silver_deals' },
+  { id:'lead_to_won',     label:'Lead to Won Conversion %', desc:'% of total leads that convert into Closed-Won deals. Formula: Won Leads / Total Leads',                                        sql:"SELECT DATE_TRUNC('month',create_date) AS metric_month, COUNT(DISTINCT CASE WHEN client_journey_stage='Customer' THEN deal_id END)*1.0 / NULLIF(COUNT(DISTINCT deal_id),0) AS lead_to_won_rate FROM shared.revops.silver_deals WHERE create_date IS NOT NULL AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%' GROUP BY 1 ORDER BY 1 DESC", table:'silver_deals' },
+  // ── Funnel (additions) ────────────────────────────────────────────────────
+  { id:'ql_count',        label:'Qualified Leads (QL)',    desc:'All leads qualified by Marketing, LDU, or Sales. Filter: Count as Qualified = Yes',                                               sql:"SELECT DATE_TRUNC('month',create_date) AS metric_month, pipeline_name, department_source_clean, COUNT(DISTINCT deal_id) AS ql_count FROM shared.revops.silver_deals WHERE create_date IS NOT NULL AND count_as_qualified = 'Yes' AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%' GROUP BY 1,2,3 ORDER BY 1 DESC", table:'silver_deals' },
+  { id:'uql_count',       label:'Upsell Qualified Leads (UQL)', desc:'Qualified upsell leads. Filter: Pipeline = PH Upsell Pipeline, Count as Qualified = Yes',                                   sql:"SELECT DATE_TRUNC('month',create_date) AS metric_month, COUNT(DISTINCT deal_id) AS uql_count FROM shared.revops.silver_deals WHERE create_date IS NOT NULL AND pipeline_name LIKE '%Upsell%' AND count_as_qualified = 'Yes' AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%' GROUP BY 1 ORDER BY 1 DESC", table:'silver_deals' },
+  { id:'sales_disqualified', label:'Sales Disqualified',   desc:'Deals disqualified by Sales during demo stage. Formula: DISTINCT COUNT(Deal IDs) where stage = Disqualified',                    sql:"SELECT DATE_TRUNC('month',create_date) AS metric_month, COUNT(DISTINCT deal_id) AS sales_disqualified FROM shared.revops.silver_deals WHERE create_date IS NOT NULL AND stage_label='Disqualified' AND count_as_qualified='Yes' AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%' GROUP BY 1 ORDER BY 1 DESC", table:'silver_deals' },
+];
 </script>
 <!-- CONNECTION MODAL -->
 <div class="conn-modal-overlay" id="conn-modal-overlay" onclick="if(event.target===this)closeConnModal()">
