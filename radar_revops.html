@@ -277,6 +277,47 @@ body{font-family:'Rubik','Bahnschrift Light SemiCondensed','Bahnschrift',Arial,s
 
 .warn-box{background:rgba(243,156,18,.08);border-left:3px solid #F39C12;border-radius:0 8px 8px 0;padding:10px 14px;font-size:12px;color:#f0b429;line-height:1.6;margin:14px 0}
 .warn-box strong{color:#F39C12}
+
+/* ── CONNECT TO RADAR SECTION ── */
+.connect-body{padding:28px 32px;max-width:860px}
+.connect-step{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:22px 24px;margin-bottom:16px}
+.connect-step-header{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.connect-step-num{background:#1DB954;color:#030712;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0}
+.connect-step-title{font-size:14px;font-weight:700;color:#e2e8f0}
+.connect-step-desc{font-size:12px;color:rgba(255,255,255,.4);margin-bottom:14px;line-height:1.6;padding-left:38px}
+.optional-tag{font-size:10px;font-weight:600;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:4px;padding:1px 7px;color:rgba(255,255,255,.35);margin-left:6px;vertical-align:middle}
+.metric-chips{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.metric-chip{background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.09);border-radius:10px;padding:11px 14px;cursor:pointer;transition:all .15s}
+.metric-chip:hover{border-color:rgba(29,185,84,.4);background:rgba(29,185,84,.06)}
+.metric-chip.selected{background:rgba(29,185,84,.12);border-color:#1DB954;box-shadow:0 0 14px rgba(29,185,84,.15)}
+.mc-label{font-size:12px;font-weight:700;color:#e2e8f0;margin-bottom:3px}
+.mc-sub{font-size:10px;color:rgba(255,255,255,.35);line-height:1.4}
+.metric-chip.selected .mc-label{color:#1DB954}
+.connect-filter-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+.connect-filter-item{display:flex;flex-direction:column;gap:6px}
+.cf-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:rgba(255,255,255,.3)}
+.connect-input{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:8px 12px;font-size:12px;color:#e2e8f0;outline:none;font-family:inherit;width:100%}
+.connect-input:focus{border-color:rgba(29,185,84,.5)}
+.chip-select{display:flex;flex-wrap:wrap;gap:6px}
+.chip-opt{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:600;color:rgba(255,255,255,.4);cursor:pointer;transition:all .15s}
+.chip-opt:hover{border-color:rgba(29,185,84,.5);color:#1DB954}
+.chip-opt.active{background:rgba(29,185,84,.15);border-color:#1DB954;color:#1DB954}
+.connect-textarea{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:10px;padding:12px 14px;font-size:12px;color:#e2e8f0;outline:none;resize:vertical;font-family:inherit;line-height:1.6}
+.connect-textarea:focus{border-color:rgba(29,185,84,.4)}
+.connect-textarea.connect-code{font-family:"Courier New",monospace;font-size:11px;color:#86EFAC;background:rgba(0,0,0,.25)}
+.connect-generate-btn{background:linear-gradient(135deg,#1DB954,#00e5a0);color:#030712;border:none;border-radius:10px;padding:13px 36px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;transition:all .2s;box-shadow:0 4px 20px rgba(29,185,84,.3)}
+.connect-generate-btn:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(29,185,84,.45)}
+.connect-output{background:rgba(0,0,0,.3);border:1px solid rgba(29,185,84,.3);border-radius:14px;overflow:hidden;margin-top:8px;animation:fadeIn .25s ease}
+.connect-output-header{padding:13px 18px;background:rgba(29,185,84,.1);display:flex;justify-content:space-between;align-items:center}
+.connect-output-label{font-size:13px;font-weight:700;color:#1DB954}
+.connect-how-steps{display:flex;gap:10px;padding:12px 18px;border-bottom:1px solid rgba(255,255,255,.06);flex-wrap:wrap}
+.connect-how-step{display:flex;align-items:center;gap:8px;font-size:11px;color:rgba(255,255,255,.5)}
+.connect-how-num{background:#1DB954;color:#030712;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0}
+.connect-how-arrow{color:rgba(255,255,255,.2);font-size:12px}
+.connect-prompt-text{padding:18px 20px;font-size:11px;color:#DFE6E9;line-height:1.75;white-space:pre-wrap;font-family:"Courier New",monospace;max-height:460px;overflow-y:auto;margin:0}
+.home-card.card-connect{border-color:rgba(29,185,84,.2);background:rgba(29,185,84,.04)}
+.home-card.card-connect:hover{background:rgba(29,185,84,.1);border-color:rgba(29,185,84,.5);box-shadow:0 16px 0 rgba(0,0,0,.5),0 24px 60px rgba(29,185,84,.25),inset 0 1px 0 rgba(255,255,255,.1)}
+.home-card.card-connect .home-card-arrow{color:#1DB954}
 .info-box{background:rgba(16,185,129,.08);border-left:3px solid #10B981;border-radius:0 8px 8px 0;padding:10px 14px;font-size:12px;color:#6EE7B7;line-height:1.6;margin:14px 0}
 .info-box strong{color:#10B981}
 /* ── DASHBOARDS ── */
@@ -497,7 +538,8 @@ body{font-family:'Rubik','Bahnschrift Light SemiCondensed','Bahnschrift',Arial,s
     <div class="sidebar-tab" id="tab-dp" onclick="switchTab('dp')">📖 DataPedia</div>
     <div class="sidebar-tab" id="tab-dash" onclick="switchTab('dash')">📊 Dashboard Studio</div>
     <div class="sidebar-tab" id="tab-dashboards" onclick="switchTab('dashboards')">📱 Dashboards</div>
-    
+    <div class="sidebar-tab" id="tab-connect" onclick="switchTab('connect')">🔌 Connect to RADAR</div>
+
   </div>
   <div class="content-area">
 
@@ -543,6 +585,15 @@ body{font-family:'Rubik','Bahnschrift Light SemiCondensed','Bahnschrift',Arial,s
         <div class="home-card-arrow">BROWSE DASHBOARDS →</div>
       </div>
 
+    </div>
+
+    <div class="home-card card-connect" onclick="switchTab('connect')" style="max-width:740px;width:100%;margin-top:4px;display:flex;flex-direction:row;align-items:center;gap:20px;padding:22px 26px">
+      <div style="font-size:36px;line-height:1;flex-shrink:0">🔌</div>
+      <div style="flex:1">
+        <div class="home-card-title">Already building a dashboard?</div>
+        <div class="home-card-desc" style="margin-top:4px">Generate a Claude prompt that adds live RADAR data to your existing dashboard — just pick your metrics and copy. No SQL needed.</div>
+      </div>
+      <div class="home-card-arrow" style="flex-shrink:0;white-space:nowrap">ADD RADAR DATA →</div>
     </div>
 
     <div class="home-version">RADAR v2.0 · shared.revops · Databricks</div>
@@ -1691,6 +1742,110 @@ python fetch_data.py
 
 
 
+<!-- PART 5 — CONNECT TO RADAR -->
+<div class="section" id="section-connect" style="display:none">
+  <div class="dash-hero">
+    <h1>🔌 Add RADAR Data to Your Dashboard</h1>
+    <p>Already building a dashboard with Claude? Fill in the steps below — we'll generate a ready-to-use prompt. Just copy it, paste it into Claude, and Claude will update your dashboard for you. No SQL or coding knowledge needed.</p>
+  </div>
+
+  <div class="connect-body">
+
+    <!-- Step 1: Metrics -->
+    <div class="connect-step">
+      <div class="connect-step-header">
+        <div class="connect-step-num">1</div>
+        <div class="connect-step-title">What data do you need from RADAR?</div>
+      </div>
+      <div class="connect-step-desc">Click to select the metrics you want to add. Select as many as you need.</div>
+      <div class="metric-chips" id="metric-chips"></div>
+    </div>
+
+    <!-- Step 2: Filters -->
+    <div class="connect-step">
+      <div class="connect-step-header">
+        <div class="connect-step-num">2</div>
+        <div class="connect-step-title">How do you want to filter the data? <span class="optional-tag">Optional</span></div>
+      </div>
+      <div class="connect-step-desc">Leave blank to include all reps, all segments, and all pipelines.</div>
+      <div class="connect-filter-grid">
+        <div class="connect-filter-item">
+          <label class="cf-label">Team or Rep</label>
+          <input type="text" class="connect-input" id="cf-team" placeholder="e.g. ENT Builders, or leave blank for all">
+        </div>
+        <div class="connect-filter-item">
+          <label class="cf-label">Segment</label>
+          <div class="chip-select" id="cf-segment">
+            <div class="chip-opt" data-val="SMB">SMB</div>
+            <div class="chip-opt" data-val="Mid-Market">Mid-Market</div>
+            <div class="chip-opt" data-val="Enterprise">Enterprise</div>
+          </div>
+        </div>
+        <div class="connect-filter-item">
+          <label class="cf-label">Pipeline</label>
+          <div class="chip-select" id="cf-pipeline">
+            <div class="chip-opt" data-val="New Business">New Business</div>
+            <div class="chip-opt" data-val="Upsell">Upsell</div>
+            <div class="chip-opt" data-val="Channel">Channel</div>
+          </div>
+        </div>
+        <div class="connect-filter-item">
+          <label class="cf-label">Date Range</label>
+          <div class="chip-select single" id="cf-date">
+            <div class="chip-opt active" data-val="YTD">YTD</div>
+            <div class="chip-opt" data-val="MTD">MTD</div>
+            <div class="chip-opt" data-val="QTD">QTD</div>
+            <div class="chip-opt" data-val="All Time">All Time</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3: Description -->
+    <div class="connect-step">
+      <div class="connect-step-header">
+        <div class="connect-step-num">3</div>
+        <div class="connect-step-title">What is your dashboard about?</div>
+      </div>
+      <div class="connect-step-desc">Briefly describe what your dashboard shows and who uses it. This helps Claude understand the context and build the right layout.</div>
+      <textarea class="connect-textarea" id="cf-desc" placeholder="e.g. A weekly performance summary for the Marketing team, showing MRR from channel-sourced deals and pipeline conversion..." rows="3"></textarea>
+    </div>
+
+    <!-- Step 4: Existing code -->
+    <div class="connect-step">
+      <div class="connect-step-header">
+        <div class="connect-step-num">4</div>
+        <div class="connect-step-title">Paste your current dashboard or script <span class="optional-tag">Optional but recommended</span></div>
+      </div>
+      <div class="connect-step-desc">Claude will update your existing code directly — no need to rebuild from scratch. Paste your HTML, Python script, or any code you're working with.</div>
+      <textarea class="connect-textarea connect-code" id="cf-code" placeholder="Paste your current dashboard code here..." rows="8"></textarea>
+    </div>
+
+    <!-- Generate button -->
+    <div style="text-align:center;margin:24px 0 10px">
+      <button class="connect-generate-btn" onclick="generateConnectPrompt()">✨ Generate Claude Prompt</button>
+    </div>
+
+    <!-- Output -->
+    <div class="connect-output" id="connect-output" style="display:none">
+      <div class="connect-output-header">
+        <span class="connect-output-label">📋 Your Claude Prompt — ready to copy</span>
+        <button class="prompt-copy-btn" onclick="copyConnectPrompt()">Copy Prompt</button>
+      </div>
+      <div class="connect-how-steps">
+        <div class="connect-how-step"><span class="connect-how-num">1</span>Copy the prompt below</div>
+        <span class="connect-how-arrow">›</span>
+        <div class="connect-how-step"><span class="connect-how-num">2</span>Open Claude</div>
+        <span class="connect-how-arrow">›</span>
+        <div class="connect-how-step"><span class="connect-how-num">3</span>Paste and send — Claude will update your dashboard</div>
+      </div>
+      <pre class="connect-prompt-text" id="connect-prompt-text"></pre>
+    </div>
+
+    <div style="height:40px"></div>
+  </div>
+</div><!-- /section-connect -->
+
   </div><!-- /content-area -->
 </div><!-- /app-layout -->
 
@@ -1897,6 +2052,7 @@ function switchTab(t) {
   // Hide sidebar on Home, show on all other sections
   const layout = document.querySelector('.app-layout');
   if (layout) layout.classList.toggle('home-mode', t === 'home');
+  if (t === 'connect') initConnectSection();
 }
 
 // ── DATABASE ──
@@ -4403,6 +4559,152 @@ document.querySelectorAll('.home-card').forEach(card => {
     card.style.transform = '';
   });
 });
+
+// ── CONNECT TO RADAR ──────────────────────────────────────────────
+const RADAR_METRICS = [
+  { id:'mrr',        label:'MRR Won',              desc:'Monthly Recurring Revenue from closed-won deals',             sql:"SUM(mrr) WHERE is_won = true AND close_date falls within the selected period",                                   table:'silver_deals' },
+  { id:'pipeline',   label:'Pipeline Value',        desc:'Total MRR of open deals not yet closed',                     sql:"SUM(mrr) WHERE deal_stage NOT IN ('Closed Won','Closed Lost')",                                               table:'silver_deals' },
+  { id:'winrate',    label:'Win Rate',              desc:'Percentage of deals won out of all closed deals',            sql:"COUNT(*) FILTER(WHERE is_won=true) / NULLIF(COUNT(*) FILTER(WHERE deal_stage IN ('Closed Won','Closed Lost')),0)", table:'silver_deals' },
+  { id:'dealcount',  label:'Deal Count',            desc:'Number of deals closed in the period',                       sql:"COUNT(*) WHERE deal_stage IN ('Closed Won','Closed Lost')",                                                   table:'silver_deals' },
+  { id:'avgdeal',    label:'Avg Deal Size',         desc:'Average MRR per closed-won deal',                           sql:"AVG(mrr) WHERE is_won = true",                                                                               table:'silver_deals' },
+  { id:'attainment', label:'Attainment vs Target',  desc:'Rep or team MRR won vs their monthly target',               sql:"SUM(mrr won) / NULLIF(SUM(mrr_target), 0) — join silver_deals with gold_targets on rep_name + year_month",     table:'silver_deals + gold_targets' },
+  { id:'velocity',   label:'Sales Cycle',           desc:'Average days from deal creation to close',                  sql:"AVG(DATEDIFF(day, create_date, close_date)) WHERE is_won = true",                                            table:'silver_deals' },
+  { id:'growth',     label:'MoM MRR Growth',        desc:'Month-over-month MRR growth percentage',                    sql:"(current_month_mrr - prior_month_mrr) / NULLIF(prior_month_mrr, 0) — from gold_monthly_exec_summary",          table:'gold_monthly_exec_summary' },
+];
+
+let connectInitialized = false;
+function initConnectSection() {
+  if (connectInitialized) return;
+  connectInitialized = true;
+  const grid = document.getElementById('metric-chips');
+  if (!grid) return;
+  grid.innerHTML = RADAR_METRICS.map(m => `
+    <div class="metric-chip" data-id="${m.id}" onclick="this.classList.toggle('selected')">
+      <div class="mc-label">${m.label}</div>
+      <div class="mc-sub">${m.desc}</div>
+    </div>`).join('');
+  document.querySelectorAll('#cf-segment .chip-opt, #cf-pipeline .chip-opt').forEach(c => {
+    c.addEventListener('click', () => c.classList.toggle('active'));
+  });
+  document.querySelectorAll('#cf-date .chip-opt').forEach(c => {
+    c.addEventListener('click', () => {
+      document.querySelectorAll('#cf-date .chip-opt').forEach(x => x.classList.remove('active'));
+      c.classList.add('active');
+    });
+  });
+}
+
+function generateConnectPrompt() {
+  const selected = [...document.querySelectorAll('.metric-chip.selected')].map(el => el.dataset.id);
+  if (selected.length === 0) {
+    alert('Please select at least one metric in Step 1.');
+    return;
+  }
+  const metrics  = RADAR_METRICS.filter(m => selected.includes(m.id));
+  const team     = document.getElementById('cf-team').value.trim();
+  const segments = [...document.querySelectorAll('#cf-segment .chip-opt.active')].map(x => x.dataset.val);
+  const pipelines= [...document.querySelectorAll('#cf-pipeline .chip-opt.active')].map(x => x.dataset.val);
+  const dateRange= document.querySelector('#cf-date .chip-opt.active')?.dataset.val || 'YTD';
+  const desc     = document.getElementById('cf-desc').value.trim();
+  const code     = document.getElementById('cf-code').value.trim();
+
+  const filterLines = [
+    `• Date Range: ${dateRange}`,
+    `• Team / Rep: ${team || 'All'}`,
+    `• Segment: ${segments.length ? segments.join(', ') : 'All'}`,
+    `• Pipeline: ${pipelines.length ? pipelines.join(', ') : 'All'}`,
+  ].join('\n');
+
+  const metricBlock = metrics.map(m =>
+    `${m.label}\n  Definition : ${m.desc}\n  SQL Logic  : ${m.sql}\n  Table(s)   : shared.revops.${m.table}`
+  ).join('\n\n');
+
+  const tableRef = `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+AVAILABLE TABLES — shared.revops (Databricks)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+shared.revops.silver_deals — one row per deal
+  Fields: deal_id, rep_name, pipeline_name, close_date, create_date,
+          mrr, deal_stage, is_won (boolean), segment, industry, company_name
+
+shared.revops.gold_monthly_exec_summary — pre-aggregated monthly KPIs
+  Fields: year_month, total_mrr, won_deals, pipeline_value,
+          win_rate, avg_deal_size, new_mrr, churn_mrr
+
+shared.revops.gold_targets — monthly targets per rep
+  Fields: year_month, rep_name, team_name, mrr_target`;
+
+  const connectionRef = `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DATABRICKS CONNECTION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Endpoint : POST https://{hostname}/api/2.0/sql/statements
+Auth     : Bearer {personal_access_token}
+HTTP Path: /sql/1.0/warehouses/{warehouse_id}
+
+Store credentials in localStorage using keys:
+  radar_hostname, radar_token, radar_http_path
+Show a connection/settings form on first load if credentials are not set.`;
+
+  const instructions = code
+    ? `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+WHAT I NEED YOU TO DO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Update my existing dashboard code (pasted below) to include live RADAR data:
+
+• Add a section or card for each metric listed above
+• Keep my existing layout, visual style, and color scheme
+• Use the exact SQL logic and table names specified above
+• Apply these filters to every query: ${dateRange}${team ? ', filtered to '+team : ''}${segments.length ? ', segment: '+segments.join('/') : ''}${pipelines.length ? ', pipeline: '+pipelines.join('/') : ''}
+• Show a loading spinner while data is fetching
+• Show a clear error message if the Databricks connection fails
+• Do not change anything in my existing dashboard that is unrelated to the RADAR data`
+    : `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+WHAT I NEED YOU TO DO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Build a clean dashboard section that displays the RADAR metrics listed above:
+
+• Create a card or stat block for each metric
+• Use the Databricks REST API with credentials stored in localStorage
+• Use the exact SQL logic and table names specified above
+• Apply these filters: ${dateRange}${team ? ', filtered to '+team : ''}${segments.length ? ', segment: '+segments.join('/') : ''}${pipelines.length ? ', pipeline: '+pipelines.join('/') : ''}
+• Show a loading state while data fetches
+• Handle Databricks connection errors gracefully with a helpful message`;
+
+  let prompt = `I'm building a dashboard and I want to add live data from RADAR — Sprout Solutions' RevOps data platform on Databricks.
+`;
+  if (desc) prompt += `\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nMY DASHBOARD\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n${desc}\n`;
+  prompt += `
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DATA I NEED FROM RADAR
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${metricBlock}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FILTERS TO APPLY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${filterLines}
+
+${tableRef}
+
+${connectionRef}
+
+${instructions}`;
+  if (code) prompt += `\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nMY CURRENT DASHBOARD CODE\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n${code}`;
+
+  document.getElementById('connect-prompt-text').textContent = prompt;
+  const out = document.getElementById('connect-output');
+  out.style.display = 'block';
+  setTimeout(() => out.scrollIntoView({ behavior:'smooth', block:'start' }), 50);
+}
+
+function copyConnectPrompt() {
+  const text = document.getElementById('connect-prompt-text').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('.connect-output-header .prompt-copy-btn');
+    const orig = btn.textContent;
+    btn.textContent = '✓ Copied!';
+    setTimeout(() => { btn.textContent = orig; }, 2200);
+  });
+}
 </script>
 <!-- CONNECTION MODAL -->
 <div class="conn-modal-overlay" id="conn-modal-overlay" onclick="if(event.target===this)closeConnModal()">
