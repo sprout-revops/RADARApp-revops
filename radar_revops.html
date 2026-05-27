@@ -1856,13 +1856,6 @@ python fetch_data.py
       </div>
     </div>
     <div class="cf-field-row">
-      <div class="cf-field-name">Segment</div>
-      <div class="chip-select cf-field-chips" data-table="silver_deals" data-field="segment">
-        <div class="chip-opt" data-val="SME" onclick="this.classList.toggle('active')">SME</div>
-        <div class="chip-opt" data-val="Enterprise" onclick="this.classList.toggle('active')">Enterprise</div>
-      </div>
-    </div>
-    <div class="cf-field-row">
       <div class="cf-field-name">Deal Stage</div>
       <div class="chip-select cf-field-chips" data-table="silver_deals" data-field="stage_label">
         <div class="chip-opt" data-val="Appointment Scheduled" onclick="this.classList.toggle('active')">Appointment Scheduled</div>
@@ -1875,7 +1868,7 @@ python fetch_data.py
       </div>
     </div>
     <div class="cf-field-row">
-      <div class="cf-field-name">Lead Source</div>
+      <div class="cf-field-name">Dept Source</div>
       <div class="chip-select cf-field-chips" data-table="silver_deals" data-field="department_source_clean">
         <div class="chip-opt" data-val="MKT Inbound" onclick="this.classList.toggle('active')">MKT Inbound</div>
         <div class="chip-opt" data-val="LDU Outbound" onclick="this.classList.toggle('active')">LDU Outbound</div>
@@ -1885,28 +1878,28 @@ python fetch_data.py
         <div class="chip-opt" data-val="Upsell Outbound" onclick="this.classList.toggle('active')">Upsell Outbound</div>
       </div>
     </div>
-    <div class="cf-field-row">
-      <div class="cf-field-name">Deal Type</div>
-      <div class="chip-select cf-field-chips" data-table="silver_deals" data-field="deal_type">
-        <div class="chip-opt" data-val="New Business" onclick="this.classList.toggle('active')">New Business</div>
-        <div class="chip-opt" data-val="Upsell Deals" onclick="this.classList.toggle('active')">Upsell Deals</div>
-        <div class="chip-opt" data-val="TH Deals" onclick="this.classList.toggle('active')">TH Deals</div>
-      </div>
-    </div>
-    <div class="cf-field-row">
-      <div class="cf-field-name">Team / Rep</div>
-      <input type="text" class="connect-input" id="cf-team" placeholder="e.g. ENT Builders, Maria Santos — leave blank for all" style="flex:1;margin-top:2px">
-    </div>
   </div>
 
   <!-- COMPANIES -->
   <div class="cf-table-panel" id="cf-panel-companies" style="display:none">
     <div class="cf-field-row">
+      <div class="cf-field-name">Brand</div>
+      <div class="chip-select cf-field-chips" data-table="silver_company" data-field="Brands">
+        <div class="chip-opt" data-val="PH Sprout" onclick="this.classList.toggle('active')">PH Sprout</div>
+        <div class="chip-opt" data-val="TH Sprout" onclick="this.classList.toggle('active')">TH Sprout</div>
+        <div class="chip-opt" data-val="PH Sprout, TH Sprout" onclick="this.classList.toggle('active')">Both</div>
+      </div>
+    </div>
+    <div class="cf-field-row">
       <div class="cf-field-name">Segment</div>
       <div class="chip-select cf-field-chips" data-table="silver_company" data-field="Segment">
         <div class="chip-opt" data-val="SME" onclick="this.classList.toggle('active')">SME</div>
-        <div class="chip-opt" data-val="Enterprise" onclick="this.classList.toggle('active')">Enterprise</div>
+        <div class="chip-opt" data-val="ENT" onclick="this.classList.toggle('active')">ENT</div>
       </div>
+    </div>
+    <div class="cf-field-row">
+      <div class="cf-field-name">Client Stage</div>
+      <input type="text" class="connect-input" id="cf-client-stage" placeholder="e.g. Onboarding, Steady State, At Risk — leave blank for all" style="flex:1;margin-top:2px">
     </div>
     <div class="cf-field-row">
       <div class="cf-field-name">Client Status</div>
@@ -1917,42 +1910,21 @@ python fetch_data.py
       </div>
     </div>
     <div class="cf-field-row">
-      <div class="cf-field-name">Brand</div>
-      <div class="chip-select cf-field-chips" data-table="silver_company" data-field="Brands">
-        <div class="chip-opt" data-val="PH Sprout" onclick="this.classList.toggle('active')">PH Sprout</div>
-        <div class="chip-opt" data-val="TH Sprout" onclick="this.classList.toggle('active')">TH Sprout</div>
-      </div>
+      <div class="cf-field-name">Client Type</div>
+      <input type="text" class="connect-input" id="cf-client-type" placeholder="e.g. Key Accounts, Channel Partner, Conglomerate — leave blank for all" style="flex:1;margin-top:2px">
     </div>
     <div class="cf-field-row">
       <div class="cf-field-name">Industry</div>
       <input type="text" class="connect-input" id="cf-industry" placeholder="e.g. Manufacturing, BPO, Retail — leave blank for all" style="flex:1;margin-top:2px">
     </div>
+    <div class="cf-field-row">
+      <div class="cf-field-name">Service Level</div>
+      <input type="text" class="connect-input" id="cf-service-level" placeholder="e.g. Tier 1, Tier 2, Tier 3 — leave blank for all" style="flex:1;margin-top:2px">
+    </div>
   </div>
 
   <!-- LINE ITEMS -->
   <div class="cf-table-panel" id="cf-panel-lineitems" style="display:none">
-    <div class="cf-field-row">
-      <div class="cf-field-name">Product Status</div>
-      <div class="chip-select cf-field-chips" data-table="silver_line_items" data-field="product_status">
-        <div class="chip-opt" data-val="Availed" onclick="this.classList.toggle('active')">Availed</div>
-        <div class="chip-opt" data-val="Not Availed" onclick="this.classList.toggle('active')">Not Availed</div>
-      </div>
-    </div>
-    <div class="cf-field-row">
-      <div class="cf-field-name">Billing Freq</div>
-      <div class="chip-select cf-field-chips" data-table="silver_line_items" data-field="recurring_billing_frequency">
-        <div class="chip-opt" data-val="Monthly" onclick="this.classList.toggle('active')">Monthly</div>
-        <div class="chip-opt" data-val="Annually" onclick="this.classList.toggle('active')">Annually</div>
-        <div class="chip-opt" data-val="One Time Payment" onclick="this.classList.toggle('active')">One Time Payment</div>
-      </div>
-    </div>
-    <div class="cf-field-row">
-      <div class="cf-field-name">Business Unit</div>
-      <div class="chip-select cf-field-chips" data-table="silver_line_items" data-field="business_unit">
-        <div class="chip-opt" data-val="PH Sprout" onclick="this.classList.toggle('active')">PH Sprout</div>
-        <div class="chip-opt" data-val="TH Sprout" onclick="this.classList.toggle('active')">TH Sprout</div>
-      </div>
-    </div>
     <div class="cf-field-row">
       <div class="cf-field-name">Product</div>
       <div class="chip-select cf-field-chips" data-table="silver_line_items" data-field="parent_product">
@@ -1961,7 +1933,28 @@ python fetch_data.py
         <div class="chip-opt" data-val="Disprz" onclick="this.classList.toggle('active')">Disprz</div>
         <div class="chip-opt" data-val="Performance+" onclick="this.classList.toggle('active')">Performance+</div>
         <div class="chip-opt" data-val="Olivia Expense" onclick="this.classList.toggle('active')">Olivia Expense</div>
+        <div class="chip-opt" data-val="Britana" onclick="this.classList.toggle('active')">Britana</div>
+        <div class="chip-opt" data-val="Kwik Insure" onclick="this.classList.toggle('active')">Kwik Insure</div>
+        <div class="chip-opt" data-val="Tability" onclick="this.classList.toggle('active')">Tability</div>
+        <div class="chip-opt" data-val="Wellness" onclick="this.classList.toggle('active')">Wellness</div>
+        <div class="chip-opt" data-val="Beppo" onclick="this.classList.toggle('active')">Beppo</div>
       </div>
+    </div>
+    <div class="cf-field-row">
+      <div class="cf-field-name">Product Category</div>
+      <input type="text" class="connect-input" id="cf-li-product-category" placeholder="e.g. Core HR, Payroll, Recruitment — leave blank for all" style="flex:1;margin-top:2px">
+    </div>
+    <div class="cf-field-row">
+      <div class="cf-field-name">Product Group</div>
+      <input type="text" class="connect-input" id="cf-li-product-group" placeholder="Leave blank for all" style="flex:1;margin-top:2px">
+    </div>
+    <div class="cf-field-row">
+      <div class="cf-field-name">Clan</div>
+      <input type="text" class="connect-input" id="cf-li-clan" placeholder="Leave blank for all" style="flex:1;margin-top:2px">
+    </div>
+    <div class="cf-field-row">
+      <div class="cf-field-name">Tribe</div>
+      <input type="text" class="connect-input" id="cf-li-tribe" placeholder="Leave blank for all" style="flex:1;margin-top:2px">
     </div>
   </div>
 
@@ -1979,7 +1972,7 @@ python fetch_data.py
       </div>
     </div>
     <div class="cf-field-row">
-      <div class="cf-field-name">Department Source</div>
+      <div class="cf-field-name">Dept Source</div>
       <div class="chip-select cf-field-chips" data-table="silver_contacts" data-field="department_source">
         <div class="chip-opt" data-val="MKT Inbound" onclick="this.classList.toggle('active')">MKT Inbound</div>
         <div class="chip-opt" data-val="LDU Outbound" onclick="this.classList.toggle('active')">LDU Outbound</div>
@@ -1987,11 +1980,20 @@ python fetch_data.py
         <div class="chip-opt" data-val="CSM Outbound" onclick="this.classList.toggle('active')">CSM Outbound</div>
         <div class="chip-opt" data-val="Sales Outbound" onclick="this.classList.toggle('active')">Sales Outbound</div>
         <div class="chip-opt" data-val="Channels" onclick="this.classList.toggle('active')">Channels</div>
-        <div class="chip-opt" data-val="Upsell Outbound" onclick="this.classList.toggle('active')">Upsell Outbound</div>
       </div>
     </div>
     <div class="cf-field-row">
-      <div class="cf-field-name">Analytics Source</div>
+      <div class="cf-field-name">Buyer Role</div>
+      <div class="chip-select cf-field-chips" data-table="silver_contacts" data-field="buyer_role">
+        <div class="chip-opt" data-val="decision_maker" onclick="this.classList.toggle('active')">Decision Maker</div>
+        <div class="chip-opt" data-val="evaluator_or_recommender" onclick="this.classList.toggle('active')">Evaluator</div>
+        <div class="chip-opt" data-val="promoter_or_champion" onclick="this.classList.toggle('active')">Champion</div>
+        <div class="chip-opt" data-val="influencer" onclick="this.classList.toggle('active')">Influencer</div>
+        <div class="chip-opt" data-val="detractor_or_blocker" onclick="this.classList.toggle('active')">Detractor</div>
+      </div>
+    </div>
+    <div class="cf-field-row">
+      <div class="cf-field-name">Original Source</div>
       <div class="chip-select cf-field-chips" data-table="silver_contacts" data-field="analytics_source">
         <div class="chip-opt" data-val="ORGANIC_SEARCH" onclick="this.classList.toggle('active')">Organic Search</div>
         <div class="chip-opt" data-val="PAID_SEARCH" onclick="this.classList.toggle('active')">Paid Search</div>
@@ -2002,33 +2004,12 @@ python fetch_data.py
         <div class="chip-opt" data-val="OTHER_CAMPAIGNS" onclick="this.classList.toggle('active')">Other Campaigns</div>
       </div>
     </div>
-    <div class="cf-field-row">
-      <div class="cf-field-name">Brands</div>
-      <div class="chip-select cf-field-chips" data-table="silver_contacts" data-field="brands">
-        <div class="chip-opt" data-val="PH Sprout" onclick="this.classList.toggle('active')">PH Sprout</div>
-        <div class="chip-opt" data-val="TH Sprout" onclick="this.classList.toggle('active')">TH Sprout</div>
-        <div class="chip-opt" data-val="PH Sprout, TH Sprout" onclick="this.classList.toggle('active')">Both</div>
-      </div>
-    </div>
-    <div class="cf-field-row">
-      <div class="cf-field-name">Type of Contact</div>
-      <div class="chip-select cf-field-chips" data-table="silver_contacts" data-field="type_of_contact">
-        <div class="chip-opt" data-val="C-Level" onclick="this.classList.toggle('active')">C-Level</div>
-        <div class="chip-opt" data-val="Authorized Contact" onclick="this.classList.toggle('active')">Authorized Contact</div>
-        <div class="chip-opt" data-val="Contract Signatory" onclick="this.classList.toggle('active')">Contract Signatory</div>
-        <div class="chip-opt" data-val="Comp &amp; Ben Officer" onclick="this.classList.toggle('active')">Comp &amp; Ben Officer</div>
-      </div>
-    </div>
-    <div class="cf-field-row">
-      <div class="cf-field-name">Industry</div>
-      <input type="text" class="connect-input" id="cf-contacts-industry" placeholder="e.g. Banking, BPO, Manufacturing — leave blank for all" style="flex:1;margin-top:2px">
-    </div>
   </div>
 
   <!-- LEADS -->
   <div class="cf-table-panel" id="cf-panel-leads" style="display:none">
     <div class="cf-field-row">
-      <div class="cf-field-name">Department Source</div>
+      <div class="cf-field-name">Dept Source</div>
       <div class="chip-select cf-field-chips" data-table="silver_leads" data-field="department_source">
         <div class="chip-opt" data-val="MKT Inbound" onclick="this.classList.toggle('active')">MKT Inbound</div>
         <div class="chip-opt" data-val="LDU Outbound" onclick="this.classList.toggle('active')">LDU Outbound</div>
@@ -2051,47 +2032,27 @@ python fetch_data.py
       </div>
     </div>
     <div class="cf-field-row">
-      <div class="cf-field-name">LDU Budget</div>
-      <div class="chip-select cf-field-chips" data-table="silver_leads" data-field="ldu_budget">
-        <div class="chip-opt" data-val="no_budget" onclick="this.classList.toggle('active')">No Budget</div>
-        <div class="chip-opt" data-val="budget_for_approval" onclick="this.classList.toggle('active')">Budget for Approval</div>
-        <div class="chip-opt" data-val="allocated_budget" onclick="this.classList.toggle('active')">Allocated Budget</div>
-      </div>
-    </div>
-    <div class="cf-field-row">
-      <div class="cf-field-name">LDU Needs</div>
-      <div class="chip-select cf-field-chips" data-table="silver_leads" data-field="ldu_needs">
-        <div class="chip-opt" data-val="implied" onclick="this.classList.toggle('active')">Implied</div>
-        <div class="chip-opt" data-val="explicit" onclick="this.classList.toggle('active')">Explicit</div>
-      </div>
-    </div>
-    <div class="cf-field-row">
-      <div class="cf-field-name">Disqual. Reason</div>
-      <div class="chip-select cf-field-chips" data-table="silver_leads" data-field="disqualification_reason">
-        <div class="chip-opt" data-val="Inquiry - Job Vacancy" onclick="this.classList.toggle('active')">Job Vacancy</div>
-        <div class="chip-opt" data-val="Invalid contact information" onclick="this.classList.toggle('active')">Invalid Contact</div>
-        <div class="chip-opt" data-val="Not within Budget" onclick="this.classList.toggle('active')">Not within Budget</div>
-        <div class="chip-opt" data-val="TECHNICAL_LIMITATIONS" onclick="this.classList.toggle('active')">Technical Limitations</div>
-        <div class="chip-opt" data-val="POC No Longer Available" onclick="this.classList.toggle('active')">POC Unavailable</div>
-        <div class="chip-opt" data-val="Preferred other competitor" onclick="this.classList.toggle('active')">Competitor Preferred</div>
-      </div>
-    </div>
-    <div class="cf-field-row">
-      <div class="cf-field-name">Brands</div>
-      <div class="chip-select cf-field-chips" data-table="silver_leads" data-field="brands">
-        <div class="chip-opt" data-val="PH Sprout" onclick="this.classList.toggle('active')">PH Sprout</div>
-        <div class="chip-opt" data-val="TH Sprout" onclick="this.classList.toggle('active')">TH Sprout</div>
-        <div class="chip-opt" data-val="PH Sprout, TH Sprout" onclick="this.classList.toggle('active')">Both</div>
-      </div>
-    </div>
-    <div class="cf-field-row">
-      <div class="cf-field-name">Industry</div>
-      <input type="text" class="connect-input" id="cf-leads-industry" placeholder="e.g. Banking, BPO, Manufacturing — leave blank for all" style="flex:1;margin-top:2px">
+      <div class="cf-field-name">Lead Stage</div>
+      <input type="text" class="connect-input" id="cf-lead-stage" placeholder="e.g. Appointment Scheduled, Solutioning — leave blank for all" style="flex:1;margin-top:2px">
     </div>
   </div>
 
   <!-- LICENSES -->
   <div class="cf-table-panel" id="cf-panel-licenses" style="display:none">
+    <div class="cf-field-row">
+      <div class="cf-field-name">Product</div>
+      <div class="chip-select cf-field-chips" data-table="silver_licenses" data-field="parent_product">
+        <div class="chip-opt" data-val="HR and Payroll" onclick="this.classList.toggle('active')">HR and Payroll</div>
+        <div class="chip-opt" data-val="JazzHR" onclick="this.classList.toggle('active')">JazzHR</div>
+        <div class="chip-opt" data-val="Disprz" onclick="this.classList.toggle('active')">Disprz</div>
+        <div class="chip-opt" data-val="Performance+" onclick="this.classList.toggle('active')">Performance+</div>
+        <div class="chip-opt" data-val="Olivia Expense" onclick="this.classList.toggle('active')">Olivia Expense</div>
+        <div class="chip-opt" data-val="Britana" onclick="this.classList.toggle('active')">Britana</div>
+        <div class="chip-opt" data-val="Kwik Insure" onclick="this.classList.toggle('active')">Kwik Insure</div>
+        <div class="chip-opt" data-val="Wellness" onclick="this.classList.toggle('active')">Wellness</div>
+        <div class="chip-opt" data-val="Beppo" onclick="this.classList.toggle('active')">Beppo</div>
+      </div>
+    </div>
     <div class="cf-field-row">
       <div class="cf-field-name">Status</div>
       <div class="chip-select cf-field-chips" data-table="silver_licenses" data-field="status">
@@ -2102,39 +2063,20 @@ python fetch_data.py
       </div>
     </div>
     <div class="cf-field-row">
-      <div class="cf-field-name">Business Unit</div>
-      <div class="chip-select cf-field-chips" data-table="silver_licenses" data-field="business_unit">
-        <div class="chip-opt" data-val="PH Sprout" onclick="this.classList.toggle('active')">PH Sprout</div>
-        <div class="chip-opt" data-val="TH Sprout" onclick="this.classList.toggle('active')">TH Sprout</div>
-      </div>
+      <div class="cf-field-name">Product Category</div>
+      <input type="text" class="connect-input" id="cf-lic-product-category" placeholder="Leave blank for all" style="flex:1;margin-top:2px">
     </div>
     <div class="cf-field-row">
-      <div class="cf-field-name">Billing Freq</div>
-      <div class="chip-select cf-field-chips" data-table="silver_licenses" data-field="billing_frequency">
-        <div class="chip-opt" data-val="Monthly" onclick="this.classList.toggle('active')">Monthly</div>
-        <div class="chip-opt" data-val="Annually" onclick="this.classList.toggle('active')">Annually</div>
-        <div class="chip-opt" data-val="One Time Payment" onclick="this.classList.toggle('active')">One Time Payment</div>
-      </div>
+      <div class="cf-field-name">Product Group</div>
+      <input type="text" class="connect-input" id="cf-lic-product-group" placeholder="Leave blank for all" style="flex:1;margin-top:2px">
     </div>
     <div class="cf-field-row">
-      <div class="cf-field-name">Deal Type</div>
-      <div class="chip-select cf-field-chips" data-table="silver_licenses" data-field="type_of_deal">
-        <div class="chip-opt" data-val="New Business" onclick="this.classList.toggle('active')">New Business</div>
-        <div class="chip-opt" data-val="Upsell Deals" onclick="this.classList.toggle('active')">Upsell Deals</div>
-        <div class="chip-opt" data-val="TH Deals" onclick="this.classList.toggle('active')">TH Deals</div>
-      </div>
+      <div class="cf-field-name">Clan</div>
+      <input type="text" class="connect-input" id="cf-lic-clan" placeholder="Leave blank for all" style="flex:1;margin-top:2px">
     </div>
     <div class="cf-field-row">
-      <div class="cf-field-name">Brands</div>
-      <div class="chip-select cf-field-chips" data-table="silver_licenses" data-field="brands">
-        <div class="chip-opt" data-val="PH Sprout" onclick="this.classList.toggle('active')">PH Sprout</div>
-        <div class="chip-opt" data-val="TH Sprout" onclick="this.classList.toggle('active')">TH Sprout</div>
-        <div class="chip-opt" data-val="PH Sprout, TH Sprout" onclick="this.classList.toggle('active')">Both</div>
-      </div>
-    </div>
-    <div class="cf-field-row">
-      <div class="cf-field-name">Product</div>
-      <input type="text" class="connect-input" id="cf-licenses-product" placeholder="e.g. HR and Payroll, JazzHR, Disprz — leave blank for all" style="flex:1;margin-top:2px">
+      <div class="cf-field-name">Tribe</div>
+      <input type="text" class="connect-input" id="cf-lic-tribe" placeholder="Leave blank for all" style="flex:1;margin-top:2px">
     </div>
   </div>
 
@@ -5246,8 +5188,7 @@ function clearCodeUpload() {
 function resetConnectForm() {
   // Deselect all metric chips
   document.querySelectorAll('.metric-chip.selected').forEach(c => c.classList.remove('selected'));
-  // Clear text inputs
-  document.getElementById('cf-team').value = '';
+  // Clear description
   document.getElementById('cf-desc').value = '';
   // Deactivate all field filter chips
   document.querySelectorAll('.cf-field-chips .chip-opt').forEach(c => c.classList.remove('active'));
@@ -5255,10 +5196,12 @@ function resetConnectForm() {
   document.querySelectorAll('.cf-table-tab').forEach(t => t.classList.remove('active'));
   const firstTab = document.querySelector('.cf-table-tab');
   if (firstTab) { firstTab.classList.add('active'); switchFilterTable('deals', firstTab); }
-  // Clear industry inputs
-  const ind = document.getElementById('cf-industry'); if (ind) ind.value = '';
-  const cind = document.getElementById('cf-contacts-industry'); if (cind) cind.value = '';
-  const lind = document.getElementById('cf-leads-industry'); if (lind) lind.value = '';
+  // Clear all text filter inputs
+  ['cf-client-stage','cf-client-type','cf-industry','cf-service-level',
+   'cf-li-product-category','cf-li-product-group','cf-li-clan','cf-li-tribe',
+   'cf-lead-stage',
+   'cf-lic-product-category','cf-lic-product-group','cf-lic-clan','cf-lic-tribe'
+  ].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   // Reset date range — deselect all, re-select YTD
   document.querySelectorAll('#cf-date .chip-opt').forEach(c => c.classList.remove('active'));
   const ytd = document.querySelector('#cf-date .chip-opt[data-val="YTD"]');
@@ -5288,12 +5231,13 @@ function generateConnectPrompt() {
     return;
   }
   const metrics  = RADAR_METRICS.filter(m => selected.includes(m.id));
-  const team     = document.getElementById('cf-team').value.trim();
-  const industry = (document.getElementById('cf-industry') || {}).value || '';
   const dateRangeArr = [...document.querySelectorAll('#cf-date .chip-opt.active')].map(x => x.dataset.val);
   const dateRange = dateRangeArr.length ? dateRangeArr.join(' + ') : 'YTD';
   const desc     = document.getElementById('cf-desc').value.trim();
   const code     = window._cfUploadedCode || '';
+
+  // Helper to safely read a text input
+  const tv = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
 
   const fieldFilters = [];
   document.querySelectorAll('.cf-field-chips').forEach(group => {
@@ -5302,12 +5246,36 @@ function generateConnectPrompt() {
     const vals  = [...group.querySelectorAll('.chip-opt.active')].map(x => x.dataset.val);
     if (vals.length) fieldFilters.push(`• ${tbl}.${field} IN (${vals.map(v => "'" + v + "'").join(', ')})`);
   });
-  if (team)     fieldFilters.push(`• silver_deals.sales_rep / hubspot_team: ${team}`);
-  if (industry) fieldFilters.push(`• silver_company.Industry: ${industry}`);
-  const contactsIndustry = (document.getElementById('cf-contacts-industry') || {}).value || '';
-  if (contactsIndustry) fieldFilters.push(`• silver_contacts.industry_official: ${contactsIndustry}`);
-  const leadsIndustry = (document.getElementById('cf-leads-industry') || {}).value || '';
-  if (leadsIndustry) fieldFilters.push(`• silver_leads.industry_official: ${leadsIndustry}`);
+  // Company text filters
+  const clientStage   = tv('cf-client-stage');
+  const clientType    = tv('cf-client-type');
+  const industry      = tv('cf-industry');
+  const serviceLevel  = tv('cf-service-level');
+  if (clientStage)  fieldFilters.push(`• silver_company.Client_stage: ${clientStage}`);
+  if (clientType)   fieldFilters.push(`• silver_company.Client_type: ${clientType}`);
+  if (industry)     fieldFilters.push(`• silver_company.Industry: ${industry}`);
+  if (serviceLevel) fieldFilters.push(`• silver_company.service_level: ${serviceLevel}`);
+  // Line Items text filters
+  const liProductCategory = tv('cf-li-product-category');
+  const liProductGroup    = tv('cf-li-product-group');
+  const liClan            = tv('cf-li-clan');
+  const liTribe           = tv('cf-li-tribe');
+  if (liProductCategory) fieldFilters.push(`• silver_line_items.product_category: ${liProductCategory}`);
+  if (liProductGroup)    fieldFilters.push(`• silver_line_items.product_group: ${liProductGroup}`);
+  if (liClan)            fieldFilters.push(`• silver_line_items.clan: ${liClan}`);
+  if (liTribe)           fieldFilters.push(`• silver_line_items.tribe_new: ${liTribe}`);
+  // Leads text filters
+  const leadStage = tv('cf-lead-stage');
+  if (leadStage) fieldFilters.push(`• silver_leads.pipeline_stage: ${leadStage}`);
+  // Licenses text filters
+  const licProductCategory = tv('cf-lic-product-category');
+  const licProductGroup    = tv('cf-lic-product-group');
+  const licClan            = tv('cf-lic-clan');
+  const licTribe           = tv('cf-lic-tribe');
+  if (licProductCategory) fieldFilters.push(`• silver_licenses.product_category: ${licProductCategory}`);
+  if (licProductGroup)    fieldFilters.push(`• silver_licenses.product_group: ${licProductGroup}`);
+  if (licClan)            fieldFilters.push(`• silver_licenses.clan: ${licClan}`);
+  if (licTribe)           fieldFilters.push(`• silver_licenses.tribe_new: ${licTribe}`);
 
   const filterLines = [
     `• Date Range: ${dateRange}`,
@@ -5380,7 +5348,7 @@ Update my existing dashboard code (pasted below) to include live RADAR data:
 • Add a section or card for each metric listed above
 • Keep my existing layout, visual style, and color scheme
 • Use the exact SQL logic and table names specified above
-• Apply these filters to every query: ${dateRange}${team ? ', filtered to '+team : ''}${fieldFilters.length ? '\n  Filters: ' + fieldFilters.join('; ') : ''}
+• Apply these filters to every query: ${dateRange}${fieldFilters.length ? '\n  Filters: ' + fieldFilters.join('; ') : ''}
 • Show a loading spinner while data is fetching
 • Show a clear error message if the Databricks connection fails
 • Add a 🔄 Refresh button that re-runs all queries and updates all values on click
@@ -5393,7 +5361,7 @@ Build a clean dashboard section that displays the RADAR metrics listed above:
 • Create a card or stat block for each metric
 • Use the Databricks REST API with credentials stored in localStorage
 • Use the exact SQL logic and table names specified above
-• Apply these filters: ${dateRange}${team ? ', filtered to '+team : ''}${fieldFilters.length ? '\n  Filters: ' + fieldFilters.join('; ') : ''}
+• Apply these filters: ${dateRange}${fieldFilters.length ? '\n  Filters: ' + fieldFilters.join('; ') : ''}
 • Show a loading state while data fetches
 • Add a 🔄 Refresh button in the header that re-runs all queries and updates all values on click
 • Handle Databricks connection errors gracefully with a helpful message`;
