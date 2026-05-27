@@ -1818,26 +1818,26 @@ python fetch_data.py
         <div class="connect-filter-item">
           <label class="cf-label">Segment</label>
           <div class="chip-select" id="cf-segment">
-            <div class="chip-opt" data-val="SME">SME</div>
-            <div class="chip-opt" data-val="Enterprise">Enterprise</div>
+            <div class="chip-opt" data-val="SME" onclick="this.classList.toggle('active')">SME</div>
+            <div class="chip-opt" data-val="Enterprise" onclick="this.classList.toggle('active')">Enterprise</div>
           </div>
         </div>
         <div class="connect-filter-item">
           <label class="cf-label">Pipeline</label>
           <div class="chip-select" id="cf-pipeline">
-            <div class="chip-opt" data-val="Sales Pipeline">Sales Pipeline</div>
-            <div class="chip-opt" data-val="TH Sales Pipeline">TH Sales Pipeline</div>
-            <div class="chip-opt" data-val="PH Upsell Pipeline">PH Upsell Pipeline</div>
-            <div class="chip-opt" data-val="Unified Channel Pipeline">Unified Channel Pipeline</div>
+            <div class="chip-opt" data-val="Sales Pipeline" onclick="this.classList.toggle('active')">Sales Pipeline</div>
+            <div class="chip-opt" data-val="TH Sales Pipeline" onclick="this.classList.toggle('active')">TH Sales Pipeline</div>
+            <div class="chip-opt" data-val="PH Upsell Pipeline" onclick="this.classList.toggle('active')">PH Upsell Pipeline</div>
+            <div class="chip-opt" data-val="Unified Channel Pipeline" onclick="this.classList.toggle('active')">Unified Channel Pipeline</div>
           </div>
         </div>
         <div class="connect-filter-item">
           <label class="cf-label">Date Range</label>
-          <div class="chip-select single" id="cf-date">
-            <div class="chip-opt active" data-val="YTD">YTD</div>
-            <div class="chip-opt" data-val="MTD">MTD</div>
-            <div class="chip-opt" data-val="QTD">QTD</div>
-            <div class="chip-opt" data-val="All Time">All Time</div>
+          <div class="chip-select" id="cf-date">
+            <div class="chip-opt active" data-val="YTD" onclick="this.classList.toggle('active')">YTD</div>
+            <div class="chip-opt" data-val="MTD" onclick="this.classList.toggle('active')">MTD</div>
+            <div class="chip-opt" data-val="QTD" onclick="this.classList.toggle('active')">QTD</div>
+            <div class="chip-opt" data-val="All Time" onclick="this.classList.toggle('active')">All Time</div>
           </div>
         </div>
       </div>
@@ -4654,20 +4654,7 @@ const RADAR_METRICS = [
   { id:'sales_disqualified', label:'Sales Disqualified',   desc:'Deals disqualified by Sales during demo stage. Formula: DISTINCT COUNT(Deal IDs) where stage = Disqualified',                    sql:"SELECT DATE_TRUNC('month',create_date) AS metric_month, COUNT(DISTINCT deal_id) AS sales_disqualified FROM shared.revops.silver_deals WHERE create_date IS NOT NULL AND stage_label='Disqualified' AND count_as_qualified='Yes' AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%' GROUP BY 1 ORDER BY 1 DESC", table:'silver_deals' },
 ];
 
-let connectInitialized = false;
-function initConnectSection() {
-  if (connectInitialized) return;
-  connectInitialized = true;
-  document.querySelectorAll('#cf-segment .chip-opt, #cf-pipeline .chip-opt').forEach(c => {
-    c.addEventListener('click', () => c.classList.toggle('active'));
-  });
-  document.querySelectorAll('#cf-date .chip-opt').forEach(c => {
-    c.addEventListener('click', () => {
-      document.querySelectorAll('#cf-date .chip-opt').forEach(x => x.classList.remove('active'));
-      c.classList.add('active');
-    });
-  });
-}
+function initConnectSection() {}
 
 window._cfUploadedCode = '';
 
@@ -4713,7 +4700,7 @@ function resetConnectForm() {
   document.getElementById('cf-desc').value = '';
   // Deactivate segment + pipeline chips
   document.querySelectorAll('#cf-segment .chip-opt, #cf-pipeline .chip-opt').forEach(c => c.classList.remove('active'));
-  // Reset date range to YTD
+  // Reset date range — deselect all, re-select YTD
   document.querySelectorAll('#cf-date .chip-opt').forEach(c => c.classList.remove('active'));
   const ytd = document.querySelector('#cf-date .chip-opt[data-val="YTD"]');
   if (ytd) ytd.classList.add('active');
@@ -4735,7 +4722,8 @@ function generateConnectPrompt() {
   const team     = document.getElementById('cf-team').value.trim();
   const segments = [...document.querySelectorAll('#cf-segment .chip-opt.active')].map(x => x.dataset.val);
   const pipelines= [...document.querySelectorAll('#cf-pipeline .chip-opt.active')].map(x => x.dataset.val);
-  const dateRange= document.querySelector('#cf-date .chip-opt.active')?.dataset.val || 'YTD';
+  const dateRangeArr = [...document.querySelectorAll('#cf-date .chip-opt.active')].map(x => x.dataset.val);
+  const dateRange = dateRangeArr.length ? dateRangeArr.join(' + ') : 'YTD';
   const desc     = document.getElementById('cf-desc').value.trim();
   const code     = window._cfUploadedCode || '';
 
