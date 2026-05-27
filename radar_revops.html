@@ -1878,6 +1878,7 @@ python fetch_data.py
     </div>
 
     <!-- Generate button -->
+    <div id="connect-error" style="display:none;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:10px;padding:10px 16px;margin-bottom:12px;font-size:12px;color:#F87171;text-align:center"></div>
     <div style="text-align:center;margin:24px 0 10px;display:flex;gap:12px;justify-content:center;align-items:center">
       <button class="connect-generate-btn" onclick="generateConnectPrompt()">✨ Generate Claude Prompt</button>
       <button class="connect-reset-btn" onclick="resetConnectForm()">↺ Start Over</button>
@@ -4712,10 +4713,20 @@ function resetConnectForm() {
   document.querySelector('.connect-body').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
+function showConnectError(msg) {
+  const el = document.getElementById('connect-error');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.display = msg ? 'block' : 'none';
+}
+
 function generateConnectPrompt() {
+  try {
+  showConnectError('');
   const selected = [...document.querySelectorAll('.metric-chip.selected')].map(el => el.dataset.id);
   if (selected.length === 0) {
-    alert('Please select at least one metric in Step 1.');
+    showConnectError('⚠ Please select at least one metric in Step 1 before generating.');
+    document.querySelector('.connect-body').scrollIntoView({ behavior: 'smooth', block: 'start' });
     return;
   }
   const metrics  = RADAR_METRICS.filter(m => selected.includes(m.id));
@@ -4815,6 +4826,10 @@ ${instructions}`;
   const out = document.getElementById('connect-output');
   out.style.display = 'block';
   setTimeout(() => out.scrollIntoView({ behavior:'smooth', block:'start' }), 50);
+  } catch(err) {
+    showConnectError('❌ Error generating prompt: ' + err.message);
+    console.error('generateConnectPrompt error:', err);
+  }
 }
 
 function copyConnectPrompt() {
