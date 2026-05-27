@@ -313,6 +313,8 @@ body{font-family:'Rubik','Bahnschrift Light SemiCondensed','Bahnschrift',Arial,s
 .cf-upload-sub{font-size:10px;color:rgba(255,255,255,.25);margin-top:4px;letter-spacing:.4px}
 .connect-generate-btn{background:linear-gradient(135deg,#1DB954,#00e5a0);color:#030712;border:none;border-radius:10px;padding:13px 36px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;transition:all .2s;box-shadow:0 4px 20px rgba(29,185,84,.3)}
 .connect-generate-btn:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(29,185,84,.45)}
+.connect-reset-btn{background:transparent;color:rgba(255,255,255,.35);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:13px 22px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s}
+.connect-reset-btn:hover{color:rgba(255,255,255,.7);border-color:rgba(255,255,255,.3)}
 .connect-output{background:rgba(0,0,0,.3);border:1px solid rgba(29,185,84,.3);border-radius:14px;overflow:hidden;margin-top:8px;animation:fadeIn .25s ease}
 .connect-output-header{padding:13px 18px;background:rgba(29,185,84,.1);display:flex;justify-content:space-between;align-items:center}
 .connect-output-label{font-size:13px;font-weight:700;color:#1DB954}
@@ -1876,8 +1878,9 @@ python fetch_data.py
     </div>
 
     <!-- Generate button -->
-    <div style="text-align:center;margin:24px 0 10px">
+    <div style="text-align:center;margin:24px 0 10px;display:flex;gap:12px;justify-content:center;align-items:center">
       <button class="connect-generate-btn" onclick="generateConnectPrompt()">✨ Generate Claude Prompt</button>
+      <button class="connect-reset-btn" onclick="resetConnectForm()">↺ Start Over</button>
     </div>
 
     <!-- Output -->
@@ -4702,6 +4705,26 @@ function clearCodeUpload() {
   document.getElementById('cf-upload-preview').style.display = 'none';
 }
 
+function resetConnectForm() {
+  // Deselect all metric chips
+  document.querySelectorAll('.metric-chip.selected').forEach(c => c.classList.remove('selected'));
+  // Clear text inputs
+  document.getElementById('cf-team').value = '';
+  document.getElementById('cf-desc').value = '';
+  // Deactivate segment + pipeline chips
+  document.querySelectorAll('#cf-segment .chip-opt, #cf-pipeline .chip-opt').forEach(c => c.classList.remove('active'));
+  // Reset date range to YTD
+  document.querySelectorAll('#cf-date .chip-opt').forEach(c => c.classList.remove('active'));
+  const ytd = document.querySelector('#cf-date .chip-opt[data-val="YTD"]');
+  if (ytd) ytd.classList.add('active');
+  // Clear uploaded file
+  clearCodeUpload();
+  // Hide output
+  document.getElementById('connect-output').style.display = 'none';
+  // Scroll back to top of section
+  document.querySelector('.connect-body').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
 function generateConnectPrompt() {
   const selected = [...document.querySelectorAll('.metric-chip.selected')].map(el => el.dataset.id);
   if (selected.length === 0) {
@@ -4764,6 +4787,7 @@ Update my existing dashboard code (pasted below) to include live RADAR data:
 • Apply these filters to every query: ${dateRange}${team ? ', filtered to '+team : ''}${segments.length ? ', segment: '+segments.join('/') : ''}${pipelines.length ? ', pipeline: '+pipelines.join('/') : ''}
 • Show a loading spinner while data is fetching
 • Show a clear error message if the Databricks connection fails
+• Add a 🔄 Refresh button that re-runs all queries and updates all values on click
 • Do not change anything in my existing dashboard that is unrelated to the RADAR data`
     : `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 WHAT I NEED YOU TO DO
@@ -4775,6 +4799,7 @@ Build a clean dashboard section that displays the RADAR metrics listed above:
 • Use the exact SQL logic and table names specified above
 • Apply these filters: ${dateRange}${team ? ', filtered to '+team : ''}${segments.length ? ', segment: '+segments.join('/') : ''}${pipelines.length ? ', pipeline: '+pipelines.join('/') : ''}
 • Show a loading state while data fetches
+• Add a 🔄 Refresh button in the header that re-runs all queries and updates all values on click
 • Handle Databricks connection errors gracefully with a helpful message`;
 
   let prompt = `I'm building a dashboard and I want to add live data from RADAR — Sprout Solutions' RevOps data platform on Databricks.
