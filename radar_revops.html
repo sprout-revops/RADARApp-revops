@@ -1875,7 +1875,12 @@ python fetch_data.py
         <div class="chip-opt" data-val="Sales Outbound" onclick="this.classList.toggle('active')">Sales Outbound</div>
         <div class="chip-opt" data-val="Channels" onclick="this.classList.toggle('active')">Channels</div>
         <div class="chip-opt" data-val="CSM Inbound" onclick="this.classList.toggle('active')">CSM Inbound</div>
+        <div class="chip-opt" data-val="CSM Outbound" onclick="this.classList.toggle('active')">CSM Outbound</div>
         <div class="chip-opt" data-val="Upsell Outbound" onclick="this.classList.toggle('active')">Upsell Outbound</div>
+        <div class="chip-opt" data-val="In-house Account" onclick="this.classList.toggle('active')">In-house Account</div>
+        <div class="chip-opt" data-val="LDU Upsell" onclick="this.classList.toggle('active')">LDU Upsell</div>
+        <div class="chip-opt" data-val="Fintech" onclick="this.classList.toggle('active')">Fintech</div>
+        <div class="chip-opt" data-val="Product Led Growth (PLG)" onclick="this.classList.toggle('active')">PLG</div>
       </div>
     </div>
   </div>
@@ -1893,20 +1898,33 @@ python fetch_data.py
     <div class="cf-field-row">
       <div class="cf-field-name">Segment</div>
       <div class="chip-select cf-field-chips" data-table="silver_company" data-field="Segment">
+        <div class="chip-opt" data-val="MICRO" onclick="this.classList.toggle('active')">MICRO</div>
         <div class="chip-opt" data-val="SME" onclick="this.classList.toggle('active')">SME</div>
         <div class="chip-opt" data-val="ENT" onclick="this.classList.toggle('active')">ENT</div>
       </div>
     </div>
     <div class="cf-field-row">
       <div class="cf-field-name">Client Stage</div>
-      <input type="text" class="connect-input" id="cf-client-stage" placeholder="e.g. Onboarding, Steady State, At Risk — leave blank for all" style="flex:1;margin-top:2px">
+      <div class="chip-select cf-field-chips" data-table="silver_company" data-field="client_stage">
+        <div class="chip-opt" data-val="Prospect Lead" onclick="this.classList.toggle('active')">Prospect Lead</div>
+        <div class="chip-opt" data-val="Qualified Lead" onclick="this.classList.toggle('active')">Qualified Lead</div>
+        <div class="chip-opt" data-val="Pre-Handover" onclick="this.classList.toggle('active')">Pre-Handover</div>
+        <div class="chip-opt" data-val="Sales Handover" onclick="this.classList.toggle('active')">Sales Handover</div>
+        <div class="chip-opt" data-val="Customer Onboarding" onclick="this.classList.toggle('active')">Customer Onboarding</div>
+        <div class="chip-opt" data-val="Customer Success" onclick="this.classList.toggle('active')">Customer Success</div>
+      </div>
     </div>
     <div class="cf-field-row">
       <div class="cf-field-name">Client Status</div>
       <div class="chip-select cf-field-chips" data-table="silver_company" data-field="Client_status">
+        <div class="chip-opt" data-val="New Project" onclick="this.classList.toggle('active')">New Project</div>
+        <div class="chip-opt" data-val="On-Track" onclick="this.classList.toggle('active')">On-Track</div>
+        <div class="chip-opt" data-val="Off-Track" onclick="this.classList.toggle('active')">Off-Track</div>
+        <div class="chip-opt" data-val="On-Hold" onclick="this.classList.toggle('active')">On-Hold</div>
         <div class="chip-opt" data-val="Active" onclick="this.classList.toggle('active')">Active</div>
         <div class="chip-opt" data-val="Churned" onclick="this.classList.toggle('active')">Churned</div>
-        <div class="chip-opt" data-val="Prospect" onclick="this.classList.toggle('active')">Prospect</div>
+        <div class="chip-opt" data-val="Renewal" onclick="this.classList.toggle('active')">Renewal</div>
+        <div class="chip-opt" data-val="Return to Sales" onclick="this.classList.toggle('active')">Return to Sales</div>
       </div>
     </div>
     <div class="cf-field-row">
@@ -1919,7 +1937,12 @@ python fetch_data.py
     </div>
     <div class="cf-field-row">
       <div class="cf-field-name">Service Level</div>
-      <input type="text" class="connect-input" id="cf-service-level" placeholder="e.g. Tier 1, Tier 2, Tier 3 — leave blank for all" style="flex:1;margin-top:2px">
+      <div class="chip-select cf-field-chips" data-table="silver_company" data-field="service_level">
+        <div class="chip-opt" data-val="MSME" onclick="this.classList.toggle('active')">MSME</div>
+        <div class="chip-opt" data-val="SME" onclick="this.classList.toggle('active')">SME</div>
+        <div class="chip-opt" data-val="Enterprise" onclick="this.classList.toggle('active')">Enterprise</div>
+        <div class="chip-opt" data-val="Channels" onclick="this.classList.toggle('active')">Channels</div>
+      </div>
     </div>
   </div>
 
@@ -1980,6 +2003,11 @@ python fetch_data.py
         <div class="chip-opt" data-val="CSM Outbound" onclick="this.classList.toggle('active')">CSM Outbound</div>
         <div class="chip-opt" data-val="Sales Outbound" onclick="this.classList.toggle('active')">Sales Outbound</div>
         <div class="chip-opt" data-val="Channels" onclick="this.classList.toggle('active')">Channels</div>
+        <div class="chip-opt" data-val="Upsell Outbound" onclick="this.classList.toggle('active')">Upsell Outbound</div>
+        <div class="chip-opt" data-val="In-house Account" onclick="this.classList.toggle('active')">In-house Account</div>
+        <div class="chip-opt" data-val="LDU Upsell" onclick="this.classList.toggle('active')">LDU Upsell</div>
+        <div class="chip-opt" data-val="Fintech" onclick="this.classList.toggle('active')">Fintech</div>
+        <div class="chip-opt" data-val="Product Led Growth (PLG)" onclick="this.classList.toggle('active')">PLG</div>
       </div>
     </div>
     <div class="cf-field-row">
@@ -1990,6 +2018,10 @@ python fetch_data.py
         <div class="chip-opt" data-val="promoter_or_champion" onclick="this.classList.toggle('active')">Champion</div>
         <div class="chip-opt" data-val="influencer" onclick="this.classList.toggle('active')">Influencer</div>
         <div class="chip-opt" data-val="detractor_or_blocker" onclick="this.classList.toggle('active')">Detractor</div>
+        <div class="chip-opt" data-val="executive_sponsor" onclick="this.classList.toggle('active')">Executive Sponsor</div>
+        <div class="chip-opt" data-val="buyer" onclick="this.classList.toggle('active')">Budget Owner</div>
+        <div class="chip-opt" data-val="user" onclick="this.classList.toggle('active')">User</div>
+        <div class="chip-opt" data-val="Legal and Compliance" onclick="this.classList.toggle('active')">Legal &amp; Compliance</div>
       </div>
     </div>
     <div class="cf-field-row">
@@ -1997,11 +2029,14 @@ python fetch_data.py
       <div class="chip-select cf-field-chips" data-table="silver_contacts" data-field="analytics_source">
         <div class="chip-opt" data-val="ORGANIC_SEARCH" onclick="this.classList.toggle('active')">Organic Search</div>
         <div class="chip-opt" data-val="PAID_SEARCH" onclick="this.classList.toggle('active')">Paid Search</div>
+        <div class="chip-opt" data-val="PAID_SOCIAL" onclick="this.classList.toggle('active')">Paid Social</div>
         <div class="chip-opt" data-val="EMAIL_MARKETING" onclick="this.classList.toggle('active')">Email Marketing</div>
         <div class="chip-opt" data-val="SOCIAL_MEDIA" onclick="this.classList.toggle('active')">Organic Social</div>
         <div class="chip-opt" data-val="REFERRALS" onclick="this.classList.toggle('active')">Referrals</div>
         <div class="chip-opt" data-val="DIRECT_TRAFFIC" onclick="this.classList.toggle('active')">Direct Traffic</div>
+        <div class="chip-opt" data-val="OFFLINE" onclick="this.classList.toggle('active')">Offline Sources</div>
         <div class="chip-opt" data-val="OTHER_CAMPAIGNS" onclick="this.classList.toggle('active')">Other Campaigns</div>
+        <div class="chip-opt" data-val="AI_REFERRALS" onclick="this.classList.toggle('active')">AI Referrals</div>
       </div>
     </div>
   </div>
@@ -2017,6 +2052,11 @@ python fetch_data.py
         <div class="chip-opt" data-val="CSM Outbound" onclick="this.classList.toggle('active')">CSM Outbound</div>
         <div class="chip-opt" data-val="Sales Outbound" onclick="this.classList.toggle('active')">Sales Outbound</div>
         <div class="chip-opt" data-val="Channels" onclick="this.classList.toggle('active')">Channels</div>
+        <div class="chip-opt" data-val="Upsell Outbound" onclick="this.classList.toggle('active')">Upsell Outbound</div>
+        <div class="chip-opt" data-val="In-house Account" onclick="this.classList.toggle('active')">In-house Account</div>
+        <div class="chip-opt" data-val="LDU Upsell" onclick="this.classList.toggle('active')">LDU Upsell</div>
+        <div class="chip-opt" data-val="Fintech" onclick="this.classList.toggle('active')">Fintech</div>
+        <div class="chip-opt" data-val="Product Led Growth (PLG)" onclick="this.classList.toggle('active')">PLG</div>
       </div>
     </div>
     <div class="cf-field-row">
@@ -2024,10 +2064,12 @@ python fetch_data.py
       <div class="chip-select cf-field-chips" data-table="silver_leads" data-field="lead_source">
         <div class="chip-opt" data-val="ORGANIC_SEARCH" onclick="this.classList.toggle('active')">Organic Search</div>
         <div class="chip-opt" data-val="PAID_SEARCH" onclick="this.classList.toggle('active')">Paid Search</div>
+        <div class="chip-opt" data-val="PAID_SOCIAL" onclick="this.classList.toggle('active')">Paid Social</div>
         <div class="chip-opt" data-val="EMAIL_MARKETING" onclick="this.classList.toggle('active')">Email Marketing</div>
         <div class="chip-opt" data-val="SOCIAL_MEDIA" onclick="this.classList.toggle('active')">Organic Social</div>
         <div class="chip-opt" data-val="REFERRALS" onclick="this.classList.toggle('active')">Referrals</div>
         <div class="chip-opt" data-val="DIRECT_TRAFFIC" onclick="this.classList.toggle('active')">Direct Traffic</div>
+        <div class="chip-opt" data-val="OFFLINE" onclick="this.classList.toggle('active')">Offline Sources</div>
         <div class="chip-opt" data-val="OTHER_CAMPAIGNS" onclick="this.classList.toggle('active')">Other Campaigns</div>
       </div>
     </div>
@@ -5197,7 +5239,7 @@ function resetConnectForm() {
   const firstTab = document.querySelector('.cf-table-tab');
   if (firstTab) { firstTab.classList.add('active'); switchFilterTable('deals', firstTab); }
   // Clear all text filter inputs
-  ['cf-client-stage','cf-client-type','cf-industry','cf-service-level',
+  ['cf-client-type','cf-industry',
    'cf-li-product-category','cf-li-product-group','cf-li-clan','cf-li-tribe',
    'cf-lead-stage',
    'cf-lic-product-category','cf-lic-product-group','cf-lic-clan','cf-lic-tribe'
@@ -5247,14 +5289,10 @@ function generateConnectPrompt() {
     if (vals.length) fieldFilters.push(`• ${tbl}.${field} IN (${vals.map(v => "'" + v + "'").join(', ')})`);
   });
   // Company text filters
-  const clientStage   = tv('cf-client-stage');
   const clientType    = tv('cf-client-type');
   const industry      = tv('cf-industry');
-  const serviceLevel  = tv('cf-service-level');
-  if (clientStage)  fieldFilters.push(`• silver_company.Client_stage: ${clientStage}`);
   if (clientType)   fieldFilters.push(`• silver_company.Client_type: ${clientType}`);
   if (industry)     fieldFilters.push(`• silver_company.Industry: ${industry}`);
-  if (serviceLevel) fieldFilters.push(`• silver_company.service_level: ${serviceLevel}`);
   // Line Items text filters
   const liProductCategory = tv('cf-li-product-category');
   const liProductGroup    = tv('cf-li-product-group');
