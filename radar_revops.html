@@ -4619,7 +4619,7 @@ document.querySelectorAll('.home-card').forEach(card => {
 });
 
 // ── CONNECT TO RADAR ──────────────────────────────────────────────
-const RADAR_METRICS = [
+var RADAR_METRICS = [
   // ── Revenue ──────────────────────────────────────────────────────────────
   { id:'won_mrr',         label:'MRR Won',               desc:'Monthly Recurring Revenue from closed-won deals. Formula: Sum of MRR where Term >= 12 months',                                   sql:"SELECT DATE_TRUNC('month',close_date) AS metric_month, pipeline_name, CASE WHEN UPPER(segment)='MICRO' THEN 'SME' ELSE segment END AS segment, SUM(COALESCE(mrr,0)) AS won_mrr FROM shared.revops.silver_deals WHERE close_date IS NOT NULL AND client_journey_stage='Customer' AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%' GROUP BY 1,2,3 ORDER BY 1 DESC",  table:'silver_deals' },
   { id:'arr',             label:'ARR',                    desc:'Annual Recurring Revenue. Formula: Sum of ARR or MRR x 12',                                                                       sql:"SELECT DATE_TRUNC('month',close_date) AS metric_month, SUM(COALESCE(mrr,0))*12 AS arr FROM shared.revops.silver_deals WHERE close_date IS NOT NULL AND client_journey_stage='Customer' AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%' GROUP BY 1 ORDER BY 1 DESC",   table:'silver_deals' },
