@@ -306,6 +306,11 @@ body{font-family:'Rubik','Bahnschrift Light SemiCondensed','Bahnschrift',Arial,s
 .connect-textarea{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:10px;padding:12px 14px;font-size:12px;color:#e2e8f0;outline:none;resize:vertical;font-family:inherit;line-height:1.6}
 .connect-textarea:focus{border-color:rgba(29,185,84,.4)}
 .connect-textarea.connect-code{font-family:"Courier New",monospace;font-size:11px;color:#86EFAC;background:rgba(0,0,0,.25)}
+.cf-upload-zone{border:2px dashed rgba(255,255,255,.12);border-radius:12px;padding:32px 20px;text-align:center;cursor:pointer;transition:all .2s;background:rgba(255,255,255,.02)}
+.cf-upload-zone:hover,.cf-upload-zone.drag-over{border-color:#1DB954;background:rgba(29,185,84,.06)}
+.cf-upload-icon{font-size:28px;margin-bottom:8px}
+.cf-upload-label{font-size:13px;font-weight:600;color:rgba(255,255,255,.55)}
+.cf-upload-sub{font-size:10px;color:rgba(255,255,255,.25);margin-top:4px;letter-spacing:.4px}
 .connect-generate-btn{background:linear-gradient(135deg,#1DB954,#00e5a0);color:#030712;border:none;border-radius:10px;padding:13px 36px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;transition:all .2s;box-shadow:0 4px 20px rgba(29,185,84,.3)}
 .connect-generate-btn:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(29,185,84,.45)}
 .connect-output{background:rgba(0,0,0,.3);border:1px solid rgba(29,185,84,.3);border-radius:14px;overflow:hidden;margin-top:8px;animation:fadeIn .25s ease}
@@ -1850,10 +1855,24 @@ python fetch_data.py
     <div class="connect-step">
       <div class="connect-step-header">
         <div class="connect-step-num">4</div>
-        <div class="connect-step-title">Paste your current dashboard or script <span class="optional-tag">Optional but recommended</span></div>
+        <div class="connect-step-title">Upload your current dashboard or script <span class="optional-tag">Optional but recommended</span></div>
       </div>
-      <div class="connect-step-desc">Claude will update your existing code directly — no need to rebuild from scratch. Paste your HTML, Python script, or any code you're working with.</div>
-      <textarea class="connect-textarea connect-code" id="cf-code" placeholder="Paste your current dashboard code here..." rows="8"></textarea>
+      <div class="connect-step-desc">Claude will update your existing code directly — no need to rebuild from scratch. Upload your HTML, Python script, or any code file.</div>
+      <input type="file" id="cf-code-file" accept=".html,.py,.js,.ts,.txt,.sql,.ipynb,.csv" style="display:none" onchange="handleCodeUpload(this)">
+      <div class="cf-upload-zone" id="cf-upload-zone" onclick="document.getElementById('cf-code-file').click()"
+           ondragover="event.preventDefault();this.classList.add('drag-over')"
+           ondragleave="this.classList.remove('drag-over')"
+           ondrop="event.preventDefault();this.classList.remove('drag-over');handleCodeUploadDrop(event)">
+        <div class="cf-upload-icon">📂</div>
+        <div class="cf-upload-label" id="cf-upload-label">Click to upload or drag & drop your file</div>
+        <div class="cf-upload-sub">.html · .py · .js · .sql · .txt · .ipynb</div>
+      </div>
+      <div id="cf-upload-preview" style="display:none;margin-top:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:10px 14px;display:none;align-items:center;gap:10px">
+        <span style="font-size:18px">📄</span>
+        <span id="cf-upload-filename" style="font-size:12px;color:#94A3B8;flex:1"></span>
+        <span id="cf-upload-size" style="font-size:11px;color:rgba(255,255,255,.3)"></span>
+        <button onclick="clearCodeUpload()" style="background:none;border:none;color:rgba(255,255,255,.3);cursor:pointer;font-size:16px;padding:0 4px" title="Remove file">✕</button>
+      </div>
     </div>
 
     <!-- Generate button -->
@@ -4647,6 +4666,42 @@ function initConnectSection() {
   });
 }
 
+window._cfUploadedCode = '';
+
+function handleCodeUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  readUploadedFile(file);
+}
+
+function handleCodeUploadDrop(event) {
+  const file = event.dataTransfer.files[0];
+  if (!file) return;
+  readUploadedFile(file);
+}
+
+function readUploadedFile(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    window._cfUploadedCode = e.target.result;
+    const preview = document.getElementById('cf-upload-preview');
+    document.getElementById('cf-upload-filename').textContent = file.name;
+    document.getElementById('cf-upload-size').textContent = (file.size / 1024).toFixed(1) + ' KB';
+    document.getElementById('cf-upload-label').textContent = '✓ ' + file.name;
+    document.getElementById('cf-upload-label').style.color = '#1DB954';
+    preview.style.display = 'flex';
+  };
+  reader.readAsText(file);
+}
+
+function clearCodeUpload() {
+  window._cfUploadedCode = '';
+  document.getElementById('cf-code-file').value = '';
+  document.getElementById('cf-upload-label').textContent = 'Click to upload or drag & drop your file';
+  document.getElementById('cf-upload-label').style.color = '';
+  document.getElementById('cf-upload-preview').style.display = 'none';
+}
+
 function generateConnectPrompt() {
   const selected = [...document.querySelectorAll('.metric-chip.selected')].map(el => el.dataset.id);
   if (selected.length === 0) {
@@ -4659,7 +4714,7 @@ function generateConnectPrompt() {
   const pipelines= [...document.querySelectorAll('#cf-pipeline .chip-opt.active')].map(x => x.dataset.val);
   const dateRange= document.querySelector('#cf-date .chip-opt.active')?.dataset.val || 'YTD';
   const desc     = document.getElementById('cf-desc').value.trim();
-  const code     = document.getElementById('cf-code').value.trim();
+  const code     = window._cfUploadedCode || '';
 
   const filterLines = [
     `• Date Range: ${dateRange}`,
