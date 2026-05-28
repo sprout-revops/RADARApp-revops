@@ -1983,11 +1983,51 @@ python fetch_data.py
     </div>
     <div class="cf-field-row">
       <div class="cf-field-name">Client Type</div>
-      <input type="text" class="connect-input" id="cf-client-type" placeholder="e.g. Key Accounts, Channel Partner, Conglomerate — leave blank for all" style="flex:1;margin-top:2px">
+            <div class="cf-multiselect" data-table="silver_company" data-field="Client_type">
+      <button type="button" class="cf-ms-trigger" onclick="toggleMultiselect(this.parentElement)">
+        <span class="cf-ms-display">&#8212; All &#8212;</span><span class="cf-ms-arrow">&#9660;</span>
+      </button>
+      <div class="cf-ms-menu">
+        <label class="cf-ms-opt"><input type="checkbox" value="Direct" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Direct</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Indirect" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Indirect</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Key Accounts" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Key Accounts</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Channel Partner" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Channel Partner</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Conglomerate" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Conglomerate</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Group Parent" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Group Parent</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Group Child" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Group Child</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Just Payroll" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Just Payroll</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="MSP" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> MSP</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="VAR" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> VAR</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="SPP" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> SPP</label>
+      </div>
+    </div>
     </div>
     <div class="cf-field-row">
       <div class="cf-field-name">Industry</div>
-      <input type="text" class="connect-input" id="cf-industry" placeholder="e.g. Manufacturing, BPO, Retail — leave blank for all" style="flex:1;margin-top:2px">
+            <div class="cf-multiselect" data-table="silver_company" data-field="Industry">
+      <button type="button" class="cf-ms-trigger" onclick="toggleMultiselect(this.parentElement)">
+        <span class="cf-ms-display">&#8212; All &#8212;</span><span class="cf-ms-arrow">&#9660;</span>
+      </button>
+      <div class="cf-ms-menu">
+        <label class="cf-ms-opt"><input type="checkbox" value="Banking" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Banking</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Computer Software" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Computer Software</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Construction" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Construction</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Education Management" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Education</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Financial Services" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Financial Services</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Food & Beverages" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Food & Beverages</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Government Administration" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Government</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Hospital & Health Care" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Healthcare</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Human Resources" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Human Resources</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Information Technology and Services" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> IT Services</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Insurance" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Insurance</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Manufacturing" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Manufacturing</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Outsourcing/Offshoring" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> BPO / Outsourcing</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Real Estate" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Real Estate</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Retail" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Retail</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Staffing and Recruiting" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Staffing & Recruiting</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Telecommunications" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Telecommunications</label>
+      </div>
+    </div>
     </div>
     <div class="cf-field-row">
       <div class="cf-field-name">Service Level</div>
@@ -2029,19 +2069,58 @@ python fetch_data.py
     </div>
     <div class="cf-field-row">
       <div class="cf-field-name">Product Category</div>
-      <input type="text" class="connect-input" id="cf-li-product-category" placeholder="e.g. Core HR, Payroll, Recruitment — leave blank for all" style="flex:1;margin-top:2px">
+            <div class="cf-multiselect" data-table="silver_line_items" data-field="product_category">
+      <button type="button" class="cf-ms-trigger" onclick="toggleMultiselect(this.parentElement)">
+        <span class="cf-ms-display">&#8212; All &#8212;</span><span class="cf-ms-arrow">&#9660;</span>
+      </button>
+      <div class="cf-ms-menu">
+        <label class="cf-ms-opt"><input type="checkbox" value="Core" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Core</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Business" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Business</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Talent" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Talent</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Retention" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Retention</label>
+      </div>
+    </div>
     </div>
     <div class="cf-field-row">
       <div class="cf-field-name">Product Group</div>
-      <input type="text" class="connect-input" id="cf-li-product-group" placeholder="Leave blank for all" style="flex:1;margin-top:2px">
+            <div class="cf-multiselect" data-table="silver_line_items" data-field="product_group">
+      <button type="button" class="cf-ms-trigger" onclick="toggleMultiselect(this.parentElement)">
+        <span class="cf-ms-display">&#8212; All &#8212;</span><span class="cf-ms-arrow">&#9660;</span>
+      </button>
+      <div class="cf-ms-menu">
+        <label class="cf-ms-opt"><input type="checkbox" value="First Party" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> First Party</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Third Party" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Third Party</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Services" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Services</label>
+      </div>
+    </div>
     </div>
     <div class="cf-field-row">
       <div class="cf-field-name">Clan</div>
-      <input type="text" class="connect-input" id="cf-li-clan" placeholder="Leave blank for all" style="flex:1;margin-top:2px">
+            <div class="cf-multiselect" data-table="silver_line_items" data-field="clan">
+      <button type="button" class="cf-ms-trigger" onclick="toggleMultiselect(this.parentElement)">
+        <span class="cf-ms-display">&#8212; All &#8212;</span><span class="cf-ms-arrow">&#9660;</span>
+      </button>
+      <div class="cf-ms-menu">
+        <label class="cf-ms-opt"><input type="checkbox" value="In-House" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> In-House</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Managed Services" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Managed Services</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Partner - Referral" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Partner - Referral</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Partner - Reseller" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Partner - Reseller</label>
+      </div>
+    </div>
     </div>
     <div class="cf-field-row">
       <div class="cf-field-name">Tribe</div>
-      <input type="text" class="connect-input" id="cf-li-tribe" placeholder="Leave blank for all" style="flex:1;margin-top:2px">
+            <div class="cf-multiselect" data-table="silver_line_items" data-field="tribe_new">
+      <button type="button" class="cf-ms-trigger" onclick="toggleMultiselect(this.parentElement)">
+        <span class="cf-ms-display">&#8212; All &#8212;</span><span class="cf-ms-arrow">&#9660;</span>
+      </button>
+      <div class="cf-ms-menu">
+        <label class="cf-ms-opt"><input type="checkbox" value="Core" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Core</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Ecosystem" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Ecosystem</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Embedded Finance" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Embedded Finance</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="AI" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> AI</label>
+      </div>
+    </div>
     </div>
   </div>
 
@@ -2171,7 +2250,20 @@ python fetch_data.py
     </div>
     <div class="cf-field-row">
       <div class="cf-field-name">Lead Stage</div>
-      <input type="text" class="connect-input" id="cf-lead-stage" placeholder="e.g. Appointment Scheduled, Solutioning — leave blank for all" style="flex:1;margin-top:2px">
+            <div class="cf-multiselect" data-table="silver_leads" data-field="pipeline_stage">
+      <button type="button" class="cf-ms-trigger" onclick="toggleMultiselect(this.parentElement)">
+        <span class="cf-ms-display">&#8212; All &#8212;</span><span class="cf-ms-arrow">&#9660;</span>
+      </button>
+      <div class="cf-ms-menu">
+        <label class="cf-ms-opt"><input type="checkbox" value="New" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> New</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="For Follow-Up" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> For Follow-Up</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="For Nurturing" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> For Nurturing</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="For Scheduling" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> For Scheduling</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Unresponsive" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Unresponsive</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Qualified" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Qualified</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Disqualified" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Disqualified</label>
+      </div>
+    </div>
     </div>
   </div>
 
@@ -2213,19 +2305,58 @@ python fetch_data.py
     </div>
     <div class="cf-field-row">
       <div class="cf-field-name">Product Category</div>
-      <input type="text" class="connect-input" id="cf-lic-product-category" placeholder="Leave blank for all" style="flex:1;margin-top:2px">
+            <div class="cf-multiselect" data-table="silver_licenses" data-field="product_category">
+      <button type="button" class="cf-ms-trigger" onclick="toggleMultiselect(this.parentElement)">
+        <span class="cf-ms-display">&#8212; All &#8212;</span><span class="cf-ms-arrow">&#9660;</span>
+      </button>
+      <div class="cf-ms-menu">
+        <label class="cf-ms-opt"><input type="checkbox" value="Core" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Core</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Business" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Business</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Talent" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Talent</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Retention" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Retention</label>
+      </div>
+    </div>
     </div>
     <div class="cf-field-row">
       <div class="cf-field-name">Product Group</div>
-      <input type="text" class="connect-input" id="cf-lic-product-group" placeholder="Leave blank for all" style="flex:1;margin-top:2px">
+            <div class="cf-multiselect" data-table="silver_licenses" data-field="product_group">
+      <button type="button" class="cf-ms-trigger" onclick="toggleMultiselect(this.parentElement)">
+        <span class="cf-ms-display">&#8212; All &#8212;</span><span class="cf-ms-arrow">&#9660;</span>
+      </button>
+      <div class="cf-ms-menu">
+        <label class="cf-ms-opt"><input type="checkbox" value="First Party" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> First Party</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Third Party" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Third Party</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Services" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Services</label>
+      </div>
+    </div>
     </div>
     <div class="cf-field-row">
       <div class="cf-field-name">Clan</div>
-      <input type="text" class="connect-input" id="cf-lic-clan" placeholder="Leave blank for all" style="flex:1;margin-top:2px">
+            <div class="cf-multiselect" data-table="silver_licenses" data-field="clan">
+      <button type="button" class="cf-ms-trigger" onclick="toggleMultiselect(this.parentElement)">
+        <span class="cf-ms-display">&#8212; All &#8212;</span><span class="cf-ms-arrow">&#9660;</span>
+      </button>
+      <div class="cf-ms-menu">
+        <label class="cf-ms-opt"><input type="checkbox" value="In-House" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> In-House</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Managed Services" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Managed Services</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Partner - Referral" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Partner - Referral</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Partner - Reseller" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Partner - Reseller</label>
+      </div>
+    </div>
     </div>
     <div class="cf-field-row">
       <div class="cf-field-name">Tribe</div>
-      <input type="text" class="connect-input" id="cf-lic-tribe" placeholder="Leave blank for all" style="flex:1;margin-top:2px">
+            <div class="cf-multiselect" data-table="silver_licenses" data-field="tribe_new">
+      <button type="button" class="cf-ms-trigger" onclick="toggleMultiselect(this.parentElement)">
+        <span class="cf-ms-display">&#8212; All &#8212;</span><span class="cf-ms-arrow">&#9660;</span>
+      </button>
+      <div class="cf-ms-menu">
+        <label class="cf-ms-opt"><input type="checkbox" value="Core" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Core</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Ecosystem" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Ecosystem</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Embedded Finance" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Embedded Finance</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="AI" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> AI</label>
+      </div>
+    </div>
     </div>
   </div>
 
@@ -5379,12 +5510,7 @@ function resetConnectForm() {
   document.querySelectorAll('.cf-table-tab').forEach(t => t.classList.remove('active'));
   const firstTab = document.querySelector('.cf-table-tab');
   if (firstTab) { firstTab.classList.add('active'); switchFilterTable('deals', firstTab); }
-  // Clear all text filter inputs
-  ['cf-client-type','cf-industry',
-   'cf-li-product-category','cf-li-product-group','cf-li-clan','cf-li-tribe',
-   'cf-lead-stage',
-   'cf-lic-product-category','cf-lic-product-group','cf-lic-clan','cf-lic-tribe'
-  ].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  // (all field filters are now multiselect dropdowns — cleared above)
   // Reset date range — deselect all, re-select YTD
   document.querySelectorAll('#cf-date .chip-opt').forEach(c => c.classList.remove('active'));
   const ytd = document.querySelector('#cf-date .chip-opt[data-val="YTD"]');
@@ -5419,9 +5545,6 @@ function generateConnectPrompt() {
   const desc     = document.getElementById('cf-desc').value.trim();
   const code     = window._cfUploadedCode || '';
 
-  // Helper to safely read a text input
-  const tv = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
-
   const fieldFilters = [];
   document.querySelectorAll('.cf-multiselect').forEach(ms => {
     const tbl   = ms.dataset.table;
@@ -5429,32 +5552,6 @@ function generateConnectPrompt() {
     const vals  = [...ms.querySelectorAll('input[type=checkbox]:checked')].map(x => x.value);
     if (vals.length) fieldFilters.push(`• ${tbl}.${field} IN (${vals.map(v => "'" + v + "'").join(', ')})`);
   });
-  // Company text filters
-  const clientType    = tv('cf-client-type');
-  const industry      = tv('cf-industry');
-  if (clientType)   fieldFilters.push(`• silver_company.Client_type: ${clientType}`);
-  if (industry)     fieldFilters.push(`• silver_company.Industry: ${industry}`);
-  // Line Items text filters
-  const liProductCategory = tv('cf-li-product-category');
-  const liProductGroup    = tv('cf-li-product-group');
-  const liClan            = tv('cf-li-clan');
-  const liTribe           = tv('cf-li-tribe');
-  if (liProductCategory) fieldFilters.push(`• silver_line_items.product_category: ${liProductCategory}`);
-  if (liProductGroup)    fieldFilters.push(`• silver_line_items.product_group: ${liProductGroup}`);
-  if (liClan)            fieldFilters.push(`• silver_line_items.clan: ${liClan}`);
-  if (liTribe)           fieldFilters.push(`• silver_line_items.tribe_new: ${liTribe}`);
-  // Leads text filters
-  const leadStage = tv('cf-lead-stage');
-  if (leadStage) fieldFilters.push(`• silver_leads.pipeline_stage: ${leadStage}`);
-  // Licenses text filters
-  const licProductCategory = tv('cf-lic-product-category');
-  const licProductGroup    = tv('cf-lic-product-group');
-  const licClan            = tv('cf-lic-clan');
-  const licTribe           = tv('cf-lic-tribe');
-  if (licProductCategory) fieldFilters.push(`• silver_licenses.product_category: ${licProductCategory}`);
-  if (licProductGroup)    fieldFilters.push(`• silver_licenses.product_group: ${licProductGroup}`);
-  if (licClan)            fieldFilters.push(`• silver_licenses.clan: ${licClan}`);
-  if (licTribe)           fieldFilters.push(`• silver_licenses.tribe_new: ${licTribe}`);
 
   const filterLines = [
     `• Date Range: ${dateRange}`,
