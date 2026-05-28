@@ -303,6 +303,21 @@ body{font-family:'Rubik','Bahnschrift Light SemiCondensed','Bahnschrift',Arial,s
 .chip-opt{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:600;color:rgba(255,255,255,.4);cursor:pointer;transition:all .15s}
 .chip-opt:hover{border-color:rgba(29,185,84,.5);color:#1DB954}
 .chip-opt.active{background:rgba(29,185,84,.15);border-color:#1DB954;color:#1DB954}
+/* ── Multi-select dropdowns (Step 2) ── */
+.cf-multiselect{position:relative;flex:1}
+.cf-ms-trigger{width:100%;display:flex;justify-content:space-between;align-items:center;padding:7px 12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:8px;cursor:pointer;color:#c5c9e8;font-size:13px;text-align:left;font-family:inherit;transition:border-color .15s,background .15s}
+.cf-ms-trigger:hover{border-color:#5b6bff;background:rgba(91,107,255,.1)}
+.cf-ms-trigger.open{border-color:#5b6bff;border-bottom-left-radius:0;border-bottom-right-radius:0}
+.cf-ms-display{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(255,255,255,.4)}
+.cf-ms-display.has-value{color:#c5c9e8}
+.cf-ms-arrow{font-size:10px;opacity:.55;transition:transform .15s;flex-shrink:0;margin-left:6px}
+.cf-ms-trigger.open .cf-ms-arrow{transform:rotate(180deg)}
+.cf-ms-menu{display:none;position:absolute;top:100%;left:0;right:0;background:#1a1d2e;border:1px solid #5b6bff;border-top:none;border-bottom-left-radius:8px;border-bottom-right-radius:8px;max-height:220px;overflow-y:auto;z-index:300;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.cf-ms-trigger.open+.cf-ms-menu{display:block}
+.cf-ms-opt{display:flex;align-items:center;gap:9px;padding:7px 12px;cursor:pointer;font-size:12.5px;color:#c5c9e8;user-select:none}
+.cf-ms-opt:hover{background:rgba(91,107,255,.15)}
+.cf-ms-opt:has(input:checked){background:rgba(91,107,255,.1);color:#a5b4fc}
+.cf-ms-opt input[type=checkbox]{accent-color:#5b6bff;flex-shrink:0;cursor:pointer;width:14px;height:14px}
 .connect-textarea{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:10px;padding:12px 14px;font-size:12px;color:#e2e8f0;outline:none;resize:vertical;font-family:inherit;line-height:1.6}
 .connect-textarea:focus{border-color:rgba(29,185,84,.4)}
 .connect-textarea.connect-code{font-family:"Courier New",monospace;font-size:11px;color:#86EFAC;background:rgba(0,0,0,.25)}
@@ -1848,40 +1863,55 @@ python fetch_data.py
   <div class="cf-table-panel" id="cf-panel-deals">
     <div class="cf-field-row">
       <div class="cf-field-name">Pipeline</div>
-      <div class="chip-select cf-field-chips" data-table="silver_deals" data-field="pipeline_name">
-        <div class="chip-opt" data-val="Sales Pipeline" onclick="this.classList.toggle('active')">Sales Pipeline</div>
-        <div class="chip-opt" data-val="TH Sales Pipeline" onclick="this.classList.toggle('active')">TH Sales Pipeline</div>
-        <div class="chip-opt" data-val="PH Upsell Pipeline" onclick="this.classList.toggle('active')">PH Upsell Pipeline</div>
-        <div class="chip-opt" data-val="Unified Channel Pipeline" onclick="this.classList.toggle('active')">Unified Channel Pipeline</div>
+      <div class="cf-multiselect" data-table="silver_deals" data-field="pipeline_name">
+      <button type="button" class="cf-ms-trigger" onclick="toggleMultiselect(this.parentElement)">
+        <span class="cf-ms-display">&#8212; All &#8212;</span><span class="cf-ms-arrow">&#9660;</span>
+      </button>
+      <div class="cf-ms-menu">
+        <label class="cf-ms-opt"><input type="checkbox" value="Sales Pipeline" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Sales Pipeline</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="TH Sales Pipeline" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> TH Sales Pipeline</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="PH Upsell Pipeline" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> PH Upsell Pipeline</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Unified Channel Pipeline" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Unified Channel Pipeline</label>
       </div>
+    </div>
     </div>
     <div class="cf-field-row">
       <div class="cf-field-name">Deal Stage</div>
-      <div class="chip-select cf-field-chips" data-table="silver_deals" data-field="stage_label">
-        <div class="chip-opt" data-val="Appointment Scheduled" onclick="this.classList.toggle('active')">Appointment Scheduled</div>
-        <div class="chip-opt" data-val="Initial Demo Done" onclick="this.classList.toggle('active')">Initial Demo Done</div>
-        <div class="chip-opt" data-val="Solutioning" onclick="this.classList.toggle('active')">Solutioning</div>
-        <div class="chip-opt" data-val="Commercial Negotiation" onclick="this.classList.toggle('active')">Commercial Negotiation</div>
-        <div class="chip-opt" data-val="Committed Accounts" onclick="this.classList.toggle('active')">Committed Accounts</div>
-        <div class="chip-opt" data-val="Closed Lost" onclick="this.classList.toggle('active')">Closed Lost</div>
-        <div class="chip-opt" data-val="Disqualified" onclick="this.classList.toggle('active')">Disqualified</div>
+      <div class="cf-multiselect" data-table="silver_deals" data-field="stage_label">
+      <button type="button" class="cf-ms-trigger" onclick="toggleMultiselect(this.parentElement)">
+        <span class="cf-ms-display">&#8212; All &#8212;</span><span class="cf-ms-arrow">&#9660;</span>
+      </button>
+      <div class="cf-ms-menu">
+        <label class="cf-ms-opt"><input type="checkbox" value="Appointment Scheduled" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Appointment Scheduled</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Initial Demo Done" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Initial Demo Done</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Solutioning" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Solutioning</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Commercial Negotiation" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Commercial Negotiation</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Committed Accounts" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Committed Accounts</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Closed Lost" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Closed Lost</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Disqualified" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Disqualified</label>
       </div>
+    </div>
     </div>
     <div class="cf-field-row">
       <div class="cf-field-name">Dept Source</div>
-      <div class="chip-select cf-field-chips" data-table="silver_deals" data-field="department_source_clean">
-        <div class="chip-opt" data-val="MKT Inbound" onclick="this.classList.toggle('active')">MKT Inbound</div>
-        <div class="chip-opt" data-val="LDU Outbound" onclick="this.classList.toggle('active')">LDU Outbound</div>
-        <div class="chip-opt" data-val="Sales Outbound" onclick="this.classList.toggle('active')">Sales Outbound</div>
-        <div class="chip-opt" data-val="Channels" onclick="this.classList.toggle('active')">Channels</div>
-        <div class="chip-opt" data-val="CSM Inbound" onclick="this.classList.toggle('active')">CSM Inbound</div>
-        <div class="chip-opt" data-val="CSM Outbound" onclick="this.classList.toggle('active')">CSM Outbound</div>
-        <div class="chip-opt" data-val="Upsell Outbound" onclick="this.classList.toggle('active')">Upsell Outbound</div>
-        <div class="chip-opt" data-val="In-house Account" onclick="this.classList.toggle('active')">In-house Account</div>
-        <div class="chip-opt" data-val="LDU Upsell" onclick="this.classList.toggle('active')">LDU Upsell</div>
-        <div class="chip-opt" data-val="Fintech" onclick="this.classList.toggle('active')">Fintech</div>
-        <div class="chip-opt" data-val="Product Led Growth (PLG)" onclick="this.classList.toggle('active')">PLG</div>
+      <div class="cf-multiselect" data-table="silver_deals" data-field="department_source_clean">
+      <button type="button" class="cf-ms-trigger" onclick="toggleMultiselect(this.parentElement)">
+        <span class="cf-ms-display">&#8212; All &#8212;</span><span class="cf-ms-arrow">&#9660;</span>
+      </button>
+      <div class="cf-ms-menu">
+        <label class="cf-ms-opt"><input type="checkbox" value="MKT Inbound" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> MKT Inbound</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="LDU Outbound" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> LDU Outbound</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Sales Outbound" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Sales Outbound</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Channels" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Channels</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="CSM Inbound" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> CSM Inbound</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="CSM Outbound" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> CSM Outbound</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Upsell Outbound" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Upsell Outbound</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="In-house Account" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> In-house Account</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="LDU Upsell" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> LDU Upsell</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Fintech" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Fintech</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Product Led Growth (PLG)" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> PLG</label>
       </div>
+    </div>
     </div>
   </div>
 
@@ -1889,43 +1919,63 @@ python fetch_data.py
   <div class="cf-table-panel" id="cf-panel-companies" style="display:none">
     <div class="cf-field-row">
       <div class="cf-field-name">Brand</div>
-      <div class="chip-select cf-field-chips" data-table="silver_company" data-field="Brands">
-        <div class="chip-opt" data-val="PH Sprout" onclick="this.classList.toggle('active')">PH Sprout</div>
-        <div class="chip-opt" data-val="TH Sprout" onclick="this.classList.toggle('active')">TH Sprout</div>
-        <div class="chip-opt" data-val="PH Sprout, TH Sprout" onclick="this.classList.toggle('active')">Both</div>
+      <div class="cf-multiselect" data-table="silver_company" data-field="Brands">
+      <button type="button" class="cf-ms-trigger" onclick="toggleMultiselect(this.parentElement)">
+        <span class="cf-ms-display">&#8212; All &#8212;</span><span class="cf-ms-arrow">&#9660;</span>
+      </button>
+      <div class="cf-ms-menu">
+        <label class="cf-ms-opt"><input type="checkbox" value="PH Sprout" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> PH Sprout</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="TH Sprout" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> TH Sprout</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="PH Sprout, TH Sprout" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Both</label>
       </div>
+    </div>
     </div>
     <div class="cf-field-row">
       <div class="cf-field-name">Segment</div>
-      <div class="chip-select cf-field-chips" data-table="silver_company" data-field="Segment">
-        <div class="chip-opt" data-val="MICRO" onclick="this.classList.toggle('active')">MICRO</div>
-        <div class="chip-opt" data-val="SME" onclick="this.classList.toggle('active')">SME</div>
-        <div class="chip-opt" data-val="ENT" onclick="this.classList.toggle('active')">ENT</div>
+      <div class="cf-multiselect" data-table="silver_company" data-field="Segment">
+      <button type="button" class="cf-ms-trigger" onclick="toggleMultiselect(this.parentElement)">
+        <span class="cf-ms-display">&#8212; All &#8212;</span><span class="cf-ms-arrow">&#9660;</span>
+      </button>
+      <div class="cf-ms-menu">
+        <label class="cf-ms-opt"><input type="checkbox" value="MICRO" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> MICRO</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="SME" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> SME</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="ENT" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> ENT</label>
       </div>
+    </div>
     </div>
     <div class="cf-field-row">
       <div class="cf-field-name">Client Stage</div>
-      <div class="chip-select cf-field-chips" data-table="silver_company" data-field="client_stage">
-        <div class="chip-opt" data-val="Prospect Lead" onclick="this.classList.toggle('active')">Prospect Lead</div>
-        <div class="chip-opt" data-val="Qualified Lead" onclick="this.classList.toggle('active')">Qualified Lead</div>
-        <div class="chip-opt" data-val="Pre-Handover" onclick="this.classList.toggle('active')">Pre-Handover</div>
-        <div class="chip-opt" data-val="Sales Handover" onclick="this.classList.toggle('active')">Sales Handover</div>
-        <div class="chip-opt" data-val="Customer Onboarding" onclick="this.classList.toggle('active')">Customer Onboarding</div>
-        <div class="chip-opt" data-val="Customer Success" onclick="this.classList.toggle('active')">Customer Success</div>
+      <div class="cf-multiselect" data-table="silver_company" data-field="client_stage">
+      <button type="button" class="cf-ms-trigger" onclick="toggleMultiselect(this.parentElement)">
+        <span class="cf-ms-display">&#8212; All &#8212;</span><span class="cf-ms-arrow">&#9660;</span>
+      </button>
+      <div class="cf-ms-menu">
+        <label class="cf-ms-opt"><input type="checkbox" value="Prospect Lead" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Prospect Lead</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Qualified Lead" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Qualified Lead</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Pre-Handover" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Pre-Handover</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Sales Handover" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Sales Handover</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Customer Onboarding" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Customer Onboarding</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Customer Success" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Customer Success</label>
       </div>
+    </div>
     </div>
     <div class="cf-field-row">
       <div class="cf-field-name">Client Status</div>
-      <div class="chip-select cf-field-chips" data-table="silver_company" data-field="Client_status">
-        <div class="chip-opt" data-val="New Project" onclick="this.classList.toggle('active')">New Project</div>
-        <div class="chip-opt" data-val="On-Track" onclick="this.classList.toggle('active')">On-Track</div>
-        <div class="chip-opt" data-val="Off-Track" onclick="this.classList.toggle('active')">Off-Track</div>
-        <div class="chip-opt" data-val="On-Hold" onclick="this.classList.toggle('active')">On-Hold</div>
-        <div class="chip-opt" data-val="Active" onclick="this.classList.toggle('active')">Active</div>
-        <div class="chip-opt" data-val="Churned" onclick="this.classList.toggle('active')">Churned</div>
-        <div class="chip-opt" data-val="Renewal" onclick="this.classList.toggle('active')">Renewal</div>
-        <div class="chip-opt" data-val="Return to Sales" onclick="this.classList.toggle('active')">Return to Sales</div>
+      <div class="cf-multiselect" data-table="silver_company" data-field="Client_status">
+      <button type="button" class="cf-ms-trigger" onclick="toggleMultiselect(this.parentElement)">
+        <span class="cf-ms-display">&#8212; All &#8212;</span><span class="cf-ms-arrow">&#9660;</span>
+      </button>
+      <div class="cf-ms-menu">
+        <label class="cf-ms-opt"><input type="checkbox" value="New Project" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> New Project</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="On-Track" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> On-Track</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Off-Track" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Off-Track</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="On-Hold" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> On-Hold</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Active" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Active</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Churned" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Churned</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Renewal" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Renewal</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Return to Sales" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Return to Sales</label>
       </div>
+    </div>
     </div>
     <div class="cf-field-row">
       <div class="cf-field-name">Client Type</div>
@@ -1937,12 +1987,17 @@ python fetch_data.py
     </div>
     <div class="cf-field-row">
       <div class="cf-field-name">Service Level</div>
-      <div class="chip-select cf-field-chips" data-table="silver_company" data-field="service_level">
-        <div class="chip-opt" data-val="MSME" onclick="this.classList.toggle('active')">MSME</div>
-        <div class="chip-opt" data-val="SME" onclick="this.classList.toggle('active')">SME</div>
-        <div class="chip-opt" data-val="Enterprise" onclick="this.classList.toggle('active')">Enterprise</div>
-        <div class="chip-opt" data-val="Channels" onclick="this.classList.toggle('active')">Channels</div>
+      <div class="cf-multiselect" data-table="silver_company" data-field="service_level">
+      <button type="button" class="cf-ms-trigger" onclick="toggleMultiselect(this.parentElement)">
+        <span class="cf-ms-display">&#8212; All &#8212;</span><span class="cf-ms-arrow">&#9660;</span>
+      </button>
+      <div class="cf-ms-menu">
+        <label class="cf-ms-opt"><input type="checkbox" value="MSME" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> MSME</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="SME" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> SME</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Enterprise" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Enterprise</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Channels" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Channels</label>
       </div>
+    </div>
     </div>
   </div>
 
@@ -1950,18 +2005,23 @@ python fetch_data.py
   <div class="cf-table-panel" id="cf-panel-lineitems" style="display:none">
     <div class="cf-field-row">
       <div class="cf-field-name">Product</div>
-      <div class="chip-select cf-field-chips" data-table="silver_line_items" data-field="parent_product">
-        <div class="chip-opt" data-val="HR and Payroll" onclick="this.classList.toggle('active')">HR and Payroll</div>
-        <div class="chip-opt" data-val="JazzHR" onclick="this.classList.toggle('active')">JazzHR</div>
-        <div class="chip-opt" data-val="Disprz" onclick="this.classList.toggle('active')">Disprz</div>
-        <div class="chip-opt" data-val="Performance+" onclick="this.classList.toggle('active')">Performance+</div>
-        <div class="chip-opt" data-val="Olivia Expense" onclick="this.classList.toggle('active')">Olivia Expense</div>
-        <div class="chip-opt" data-val="Britana" onclick="this.classList.toggle('active')">Britana</div>
-        <div class="chip-opt" data-val="Kwik Insure" onclick="this.classList.toggle('active')">Kwik Insure</div>
-        <div class="chip-opt" data-val="Tability" onclick="this.classList.toggle('active')">Tability</div>
-        <div class="chip-opt" data-val="Wellness" onclick="this.classList.toggle('active')">Wellness</div>
-        <div class="chip-opt" data-val="Beppo" onclick="this.classList.toggle('active')">Beppo</div>
+      <div class="cf-multiselect" data-table="silver_line_items" data-field="parent_product">
+      <button type="button" class="cf-ms-trigger" onclick="toggleMultiselect(this.parentElement)">
+        <span class="cf-ms-display">&#8212; All &#8212;</span><span class="cf-ms-arrow">&#9660;</span>
+      </button>
+      <div class="cf-ms-menu">
+        <label class="cf-ms-opt"><input type="checkbox" value="HR and Payroll" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> HR and Payroll</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="JazzHR" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> JazzHR</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Disprz" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Disprz</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Performance+" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Performance+</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Olivia Expense" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Olivia Expense</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Britana" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Britana</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Kwik Insure" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Kwik Insure</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Tability" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Tability</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Wellness" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Wellness</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Beppo" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Beppo</label>
       </div>
+    </div>
     </div>
     <div class="cf-field-row">
       <div class="cf-field-name">Product Category</div>
@@ -1985,59 +2045,79 @@ python fetch_data.py
   <div class="cf-table-panel" id="cf-panel-contacts" style="display:none">
     <div class="cf-field-row">
       <div class="cf-field-name">Lifecycle Stage</div>
-      <div class="chip-select cf-field-chips" data-table="silver_contacts" data-field="lifecycle_stage">
-        <div class="chip-opt" data-val="lead" onclick="this.classList.toggle('active')">Lead</div>
-        <div class="chip-opt" data-val="marketingqualifiedlead" onclick="this.classList.toggle('active')">MQL</div>
-        <div class="chip-opt" data-val="salesqualifiedlead" onclick="this.classList.toggle('active')">SQL</div>
-        <div class="chip-opt" data-val="opportunity" onclick="this.classList.toggle('active')">Opportunity</div>
-        <div class="chip-opt" data-val="customer" onclick="this.classList.toggle('active')">Customer</div>
-        <div class="chip-opt" data-val="other" onclick="this.classList.toggle('active')">Other</div>
+      <div class="cf-multiselect" data-table="silver_contacts" data-field="lifecycle_stage">
+      <button type="button" class="cf-ms-trigger" onclick="toggleMultiselect(this.parentElement)">
+        <span class="cf-ms-display">&#8212; All &#8212;</span><span class="cf-ms-arrow">&#9660;</span>
+      </button>
+      <div class="cf-ms-menu">
+        <label class="cf-ms-opt"><input type="checkbox" value="lead" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Lead</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="marketingqualifiedlead" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> MQL</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="salesqualifiedlead" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> SQL</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="opportunity" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Opportunity</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="customer" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Customer</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="other" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Other</label>
       </div>
+    </div>
     </div>
     <div class="cf-field-row">
       <div class="cf-field-name">Dept Source</div>
-      <div class="chip-select cf-field-chips" data-table="silver_contacts" data-field="department_source">
-        <div class="chip-opt" data-val="MKT Inbound" onclick="this.classList.toggle('active')">MKT Inbound</div>
-        <div class="chip-opt" data-val="LDU Outbound" onclick="this.classList.toggle('active')">LDU Outbound</div>
-        <div class="chip-opt" data-val="CSM Inbound" onclick="this.classList.toggle('active')">CSM Inbound</div>
-        <div class="chip-opt" data-val="CSM Outbound" onclick="this.classList.toggle('active')">CSM Outbound</div>
-        <div class="chip-opt" data-val="Sales Outbound" onclick="this.classList.toggle('active')">Sales Outbound</div>
-        <div class="chip-opt" data-val="Channels" onclick="this.classList.toggle('active')">Channels</div>
-        <div class="chip-opt" data-val="Upsell Outbound" onclick="this.classList.toggle('active')">Upsell Outbound</div>
-        <div class="chip-opt" data-val="In-house Account" onclick="this.classList.toggle('active')">In-house Account</div>
-        <div class="chip-opt" data-val="LDU Upsell" onclick="this.classList.toggle('active')">LDU Upsell</div>
-        <div class="chip-opt" data-val="Fintech" onclick="this.classList.toggle('active')">Fintech</div>
-        <div class="chip-opt" data-val="Product Led Growth (PLG)" onclick="this.classList.toggle('active')">PLG</div>
+      <div class="cf-multiselect" data-table="silver_contacts" data-field="department_source">
+      <button type="button" class="cf-ms-trigger" onclick="toggleMultiselect(this.parentElement)">
+        <span class="cf-ms-display">&#8212; All &#8212;</span><span class="cf-ms-arrow">&#9660;</span>
+      </button>
+      <div class="cf-ms-menu">
+        <label class="cf-ms-opt"><input type="checkbox" value="MKT Inbound" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> MKT Inbound</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="LDU Outbound" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> LDU Outbound</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="CSM Inbound" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> CSM Inbound</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="CSM Outbound" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> CSM Outbound</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Sales Outbound" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Sales Outbound</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Channels" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Channels</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Upsell Outbound" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Upsell Outbound</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="In-house Account" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> In-house Account</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="LDU Upsell" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> LDU Upsell</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Fintech" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Fintech</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Product Led Growth (PLG)" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> PLG</label>
       </div>
+    </div>
     </div>
     <div class="cf-field-row">
       <div class="cf-field-name">Buyer Role</div>
-      <div class="chip-select cf-field-chips" data-table="silver_contacts" data-field="buyer_role">
-        <div class="chip-opt" data-val="decision_maker" onclick="this.classList.toggle('active')">Decision Maker</div>
-        <div class="chip-opt" data-val="evaluator_or_recommender" onclick="this.classList.toggle('active')">Evaluator</div>
-        <div class="chip-opt" data-val="promoter_or_champion" onclick="this.classList.toggle('active')">Champion</div>
-        <div class="chip-opt" data-val="influencer" onclick="this.classList.toggle('active')">Influencer</div>
-        <div class="chip-opt" data-val="detractor_or_blocker" onclick="this.classList.toggle('active')">Detractor</div>
-        <div class="chip-opt" data-val="executive_sponsor" onclick="this.classList.toggle('active')">Executive Sponsor</div>
-        <div class="chip-opt" data-val="buyer" onclick="this.classList.toggle('active')">Budget Owner</div>
-        <div class="chip-opt" data-val="user" onclick="this.classList.toggle('active')">User</div>
-        <div class="chip-opt" data-val="Legal and Compliance" onclick="this.classList.toggle('active')">Legal &amp; Compliance</div>
+      <div class="cf-multiselect" data-table="silver_contacts" data-field="buyer_role">
+      <button type="button" class="cf-ms-trigger" onclick="toggleMultiselect(this.parentElement)">
+        <span class="cf-ms-display">&#8212; All &#8212;</span><span class="cf-ms-arrow">&#9660;</span>
+      </button>
+      <div class="cf-ms-menu">
+        <label class="cf-ms-opt"><input type="checkbox" value="decision_maker" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Decision Maker</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="evaluator_or_recommender" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Evaluator</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="promoter_or_champion" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Champion</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="influencer" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Influencer</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="detractor_or_blocker" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Detractor</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="executive_sponsor" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Executive Sponsor</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="buyer" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Budget Owner</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="user" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> User</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Legal and Compliance" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Legal &amp; Compliance</label>
       </div>
+    </div>
     </div>
     <div class="cf-field-row">
       <div class="cf-field-name">Original Source</div>
-      <div class="chip-select cf-field-chips" data-table="silver_contacts" data-field="analytics_source">
-        <div class="chip-opt" data-val="ORGANIC_SEARCH" onclick="this.classList.toggle('active')">Organic Search</div>
-        <div class="chip-opt" data-val="PAID_SEARCH" onclick="this.classList.toggle('active')">Paid Search</div>
-        <div class="chip-opt" data-val="PAID_SOCIAL" onclick="this.classList.toggle('active')">Paid Social</div>
-        <div class="chip-opt" data-val="EMAIL_MARKETING" onclick="this.classList.toggle('active')">Email Marketing</div>
-        <div class="chip-opt" data-val="SOCIAL_MEDIA" onclick="this.classList.toggle('active')">Organic Social</div>
-        <div class="chip-opt" data-val="REFERRALS" onclick="this.classList.toggle('active')">Referrals</div>
-        <div class="chip-opt" data-val="DIRECT_TRAFFIC" onclick="this.classList.toggle('active')">Direct Traffic</div>
-        <div class="chip-opt" data-val="OFFLINE" onclick="this.classList.toggle('active')">Offline Sources</div>
-        <div class="chip-opt" data-val="OTHER_CAMPAIGNS" onclick="this.classList.toggle('active')">Other Campaigns</div>
-        <div class="chip-opt" data-val="AI_REFERRALS" onclick="this.classList.toggle('active')">AI Referrals</div>
+      <div class="cf-multiselect" data-table="silver_contacts" data-field="analytics_source">
+      <button type="button" class="cf-ms-trigger" onclick="toggleMultiselect(this.parentElement)">
+        <span class="cf-ms-display">&#8212; All &#8212;</span><span class="cf-ms-arrow">&#9660;</span>
+      </button>
+      <div class="cf-ms-menu">
+        <label class="cf-ms-opt"><input type="checkbox" value="ORGANIC_SEARCH" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Organic Search</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="PAID_SEARCH" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Paid Search</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="PAID_SOCIAL" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Paid Social</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="EMAIL_MARKETING" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Email Marketing</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="SOCIAL_MEDIA" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Organic Social</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="REFERRALS" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Referrals</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="DIRECT_TRAFFIC" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Direct Traffic</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="OFFLINE" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Offline Sources</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="OTHER_CAMPAIGNS" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Other Campaigns</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="AI_REFERRALS" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> AI Referrals</label>
       </div>
+    </div>
     </div>
   </div>
 
@@ -2045,33 +2125,43 @@ python fetch_data.py
   <div class="cf-table-panel" id="cf-panel-leads" style="display:none">
     <div class="cf-field-row">
       <div class="cf-field-name">Dept Source</div>
-      <div class="chip-select cf-field-chips" data-table="silver_leads" data-field="department_source">
-        <div class="chip-opt" data-val="MKT Inbound" onclick="this.classList.toggle('active')">MKT Inbound</div>
-        <div class="chip-opt" data-val="LDU Outbound" onclick="this.classList.toggle('active')">LDU Outbound</div>
-        <div class="chip-opt" data-val="CSM Inbound" onclick="this.classList.toggle('active')">CSM Inbound</div>
-        <div class="chip-opt" data-val="CSM Outbound" onclick="this.classList.toggle('active')">CSM Outbound</div>
-        <div class="chip-opt" data-val="Sales Outbound" onclick="this.classList.toggle('active')">Sales Outbound</div>
-        <div class="chip-opt" data-val="Channels" onclick="this.classList.toggle('active')">Channels</div>
-        <div class="chip-opt" data-val="Upsell Outbound" onclick="this.classList.toggle('active')">Upsell Outbound</div>
-        <div class="chip-opt" data-val="In-house Account" onclick="this.classList.toggle('active')">In-house Account</div>
-        <div class="chip-opt" data-val="LDU Upsell" onclick="this.classList.toggle('active')">LDU Upsell</div>
-        <div class="chip-opt" data-val="Fintech" onclick="this.classList.toggle('active')">Fintech</div>
-        <div class="chip-opt" data-val="Product Led Growth (PLG)" onclick="this.classList.toggle('active')">PLG</div>
+      <div class="cf-multiselect" data-table="silver_leads" data-field="department_source">
+      <button type="button" class="cf-ms-trigger" onclick="toggleMultiselect(this.parentElement)">
+        <span class="cf-ms-display">&#8212; All &#8212;</span><span class="cf-ms-arrow">&#9660;</span>
+      </button>
+      <div class="cf-ms-menu">
+        <label class="cf-ms-opt"><input type="checkbox" value="MKT Inbound" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> MKT Inbound</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="LDU Outbound" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> LDU Outbound</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="CSM Inbound" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> CSM Inbound</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="CSM Outbound" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> CSM Outbound</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Sales Outbound" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Sales Outbound</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Channels" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Channels</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Upsell Outbound" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Upsell Outbound</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="In-house Account" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> In-house Account</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="LDU Upsell" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> LDU Upsell</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Fintech" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Fintech</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Product Led Growth (PLG)" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> PLG</label>
       </div>
+    </div>
     </div>
     <div class="cf-field-row">
       <div class="cf-field-name">Lead Source</div>
-      <div class="chip-select cf-field-chips" data-table="silver_leads" data-field="lead_source">
-        <div class="chip-opt" data-val="ORGANIC_SEARCH" onclick="this.classList.toggle('active')">Organic Search</div>
-        <div class="chip-opt" data-val="PAID_SEARCH" onclick="this.classList.toggle('active')">Paid Search</div>
-        <div class="chip-opt" data-val="PAID_SOCIAL" onclick="this.classList.toggle('active')">Paid Social</div>
-        <div class="chip-opt" data-val="EMAIL_MARKETING" onclick="this.classList.toggle('active')">Email Marketing</div>
-        <div class="chip-opt" data-val="SOCIAL_MEDIA" onclick="this.classList.toggle('active')">Organic Social</div>
-        <div class="chip-opt" data-val="REFERRALS" onclick="this.classList.toggle('active')">Referrals</div>
-        <div class="chip-opt" data-val="DIRECT_TRAFFIC" onclick="this.classList.toggle('active')">Direct Traffic</div>
-        <div class="chip-opt" data-val="OFFLINE" onclick="this.classList.toggle('active')">Offline Sources</div>
-        <div class="chip-opt" data-val="OTHER_CAMPAIGNS" onclick="this.classList.toggle('active')">Other Campaigns</div>
+      <div class="cf-multiselect" data-table="silver_leads" data-field="lead_source">
+      <button type="button" class="cf-ms-trigger" onclick="toggleMultiselect(this.parentElement)">
+        <span class="cf-ms-display">&#8212; All &#8212;</span><span class="cf-ms-arrow">&#9660;</span>
+      </button>
+      <div class="cf-ms-menu">
+        <label class="cf-ms-opt"><input type="checkbox" value="ORGANIC_SEARCH" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Organic Search</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="PAID_SEARCH" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Paid Search</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="PAID_SOCIAL" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Paid Social</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="EMAIL_MARKETING" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Email Marketing</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="SOCIAL_MEDIA" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Organic Social</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="REFERRALS" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Referrals</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="DIRECT_TRAFFIC" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Direct Traffic</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="OFFLINE" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Offline Sources</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="OTHER_CAMPAIGNS" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Other Campaigns</label>
       </div>
+    </div>
     </div>
     <div class="cf-field-row">
       <div class="cf-field-name">Lead Stage</div>
@@ -2083,26 +2173,36 @@ python fetch_data.py
   <div class="cf-table-panel" id="cf-panel-licenses" style="display:none">
     <div class="cf-field-row">
       <div class="cf-field-name">Product</div>
-      <div class="chip-select cf-field-chips" data-table="silver_licenses" data-field="parent_product">
-        <div class="chip-opt" data-val="HR and Payroll" onclick="this.classList.toggle('active')">HR and Payroll</div>
-        <div class="chip-opt" data-val="JazzHR" onclick="this.classList.toggle('active')">JazzHR</div>
-        <div class="chip-opt" data-val="Disprz" onclick="this.classList.toggle('active')">Disprz</div>
-        <div class="chip-opt" data-val="Performance+" onclick="this.classList.toggle('active')">Performance+</div>
-        <div class="chip-opt" data-val="Olivia Expense" onclick="this.classList.toggle('active')">Olivia Expense</div>
-        <div class="chip-opt" data-val="Britana" onclick="this.classList.toggle('active')">Britana</div>
-        <div class="chip-opt" data-val="Kwik Insure" onclick="this.classList.toggle('active')">Kwik Insure</div>
-        <div class="chip-opt" data-val="Wellness" onclick="this.classList.toggle('active')">Wellness</div>
-        <div class="chip-opt" data-val="Beppo" onclick="this.classList.toggle('active')">Beppo</div>
+      <div class="cf-multiselect" data-table="silver_licenses" data-field="parent_product">
+      <button type="button" class="cf-ms-trigger" onclick="toggleMultiselect(this.parentElement)">
+        <span class="cf-ms-display">&#8212; All &#8212;</span><span class="cf-ms-arrow">&#9660;</span>
+      </button>
+      <div class="cf-ms-menu">
+        <label class="cf-ms-opt"><input type="checkbox" value="HR and Payroll" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> HR and Payroll</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="JazzHR" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> JazzHR</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Disprz" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Disprz</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Performance+" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Performance+</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Olivia Expense" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Olivia Expense</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Britana" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Britana</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Kwik Insure" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Kwik Insure</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Wellness" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Wellness</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Beppo" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Beppo</label>
       </div>
+    </div>
     </div>
     <div class="cf-field-row">
       <div class="cf-field-name">Status</div>
-      <div class="chip-select cf-field-chips" data-table="silver_licenses" data-field="status">
-        <div class="chip-opt" data-val="Availed" onclick="this.classList.toggle('active')">Availed</div>
-        <div class="chip-opt" data-val="Not Availed" onclick="this.classList.toggle('active')">Not Availed</div>
-        <div class="chip-opt" data-val="On Hold" onclick="this.classList.toggle('active')">On Hold</div>
-        <div class="chip-opt" data-val="Churned" onclick="this.classList.toggle('active')">Churned</div>
+      <div class="cf-multiselect" data-table="silver_licenses" data-field="status">
+      <button type="button" class="cf-ms-trigger" onclick="toggleMultiselect(this.parentElement)">
+        <span class="cf-ms-display">&#8212; All &#8212;</span><span class="cf-ms-arrow">&#9660;</span>
+      </button>
+      <div class="cf-ms-menu">
+        <label class="cf-ms-opt"><input type="checkbox" value="Availed" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Availed</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Not Availed" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Not Availed</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="On Hold" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> On Hold</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Churned" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Churned</label>
       </div>
+    </div>
     </div>
     <div class="cf-field-row">
       <div class="cf-field-name">Product Category</div>
@@ -5227,13 +5327,47 @@ function clearCodeUpload() {
   document.getElementById('cf-upload-preview').style.display = 'none';
 }
 
+function toggleMultiselect(ms) {
+  const trigger = ms.querySelector('.cf-ms-trigger');
+  const isOpen  = trigger.classList.contains('open');
+  document.querySelectorAll('.cf-ms-trigger.open').forEach(t => t.classList.remove('open'));
+  if (!isOpen) trigger.classList.add('open');
+}
+
+function updateMSDisplay(ms) {
+  const checked = [...ms.querySelectorAll('input[type=checkbox]:checked')];
+  const display = ms.querySelector('.cf-ms-display');
+  if (checked.length === 0) {
+    display.textContent = '— All —';
+    display.classList.remove('has-value');
+  } else if (checked.length === 1) {
+    display.textContent = checked[0].value;
+    display.classList.add('has-value');
+  } else {
+    display.textContent = checked.length + ' selected';
+    display.classList.add('has-value');
+  }
+}
+
+// Close all multiselect dropdowns when clicking outside
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.cf-multiselect')) {
+    document.querySelectorAll('.cf-ms-trigger.open').forEach(t => t.classList.remove('open'));
+  }
+});
+
 function resetConnectForm() {
   // Deselect all metric chips
   document.querySelectorAll('.metric-chip.selected').forEach(c => c.classList.remove('selected'));
   // Clear description
   document.getElementById('cf-desc').value = '';
-  // Deactivate all field filter chips
-  document.querySelectorAll('.cf-field-chips .chip-opt').forEach(c => c.classList.remove('active'));
+  // Reset all multiselect dropdowns
+  document.querySelectorAll('.cf-multiselect').forEach(ms => {
+    ms.querySelectorAll('input[type=checkbox]').forEach(cb => cb.checked = false);
+    ms.querySelector('.cf-ms-trigger').classList.remove('open');
+    const d = ms.querySelector('.cf-ms-display');
+    d.textContent = '— All —'; d.classList.remove('has-value');
+  });
   // Reset table tab to Deals
   document.querySelectorAll('.cf-table-tab').forEach(t => t.classList.remove('active'));
   const firstTab = document.querySelector('.cf-table-tab');
@@ -5282,10 +5416,10 @@ function generateConnectPrompt() {
   const tv = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
 
   const fieldFilters = [];
-  document.querySelectorAll('.cf-field-chips').forEach(group => {
-    const tbl   = group.dataset.table;
-    const field = group.dataset.field;
-    const vals  = [...group.querySelectorAll('.chip-opt.active')].map(x => x.dataset.val);
+  document.querySelectorAll('.cf-multiselect').forEach(ms => {
+    const tbl   = ms.dataset.table;
+    const field = ms.dataset.field;
+    const vals  = [...ms.querySelectorAll('input[type=checkbox]:checked')].map(x => x.value);
     if (vals.length) fieldFilters.push(`• ${tbl}.${field} IN (${vals.map(v => "'" + v + "'").join(', ')})`);
   });
   // Company text filters
