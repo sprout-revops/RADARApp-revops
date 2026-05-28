@@ -844,6 +844,8 @@ USE SCHEMA revops;
 
 2. SEGMENT STANDARDIZATION:
    CASE WHEN UPPER(segment) = 'MICRO' THEN 'SME' ELSE segment END
+   ⚠️ Actual values in data: "SME" and "ENT". Never remap "ENT" → "Enterprise".
+   In JavaScript, compare against "SME" and "ENT" directly — do NOT normalize "ENT" to "Enterprise".
 
 3. LEAD-BASED FUNNEL LOGIC (FINAL):
 
@@ -1082,147 +1084,130 @@ git push origin main</div>
       <!-- build-prompt-text kept hidden for JS compat -->
       <div id="build-prompt-wrap" style="display:none"><textarea id="build-prompt-text"></textarea></div>
 
-      <div class="plan-h3">Step 1 — Create a GitHub Repository</div>
+      <!-- Before You Start -->
+      <div class="plan-h3">Before You Start</div>
+      <p style="font-size:12px;color:#636E72;margin-bottom:14px;line-height:1.6">Do these first on your computer before touching GitHub.</p>
+
       <div class="github-step">
-        <div class="github-num">2</div>
+        <div class="github-num" style="background:#374151">A</div>
         <div class="github-body">
-          <div class="github-title">Create a new repo on GitHub</div>
-          <div class="github-desc">Go to <strong>github.com → + → New repository</strong>. Name it e.g. <code>my-team-dashboard</code>. Set to <strong>Private</strong>. Check "Add a README file". Click <strong>Create repository</strong>.</div>
-        </div>
-      </div>
-      <div class="github-step">
-        <div class="github-num">3</div>
-        <div class="github-body">
-          <div class="github-title">Clone to your computer</div>
-          <div class="github-desc">Open PowerShell and run:</div>
-          <div class="github-code"><button class="github-copy" onclick="cpGithub(this)">Copy</button>git clone https://github.com/YOUR-USERNAME/YOUR-REPO-NAME.git
-cd YOUR-REPO-NAME</div>
+          <div class="github-title">Save Claude's files into a project folder</div>
+          <div class="github-desc">Create a new folder anywhere (e.g. <code>my-team-dashboard</code>) and save every file Claude generated into it. The structure should look like this:</div>
+          <div style="background:#0B1E10;border-radius:8px;padding:12px 16px;font-family:'Courier New',monospace;font-size:11px;color:#6EE7B7;margin-top:8px;line-height:2">
+            my-team-dashboard/<br>
+            &nbsp;&nbsp;📄 fetch_data.py<br>
+            &nbsp;&nbsp;📄 dashboard.html<br>
+            &nbsp;&nbsp;📄 .gitignore<br>
+            &nbsp;&nbsp;📄 refresh_and_push.bat<br>
+            &nbsp;&nbsp;📁 .github/workflows/<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;📄 refresh.yml
+          </div>
+          <div class="github-desc" style="margin-top:8px">Create the <code>.github\workflows\</code> subfolder manually before saving <code>refresh.yml</code> into it:</div>
+          <div class="github-code"><button class="github-copy" onclick="cpGithub(this)">Copy</button>mkdir .github\workflows</div>
+          <div class="github-desc" style="margin-top:10px">If this is your first time using Git on this computer, set your identity once — open PowerShell anywhere and run:</div>
+          <div class="github-code"><button class="github-copy" onclick="cpGithub(this)">Copy</button>git config --global user.email "you@sproutsocial.com"
+git config --global user.name "Your Name"</div>
         </div>
       </div>
 
-      <div class="plan-h3">Step 2 — Drop In the Generated Files</div>
       <div class="github-step">
-        <div class="github-num">4</div>
+        <div class="github-num" style="background:#374151">B</div>
         <div class="github-body">
-          <div class="github-title">Create folders + paste in each file Claude generated</div>
-          <div class="github-desc">Create the subfolders first, then save each file from Claude's output into the correct location:</div>
-          <div class="github-code"><button class="github-copy" onclick="cpGithub(this)">Copy</button>mkdir data
-mkdir .github\workflows</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
-            <div style="background:#F8F9FA;border-radius:6px;padding:10px 12px;font-size:11px;color:#636E72;line-height:1.9;border:1px solid #DFE6E9">
-              <div style="font-weight:700;color:#0B1E10;margin-bottom:4px">Root folder</div>
-              <div>📄 <code>fetch_data.py</code></div>
-              <div>📄 <code>dashboard.html</code></div>
-              <div>📄 <code>.env</code> <span style="font-size:10px;color:rgba(255,255,255,.4)">(fill in your tokens)</span></div>
-              <div>📄 <code>.gitignore</code></div>
-              <div>📄 <code>refresh_and_push.bat</code></div>
-            </div>
-            <div style="background:#F8F9FA;border-radius:6px;padding:10px 12px;font-size:11px;color:#636E72;line-height:1.9;border:1px solid #DFE6E9">
-              <div style="font-weight:700;color:#0B1E10;margin-bottom:4px">Subfolders</div>
-              <div>📁 <code>data/</code> (empty for now)</div>
-              <div>📄 <code>.github/workflows/refresh.yml</code></div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="github-step">
-        <div class="github-num">5</div>
-        <div class="github-body">
-          <div class="github-title">Create <code>.env</code> with your Databricks credentials</div>
-          <div class="github-desc">Create a plain text file named <code>.env</code> in the project root. <strong>Never commit this file</strong> — it's already listed in your generated <code>.gitignore</code>.</div>
+          <div class="github-title">Add your Databricks credentials</div>
+          <div class="github-desc">Create a file called <code>.env</code> in the same folder. Paste this in and fill in your actual values:</div>
           <div class="github-code"><button class="github-copy" onclick="cpGithub(this)">Copy</button>DATABRICKS_HOST=adb-XXXXXXXXXXXXXXXX.XX.azuredatabricks.net
 DATABRICKS_HTTP_PATH=/sql/1.0/warehouses/XXXXXXXXXXXXXXXXX
 DATABRICKS_TOKEN=dapi...your-personal-access-token...</div>
-          <div class="github-desc" style="margin-top:8px">Get these from: <strong>Databricks → SQL Warehouses → your warehouse → Connection Details</strong>. Generate a PAT under <strong>Settings → Developer → Access Tokens</strong>.</div>
+          <div class="github-desc" style="margin-top:8px">Find these in Databricks: <strong>SQL Warehouses → your warehouse → Connection Details</strong>. Generate a token under <strong>Settings → Developer → Access Tokens</strong>.<br><strong>Never share this file</strong> — it's excluded from GitHub by <code>.gitignore</code>.</div>
         </div>
       </div>
 
-      <div class="plan-h3">Step 3 — Test Locally First</div>
       <div class="github-step">
-        <div class="github-num">6</div>
+        <div class="github-num" style="background:#374151">C</div>
         <div class="github-body">
-          <div class="github-title">Run fetch_data.py to verify your Databricks connection</div>
+          <div class="github-title">Pull your live data from Databricks</div>
+          <div class="github-desc">Open PowerShell inside your project folder, then run:</div>
           <div class="github-code"><button class="github-copy" onclick="cpGithub(this)">Copy</button>pip install requests
 python fetch_data.py</div>
-          <div class="github-desc" style="margin-top:6px">Expected: <code>Running: All Records... [N] rows (0 polls) → Done! Saved [N] records to data/dashboard.json</code><br>Open <code>data/dashboard.json</code> to verify records look correct before proceeding.</div>
+          <div class="github-desc" style="margin-top:6px">✅ You should see: <code>Done! Saved [N] records to data/dashboard.json</code><br>If it errors, double-check your <code>.env</code> credentials.</div>
         </div>
       </div>
 
-      <div class="plan-h3">Step 4 — Commit &amp; Push</div>
+      <!-- Numbered Steps -->
+      <div class="plan-h3" style="margin-top:24px">Publish to GitHub + Vercel</div>
+
       <div class="github-step">
-        <div class="github-num">7</div>
+        <div class="github-num">1</div>
         <div class="github-body">
-          <div class="github-title">Push everything to GitHub</div>
-          <div class="github-desc"><code>data/dashboard.json</code> must be committed — GitHub Pages serves it to the browser. <code>.env</code> is already in <code>.gitignore</code> so it will never be committed.</div>
-          <div class="github-code"><button class="github-copy" onclick="cpGithub(this)">Copy</button>git add dashboard.html fetch_data.py .gitignore .github data/dashboard.json refresh_and_push.bat
-git commit -m "Initial dashboard — first data fetch"
-git push origin master</div>
+          <div class="github-title">Create an empty GitHub repository</div>
+          <div class="github-desc">Go to <strong>github.com → + → New repository</strong>. Give it a name (e.g. <code>my-team-dashboard</code>). Set to <strong>Private</strong>. Leave all other options as-is and click <strong>Create repository</strong>.</div>
+          <div class="github-desc" style="margin-top:8px">💡 Use a <strong>personal GitHub account</strong> — organization accounts require a paid plan for Vercel.</div>
         </div>
       </div>
 
-      <div class="plan-h3">Step 5 — Enable GitHub Pages (Free Hosting)</div>
       <div class="github-step">
-        <div class="github-num">8</div>
+        <div class="github-num">2</div>
         <div class="github-body">
-          <div class="github-title">Turn on GitHub Pages</div>
+          <div class="github-title">Push your files to GitHub</div>
+          <div class="github-desc">Right-click inside your project folder → <strong>Open in Terminal</strong>. Then run these commands — replace with your actual GitHub username and repo name:</div>
+          <div class="github-code"><button class="github-copy" onclick="cpGithub(this)">Copy</button>git init
+git add .
+git commit -m "Initial dashboard"
+git branch -M main
+git remote add origin https://github.com/YOUR-USERNAME/YOUR-REPO-NAME.git
+git push -u origin main</div>
+          <div class="github-desc" style="margin-top:8px">💡 <code>git add .</code> stages everything at once. Your <code>.gitignore</code> automatically keeps <code>.env</code> out — it will never be uploaded.</div>
+          <div class="github-desc" style="margin-top:8px">⚠️ If push is rejected with "fetch first" error, run:</div>
+          <div class="github-code"><button class="github-copy" onclick="cpGithub(this)">Copy</button>git pull --rebase origin main
+git push</div>
+        </div>
+      </div>
+
+      <div class="github-step">
+        <div class="github-num">3</div>
+        <div class="github-body">
+          <div class="github-title">Deploy to Vercel</div>
           <div class="github-desc">
-            1. GitHub repo → <strong>Settings</strong> tab<br>
-            2. Left sidebar → <strong>Pages</strong><br>
-            3. Source: <strong>Deploy from a branch → master → / (root)</strong><br>
-            4. Click <strong>Save</strong>
+            Go to <strong>vercel.com</strong> → log in with GitHub → <strong>Add New → Project</strong><br><br>
+            Find your repo → click <strong>Import</strong> → leave all settings as-is → click <strong>Deploy</strong><br><br>
+            After ~1 minute your dashboard will be live at:
           </div>
-          <div class="github-code" style="margin-top:8px"><button class="github-copy" onclick="cpGithub(this)">Copy</button>https://YOUR-USERNAME.github.io/YOUR-REPO-NAME/dashboard.html</div>
-          <div class="github-desc" style="margin-top:6px">Your dashboard is live after ~2 minutes. Share this link with your team.</div>
-        </div>
-      </div>
-
-      <div class="plan-h3">Step 6 — Activate Auto-Refresh</div>
-      <p style="font-size:12px;color:#636E72;margin-bottom:14px;line-height:1.6">Claude already generated both automation files. Use <strong>both options</strong> — they back each other up. Windows Task Scheduler runs from your machine; GitHub Actions runs from the cloud even when your laptop is off.</p>
-
-      <div class="github-step">
-        <div class="github-num">9</div>
-        <div class="github-body">
-          <div class="github-title">Option A — Windows Task Scheduler (schedule refresh_and_push.bat)</div>
-          <div class="github-desc">
-            First, open <code>refresh_and_push.bat</code> and update the path to your actual project folder:<br>
-          </div>
-          <div class="github-code"><button class="github-copy" onclick="cpGithub(this)">Copy</button>cd /d "C:\path\to\YOUR-REPO-NAME"</div>
-          <div class="github-desc" style="margin-top:8px">
-            Then open <strong>Task Scheduler → Create Task</strong>:<br>
-            • General: check <em>"Run whether user is logged on or not"</em> + <em>"Run with highest privileges"</em><br>
-            • Triggers: Daily, repeat every 8 hours — or set 3 specific times (8:30 AM, 1:30 PM, 5:15 PM)<br>
-            • Actions: Start a program → point to <code>refresh_and_push.bat</code>
-          </div>
+          <div class="github-code" style="margin-top:8px"><button class="github-copy" onclick="cpGithub(this)">Copy</button>https://YOUR-REPO-NAME.vercel.app/dashboard.html</div>
+          <div class="github-desc" style="margin-top:8px">💡 Vercel auto-redeploys every time you push to GitHub — no manual steps needed.</div>
         </div>
       </div>
 
       <div class="github-step">
-        <div class="github-num">10</div>
+        <div class="github-num">4</div>
         <div class="github-body">
-          <div class="github-title">Option B — GitHub Actions (add Secrets so refresh.yml can run)</div>
-          <div class="github-desc">The <code>.github/workflows/refresh.yml</code> is already in your repo. Just add your credentials as GitHub Secrets so the Action can authenticate to Databricks:<br><br>
-            Repo → <strong>Settings → Secrets and variables → Actions → New repository secret</strong>
+          <div class="github-title">Add GitHub Secrets for auto-refresh</div>
+          <div class="github-desc">The <code>refresh.yml</code> workflow runs on a schedule and pulls fresh data from Databricks automatically. It needs your credentials stored as GitHub Secrets:<br><br>
+            Go to: <strong>Repo → Settings → Secrets and variables → Actions → New repository secret</strong><br><br>
+            Add these three — paste the same values from your <code>.env</code>:
           </div>
           <div class="github-code"><button class="github-copy" onclick="cpGithub(this)">Copy</button>DATABRICKS_HOST
 DATABRICKS_HTTP_PATH
 DATABRICKS_TOKEN</div>
-          <div class="github-desc" style="margin-top:8px">Paste the same values from your <code>.env</code> file into each secret.</div>
+          <div class="github-desc" style="margin-top:8px">Once added, data refreshes automatically at 8:30 AM, 1:30 PM, and 5:15 PM daily. Vercel picks up each refresh automatically.</div>
         </div>
       </div>
 
-      <div class="plan-h3">Step 7 — Verify It's Working</div>
       <div class="github-step">
-        <div class="github-num">11</div>
+        <div class="github-num">5</div>
         <div class="github-body">
-          <div class="github-title">Test end-to-end</div>
+          <div class="github-title">Confirm it's working</div>
           <div class="github-desc">
-            1. GitHub repo → <strong>Actions</strong> tab → <strong>Refresh Dashboard Data</strong> → <strong>Run workflow</strong><br>
-            2. Wait ~2 minutes for the run to complete<br>
-            3. Open your GitHub Pages URL<br>
-            4. Confirm <strong>🟢 Live</strong> status badge appears (not Sample Data)<br>
-            5. Change <strong>Start Date / End Date</strong> and click <strong>Apply Filters</strong> — KPIs should update instantly with no loading
+            Trigger a manual refresh to test everything:<br><br>
+            1. Repo → <strong>Actions</strong> tab → <strong>Refresh Dashboard Data</strong> → <strong>Run workflow</strong><br>
+            2. Wait ~2 minutes for the ✅ green checkmark<br>
+            3. Open your Vercel URL with <code>/dashboard.html</code><br>
+            4. You should see a <strong>🟢 Live</strong> badge and today's refresh timestamp
           </div>
         </div>
+      </div>
+
+      <div class="info-box" style="margin:4px 0 20px">
+        💡 <strong>Want data refreshed from your own machine too?</strong> Open <code>refresh_and_push.bat</code>, update the folder path at the top, then schedule it via <strong>Windows Task Scheduler</strong> to run at the same times. Both GitHub Actions and Task Scheduler back each other up.
       </div>
 
       <div class="plan-h3">Common Issues</div>
@@ -1230,13 +1215,14 @@ DATABRICKS_TOKEN</div>
         <thead><tr><th>Symptom</th><th>Cause</th><th>Fix</th></tr></thead>
         <tbody>
           <tr><td class="kpi-name-cell">Dashboard shows Sample Data</td><td><code>data/dashboard.json</code> not committed, or opened via <code>file://</code></td><td>Run <code>python fetch_data.py</code> and <code>git push</code>. Locally, always open via <code>serve.bat</code> — Chrome blocks <code>fetch()</code> on <code>file://</code> URLs</td></tr>
-          <tr><td class="kpi-name-cell">Currency shows <code>&amp;#8369;</code></td><td>HTML entity used in Chart.js label — Chart.js renders plain text, not HTML</td><td>Use the literal <code>₱</code> character in all Chart.js callbacks and tooltips</td></tr>
-          <tr><td class="kpi-name-cell"><code>serve.bat</code> shows garbled <code>ΓöçΓöç</code> characters</td><td>Box-drawing Unicode chars (═══) not supported by cmd.exe default codepage</td><td>Add <code>chcp 65001 &gt;nul</code> as first line; replace <code>═══</code> separators with plain <code>===</code></td></tr>
-          <tr><td class="kpi-name-cell">HTTP 401 from Databricks</td><td>PAT expired</td><td>Generate a new token; update <code>.env</code> and GitHub Secrets</td></tr>
+          <tr><td class="kpi-name-cell">Push rejected: "fetch first"</td><td>Remote has commits your local doesn't (e.g. Actions ran)</td><td>Run <code>git pull --rebase origin main</code> then <code>git push</code></td></tr>
+          <tr><td class="kpi-name-cell">Vercel repo not found</td><td>Vercel not authorized on your GitHub account</td><td>On the Vercel import screen, click "Adjust GitHub App Permissions" → Install on your account → select the repo</td></tr>
+          <tr><td class="kpi-name-cell">Vercel shows 404</td><td>Root URL has no index file</td><td>Add <code>/dashboard.html</code> to the end of your Vercel URL</td></tr>
+          <tr><td class="kpi-name-cell">HTTP 401 from Databricks</td><td>PAT expired (usually after 90 days)</td><td>Generate a new token in Databricks; update <code>.env</code> and GitHub Secrets</td></tr>
           <tr><td class="kpi-name-cell"><code>wait_timeout</code> error</td><td>Value out of range</td><td>Must be <code>5s</code> to <code>50s</code> (use <code>50s</code>)</td></tr>
           <tr><td class="kpi-name-cell"><code>.env</code> key has ﻿ prefix</td><td>BOM added by PowerShell Out-File</td><td>Open <code>.env</code> with <code>encoding='utf-8-sig'</code> in Python</td></tr>
           <tr><td class="kpi-name-cell">Filters don't update KPIs</td><td>Old pre-aggregated JSON format</td><td>Re-run <code>fetch_data.py</code> to generate raw-records format</td></tr>
-          <tr><td class="kpi-name-cell">GitHub Pages shows old version</td><td>Browser cache</td><td>Hard refresh: <code>Ctrl + Shift + R</code></td></tr>
+          <tr><td class="kpi-name-cell">Dashboard shows old data</td><td>Browser cache</td><td>Hard refresh: <code>Ctrl + Shift + R</code></td></tr>
         </tbody>
       </table>
 
@@ -5460,7 +5446,9 @@ function _builderRenderPromptInner() {
     + 'FILTERS IN DASHBOARD:\n'
     + '  • Date filter style: ' + _dateStyleLine + '\n'
     + (_dateScope==='specific' && fromDate ? '  • Default date range: ' + fromDate + ' to ' + (toDate||'') + '\n' : '  • Default: All Data\n')
-    + (subFilters.length ? '  • Add these as dropdown slicer controls (NOT tabs — use <select> dropdowns or styled pill slicers the user can click to filter the whole dashboard): ' + subFilters.join(', ') + '\n' : '')
+    + (subFilters.length
+        ? '  • Sub-filter slicers (ONLY these — do not add others): ' + subFilters.join(', ') + '\n'
+        : '  • No sub-filter slicers — date range only\n')
     + '\n'
     + '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n'
     + '🧱 DATA PLATFORM (shared.revops)\n'
@@ -5491,7 +5479,7 @@ function _builderRenderPromptInner() {
     + '                otp_only (one-time payment), mrr_lt_12 (recurring <12 mo), implem_fee,\n'
     + '                amount, tcv, arr\n'
     + '  PEOPLE:       sales_rep, co_owner, inbound_lead, deal_split_owner_names, hubspot_team\n'
-    + '  SEGMENTATION: segment  [Enterprise | Mid-Market | SME — NOTE: MICRO maps to SME]\n'
+    + '  SEGMENTATION: segment  [ENT | SME — actual values in data; MICRO maps to SME; never remap ENT → "Enterprise"]\n'
     + '                ⚠️  Column is "segment" in silver_deals — NOT "segment_official" (that only exists in gold tables)\n'
     + '                ⚠️  industry and sub_industry do NOT exist in silver_deals — JOIN silver_company on company_id to get them\n'
     + '                client_type, city_municipality_province, headcount\n'
@@ -5521,7 +5509,7 @@ function _builderRenderPromptInner() {
     + 'shared.revops.silver_company  (1 row per company, join on company_id)\n'
     + '  Company_id, Company_name, Registered_company_name, Company_domain_name\n'
     + '  Brands  [PH Sprout | TH Sprout | PH Sprout, TH Sprout]\n'
-    + '  Segment  [Enterprise | Mid-Market | SME], Service_level_csm\n'
+    + '  Segment  [ENT | SME — same values as silver_deals; MICRO maps to SME], Service_level_csm\n'
     + '  Industry, Sub_industry\n'
     + '  Headcount, HR_headcount_active_client, Payroll_headcount_active_client\n'
     + '  Client_type, Client_status, Client_stage, Lifecycle_stage, Account_tier\n'
@@ -5588,7 +5576,12 @@ function _builderRenderPromptInner() {
     + '   deal_type NOT IN (\'Renewal\',\'Upsell - Renewal\') AND LOWER(COALESCE(deal_name,\'\')) NOT LIKE \'%renewal%\'\n\n'
     + '2. SEGMENT STANDARDIZATION:\n'
     + '   In silver_deals the column is "segment" (NOT "segment_official" — that only exists in gold tables).\n'
-    + '   Always apply: CASE WHEN UPPER(segment)=\'MICRO\' THEN \'SME\' ELSE segment END\n\n'
+    + '   Always apply: CASE WHEN UPPER(segment)=\'MICRO\' THEN \'SME\' ELSE segment END\n'
+    + '   ⚠️ Actual segment values in data: "SME" and "ENT" — never remap "ENT" to "Enterprise".\n'
+    + '   In JavaScript: filter/compare using "SME" and "ENT" as the exact strings. Do NOT normalize "ENT" → "Enterprise".\n'
+    + '   If you write a normSeg() function: CASE WHEN UPPER(s)=\'MICRO\' OR UPPER(s)=\'SME\' THEN \'SME\'\n'
+    + '                                           WHEN UPPER(s)=\'ENT\' OR UPPER(s)=\'ENTERPRISE\' THEN \'ENT\'\n'
+    + '                                           ELSE s END — keep Enterprise label as "ENT" throughout.\n\n'
     + '3. Always use department_source_clean (NOT raw department_source)\n'
     + '4. MRR = recurring revenue | ef_mrr = Embedded Finance (ReadyCash + ReadyWage)\n\n'
     + '5. GOLD_TARGETS — JavaScript pivot pattern (CRITICAL — always use this exact pattern):\n'
@@ -5639,30 +5632,35 @@ function _builderRenderPromptInner() {
     + 'KPI Scorecards (each card: current value + LY comparison + % change arrow):\n'
     + '  ' + _kpiList + '\n\n'
     + '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n'
-    + '🗂️  DASHBOARD STRUCTURE — 2 to 3 pages MAX\n'
+    + '🗂️  DASHBOARD STRUCTURE — implement ONLY the selected views below\n'
     + '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n'
-    + 'Do NOT create separate tabs for Trends, MoM, or Distribution — these are views, not pages.\n'
-    + 'Instead, fold them into the relevant page as additional charts.\n\n'
-    + 'Recommended page structure:\n'
-    + '  Page 1 — Summary: KPI scorecards + key time-series bar charts (MRR, Won Deals, Pipeline MRR vs Target)\n'
-    + '           MoM comparison belongs here as a bar chart (current month vs prior month, side-by-side bars)\n'
-    + '  Page 2 — Breakdown: By Rep, By Team, By Segment, By Pipeline, By Source\n'
-    + '           Distribution charts (donut/pie breakdowns) belong here as supporting visuals\n'
-    + '  Page 3 — Deal Details: Sortable, filterable deal-level data table\n\n'
+    + '⚠️ STRICT: Only build the views listed here. Do NOT add extra charts, sections, or breakdowns beyond what is selected.\n'
+    + 'Do NOT create a separate tab or page per view — fold all selected views into 2–3 pages max.\n\n'
+    + 'SELECTED VIEWS (implement ONLY these — nothing else):\n'
+    + viewList + '\n'
+    + '- [Page 3 — always included] Deal Details: Sortable, filterable deal-level data table\n\n'
     + '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n'
     + '🔽 SLICER / FILTER RULES (critical)\n'
     + '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n'
-    + (subFilters.length ? 'Slicer filters to implement: ' + subFilters.join(', ') + '\n\n' : '')
+    + '⚠️ STRICT: Implement ONLY the filter slicers listed below. Do NOT add any other filters not on this list.\n'
+    + (subFilters.length
+        ? 'Filter slicers to implement: ' + subFilters.join(', ') + '\n\n'
+        : 'No sub-filters selected — include a date range filter ONLY. Do NOT add segment, rep, team, stage, or any other dropdowns.\n\n')
     + '  • Implement as dropdown <select> slicers at the top of the dashboard — NOT tabs\n'
     + '  • Every slicer MUST filter ALL charts, KPI cards, and the deal table on every page simultaneously\n'
     + '  • Use a single shared filter state object; all chart render functions read from it before drawing\n'
     + '  • Changing any slicer re-renders every visual on the current page instantly\n\n'
-    + 'Filter population rules:\n'
-    + '  • Sales Rep dropdown → populate ONLY from active_reps in dashboard.json\n'
-    + '    (deals in current calendar year, Sales Pipeline + Unified Channel Pipeline + Upsell Pipeline only)\n'
-    + '  • Teams dropdown → same source (active_reps), same pipeline constraint\n'
-    + '  • Segment dropdown → only show "SME" and "ENT" — no other values\n'
-    + '  • Stage/Pipeline dropdowns → only show stages/pipelines that have at least 1 deal (no zero-count options)\n\n'
+    + (subFilters.length ? 'Population rules for selected filters:\n'
+        + (subFilters.some(function(f){return f.indexOf('Sales Rep')>=0;})
+            ? '  • Sales Rep dropdown → populate ONLY from active_reps in dashboard.json\n    (deals in current calendar year, Sales Pipeline + Unified Channel Pipeline + Upsell Pipeline only)\n' : '')
+        + (subFilters.some(function(f){return f.indexOf('Team')>=0;})
+            ? '  • Team dropdown → same source as active_reps, same pipeline constraint\n' : '')
+        + (subFilters.some(function(f){return f.indexOf('Segment')>=0;})
+            ? '  • Segment dropdown → only show "SME" and "ENT" — no other values\n' : '')
+        + (subFilters.some(function(f){return f.indexOf('Deal Stage')>=0 || f.indexOf('Pipeline')>=0;})
+            ? '  • Stage/Pipeline dropdowns → only show values that have at least 1 deal (no zero-count options)\n' : '')
+        + '\n'
+        : '')
     + '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n'
     + '📊 CHART TYPE RULES\n'
     + '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n'
@@ -5700,7 +5698,7 @@ function _builderRenderPromptInner() {
     + '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n'
     + '.gitignore → include: .env, __pycache__/, *.pyc, node_modules/, refresh_log.txt, data/dashboard.json\n\n'
     + 'refresh_and_push.bat → cd to project folder, run python fetch_data.py,\n'
-    + 'git add data/dashboard.json, commit with timestamp, git push origin master.\n'
+    + 'git add data/dashboard.json, commit with timestamp, git push origin main.\n'
     + 'Log output to refresh_log.txt. Exit on error.\n\n'
     + 'refresh.yml → schedule at 8:30 AM, 1:30 PM, 5:15 PM PHT\n'
     + '(PHT = UTC+8, so cron: \'30 0 * * *\', \'30 5 * * *\', \'15 9 * * *\'), plus workflow_dispatch.\n'
