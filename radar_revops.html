@@ -2004,28 +2004,24 @@ python fetch_data.py
     </div>
     <div class="cf-field-row">
       <div class="cf-field-name">Industry</div>
-            <div class="cf-multiselect" data-table="silver_company" data-field="Industry">
+                  <div class="cf-multiselect" data-table="silver_company" data-field="Industry">
       <button type="button" class="cf-ms-trigger" onclick="toggleMultiselect(this.parentElement)">
         <span class="cf-ms-display">&#8212; All &#8212;</span><span class="cf-ms-arrow">&#9660;</span>
       </button>
       <div class="cf-ms-menu">
-        <label class="cf-ms-opt"><input type="checkbox" value="Banking" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Banking</label>
-        <label class="cf-ms-opt"><input type="checkbox" value="Computer Software" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Computer Software</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Accommodation and Food Service Activities" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Accommodation & Food Services</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Administrative and Support Service activities" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Admin & Support Services</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Arts, Entertainment, and Recreation" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Arts, Entertainment & Recreation</label>
         <label class="cf-ms-opt"><input type="checkbox" value="Construction" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Construction</label>
-        <label class="cf-ms-opt"><input type="checkbox" value="Education Management" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Education</label>
-        <label class="cf-ms-opt"><input type="checkbox" value="Financial Services" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Financial Services</label>
-        <label class="cf-ms-opt"><input type="checkbox" value="Food & Beverages" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Food & Beverages</label>
-        <label class="cf-ms-opt"><input type="checkbox" value="Government Administration" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Government</label>
-        <label class="cf-ms-opt"><input type="checkbox" value="Hospital & Health Care" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Healthcare</label>
-        <label class="cf-ms-opt"><input type="checkbox" value="Human Resources" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Human Resources</label>
-        <label class="cf-ms-opt"><input type="checkbox" value="Information Technology and Services" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> IT Services</label>
-        <label class="cf-ms-opt"><input type="checkbox" value="Insurance" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Insurance</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Education" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Education</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Financial and Insurance Activities" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Financial & Insurance</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Human Health and Social Work Activities" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Human Health & Social Work</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Information and Communication" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Information & Communication</label>
         <label class="cf-ms-opt"><input type="checkbox" value="Manufacturing" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Manufacturing</label>
-        <label class="cf-ms-opt"><input type="checkbox" value="Outsourcing/Offshoring" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> BPO / Outsourcing</label>
-        <label class="cf-ms-opt"><input type="checkbox" value="Real Estate" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Real Estate</label>
-        <label class="cf-ms-opt"><input type="checkbox" value="Retail" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Retail</label>
-        <label class="cf-ms-opt"><input type="checkbox" value="Staffing and Recruiting" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Staffing & Recruiting</label>
-        <label class="cf-ms-opt"><input type="checkbox" value="Telecommunications" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Telecommunications</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Professional, Scientific, and Technical Services" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Professional & Technical Services</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Real Estate Activities" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Real Estate</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Transportation and Storage" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Transportation & Storage</label>
+        <label class="cf-ms-opt"><input type="checkbox" value="Wholesale and Retail Trade (inc. motor vehicles and motorcycles)" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Wholesale & Retail Trade</label>
       </div>
     </div>
     </div>
@@ -2047,26 +2043,7 @@ python fetch_data.py
 
   <!-- LINE ITEMS -->
   <div class="cf-table-panel" id="cf-panel-lineitems" style="display:none">
-    <div class="cf-field-row">
-      <div class="cf-field-name">Product</div>
-      <div class="cf-multiselect" data-table="silver_line_items" data-field="parent_product">
-      <button type="button" class="cf-ms-trigger" onclick="toggleMultiselect(this.parentElement)">
-        <span class="cf-ms-display">&#8212; All &#8212;</span><span class="cf-ms-arrow">&#9660;</span>
-      </button>
-      <div class="cf-ms-menu">
-        <label class="cf-ms-opt"><input type="checkbox" value="HR and Payroll" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> HR and Payroll</label>
-        <label class="cf-ms-opt"><input type="checkbox" value="JazzHR" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> JazzHR</label>
-        <label class="cf-ms-opt"><input type="checkbox" value="Disprz" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Disprz</label>
-        <label class="cf-ms-opt"><input type="checkbox" value="Performance+" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Performance+</label>
-        <label class="cf-ms-opt"><input type="checkbox" value="Olivia Expense" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Olivia Expense</label>
-        <label class="cf-ms-opt"><input type="checkbox" value="Britana" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Britana</label>
-        <label class="cf-ms-opt"><input type="checkbox" value="Kwik Insure" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Kwik Insure</label>
-        <label class="cf-ms-opt"><input type="checkbox" value="Tability" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Tability</label>
-        <label class="cf-ms-opt"><input type="checkbox" value="Wellness" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Wellness</label>
-        <label class="cf-ms-opt"><input type="checkbox" value="Beppo" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Beppo</label>
-      </div>
-    </div>
-    </div>
+    
     <div class="cf-field-row">
       <div class="cf-field-name">Product Category</div>
             <div class="cf-multiselect" data-table="silver_line_items" data-field="product_category">
@@ -2269,26 +2246,7 @@ python fetch_data.py
 
   <!-- LICENSES -->
   <div class="cf-table-panel" id="cf-panel-licenses" style="display:none">
-    <div class="cf-field-row">
-      <div class="cf-field-name">Product</div>
-      <div class="cf-multiselect" data-table="silver_licenses" data-field="parent_product">
-      <button type="button" class="cf-ms-trigger" onclick="toggleMultiselect(this.parentElement)">
-        <span class="cf-ms-display">&#8212; All &#8212;</span><span class="cf-ms-arrow">&#9660;</span>
-      </button>
-      <div class="cf-ms-menu">
-        <label class="cf-ms-opt"><input type="checkbox" value="HR and Payroll" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> HR and Payroll</label>
-        <label class="cf-ms-opt"><input type="checkbox" value="JazzHR" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> JazzHR</label>
-        <label class="cf-ms-opt"><input type="checkbox" value="Disprz" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Disprz</label>
-        <label class="cf-ms-opt"><input type="checkbox" value="Performance+" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Performance+</label>
-        <label class="cf-ms-opt"><input type="checkbox" value="Olivia Expense" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Olivia Expense</label>
-        <label class="cf-ms-opt"><input type="checkbox" value="Britana" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Britana</label>
-        <label class="cf-ms-opt"><input type="checkbox" value="Kwik Insure" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Kwik Insure</label>
-        <label class="cf-ms-opt"><input type="checkbox" value="Tability" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Tability</label>
-        <label class="cf-ms-opt"><input type="checkbox" value="Wellness" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Wellness</label>
-        <label class="cf-ms-opt"><input type="checkbox" value="Beppo" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Beppo</label>
-      </div>
-    </div>
-    </div>
+    
     <div class="cf-field-row">
       <div class="cf-field-name">Status</div>
       <div class="cf-multiselect" data-table="silver_licenses" data-field="status">
