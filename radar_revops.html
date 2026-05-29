@@ -2720,18 +2720,6 @@ python fetch_data.py
       </div>
     </div>
 
-    <!-- Step 5: .env credentials -->
-    <div class="connect-step">
-      <div class="connect-step-header">
-        <div class="connect-step-num">5</div>
-        <div class="connect-step-title">Paste your <code style="background:rgba(29,185,84,.12);color:#1DB954;padding:1px 6px;border-radius:4px;font-size:12px">.env</code> file contents <span class="optional-tag">Optional</span></div>
-      </div>
-      <div class="connect-step-desc">If you paste your <code>.env</code> file, the generated prompt will include your actual Databricks credentials instead of placeholder values — Claude can connect straight away without any manual edits.<br><span style="color:rgba(255,255,255,.25);font-size:10px">⚠ Only DATABRICKS_HOST, DATABRICKS_HTTP_PATH, and DATABRICKS_TOKEN are read. Nothing else is sent anywhere.</span></div>
-      <textarea class="connect-textarea" id="cf-env" placeholder="DATABRICKS_HOST=adb-xxxxxxxxxxxxxxxxx.xx.azuredatabricks.net
-DATABRICKS_HTTP_PATH=/sql/1.0/warehouses/xxxxxxxxxxxxxxxx
-DATABRICKS_TOKEN=dapi..." rows="4" style="font-family:'Courier New',monospace;font-size:11px;letter-spacing:.3px"></textarea>
-    </div>
-
     <!-- Generate button -->
     <div id="connect-error" style="display:none;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:10px;padding:10px 16px;margin-bottom:12px;font-size:12px;color:#F87171;text-align:center"></div>
     <div style="text-align:center;margin:24px 0 10px;display:flex;gap:12px;justify-content:center;align-items:center">
@@ -6023,9 +6011,6 @@ function resetConnectForm() {
   if (ytd) ytd.classList.add('active');
   // Clear uploaded file
   clearCodeUpload();
-  // Clear .env input
-  const envField = document.getElementById('cf-env');
-  if (envField) envField.value = '';
   // Hide output
   document.getElementById('connect-output').style.display = 'none';
   // Scroll back to top of section
@@ -6117,73 +6102,26 @@ shared.revops.silver_licenses — 1 row per license/product availed
           license_start_date, license_end_date, renewal_date, churn_effectivity_date, brands
   Joins: LEFT JOIN silver_company ON company_id; LEFT JOIN silver_deals ON deal_id`;
 
-  const connectionRef = hasEnv
-    ? `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  const connectionRef = `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 DATABRICKS CONNECTION
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Create a file called .env in the project root with exactly these contents:
 
-  DATABRICKS_HOST=${dbHost}
-  DATABRICKS_HTTP_PATH=${dbPath}
-  DATABRICKS_TOKEN=${dbToken}
+  DATABRICKS_HOST=adb-XXXXXXXXXXXXXXXX.XX.azuredatabricks.net
+  DATABRICKS_HTTP_PATH=/sql/1.0/warehouses/XXXXXXXXXXXXXXXXX
+  DATABRICKS_TOKEN=dapi...your-personal-access-token...
 
-Then in fetch_data.py, read credentials from that .env file — never hardcode them.
-Load with: open('.env', encoding='utf-8-sig') and parse KEY=VALUE lines.
-Add ".env" to .gitignore immediately so it is never committed to git.
+In fetch_data.py, load credentials from that .env file using:
+  open('.env', encoding='utf-8-sig') and parse KEY=VALUE lines.
 
-The dashboard (dashboard.html) reads from the JSON file that fetch_data.py produces.
-It does not touch the .env directly — only the Python script does.
+Add ".env" to .gitignore immediately — it must never be committed to git.
+The dashboard.html reads from the JSON file that fetch_data.py produces.
+It does not touch .env directly — only the Python script does.
 
-⚠️ Security: .env must never be committed to git. Use GitHub Secrets for CI/CD.`
-    : `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-DATABRICKS CONNECTION
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Endpoint : POST https://{hostname}/api/2.0/sql/statements
-Auth     : Bearer {personal_access_token}
-HTTP Path: /sql/1.0/warehouses/{warehouse_id}
-
-CONNECTION APPROACH — choose based on project type:
-
-Option A — Python project (fetch_data.py + dashboard.html):
-  Read credentials from a .env file in the project root. NEVER hardcode. NEVER commit.
-  .env file contents:
-    DATABRICKS_HOST=adb-XXXXXXXXXXXXXXXX.XX.azuredatabricks.net
-    DATABRICKS_HTTP_PATH=/sql/1.0/warehouses/XXXXXXXXXXXXXXXXX
-    DATABRICKS_TOKEN=dapi...your-personal-access-token...
-  Add ".env" to .gitignore immediately.
-  Load in Python with: open('.env', encoding='utf-8-sig') and parse KEY=VALUE lines.
-  ⚠️ Security: Never hardcode credentials. .env must never be committed to git.
-
-Option B — Standalone HTML dashboard (browser-only, no Python):
-  Store credentials in localStorage using keys:
-    radar_hostname, radar_token, radar_http_path
-  Show a connection/settings modal on first load if credentials are not set.
-  ⚠️ Security: Never embed the PAT token inside the HTML source code itself.`;
-
-  // ── Parse .env input ───────────────────────────────────────
-  const envRaw = (document.getElementById('cf-env').value || '').trim();
-  const envVars = {};
-  envRaw.split('\n').forEach(line => {
-    line = line.trim();
-    if (!line || line.startsWith('#')) return;
-    const eq = line.indexOf('=');
-    if (eq === -1) return;
-    const k = line.slice(0, eq).trim();
-    const v = line.slice(eq + 1).trim();
-    if (v) envVars[k] = v;
-  });
-  const dbHost  = envVars['DATABRICKS_HOST']      || null;
-  const dbPath  = envVars['DATABRICKS_HTTP_PATH'] || null;
-  const dbToken = envVars['DATABRICKS_TOKEN']     || null;
-  const hasEnv  = dbHost && dbPath && dbToken;
-  const warehouseId = dbPath ? dbPath.split('/').pop() : '{warehouse_id}';
+⚠️ Security: Never hardcode credentials. Use GitHub Secrets for CI/CD workflows.`;
 
   const isPython = code && /^import |^from |def |pip install|fetch_data|\.py\b/.test(code);
-  const credNote = hasEnv
-    ? '• Create a .env file in the project root with the Databricks credentials listed in the CONNECTION section above. Read those credentials in fetch_data.py using open(\'.env\', encoding=\'utf-8-sig\'). Add .env to .gitignore. Never hardcode. Never commit.'
-    : isPython
-      ? '• Read Databricks credentials from a .env file (see CONNECTION APPROACH above — Option A). Never hardcode credentials. Add .env to .gitignore.'
-      : '• Store Databricks credentials in localStorage (see CONNECTION APPROACH above — Option B). Never embed the PAT in the HTML source.';
+  const credNote = '• Create a .env file in the project root with the Databricks credentials listed in the CONNECTION section above. Read those credentials in fetch_data.py using open(\'.env\', encoding=\'utf-8-sig\'). Add .env to .gitignore. Never hardcode. Never commit.';
 
   const instructions = code
     ? `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
