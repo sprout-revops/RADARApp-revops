@@ -6058,15 +6058,19 @@ AVAILABLE TABLES — shared.revops (Databricks)
 🥇 GOLD (use first — pre-aggregated)
 shared.revops.gold_monthly_exec_summary — monthly KPIs
   Fields: metric_month, pipeline_name, segment_official, department_source_clean,
-          qualified_leads, sales_qualified_leads, won_deals, won_mrr, win_rate, avg_deal_size, avg_deal_velocity, mrr_in_pipeline
+          qualified_leads, sales_qualified_leads, won_deals, won_mrr, won_ef_mrr, won_amount,
+          win_rate, avg_deal_size, avg_deal_velocity, mrr_in_pipeline
 
 shared.revops.gold_targets — monthly targets
   Fields: metric_month, pipeline_name, segment_official, department_source_clean, target_type, target_value
 
 🥈 SILVER (for drilldown or missing metrics)
 shared.revops.silver_deals — 1 row per deal
-  Fields: deal_id, sales_rep, hubspot_team, pipeline_name, deal_type, stage_label, client_journey_stage,
-          create_date, close_date, mrr, ef_mrr, tcv, segment, department_source_clean, qualified_lead
+  Fields: deal_id, deal_name, deal_type, pipeline_name, stage_label, client_journey_stage, qualified_lead,
+          create_date, close_date, projected_close_date, deal_velocity_days,
+          mrr, ef_mrr, otp_only, mrr_lt_12, implem_fee, amount, tcv,
+          sales_rep, hubspot_team, partner_on_record, company_id,
+          segment [ENT | SME — actual values; MICRO maps to SME], department_source_clean, original_channel_source
   ⚠️ industry/sub_industry NOT in silver_deals — LEFT JOIN silver_company on company_id
 
 shared.revops.silver_company — 1 row per company
