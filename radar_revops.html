@@ -2720,6 +2720,18 @@ python fetch_data.py
       </div>
     </div>
 
+    <!-- Step 5: .env credentials -->
+    <div class="connect-step">
+      <div class="connect-step-header">
+        <div class="connect-step-num">5</div>
+        <div class="connect-step-title">Paste your <code style="background:rgba(29,185,84,.12);color:#1DB954;padding:1px 6px;border-radius:4px;font-size:12px">.env</code> file contents <span class="optional-tag">Optional</span></div>
+      </div>
+      <div class="connect-step-desc">If you paste your <code>.env</code> file, the generated prompt will include your actual Databricks credentials instead of placeholder values — Claude can connect straight away without any manual edits.<br><span style="color:rgba(255,255,255,.25);font-size:10px">⚠ Only DATABRICKS_HOST, DATABRICKS_HTTP_PATH, and DATABRICKS_TOKEN are read. Nothing else is sent anywhere.</span></div>
+      <textarea class="connect-textarea" id="cf-env" placeholder="DATABRICKS_HOST=adb-xxxxxxxxxxxxxxxxx.xx.azuredatabricks.net
+DATABRICKS_HTTP_PATH=/sql/1.0/warehouses/xxxxxxxxxxxxxxxx
+DATABRICKS_TOKEN=dapi..." rows="4" style="font-family:'Courier New',monospace;font-size:11px;letter-spacing:.3px"></textarea>
+    </div>
+
     <!-- Generate button -->
     <div id="connect-error" style="display:none;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:10px;padding:10px 16px;margin-bottom:12px;font-size:12px;color:#F87171;text-align:center"></div>
     <div style="text-align:center;margin:24px 0 10px;display:flex;gap:12px;justify-content:center;align-items:center">
@@ -6011,6 +6023,9 @@ function resetConnectForm() {
   if (ytd) ytd.classList.add('active');
   // Clear uploaded file
   clearCodeUpload();
+  // Clear .env input
+  const envField = document.getElementById('cf-env');
+  if (envField) envField.value = '';
   // Hide output
   document.getElementById('connect-output').style.display = 'none';
   // Scroll back to top of section
@@ -6102,7 +6117,24 @@ shared.revops.silver_licenses — 1 row per license/product availed
           license_start_date, license_end_date, renewal_date, churn_effectivity_date, brands
   Joins: LEFT JOIN silver_company ON company_id; LEFT JOIN silver_deals ON deal_id`;
 
-  const connectionRef = `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  const connectionRef = hasEnv
+    ? `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DATABRICKS CONNECTION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Endpoint    : POST https://${dbHost}/api/2.0/sql/statements
+Auth        : Bearer ${dbToken}
+HTTP Path   : ${dbPath}
+Warehouse ID: ${warehouseId}
+
+CONNECTION APPROACH — Python project (fetch_data.py + dashboard.html):
+  Read credentials from a .env file in the project root. The .env should contain:
+    DATABRICKS_HOST=${dbHost}
+    DATABRICKS_HTTP_PATH=${dbPath}
+    DATABRICKS_TOKEN=${dbToken}
+  Load with: open('.env', encoding='utf-8-sig') and parse KEY=VALUE lines.
+  Add ".env" to .gitignore immediately. NEVER hardcode. NEVER commit the token.
+  ⚠️ Security: .env must never be committed to git. Use GitHub Secrets for CI/CD.`
+    : `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 DATABRICKS CONNECTION
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Endpoint : POST https://{hostname}/api/2.0/sql/statements
@@ -6126,6 +6158,24 @@ Option B — Standalone HTML dashboard (browser-only, no Python):
     radar_hostname, radar_token, radar_http_path
   Show a connection/settings modal on first load if credentials are not set.
   ⚠️ Security: Never embed the PAT token inside the HTML source code itself.`;
+
+  // ── Parse .env input ───────────────────────────────────────
+  const envRaw = (document.getElementById('cf-env').value || '').trim();
+  const envVars = {};
+  envRaw.split('\n').forEach(line => {
+    line = line.trim();
+    if (!line || line.startsWith('#')) return;
+    const eq = line.indexOf('=');
+    if (eq === -1) return;
+    const k = line.slice(0, eq).trim();
+    const v = line.slice(eq + 1).trim();
+    if (v) envVars[k] = v;
+  });
+  const dbHost  = envVars['DATABRICKS_HOST']      || null;
+  const dbPath  = envVars['DATABRICKS_HTTP_PATH'] || null;
+  const dbToken = envVars['DATABRICKS_TOKEN']     || null;
+  const hasEnv  = dbHost && dbPath && dbToken;
+  const warehouseId = dbPath ? dbPath.split('/').pop() : '{warehouse_id}';
 
   const isPython = code && /^import |^from |def |pip install|fetch_data|\.py\b/.test(code);
   const credNote = isPython
