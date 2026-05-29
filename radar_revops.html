@@ -6121,19 +6121,20 @@ shared.revops.silver_licenses — 1 row per license/product availed
     ? `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 DATABRICKS CONNECTION
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Endpoint    : POST https://${dbHost}/api/2.0/sql/statements
-Auth        : Bearer ${dbToken}
-HTTP Path   : ${dbPath}
-Warehouse ID: ${warehouseId}
+Create a file called .env in the project root with exactly these contents:
 
-CONNECTION APPROACH — Python project (fetch_data.py + dashboard.html):
-  Read credentials from a .env file in the project root. The .env should contain:
-    DATABRICKS_HOST=${dbHost}
-    DATABRICKS_HTTP_PATH=${dbPath}
-    DATABRICKS_TOKEN=${dbToken}
-  Load with: open('.env', encoding='utf-8-sig') and parse KEY=VALUE lines.
-  Add ".env" to .gitignore immediately. NEVER hardcode. NEVER commit the token.
-  ⚠️ Security: .env must never be committed to git. Use GitHub Secrets for CI/CD.`
+  DATABRICKS_HOST=${dbHost}
+  DATABRICKS_HTTP_PATH=${dbPath}
+  DATABRICKS_TOKEN=${dbToken}
+
+Then in fetch_data.py, read credentials from that .env file — never hardcode them.
+Load with: open('.env', encoding='utf-8-sig') and parse KEY=VALUE lines.
+Add ".env" to .gitignore immediately so it is never committed to git.
+
+The dashboard (dashboard.html) reads from the JSON file that fetch_data.py produces.
+It does not touch the .env directly — only the Python script does.
+
+⚠️ Security: .env must never be committed to git. Use GitHub Secrets for CI/CD.`
     : `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 DATABRICKS CONNECTION
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -6178,9 +6179,11 @@ Option B — Standalone HTML dashboard (browser-only, no Python):
   const warehouseId = dbPath ? dbPath.split('/').pop() : '{warehouse_id}';
 
   const isPython = code && /^import |^from |def |pip install|fetch_data|\.py\b/.test(code);
-  const credNote = isPython
-    ? '• Read Databricks credentials from a .env file (see CONNECTION APPROACH above — Option A). Never hardcode credentials. Add .env to .gitignore.'
-    : '• Store Databricks credentials in localStorage (see CONNECTION APPROACH above — Option B). Never embed the PAT in the HTML source.';
+  const credNote = hasEnv
+    ? '• Create a .env file in the project root with the Databricks credentials listed in the CONNECTION section above. Read those credentials in fetch_data.py using open(\'.env\', encoding=\'utf-8-sig\'). Add .env to .gitignore. Never hardcode. Never commit.'
+    : isPython
+      ? '• Read Databricks credentials from a .env file (see CONNECTION APPROACH above — Option A). Never hardcode credentials. Add .env to .gitignore.'
+      : '• Store Databricks credentials in localStorage (see CONNECTION APPROACH above — Option B). Never embed the PAT in the HTML source.';
 
   const instructions = code
     ? `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
