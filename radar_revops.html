@@ -570,13 +570,6 @@ body{font-family:'Rubik','Bahnschrift Light SemiCondensed','Bahnschrift',Arial,s
 .bd-select-multi option{padding:4px 6px}
 .bd-select-multi option:checked{background:#1a3a2a;color:#4ade80}
 
-.bd-source-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
-.bd-source-card{display:flex;align-items:center;gap:8px;padding:9px 14px;background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.1);border-radius:8px;cursor:pointer;transition:all .15s;user-select:none;font-size:12px;font-weight:600;color:rgba(255,255,255,.55)}
-.bd-source-card:hover{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.18);color:#e2e8f0}
-.bd-source-card input[type=checkbox]{display:none}
-.bd-source-card.src-checked{background:rgba(29,185,84,.1);border-color:rgba(29,185,84,.4);color:#4ade80}
-.bd-source-card.src-primary{background:rgba(29,185,84,.06);border-color:rgba(29,185,84,.25);color:#86efac;cursor:default}
-.bd-source-join-hint{font-size:10px;color:rgba(255,255,255,.25);margin-top:8px;line-height:1.6;font-family:"Courier New",monospace}
 .bd-date-mode-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
 .bd-date-mode-btn{display:flex;align-items:center;gap:6px;padding:7px 16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:6px;cursor:pointer;font-size:13px;color:#94a3b8;transition:all .15s}
 .bd-date-mode-btn:has(input:checked){background:rgba(16,185,129,.15);border-color:rgba(16,185,129,.4);color:#4ade80}
@@ -625,6 +618,7 @@ body{font-family:'Rubik','Bahnschrift Light SemiCondensed','Bahnschrift',Arial,s
     <div class="sidebar-tab" id="tab-dash" onclick="switchTab('dash')">📊 Dashboard Studio</div>
     <div class="sidebar-tab" id="tab-dashboards" onclick="switchTab('dashboards')">📱 Dashboards</div>
     <div class="sidebar-tab" id="tab-connect" onclick="switchTab('connect')">🔌 Connect to RADAR</div>
+    <div class="sidebar-tab" id="tab-request" onclick="switchTab('request')">🗂️ Request Data</div>
 
   </div>
   <div class="content-area">
@@ -1473,37 +1467,6 @@ DATABRICKS_TOKEN</div>
       <div class="bd-section">
         <div class="bd-section-title">Dashboard Name</div>
         <input class="builder-input" id="bd-name" type="text" placeholder="e.g. Leads Dashboard Q2 2026" style="max-width:480px">
-      </div>
-
-      <!-- Data Sources -->
-      <div class="bd-section">
-        <div class="bd-section-title">Data Sources <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:10px;color:rgba(255,255,255,.3)">Select tables to combine — Deals is always included</span></div>
-        <div class="bd-source-grid" id="bd-source-grid">
-          <div class="bd-source-card src-primary" title="Always included as the primary table">
-            <span>📋</span> Deals <span style="font-size:9px;opacity:.6;margin-left:2px">(primary)</span>
-          </div>
-          <label class="bd-source-card" id="bds-company" onclick="bdSourceToggle('company')">
-            <input type="checkbox" id="bds-cb-company">
-            <span>🏢</span> Company
-          </label>
-          <label class="bd-source-card" id="bds-lineitems" onclick="bdSourceToggle('lineitems')">
-            <input type="checkbox" id="bds-cb-lineitems">
-            <span>📦</span> Line Items
-          </label>
-          <label class="bd-source-card" id="bds-contacts" onclick="bdSourceToggle('contacts')">
-            <input type="checkbox" id="bds-cb-contacts">
-            <span>👤</span> Contacts
-          </label>
-          <label class="bd-source-card" id="bds-leads" onclick="bdSourceToggle('leads')">
-            <input type="checkbox" id="bds-cb-leads">
-            <span>🎯</span> Leads
-          </label>
-          <label class="bd-source-card" id="bds-licenses" onclick="bdSourceToggle('licenses')">
-            <input type="checkbox" id="bds-cb-licenses">
-            <span>📄</span> Licenses
-          </label>
-        </div>
-        <div class="bd-source-join-hint" id="bd-source-join-hint" style="display:none"></div>
       </div>
 
       <!-- Date Filter -->
@@ -5402,32 +5365,6 @@ function bdDateScope(scope) {
     inp.style.display = 'none';
   }
 }
-var BD_SOURCES = {
-  company:   { label:'Company',    table:'silver_company',    join:'LEFT JOIN shared.revops.silver_company c ON d.company_id = c.company_id',    note:'industry, sub_industry, company_name, company_size' },
-  lineitems: { label:'Line Items', table:'silver_line_items', join:'LEFT JOIN shared.revops.silver_line_items li ON d.deal_id = li.deal_id',       note:'product_name, quantity, unit_price, line_item_amount' },
-  contacts:  { label:'Contacts',   table:'silver_contacts',   join:'LEFT JOIN shared.revops.silver_contacts con ON d.company_id = con.company_id', note:'contact_name, email, job_title, lifecycle_stage' },
-  leads:     { label:'Leads',      table:'silver_leads',      join:'LEFT JOIN shared.revops.silver_leads l ON d.company_id = l.company_id',        note:'lead_source, lead_status, lead_score, qualified' },
-  licenses:  { label:'Licenses',   table:'silver_licenses',   join:'LEFT JOIN shared.revops.silver_licenses lic ON c.company_id = lic.company_id', note:'license_type, license_count, start_date, end_date (requires Company)' }
-};
-function bdSourceToggle(key) {
-  var cb   = document.getElementById('bds-cb-' + key);
-  var card = document.getElementById('bds-' + key);
-  if (!cb || !card) return;
-  cb.checked = !cb.checked;
-  card.classList.toggle('src-checked', cb.checked);
-  // Update join hint
-  var selected = Object.keys(BD_SOURCES).filter(function(k){ var c2=document.getElementById('bds-cb-'+k); return c2&&c2.checked; });
-  var hint = document.getElementById('bd-source-join-hint');
-  if (selected.length) {
-    hint.style.display = 'block';
-    hint.innerHTML = 'Join plan:<br>' + selected.map(function(k){ return '  ' + BD_SOURCES[k].join + '<br>  → fields: ' + BD_SOURCES[k].note; }).join('<br>');
-  } else {
-    hint.style.display = 'none';
-  }
-}
-function bdGetSelectedSources() {
-  return Object.keys(BD_SOURCES).filter(function(k){ var cb=document.getElementById('bds-cb-'+k); return cb&&cb.checked; });
-}
 function bdViewToggle(cb) {
   var card = cb.closest ? cb.closest('.bd-view-card') : cb.parentNode;
   if (card) card.classList.toggle('bd-view-checked', cb.checked);
@@ -5568,34 +5505,6 @@ function _builderRenderPromptInner() {
   var _dateStyleLine  = _dashDateStyle==='between' ? 'Date Between (start/end date pickers)'
     : _dashDateStyle==='monthly' ? 'Monthly Dropdown (month + year)' : 'Not specified';
 
-  // ── Selected extra data sources ──
-  var _extraSources = bdGetSelectedSources();
-  var _sourceBlock = '';
-  if (_extraSources.length) {
-    var srcLines = _extraSources.map(function(k){
-      var s = BD_SOURCES[k];
-      return '  • ' + s.label + ' (' + s.table + ')\n    Join: ' + s.join + '\n    Key fields: ' + s.note;
-    }).join('\n');
-    var joinBlock = _extraSources.map(function(k){ return '  ' + BD_SOURCES[k].join; }).join('\n');
-    _sourceBlock =
-      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n'
-      + '🔗 MULTI-TABLE DATA SOURCES\n'
-      + '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n'
-      + 'This dashboard combines data from multiple shared.revops tables.\n'
-      + 'Primary table: silver_deals (alias d)\n'
-      + 'Additional tables to JOIN:\n'
-      + srcLines + '\n\n'
-      + 'Apply these JOINs to Query 1 (the raw deal-level query):\n'
-      + 'FROM shared.revops.silver_deals d\n'
-      + joinBlock + '\n\n'
-      + '⚠️  Rules for multi-table queries:\n'
-      + '• Always alias every table (d, c, li, con, l, lic) to avoid ambiguous column names\n'
-      + '• Use LEFT JOIN (not INNER JOIN) so deals without matching rows are not dropped\n'
-      + '• If Line Items is selected: aggregate at deal level (SUM/COUNT) or keep one row per line item and handle duplicates in the dashboard\n'
-      + '• If Leads is selected: one company may have many leads — GROUP BY or DISTINCT to avoid row explosion\n'
-      + '• If Licenses requires Company: ensure Company JOIN is also included\n\n';
-  }
-
   var _promptText =
     'You are a RevOps Data Analytics Engineer at Sprout Solutions.\n\n'
     + '⚠️  OUTPUT FORMAT — IMPORTANT:\n'
@@ -5631,7 +5540,6 @@ function _builderRenderPromptInner() {
     + '• Always follow the DataPedia definitions below — these are the approved source of truth for ALL metrics\n'
     + '• Never change the business logic or formula of any metric from what is defined in the DataPedia\n'
     + '• Always prioritize GOLD tables for aggregated/chart data; use SILVER for drilldown/record-level queries only\n\n'
-    + _sourceBlock
     + '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n'
     + '📁 FILE 1: fetch_data.py — Requirements\n'
     + '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n'
