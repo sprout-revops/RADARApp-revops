@@ -350,6 +350,53 @@ body{font-family:'Rubik','Bahnschrift Light SemiCondensed','Bahnschrift',Arial,s
 .home-card.card-connect{border-color:rgba(29,185,84,.2);background:rgba(29,185,84,.04)}
 .home-card.card-connect:hover{background:rgba(29,185,84,.1);border-color:rgba(29,185,84,.5);box-shadow:0 16px 0 rgba(0,0,0,.5),0 24px 60px rgba(29,185,84,.25),inset 0 1px 0 rgba(255,255,255,.1)}
 .home-card.card-connect .home-card-arrow{color:#1DB954}
+.home-card.card-request{border-color:rgba(245,158,11,.2);background:rgba(245,158,11,.04)}
+.home-card.card-request:hover{background:rgba(245,158,11,.1);border-color:rgba(245,158,11,.5);box-shadow:0 16px 0 rgba(0,0,0,.5),0 24px 60px rgba(245,158,11,.2),inset 0 1px 0 rgba(255,255,255,.1)}
+.home-card.card-request .home-card-arrow{color:#F59E0B}
+/* ── REQUEST DATA SOURCE ── */
+.rq-hero{background:linear-gradient(135deg,#0d0a00 0%,#1a1200 60%,#0d1200 100%);padding:28px 28px 22px;color:#fff;border-bottom:1px solid rgba(245,158,11,.12)}
+.rq-hero h1{font-size:20px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:10px}
+.rq-hero p{color:rgba(255,255,255,.5);font-size:13px;line-height:1.65;max-width:680px;margin-bottom:18px}
+.rq-process{display:flex;align-items:center;gap:0;flex-wrap:wrap;gap:6px}
+.rq-step{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);border-radius:8px;padding:7px 14px;font-size:11px;font-weight:700;color:#FCD34D;letter-spacing:.3px;display:flex;align-items:center;gap:7px}
+.rq-step-num{width:20px;height:20px;border-radius:50%;background:#F59E0B;color:#000;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.rq-arrow{color:rgba(245,158,11,.35);font-size:14px;font-weight:700}
+.rq-body{display:grid;grid-template-columns:1fr 320px;gap:0;min-height:calc(100vh - 300px)}
+.rq-form-panel{padding:24px 28px;border-right:1px solid rgba(255,255,255,.06)}
+.rq-gov-panel{padding:20px 20px;background:#060a04}
+.rq-label{font-size:11px;font-weight:700;color:rgba(255,255,255,.5);letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px;margin-top:18px;display:block}
+.rq-label:first-child{margin-top:0}
+.rq-input{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:9px 12px;font-size:13px;color:#e2e8f0;font-family:'Rubik',Arial,sans-serif;transition:border-color .15s,background .15s;outline:none}
+.rq-input:focus{border-color:rgba(245,158,11,.5);background:rgba(245,158,11,.04)}
+.rq-textarea{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:9px 12px;font-size:13px;color:#e2e8f0;font-family:'Rubik',Arial,sans-serif;transition:border-color .15s,background .15s;outline:none;resize:vertical;min-height:80px}
+.rq-textarea:focus{border-color:rgba(245,158,11,.5);background:rgba(245,158,11,.04)}
+.rq-select{width:100%;background:#0d1117;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:9px 12px;font-size:13px;color:#e2e8f0;font-family:'Rubik',Arial,sans-serif;outline:none;cursor:pointer;transition:border-color .15s}
+.rq-select:focus{border-color:rgba(245,158,11,.5)}
+.rq-priority-row{display:flex;gap:8px;flex-wrap:wrap}
+.rq-priority-btn{padding:6px 16px;border-radius:20px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:rgba(255,255,255,.5);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:'Rubik',Arial,sans-serif}
+.rq-priority-btn.sel-low{background:rgba(100,200,100,.12);border-color:rgba(100,200,100,.4);color:#6ee7b7}
+.rq-priority-btn.sel-medium{background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.4);color:#FCD34D}
+.rq-priority-btn.sel-high{background:rgba(251,146,60,.12);border-color:rgba(251,146,60,.4);color:#FCA97A}
+.rq-priority-btn.sel-critical{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.4);color:#FCA5A5}
+.rq-row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.rq-generate-btn{margin-top:22px;width:100%;padding:12px;background:rgba(245,158,11,.15);border:1.5px solid rgba(245,158,11,.4);border-radius:10px;color:#FCD34D;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;font-family:'Rubik',Arial,sans-serif;box-shadow:0 3px 0 rgba(0,0,0,.4)}
+.rq-generate-btn:hover{background:rgba(245,158,11,.25);border-color:#F59E0B;transform:translateY(-1px);box-shadow:0 5px 0 rgba(0,0,0,.4),0 8px 20px rgba(245,158,11,.2)}
+.rq-generate-btn:active{transform:translateY(1px);box-shadow:0 1px 0 rgba(0,0,0,.4)}
+.rq-output-box{margin-top:18px;background:#020507;border:1px solid rgba(245,158,11,.2);border-radius:10px;overflow:hidden;display:none}
+.rq-output-header{background:rgba(245,158,11,.08);padding:9px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(245,158,11,.12)}
+.rq-output-label{font-size:11px;font-weight:700;color:#F59E0B;letter-spacing:.5px;text-transform:uppercase}
+.rq-copy-btn{background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.25);border-radius:6px;padding:4px 12px;font-size:11px;font-weight:700;color:#FCD34D;cursor:pointer;transition:all .15s;font-family:'Rubik',Arial,sans-serif}
+.rq-copy-btn:hover{background:rgba(245,158,11,.22);border-color:#F59E0B}
+.rq-output-text{padding:14px 16px;font-size:11.5px;color:#DFE6E9;line-height:1.75;white-space:pre-wrap;font-family:"Courier New",monospace;max-height:360px;overflow-y:auto}
+.rq-gov-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:rgba(245,158,11,.7);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid rgba(245,158,11,.12)}
+.rq-gov-rule{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:10px 12px;margin-bottom:8px;font-size:12px;color:rgba(255,255,255,.55);line-height:1.55}
+.rq-gov-rule strong{color:rgba(255,255,255,.8);display:block;margin-bottom:2px;font-size:11px}
+.rq-gov-rule.warn{border-color:rgba(245,158,11,.2);background:rgba(245,158,11,.04)}
+.rq-gov-rule.warn strong{color:#FCD34D}
+.rq-sla-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:12px}
+.rq-sla-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:10px;text-align:center}
+.rq-sla-val{font-size:18px;font-weight:800;color:#F59E0B}
+.rq-sla-lbl{font-size:10px;color:rgba(255,255,255,.4);margin-top:2px}
 .info-box{background:rgba(16,185,129,.08);border-left:3px solid #10B981;border-radius:0 8px 8px 0;padding:10px 14px;font-size:12px;color:#6EE7B7;line-height:1.6;margin:14px 0}
 .info-box strong{color:#10B981}
 /* ── DASHBOARDS ── */
@@ -571,6 +618,7 @@ body{font-family:'Rubik','Bahnschrift Light SemiCondensed','Bahnschrift',Arial,s
     <div class="sidebar-tab" id="tab-dash" onclick="switchTab('dash')">📊 Dashboard Studio</div>
     <div class="sidebar-tab" id="tab-dashboards" onclick="switchTab('dashboards')">📱 Dashboards</div>
     <div class="sidebar-tab" id="tab-connect" onclick="switchTab('connect')">🔌 Connect to RADAR</div>
+    <div class="sidebar-tab" id="tab-request" onclick="switchTab('request')">🗂️ Request Data</div>
 
   </div>
   <div class="content-area">
@@ -626,6 +674,15 @@ body{font-family:'Rubik','Bahnschrift Light SemiCondensed','Bahnschrift',Arial,s
         <div class="home-card-desc" style="margin-top:4px">Generate a Claude prompt that adds live RADAR data to your existing dashboard — just pick your metrics and copy. No SQL needed.</div>
       </div>
       <div class="home-card-arrow" style="flex-shrink:0;white-space:nowrap">ADD RADAR DATA →</div>
+    </div>
+
+    <div class="home-card card-request" onclick="switchTab('request')" style="max-width:740px;width:100%;margin-top:4px;display:flex;flex-direction:row;align-items:center;gap:20px;padding:22px 26px">
+      <div style="font-size:36px;line-height:1;flex-shrink:0">🗂️</div>
+      <div style="flex:1">
+        <div class="home-card-title">Need data that's not in RADAR yet?</div>
+        <div class="home-card-desc" style="margin-top:4px">Submit a formal data source request — fill in the details and generate a structured ticket for RevOps review. New sources go through governance before being added to shared.revops.</div>
+      </div>
+      <div class="home-card-arrow" style="flex-shrink:0;white-space:nowrap">REQUEST DATA →</div>
     </div>
 
     <div class="home-version">RADAR v2.0 · shared.revops · Databricks</div>
@@ -2747,6 +2804,130 @@ python fetch_data.py
   </div>
 </div><!-- /section-connect -->
 
+<!-- SECTION: REQUEST DATA SOURCE -->
+<div class="section" id="section-request" style="display:none">
+  <div class="rq-hero">
+    <h1>🗂️ Request a New Data Source</h1>
+    <p>Don't see the data you need in RADAR? Submit a formal request below. RevOps will review it, Engineering will scope the work, and once approved the data will be added to <strong style="color:#FCD34D">shared.revops</strong> and available to all dashboards.</p>
+    <div class="rq-process">
+      <div class="rq-step"><span class="rq-step-num">1</span>Submit Request</div>
+      <div class="rq-arrow">›</div>
+      <div class="rq-step"><span class="rq-step-num">2</span>RevOps Reviews</div>
+      <div class="rq-arrow">›</div>
+      <div class="rq-step"><span class="rq-step-num">3</span>Engineering Scopes</div>
+      <div class="rq-arrow">›</div>
+      <div class="rq-step"><span class="rq-step-num">4</span>Data Added to RADAR</div>
+    </div>
+  </div>
+
+  <div class="rq-body">
+    <!-- ── FORM ── -->
+    <div class="rq-form-panel">
+      <label class="rq-label">Data Source / System Name <span style="color:#EF4444">*</span></label>
+      <input class="rq-input" id="rq-source-name" placeholder="e.g. Zuora subscription events, HubSpot sequences, Gong calls…">
+
+      <label class="rq-label">Source System</label>
+      <select class="rq-select" id="rq-source-system">
+        <option value="">— Select system —</option>
+        <option>HubSpot</option>
+        <option>Salesforce</option>
+        <option>Zuora</option>
+        <option>Gong</option>
+        <option>Outreach</option>
+        <option>Google Analytics</option>
+        <option>Stripe</option>
+        <option>Jira</option>
+        <option>Internal Database</option>
+        <option>Other / Manual Upload</option>
+      </select>
+
+      <label class="rq-label">Business Justification <span style="color:#EF4444">*</span></label>
+      <textarea class="rq-textarea" id="rq-justification" placeholder="Why is this data needed? Which decisions or dashboards will it power?"></textarea>
+
+      <label class="rq-label">Metrics / Fields Needed <span style="color:#EF4444">*</span></label>
+      <textarea class="rq-textarea" id="rq-fields" placeholder="List the specific fields, metrics, or dimensions required (e.g. subscription_start_date, MRR by product line, call duration by rep)…"></textarea>
+
+      <label class="rq-label">Estimated Impact</label>
+      <input class="rq-input" id="rq-impact" placeholder="e.g. 3 dashboards, 12 users, weekly exec reporting…">
+
+      <label class="rq-label">Priority</label>
+      <div class="rq-priority-row" id="rq-priority-row">
+        <button class="rq-priority-btn" onclick="setPriority('Low')" id="rq-p-Low">🟢 Low</button>
+        <button class="rq-priority-btn" onclick="setPriority('Medium')" id="rq-p-Medium">🟡 Medium</button>
+        <button class="rq-priority-btn" onclick="setPriority('High')" id="rq-p-High">🟠 High</button>
+        <button class="rq-priority-btn" onclick="setPriority('Critical')" id="rq-p-Critical">🔴 Critical</button>
+      </div>
+
+      <div class="rq-row2" style="margin-top:18px">
+        <div>
+          <label class="rq-label" style="margin-top:0">Your Name <span style="color:#EF4444">*</span></label>
+          <input class="rq-input" id="rq-name" placeholder="Your name">
+        </div>
+        <div>
+          <label class="rq-label" style="margin-top:0">Your Team</label>
+          <input class="rq-input" id="rq-team" placeholder="e.g. Marketing, Sales, CS…">
+        </div>
+      </div>
+
+      <button class="rq-generate-btn" onclick="generateRequest()">✦ Generate Request Ticket →</button>
+
+      <!-- Output -->
+      <div class="rq-output-box" id="rq-output-box">
+        <div class="rq-output-header">
+          <span class="rq-output-label">📋 Request Ticket — Ready to Copy</span>
+          <button class="rq-copy-btn" onclick="copyRequest()">⎘ Copy</button>
+        </div>
+        <div class="rq-output-text" id="rq-output-text"></div>
+      </div>
+
+      <div style="height:40px"></div>
+    </div>
+
+    <!-- ── GOVERNANCE SIDEBAR ── -->
+    <div class="rq-gov-panel">
+      <div class="rq-gov-title">📋 Governance Guidelines</div>
+
+      <div class="rq-gov-rule warn">
+        <strong>All requests require RevOps approval</strong>
+        Data sources are reviewed for quality, relevance, and alignment with shared.revops standards before any engineering work begins.
+      </div>
+
+      <div class="rq-gov-rule">
+        <strong>Naming conventions apply</strong>
+        All new fields must follow the <code style="font-size:10px;background:rgba(255,255,255,.08);padding:1px 5px;border-radius:3px;color:#1DB954">shared.revops</code> naming convention. RevOps will align field names during scoping.
+      </div>
+
+      <div class="rq-gov-rule">
+        <strong>PII requires additional sign-off</strong>
+        Any data containing personally identifiable information (name, email, phone) needs Security &amp; Legal approval before it can be ingested.
+      </div>
+
+      <div class="rq-gov-rule">
+        <strong>One source of truth</strong>
+        Approved data is added to the shared layer — not siloed per team. All dashboards can reference it once it's in RADAR.
+      </div>
+
+      <div class="rq-gov-title" style="margin-top:20px">⏱ Typical SLA</div>
+      <div class="rq-sla-grid">
+        <div class="rq-sla-card">
+          <div class="rq-sla-val">2 wks</div>
+          <div class="rq-sla-lbl">RevOps Review</div>
+        </div>
+        <div class="rq-sla-card">
+          <div class="rq-sla-val">4–6 wks</div>
+          <div class="rq-sla-lbl">Engineering Delivery</div>
+        </div>
+      </div>
+
+      <div class="rq-gov-title" style="margin-top:20px">📬 Contact</div>
+      <div class="rq-gov-rule">
+        <strong>RevOps Data Team</strong>
+        For urgent requests or questions about the process, reach out to the RevOps team directly on Slack or via the RADAR feedback channel.
+      </div>
+    </div>
+  </div>
+</div><!-- /section-request -->
+
   </div><!-- /content-area -->
 </div><!-- /app-layout -->
 
@@ -2959,6 +3140,74 @@ function switchTab(t) {
   const layout = document.querySelector('.app-layout');
   if (layout) layout.classList.toggle('home-mode', t === 'home');
   if (t === 'connect') initConnectSection();
+}
+
+// ── REQUEST DATA SOURCE ──
+let rqPriority = '';
+function setPriority(p) {
+  rqPriority = p;
+  ['Low','Medium','High','Critical'].forEach(x => {
+    const btn = document.getElementById('rq-p-' + x);
+    btn.className = 'rq-priority-btn' + (x === p ? ' sel-' + x.toLowerCase() : '');
+  });
+}
+
+function generateRequest() {
+  const name    = (document.getElementById('rq-source-name').value || '').trim();
+  const system  = (document.getElementById('rq-source-system').value || '').trim();
+  const just    = (document.getElementById('rq-justification').value || '').trim();
+  const fields  = (document.getElementById('rq-fields').value || '').trim();
+  const impact  = (document.getElementById('rq-impact').value || '').trim();
+  const who     = (document.getElementById('rq-name').value || '').trim();
+  const team    = (document.getElementById('rq-team').value || '').trim();
+  const prio    = rqPriority || 'Not specified';
+
+  if (!name || !just || !fields || !who) {
+    alert('Please fill in the required fields: Source Name, Justification, Fields Needed, and Your Name.');
+    return;
+  }
+
+  const today = new Date().toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
+  const ticket = `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RADAR DATA SOURCE REQUEST
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Date Submitted : ${today}
+Requested By   : ${who}${team ? ' · ' + team : ''}
+Priority       : ${prio}
+
+── SOURCE DETAILS ────────────────────
+Data Source    : ${name}${system ? '\nSource System  : ' + system : ''}
+
+── BUSINESS JUSTIFICATION ────────────
+${just}
+
+── METRICS / FIELDS NEEDED ───────────
+${fields}
+${impact ? '\n── ESTIMATED IMPACT ──────────────────\n' + impact : ''}
+── NEXT STEPS ────────────────────────
+→ Submit this ticket to the RevOps Data Team via Jira or Slack
+→ RevOps will review within 2 weeks
+→ Engineering scoping begins after approval
+→ Data added to shared.revops upon completion
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Generated by RADAR · shared.revops Data Platform
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
+
+  const outBox  = document.getElementById('rq-output-box');
+  const outText = document.getElementById('rq-output-text');
+  outText.textContent = ticket;
+  outBox.style.display = 'block';
+  outBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function copyRequest() {
+  const text = document.getElementById('rq-output-text').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('.rq-copy-btn');
+    btn.textContent = '✓ Copied!';
+    setTimeout(() => { btn.textContent = '⎘ Copy'; }, 2000);
+  });
 }
 
 // ── DATABASE ──
