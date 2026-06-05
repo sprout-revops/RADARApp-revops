@@ -3644,6 +3644,12 @@ function handleGoogleSignIn(response) {
   }
   localStorage.setItem('radar_user_email', email);
   document.getElementById('login-error').textContent = '';
+  var params = new URLSearchParams(window.location.search);
+  var redirect = params.get('redirect');
+  if (redirect && redirect.startsWith('https://sprout-revops.github.io/')) {
+    window.location.href = redirect;
+    return;
+  }
   document.getElementById('login-overlay').style.display = 'none';
   document.getElementById('app-root').style.display = 'block';
   document.getElementById('user-email-display').textContent = email;
