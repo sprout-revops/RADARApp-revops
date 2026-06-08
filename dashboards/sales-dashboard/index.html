@@ -1,0 +1,2585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>(function(){var e=localStorage.getItem('radar_user_email');if(!e||!e.endsWith('@sprout.ph')){window.location.replace('https://sprout-revops.github.io/RADARApp-revops/radar_revops.html?redirect='+encodeURIComponent(window.location.href));}})()</script>
+<title>Sales Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Syne', sans-serif; background: #0e0f14; min-height: 100vh; color: #e2e4ed; }
+
+/* ── Tab Bar ───────────────────────────────────── */
+.tab-bar { display:flex; align-items:center; gap:4px; padding:16px 32px 0; border-bottom:1px solid #ffffff0d; background:#0e0f14; position:sticky; top:0; z-index:50; flex-wrap:wrap; }
+.tab-bar-title { font-size:13px; font-weight:800; color:#ffffff25; letter-spacing:0.06em; text-transform:uppercase; margin-right:16px; }
+.tab { font-family:'Syne',sans-serif; font-size:12px; font-weight:700; letter-spacing:0.05em; padding:10px 20px; border:none; background:transparent; color:#ffffff35; cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-1px; transition:all 0.15s; border-radius:6px 6px 0 0; }
+.tab:hover { color:#ffffff70; background:#ffffff05; }
+.tab.active { color:#e8b86d; border-bottom-color:#e8b86d; background:#e8b86d08; }
+.tab-panel { display:none; }
+.tab-panel.active { display:block; }
+.filter-select { font-family:'IBM Plex Mono',monospace; font-size:10px; color:#ffffff70; background:#ffffff08; border:1px solid #ffffff15; border-radius:6px; padding:5px 10px; outline:none; cursor:pointer; }
+.filter-select option { background:#1a1a2e; }
+
+/* ── MRR Panel ─────────────────────────────────── */
+#mrr-panel { display:none; align-items:center; justify-content:center; padding:32px 24px; }
+#mrr-panel.active { display:flex; }
+.mrr-card { background:#1a1a2e; border-radius:16px; overflow:hidden; width:100%; max-width:920px; box-shadow:0 0 0 1px #ffffff0a, 0 24px 60px #00000060; }
+.mrr-card-top { padding:16px 20px 14px; display:flex; justify-content:space-between; align-items:flex-start; border-bottom:1px solid #ffffff0d; background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%); }
+.mrr-card-title { font-size:11px; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; color:#ffffff40; margin-bottom:4px; }
+.mrr-card-heading { font-size:20px; font-weight:800; color:#fff; letter-spacing:-0.3px; }
+.mrr-card-heading span { color:#e8b86d; }
+.date-chip { font-family:'IBM Plex Mono',monospace; font-size:11px; color:#ffffff50; background:#ffffff08; border:1px solid #ffffff10; padding:5px 11px; border-radius:20px; white-space:nowrap; }
+.mrr-table { width:100%; border-collapse:collapse; }
+.mrr-table thead tr { background:#ffffff06; }
+.mrr-table thead th { font-family:'IBM Plex Mono',monospace; font-size:10px; font-weight:500; letter-spacing:0.1em; text-transform:uppercase; color:#ffffff30; padding:10px 16px; text-align:right; }
+.mrr-table thead th:first-child { text-align:left; }
+.mrr-table tbody tr { border-top:1px solid #ffffff08; transition:background 0.15s; }
+.mrr-table tbody tr:hover { background:#ffffff04; }
+.mrr-table tbody td { padding:14px 16px; text-align:right; }
+.mrr-table tbody td:first-child { text-align:left; }
+.seg-label { font-size:15px; font-weight:700; color:#fff; }
+.money { font-family:'IBM Plex Mono',monospace; font-size:14px; color:#ffffffb0; }
+.money.actual { color:#fff; font-weight:500; }
+.yoy { font-family:'IBM Plex Mono',monospace; font-size:13px; }
+.ytd { display:inline-flex; align-items:center; justify-content:center; font-family:'IBM Plex Mono',monospace; font-size:13px; font-weight:500; padding:5px 14px; border-radius:6px; min-width:70px; }
+.ytd-over  { background:#22c55e18; color:#4ade80; border:1px solid #22c55e30; }
+.ytd-warn  { background:#f59e0b18; color:#fbbf24; border:1px solid #f59e0b30; }
+.ytd-under { background:#ef444418; color:#f87171; border:1px solid #ef444430; }
+.actual-wrap { display:flex; flex-direction:column; align-items:flex-end; gap:5px; }
+.mini-bar { width:80px; height:3px; background:#ffffff10; border-radius:99px; overflow:hidden; }
+.mini-fill { height:100%; border-radius:99px; }
+.mrr-footer { padding:10px 20px; background:#ffffff04; border-top:1px solid #ffffff08; display:flex; justify-content:space-between; align-items:center; }
+.footer-note { font-size:10px; font-family:'IBM Plex Mono',monospace; color:#ffffff25; letter-spacing:0.06em; }
+
+/* ── Forecast Panel ────────────────────────────── */
+#fc-panel { display:none; padding:32px 24px; }
+#fc-panel.active { display:block; }
+.fc-page { max-width:960px; margin:0 auto; display:flex; flex-direction:column; gap:14px; }
+.fc-page-header { display:flex; justify-content:space-between; align-items:flex-start; padding-bottom:18px; border-bottom:1px solid #ffffff0d; margin-bottom:4px; flex-wrap:wrap; gap:12px; }
+.fc-page-title { font-size:18px; font-weight:800; letter-spacing:-0.3px; color:#fff; }
+.fc-page-title span { color:#e8b86d; }
+.fc-header-right { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.month-picker { display:flex; gap:4px; flex-wrap:wrap; }
+.mpk-btn { font-family:'IBM Plex Mono',monospace; font-size:10px; font-weight:500; padding:4px 10px; border-radius:5px; border:1px solid #ffffff12; background:transparent; color:#ffffff40; cursor:pointer; transition:all 0.15s; position:relative; }
+.mpk-btn:hover { color:#ffffff70; border-color:#ffffff25; }
+.mpk-btn.active { color:#e8b86d; background:#e8b86d10; border-color:#e8b86d35; }
+.mpk-btn.has-override::after { content:''; position:absolute; top:3px; right:3px; width:4px; height:4px; border-radius:50%; background:#4ade80; }
+.fc-chips { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:4px; }
+.chip { font-family:'IBM Plex Mono',monospace; font-size:11px; padding:5px 12px; border-radius:20px; }
+.chip-target { color:#e8b86d; background:#e8b86d10; border:1px solid #e8b86d25; }
+.chip-date   { color:#ffffff45; background:#ffffff08; border:1px solid #ffffff10; }
+
+/* ── Shared Panel Styles ────────────────────────── */
+.panel { background:#13151f; border:1px solid #ffffff0d; border-radius:12px; overflow:hidden; }
+.panel-header { padding:11px 20px; border-bottom:1px solid #ffffff0a; display:flex; align-items:center; gap:8px; background:#ffffff04; }
+.panel-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+.panel-label { font-size:10px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:#ffffff40; }
+.panel-desc  { font-size:9px; color:#ffffff20; font-family:'IBM Plex Mono',monospace; margin-left:auto; letter-spacing:0.04em; }
+/* ── Forecast Edit Button & Modal ──────────────── */
+.fc-edit-btn { background:none; border:1px solid #ffffff20; border-radius:6px; color:#ffffff50; cursor:pointer; font-size:10px; padding:4px 10px; margin-left:8px; transition:all 0.15s; font-family:'IBM Plex Mono',monospace; letter-spacing:0.05em; flex-shrink:0; }
+.fc-edit-btn:hover { background:#ffffff10; color:#e8b86d; border-color:#e8b86d50; }
+.fc-modal-overlay { display:none; position:fixed; inset:0; background:#00000085; z-index:2000; align-items:center; justify-content:center; }
+.fc-modal-overlay.open { display:flex; }
+.fc-modal { background:#1a1a2e; border:1px solid #ffffff15; border-radius:16px; padding:28px 32px; width:440px; max-width:92vw; box-shadow:0 24px 60px #00000090; }
+.fc-modal-title { font-size:15px; font-weight:800; color:#fff; margin-bottom:4px; }
+.fc-modal-sub { font-size:11px; color:#ffffff40; font-family:'IBM Plex Mono',monospace; margin-bottom:24px; letter-spacing:0.06em; }
+.fc-modal-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:24px; }
+.fc-modal-field label { display:block; font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:#ffffff40; margin-bottom:6px; font-family:'Syne',sans-serif; }
+.fc-modal-field input { width:100%; background:#ffffff08; border:1px solid #ffffff15; border-radius:8px; padding:10px 14px; color:#fff; font-family:'IBM Plex Mono',monospace; font-size:13px; outline:none; transition:border 0.15s; -moz-appearance:textfield; }
+.fc-modal-field input::-webkit-outer-spin-button,.fc-modal-field input::-webkit-inner-spin-button { -webkit-appearance:none; }
+.fc-modal-field input:focus { border-color:#e8b86d60; background:#ffffff0d; }
+.fc-modal-actions { display:flex; gap:10px; justify-content:flex-end; }
+.fc-modal-clear { background:none; border:none; color:#f87171; cursor:pointer; padding:10px 0; font-size:11px; font-family:'IBM Plex Mono',monospace; letter-spacing:0.04em; margin-right:auto; transition:opacity 0.15s; }
+.fc-modal-clear:hover { opacity:0.7; text-decoration:underline; }
+.fc-modal-cancel { background:none; border:1px solid #ffffff20; border-radius:8px; color:#ffffff60; cursor:pointer; padding:10px 20px; font-size:12px; font-family:'Syne',sans-serif; font-weight:700; transition:all 0.15s; }
+.fc-modal-cancel:hover { background:#ffffff08; color:#fff; }
+.fc-modal-save { background:#e8b86d; border:none; border-radius:8px; color:#0e0f14; cursor:pointer; padding:10px 26px; font-size:12px; font-family:'Syne',sans-serif; font-weight:800; transition:all 0.15s; }
+.fc-modal-save:hover { background:#f0c97d; }
+.panel-label span { color:#ffffff70; }
+table { width:100%; border-collapse:collapse; }
+thead th { font-family:'IBM Plex Mono',monospace; font-size:10px; font-weight:500; letter-spacing:0.09em; text-transform:uppercase; color:#ffffff25; padding:9px 20px; text-align:right; background:#ffffff03; border-bottom:1px solid #ffffff08; }
+thead th:first-child { text-align:left; width:130px; }
+tbody tr { border-bottom:1px solid #ffffff07; transition:background 0.12s; }
+tbody tr:last-child { border-bottom:none; }
+tbody tr:hover { background:#ffffff04; }
+tbody td { padding:13px 20px; text-align:right; font-size:13px; }
+tbody td:first-child { text-align:left; }
+.row-seg { font-size:12px; font-weight:600; color:#ffffff60; letter-spacing:0.04em; }
+.row-seg.total { color:#ffffff90; font-size:13px; }
+.num { font-family:'IBM Plex Mono',monospace; font-size:12px; color:#ffffffa0; }
+.num.bright { color:#fff; font-weight:500; }
+.num.gold   { color:#e8b86d; font-weight:500; }
+.num.dim    { color:#ffffff30; }
+.num.green  { color:#4ade80; }
+.num.blue   { color:#93c5fd; }
+.num.purple { color:#c4b5fd; }
+.num.amber  { color:#fcd34d; }
+.num.teal   { color:#5eead4; }
+.num.red    { color:#f87171; }
+.att-cell { display:flex; flex-direction:column; align-items:flex-end; gap:4px; }
+.att-pct { font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:500; }
+.att-bar { width:70px; height:3px; background:#ffffff10; border-radius:99px; overflow:hidden; }
+.att-fill { height:100%; border-radius:99px; }
+.total-row td { background:#ffffff05; }
+.impl-row { display:flex; border-top:1px solid #ffffff08; }
+.impl-cell { flex:1; padding:12px 20px; border-right:1px solid #ffffff08; }
+.impl-cell:last-child { border-right:none; }
+.impl-label { font-size:9px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:#ffffff30; margin-bottom:5px; }
+.impl-val { font-family:'IBM Plex Mono',monospace; font-size:14px; font-weight:500; }
+.case-grid { display:grid; grid-template-columns:1fr 1fr; }
+.case-cell { padding:14px 20px; border-right:1px solid #ffffff08; }
+.case-cell:last-child { border-right:none; }
+.case-title { font-size:9px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:#ffffff25; margin-bottom:10px; }
+.case-row-item { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+.case-seg { font-size:11px; color:#ffffff45; }
+.case-val { font-family:'IBM Plex Mono',monospace; font-size:12px; color:#ffffffa0; min-width:90px; text-align:right; }
+.case-total { border-top:1px solid #ffffff0a; margin-top:8px; padding-top:8px; }
+
+/* ── Top Deals Panel ───────────────────────────── */
+#deals-panel { display:none; padding:24px; }
+#deals-panel.active { display:block; }
+.deals-wrap { max-width:1200px; margin:0 auto; }
+.deals-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; flex-wrap:wrap; gap:12px; }
+.deals-title-sub { font-size:10px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:#ffffff25; margin-bottom:4px; }
+.deals-title { font-size:20px; font-weight:800; color:#fff; letter-spacing:-0.3px; }
+.deals-totals { display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+.deals-total-block { text-align:right; }
+.deals-total-label { font-size:9px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; margin-bottom:2px; }
+.deals-total-val { font-family:'IBM Plex Mono',monospace; font-size:18px; font-weight:500; }
+.deals-total-count { font-size:9px; color:#ffffff25; font-family:'IBM Plex Mono',monospace; }
+.deals-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.fc-cat-tag { display:inline-block; font-size:9px; font-weight:700; letter-spacing:0.06em; padding:2px 7px; border-radius:4px; }
+.src-tag { display:inline-block; font-size:9px; font-weight:700; letter-spacing:0.06em; padding:2px 7px; border-radius:4px; }
+.empty-row { padding:20px; text-align:center; font-size:12px; color:#ffffff20; font-family:'IBM Plex Mono',monospace; }
+
+/* ── Actuals Summary Panel ──────────────────────── */
+#actuals-panel { display:none; padding:32px 24px; }
+#actuals-panel.active { display:block; }
+.act-page { max-width:1300px; margin:0 auto; display:flex; flex-direction:column; gap:14px; }
+.act-page-header { padding-bottom:18px; border-bottom:1px solid #ffffff0d; margin-bottom:4px; }
+.act-page-title { font-size:20px; font-weight:800; letter-spacing:-0.3px; color:#fff; }
+.act-page-title span { color:#e8b86d; }
+.act-split { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.act-half { overflow:hidden; }
+tfoot tr { border-top:2px solid #ffffff12; }
+tfoot td { padding:10px 20px; font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:600; text-align:right; background:#ffffff05; }
+tfoot td:first-child { text-align:left; font-size:10px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:#ffffff50; }
+.act-mon-label { font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:#ffffff50; }
+.act-cur-mon td { background:#e8b86d06; }
+.act-cur-mon .act-mon-label { color:#e8b86d; }
+.act-zero { color:#ffffff15 !important; }
+
+/* ── No Data Overlay ────────────────────────────── */
+.no-data { text-align:center; padding:48px 24px; }
+.no-data-icon { font-size:32px; margin-bottom:12px; opacity:0.4; }
+.no-data-text { font-size:13px; color:#ffffff30; font-family:'IBM Plex Mono',monospace; }
+
+/* ── Responsive ─────────────────────────────────── */
+@media (max-width: 768px) {
+  .tab-bar { padding:10px 12px 0; }
+  .tab { font-size:11px; padding:8px 12px; }
+  #mrr-panel { padding:12px; }
+  #fc-panel { padding:12px; }
+  .mrr-table { display:block; overflow-x:auto; }
+  table { display:block; overflow-x:auto; }
+  .deals-grid { grid-template-columns:1fr; }
+  .case-grid { grid-template-columns:1fr; }
+  .case-cell { border-right:none; border-bottom:1px solid #ffffff08; }
+}
+
+/* ── Mode Switcher ──────────────────────────────── */
+.mode-bar { display:flex; align-items:center; gap:6px; padding:10px 32px; background:#080910; border-bottom:1px solid #ffffff0a; }
+.mode-label { font-family:'IBM Plex Mono',monospace; font-size:9px; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; color:#ffffff20; margin-right:6px; }
+.mode-btn { font-family:'Syne',sans-serif; font-size:12px; font-weight:700; letter-spacing:0.04em; padding:7px 20px; border-radius:8px; border:1px solid #ffffff12; background:transparent; color:#ffffff35; cursor:pointer; transition:all 0.2s; }
+.mode-btn:hover { color:#ffffff60; border-color:#ffffff25; background:#ffffff05; }
+.mode-btn.active { color:#e8b86d; background:#e8b86d0d; border-color:#e8b86d35; }
+
+/* ── Sales Performance Global ───────────────────── */
+.sp-panel { display:none; padding:28px 24px; }
+.sp-panel.active { display:block; }
+
+/* ── Rep Summary Table ──────────────────────────── */
+.sp-rep-table { width:100%; border-collapse:collapse; }
+.sp-rep-table thead th { font-family:'IBM Plex Mono',monospace; font-size:9px; font-weight:500; letter-spacing:0.1em; text-transform:uppercase; color:#ffffff25; padding:9px 12px; text-align:right; background:#ffffff03; border-bottom:1px solid #ffffff08; white-space:nowrap; }
+.sp-rep-table thead th:first-child { text-align:left; }
+.sp-rep-table thead th:nth-child(2) { text-align:left; }
+.sp-rep-table tbody tr { border-bottom:1px solid #ffffff07; transition:background 0.12s; }
+.sp-rep-table tbody tr:hover { background:#ffffff05; }
+.sp-rep-table tbody td { padding:11px 12px; text-align:right; font-family:'IBM Plex Mono',monospace; font-size:12px; color:#ffffffa0; white-space:nowrap; }
+.sp-rep-table tbody td:first-child { text-align:left; font-family:'Syne',sans-serif; font-size:13px; font-weight:600; color:#fff; }
+.sp-rep-table tbody td:nth-child(2) { text-align:left; }
+.sp-rep-att { display:inline-flex; align-items:center; justify-content:center; font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:600; padding:3px 10px; border-radius:5px; min-width:54px; }
+.sp-rep-att.over  { background:#22c55e18; color:#4ade80;  border:1px solid #22c55e30; }
+.sp-rep-att.hi    { background:#0ea5e918; color:#38bdf8;  border:1px solid #0ea5e930; }
+.sp-rep-att.mid   { background:#f59e0b18; color:#fbbf24;  border:1px solid #f59e0b30; }
+.sp-rep-att.under { background:#ef444418; color:#f87171;  border:1px solid #ef444430; }
+.team-badge { display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:9px; font-weight:700; letter-spacing:0.07em; padding:2px 8px; border-radius:4px; white-space:nowrap; }
+
+/* ── Segment Summary ────────────────────────────── */
+.seg-sum-wrap { max-width:1400px; margin:0 auto; display:flex; flex-direction:column; gap:16px; }
+.seg-sum-table { width:100%; border-collapse:collapse; }
+.seg-sum-table thead th { font-family:'IBM Plex Mono',monospace; font-size:9px; font-weight:500; letter-spacing:0.1em; text-transform:uppercase; color:#ffffff25; padding:8px 10px; text-align:right; background:#ffffff03; border-bottom:1px solid #ffffff08; white-space:nowrap; }
+.seg-sum-table thead th:first-child { text-align:left; width:56px; }
+.seg-sum-table thead th:nth-child(2) { text-align:left; width:52px; }
+.seg-sum-table tbody tr { border-bottom:1px solid #ffffff05; transition:background 0.12s; }
+.seg-sum-table tbody td { padding:7px 10px; text-align:right; font-family:'IBM Plex Mono',monospace; font-size:11px; color:#ffffffa0; }
+.seg-label-cell { text-align:left !important; font-family:'Syne',sans-serif; font-size:12px; font-weight:700; vertical-align:middle !important; border-right:1px solid #ffffff0a; padding:0 12px !important; white-space:nowrap; }
+.seg-row-label { font-family:'IBM Plex Mono',monospace !important; font-size:9px !important; font-weight:500 !important; letter-spacing:0.08em; text-transform:uppercase; color:#ffffff30 !important; text-align:left !important; padding:7px 8px !important; white-space:nowrap; }
+.seg-act-row td { background:#ffffff03; }
+.seg-tgt-row { border-top:2px solid #ffffff10 !important; }
+.seg-ach-row { border-bottom:2px solid #ffffff10 !important; }
+.seg-total-tgt-row { border-top:3px solid #ffffff18 !important; }
+.seg-total-act-row td { background:#ffffff05; }
+.total-seg-label { font-family:'IBM Plex Mono',monospace !important; font-size:10px !important; font-weight:700 !important; letter-spacing:0.08em; text-transform:uppercase; color:#ffffff50 !important; }
+
+/* ── Leaderboard ────────────────────────────────── */
+.lb-wrap { max-width:860px; margin:0 auto; }
+.lb-table { width:100%; border-collapse:collapse; }
+.lb-table thead th { font-family:'IBM Plex Mono',monospace; font-size:9px; font-weight:500; letter-spacing:0.1em; text-transform:uppercase; color:#ffffff25; padding:9px 14px; text-align:right; background:#ffffff03; border-bottom:1px solid #ffffff08; }
+.lb-table thead th:first-child { text-align:center; width:44px; }
+.lb-table thead th:nth-child(2) { text-align:left; }
+.lb-table thead th:nth-child(3) { text-align:left; }
+.lb-table tbody tr { border-bottom:1px solid #ffffff07; transition:background 0.12s; }
+.lb-table tbody tr:hover { background:#ffffff04; }
+.lb-table tbody td { padding:12px 14px; text-align:right; font-family:'IBM Plex Mono',monospace; font-size:12px; color:#ffffffa0; }
+.lb-table tbody td:first-child { text-align:center; }
+.lb-table tbody td:nth-child(2) { text-align:left; font-family:'Syne',sans-serif; font-size:13px; font-weight:600; color:#fff; }
+.lb-table tbody td:nth-child(3) { text-align:left; }
+.lb-rank { font-family:'Syne',sans-serif; font-size:20px; }
+
+/* ── Teams Grid ─────────────────────────────────── */
+.teams-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:16px; max-width:1200px; margin:0 auto; }
+.team-card { background:#13151f; border:1px solid #ffffff0d; border-radius:14px; overflow:hidden; }
+.team-card-header { padding:14px 18px; border-bottom:1px solid #ffffff08; display:flex; align-items:center; gap:10px; }
+.team-card-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.team-card-name { font-size:14px; font-weight:800; letter-spacing:-0.2px; flex:1; }
+.team-kpi-row { display:flex; border-bottom:1px solid #ffffff08; }
+.team-kpi { flex:1; padding:10px 14px; border-right:1px solid #ffffff08; }
+.team-kpi:last-child { border-right:none; }
+.team-kpi-label { font-size:9px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:#ffffff25; margin-bottom:4px; }
+.team-kpi-val { font-family:'IBM Plex Mono',monospace; font-size:15px; font-weight:500; }
+.team-reps { padding:10px 18px 14px; display:flex; flex-direction:column; gap:8px; }
+.team-rep-row { display:flex; align-items:center; gap:8px; }
+.team-rep-name { font-size:11px; color:#ffffff60; flex:0 0 140px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.team-rep-bar-wrap { flex:1; height:3px; background:#ffffff10; border-radius:99px; overflow:hidden; }
+.team-rep-bar-fill { height:100%; border-radius:99px; transition:width 0.4s; }
+.team-rep-pct { font-family:'IBM Plex Mono',monospace; font-size:10px; min-width:38px; text-align:right; }
+
+/* ── Accelerator ────────────────────────────────── */
+.accel-table { width:100%; border-collapse:collapse; }
+.accel-table thead th { font-family:'IBM Plex Mono',monospace; font-size:9px; font-weight:500; letter-spacing:0.08em; text-transform:uppercase; color:#ffffff25; padding:8px 6px; text-align:center; background:#ffffff03; border-bottom:1px solid #ffffff08; white-space:nowrap; }
+.accel-table thead th:first-child { text-align:left; padding-left:16px; width:150px; }
+.accel-table thead th:nth-child(2) { text-align:left; width:115px; }
+.accel-table tbody tr { border-bottom:1px solid #ffffff07; transition:background 0.12s; }
+.accel-table tbody tr:hover { background:#ffffff04; }
+.accel-table tbody td { padding:10px 6px; text-align:center; }
+.accel-table tbody td:first-child { text-align:left; padding-left:16px; font-family:'Syne',sans-serif; font-size:12px; font-weight:600; color:#fff; }
+.accel-table tbody td:nth-child(2) { text-align:left; }
+.accel-hit  { color:#4ade80; font-size:15px; cursor:pointer; user-select:none; }
+.accel-miss { color:#f87171; font-size:15px; cursor:pointer; user-select:none; }
+.accel-skip { color:#ffffff20; font-size:15px; cursor:pointer; user-select:none; }
+.accel-fut  { color:#ffffff15; font-size:13px; }
+.accel-cur  { font-size:11px; font-family:'IBM Plex Mono',monospace; cursor:pointer; user-select:none; }
+.accel-cell { transition:background .12s; border-radius:4px; }
+.accel-cell:hover { background:rgba(255,255,255,.06); }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════
+     MODE SWITCHER
+═══════════════════════════════════════════════ -->
+<div class="mode-bar">
+  <span class="mode-label">Dashboard</span>
+  <button class="mode-btn active" id="mode-salesops"  onclick="switchMode('salesops')">Sales Ops</button>
+  <button class="mode-btn"        id="mode-salesperf" onclick="switchMode('salesperf')">Sales Performance</button>
+</div>
+
+<div id="salesops-section">
+
+<!-- ═══════════════════════════════════════════════
+     TAB BAR
+═══════════════════════════════════════════════ -->
+<div class="tab-bar">
+  <span class="tab-bar-title">Sales Ops</span>
+  <button class="tab active" id="tab-mrr"     onclick="switchTab('mrr')">📊 MRR Performance</button>
+  <button class="tab"        id="tab-fc"      onclick="switchTab('fc')">🏆 Forecast Dashboard</button>
+  <button class="tab"        id="tab-deals"   onclick="switchTab('deals')">📋 Top Deals</button>
+  <button class="tab"        id="tab-actuals" onclick="switchTab('actuals')">📅 Actuals Summary</button>
+  <div style="margin-left:auto; padding-bottom:8px; display:flex; align-items:center; gap:10px;">
+    <span id="sync-status" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#ffffff25;letter-spacing:0.06em;">Loading...</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     MRR PERFORMANCE TAB
+═══════════════════════════════════════════════ -->
+<div id="mrr-panel" class="tab-panel active" style="display:flex; align-items:center; justify-content:center; padding:32px 24px;">
+  <div class="mrr-card">
+    <div class="mrr-card-top">
+      <div>
+        <div class="mrr-card-title">Monthly Recurring Revenue</div>
+        <div class="mrr-card-heading">MRR <span>Performance</span></div>
+      </div>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <div style="text-align:right;">
+          <div style="font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#ffffff25;margin-bottom:3px;">Sales Attainment</div>
+          <div id="sales-att-badge" style="font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:500;color:#fbbf24;">—</div>
+        </div>
+        <div class="date-chip" id="mrr-date-chip">—</div>
+      </div>
+    </div>
+
+    <table class="mrr-table">
+      <thead>
+        <tr>
+          <th>Segment</th>
+          <th>YTD Target</th>
+          <th>YTD Actual</th>
+          <th>YoY Growth</th>
+          <th>YTD Attainment</th>
+          <th>Wtd. Pipeline / Coverage</th>
+        </tr>
+      </thead>
+      <tbody id="mrr-tbody">
+        <tr><td colspan="6" class="empty-row">Loading data…</td></tr>
+      </tbody>
+    </table>
+
+    <div class="mrr-footer">
+      <span class="footer-note">SOURCE: DATABRICKS · UPDATED DAILY</span>
+      <span id="mrr-refresh" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#ffffff20;"></span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     FORECAST DASHBOARD TAB
+═══════════════════════════════════════════════ -->
+<div id="fc-panel" class="tab-panel" style="display:none; padding:32px 24px;">
+  <div class="fc-page">
+
+    <!-- Header -->
+    <div class="fc-page-header">
+      <div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#ffffff25;margin-bottom:4px;">Sales Operations</div>
+        <div class="fc-page-title">Forecast <span>Dashboard</span></div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
+        <div class="month-picker" id="month-picker"></div>
+        <div class="fc-chips">
+          <span class="chip chip-target" id="fc-target-chip">Target: —</span>
+          <span class="chip chip-date"   id="fc-date-chip">—</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Month Forecast Panel -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-dot" style="background:#e8b86d;"></div>
+        <div class="panel-label"><span style="color:#e8b86d;" id="fc-forecast-label">Month Forecast</span> · MRR + Fintech MRR</div>
+        <div class="panel-desc">Open deals · projected close = selected month · Forecast + Commit categories</div>
+        <button class="fc-edit-btn" onclick="openFcModal()">✎ Edit</button>
+      </div>
+      <table>
+        <thead><tr><th></th><th>MRR</th><th>Fintech MRR</th><th>Sales</th></tr></thead>
+        <tbody id="fc-forecast-body"></tbody>
+      </table>
+    </div>
+
+    <!-- Actual Panel -->
+    <div class="panel" id="fc-actual-panel">
+      <div class="panel-header">
+        <div class="panel-dot" style="background:#4ade80;"></div>
+        <div class="panel-label"><span style="color:#4ade80;">Actual</span> · Closed Won</div>
+        <div class="panel-desc">Won deals (Customer stage) with close date in selected month</div>
+      </div>
+      <table>
+        <thead><tr><th></th><th>MRR</th><th>E/F MRR</th><th>Sales</th><th>MRR Att.</th><th>E/F Att.</th></tr></thead>
+        <tbody id="fc-actual-body"></tbody>
+      </table>
+      <div class="impl-row" id="fc-actual-impl"></div>
+    </div>
+
+    <!-- Commit Panel -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-dot" style="background:#93c5fd;"></div>
+        <div class="panel-label"><span style="color:#93c5fd;">Commit</span> · MRR + E/F MRR</div>
+        <div class="panel-desc">Open deals · projected close = selected month · forecast category = Commit</div>
+      </div>
+      <table>
+        <thead><tr><th></th><th>MRR</th><th>E/F MRR</th><th>Sales</th></tr></thead>
+        <tbody id="fc-commit-body"></tbody>
+      </table>
+    </div>
+
+    <!-- Forecast Pipeline Panel -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-dot" style="background:#c4b5fd;"></div>
+        <div class="panel-label"><span style="color:#c4b5fd;">Forecast Pipeline</span> · Best Case · MRR + E/F MRR</div>
+        <div class="panel-desc">Open deals · projected close = selected month · forecast category = Best Case</div>
+      </div>
+      <table>
+        <thead><tr><th></th><th>MRR</th><th>E/F MRR</th><th>Sales</th></tr></thead>
+        <tbody id="fc-pipeline-body"></tbody>
+      </table>
+    </div>
+
+    <!-- Strong Upside Panel -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-dot" style="background:#fcd34d;"></div>
+        <div class="panel-label"><span style="color:#fcd34d;">Strong Upside</span> · Pipeline · MRR + E/F MRR</div>
+        <div class="panel-desc">Open deals · projected close = selected month · forecast category = Pipeline / Upside</div>
+      </div>
+      <table>
+        <thead><tr><th></th><th>MRR</th><th>E/F MRR</th><th>Sales</th></tr></thead>
+        <tbody id="fc-upside-body"></tbody>
+      </table>
+    </div>
+
+    <!-- Case Summary -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-dot" style="background:#ffffff20;"></div>
+        <div class="panel-label"><span>Case Summary</span></div>
+      </div>
+      <div class="case-grid">
+        <div class="case-cell">
+          <div class="case-title" style="color:#f87171aa;">⬇ Worst Case · Actual + Commit</div>
+          <div class="case-row-item"><span class="case-seg">MRR</span><span class="case-val" id="wc-mrr">—</span></div>
+          <div class="case-row-item"><span class="case-seg">E/F MRR</span><span class="case-val" id="wc-ef">—</span></div>
+          <div class="case-row-item case-total">
+            <span class="case-seg" style="color:#ffffff70;font-weight:700;">Sales</span>
+            <span class="case-val" style="color:#f87171;font-weight:600;" id="wc-sales">—</span>
+          </div>
+        </div>
+        <div class="case-cell">
+          <div class="case-title" style="color:#4ade80aa;">⬆ Best Case · Actual + Commit + Forecast</div>
+          <div class="case-row-item"><span class="case-seg">MRR</span><span class="case-val" id="bc-mrr">—</span></div>
+          <div class="case-row-item"><span class="case-seg">E/F MRR</span><span class="case-val" id="bc-ef">—</span></div>
+          <div class="case-row-item case-total">
+            <span class="case-seg" style="color:#ffffff70;font-weight:700;">Sales</span>
+            <span class="case-val" style="color:#4ade80;font-weight:600;" id="bc-sales">—</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     TOP DEALS TAB
+═══════════════════════════════════════════════ -->
+<div id="deals-panel" class="tab-panel" style="display:none; padding:24px;">
+  <div class="deals-wrap">
+    <div class="deals-header">
+      <div>
+        <div class="deals-title-sub">Closing This Month</div>
+        <div class="deals-title" id="deals-month-title">—</div>
+      </div>
+      <div class="deals-totals">
+        <div class="deals-total-block">
+          <div class="deals-total-label" style="color:#60a5fa80;">N/B Total</div>
+          <div class="deals-total-val" style="color:#60a5fa;" id="nb-total">₱0</div>
+          <div class="deals-total-count" id="nb-count">0 deals</div>
+        </div>
+        <div class="deals-total-block">
+          <div class="deals-total-label" style="color:#a78bfa80;">U/S Total</div>
+          <div class="deals-total-val" style="color:#a78bfa;" id="us-total">₱0</div>
+          <div class="deals-total-count" id="us-count">0 deals</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="deals-grid">
+      <!-- N/B -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-dot" style="background:#60a5fa;"></div>
+          <div class="panel-label"><span style="color:#60a5fa;">New Business</span></div>
+          <div id="nb-badge" style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:10px;background:#60a5fa18;color:#60a5fa;border:1px solid #60a5fa30;padding:2px 10px;border-radius:20px;">0 DEALS</div>
+        </div>
+        <table>
+          <thead><tr>
+            <th style="text-align:left;">Deal</th>
+            <th>Seg</th>
+            <th style="text-align:left;">Sales Rep</th>
+            <th style="text-align:left;">Catalyst</th>
+            <th style="text-align:left;">Source</th>
+            <th>MRR</th>
+          </tr></thead>
+          <tbody id="nb-deals-body"></tbody>
+        </table>
+      </div>
+
+      <!-- U/S -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-dot" style="background:#a78bfa;"></div>
+          <div class="panel-label"><span style="color:#a78bfa;">Upsell</span></div>
+          <div id="us-badge" style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:10px;background:#a78bfa18;color:#a78bfa;border:1px solid #a78bfa30;padding:2px 10px;border-radius:20px;">0 DEALS</div>
+        </div>
+        <table>
+          <thead><tr>
+            <th style="text-align:left;">Deal</th>
+            <th>Seg</th>
+            <th style="text-align:left;">Sales Rep</th>
+            <th style="text-align:left;">Catalyst</th>
+            <th style="text-align:left;">Source</th>
+            <th>MRR</th>
+          </tr></thead>
+          <tbody id="us-deals-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     ACTUALS SUMMARY TAB
+═══════════════════════════════════════════════ -->
+<div id="actuals-panel" class="tab-panel" style="display:none; padding:32px 24px;">
+  <div class="act-page">
+    <div class="act-page-header">
+      <div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#ffffff25;margin-bottom:4px;">Year to Date</div>
+        <div class="act-page-title">YTD <span>Actuals</span></div>
+      </div>
+    </div>
+
+    <!-- N/B + U/S side by side -->
+    <div class="act-split">
+      <!-- N/B -->
+      <div class="panel act-half">
+        <div class="panel-header">
+          <div class="panel-dot" style="background:#60a5fa;"></div>
+          <div class="panel-label"><span style="color:#60a5fa;">N/B</span></div>
+          <div class="panel-desc">Sales Pipeline + Unified Channel Pipeline · won by close date</div>
+        </div>
+        <table>
+          <thead><tr>
+            <th style="text-align:left;width:60px;"></th>
+            <th>MRR</th>
+            <th>E/F MRR</th>
+            <th>Implem Fee</th>
+            <th>OTP Fee</th>
+            <th>New Logos</th>
+          </tr></thead>
+          <tbody id="act-nb-body"></tbody>
+          <tfoot id="act-nb-foot"></tfoot>
+        </table>
+      </div>
+
+      <!-- U/S -->
+      <div class="panel act-half">
+        <div class="panel-header">
+          <div class="panel-dot" style="background:#a78bfa;"></div>
+          <div class="panel-label"><span style="color:#a78bfa;">U/S</span></div>
+          <div class="panel-desc">PH Upsell Pipeline · won by close date</div>
+        </div>
+        <table>
+          <thead><tr>
+            <th style="text-align:left;width:60px;"></th>
+            <th>MRR</th>
+            <th>E/F MRR</th>
+            <th>Implem Fee</th>
+            <th>OTP Fee</th>
+            <th>Deals</th>
+          </tr></thead>
+          <tbody id="act-us-body"></tbody>
+          <tfoot id="act-us-foot"></tfoot>
+        </table>
+      </div>
+    </div>
+
+    <!-- Combined -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-dot" style="background:#e8b86d;"></div>
+        <div class="panel-label"><span style="color:#e8b86d;">Combined</span> · N/B + U/S</div>
+        <div class="panel-desc">Total across all pipelines · won by close date</div>
+      </div>
+      <table>
+        <thead><tr>
+          <th style="text-align:left;width:60px;"></th>
+          <th>MRR</th>
+          <th>E/F MRR</th>
+          <th>Implem Fee</th>
+          <th>OTP Fee</th>
+          <th>Total Sales</th>
+          <th>Deals</th>
+        </tr></thead>
+        <tbody id="act-combined-body"></tbody>
+        <tfoot id="act-combined-foot"></tfoot>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+</div><!-- end salesops-section -->
+
+
+<!-- ═══════════════════════════════════════════════
+     SALES PERFORMANCE SECTION
+═══════════════════════════════════════════════ -->
+<div id="salesperf-section" style="display:none;">
+
+  <!-- SP Tab Bar -->
+  <div class="tab-bar">
+    <span class="tab-bar-title">Sales Perf</span>
+    <button class="tab active" id="sp-tab-rep"   onclick="switchSpTab('rep')">👤 Rep Summary</button>
+    <button class="tab"        id="sp-tab-seg"   onclick="switchSpTab('seg')">📊 Segment Summary</button>
+    <button class="tab"        id="sp-tab-lead"  onclick="switchSpTab('lead')">🏆 Leaderboard</button>
+    <button class="tab"        id="sp-tab-teams" onclick="switchSpTab('teams')">👥 Teams</button>
+    <button class="tab"        id="sp-tab-accel" onclick="switchSpTab('accel')">⚡ Accelerator</button>
+    <div style="margin-left:auto;padding-bottom:8px;display:flex;align-items:center;gap:10px;">
+      <span id="sp-sync-status" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#ffffff25;letter-spacing:0.06em;"></span>
+    </div>
+  </div>
+
+  <!-- Rep Summary -->
+  <div id="sp-rep-panel" class="sp-panel active" style="display:block;">
+    <div style="max-width:1340px;margin:0 auto;">
+      <div style="padding-bottom:16px;border-bottom:1px solid #ffffff0d;margin-bottom:20px;display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#ffffff25;margin-bottom:4px;">Sales Performance</div>
+          <div style="font-size:20px;font-weight:800;color:#fff;">Rep <span style="color:#e8b86d;">Summary</span></div>
+        </div>
+        <div id="rep-month-filter" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+      </div>
+      <div class="panel" style="overflow:hidden;">
+        <div style="overflow-x:auto;">
+          <table class="sp-rep-table">
+            <thead><tr>
+              <th style="text-align:left;">Rep</th>
+              <th style="text-align:left;">Team</th>
+              <th id="rep-th-quota">YTD Quota</th>
+              <th id="rep-th-won">YTD Won</th>
+              <th id="rep-th-att">YTD Att%</th>
+              <th>To Go</th>
+              <th id="rep-th-fcst">Mo. Forecast</th>
+              <th id="rep-th-actual">Mo. Actual</th>
+              <th>Fcst Acc%</th>
+              <th>E/F MRR</th>
+              <th>Logos</th>
+              <th>Mo. Quota</th>
+            </tr></thead>
+            <tbody id="sp-rep-body">
+              <tr><td colspan="12" class="empty-row">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Segment Summary -->
+  <div id="sp-seg-panel" class="sp-panel" style="display:none;">
+    <div class="seg-sum-wrap">
+      <div style="padding-bottom:16px;border-bottom:1px solid #ffffff0d;margin-bottom:4px;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#ffffff25;margin-bottom:4px;">Sales Performance</div>
+        <div style="font-size:20px;font-weight:800;color:#fff;">Segment <span style="color:#e8b86d;">Summary</span></div>
+      </div>
+      <div id="sp-seg-body"></div>
+    </div>
+  </div>
+
+  <!-- Leaderboard -->
+  <div id="sp-lead-panel" class="sp-panel" style="display:none;">
+    <div class="lb-wrap">
+      <div style="padding-bottom:16px;border-bottom:1px solid #ffffff0d;margin-bottom:20px;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#ffffff25;margin-bottom:4px;">Sales Performance</div>
+        <div style="font-size:20px;font-weight:800;color:#fff;">🏆 <span style="color:#e8b86d;">Leaderboard</span></div>
+      </div>
+      <div class="panel" style="overflow:hidden;">
+        <table class="lb-table">
+          <thead><tr>
+            <th style="text-align:center;">#</th>
+            <th style="text-align:left;">Rep</th>
+            <th style="text-align:left;">Team</th>
+            <th>YTD Won MRR</th>
+            <th>YTD EF Won MRR</th>
+            <th>MRR YTD Attnmt %</th>
+            <th>EF MRR YTD Attnmt %</th>
+          </tr></thead>
+          <tbody id="sp-lead-body">
+            <tr><td colspan="7" class="empty-row">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Teams -->
+  <div id="sp-teams-panel" class="sp-panel" style="display:none;">
+    <div style="max-width:1200px;margin:0 auto;">
+      <div style="padding-bottom:16px;border-bottom:1px solid #ffffff0d;margin-bottom:20px;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#ffffff25;margin-bottom:4px;">Sales Performance</div>
+        <div style="font-size:20px;font-weight:800;color:#fff;">Team <span style="color:#e8b86d;">Performance</span></div>
+      </div>
+      <div class="teams-grid" id="sp-teams-body"></div>
+    </div>
+  </div>
+
+  <!-- Accelerator -->
+  <div id="sp-accel-panel" class="sp-panel" style="display:none;">
+    <div style="max-width:1200px;margin:0 auto;">
+      <div style="padding-bottom:16px;border-bottom:1px solid #ffffff0d;margin-bottom:20px;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#ffffff25;margin-bottom:4px;">Sales Performance</div>
+        <div style="font-size:20px;font-weight:800;color:#fff;">⚡ <span style="color:#e8b86d;">Accelerator</span></div>
+        <div style="font-size:11px;color:#ffffff30;font-family:'IBM Plex Mono',monospace;margin-top:6px;">Monthly quota hit tracker · ✓ = hit · ✗ = missed · — = future</div>
+      </div>
+      <div class="panel" style="overflow:hidden;">
+        <div style="overflow-x:auto;" id="sp-accel-body"></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end salesperf-section -->
+
+
+<!-- ═══════════════════════════════════════════════
+     JAVASCRIPT
+═══════════════════════════════════════════════ -->
+<script>
+/* ── Constants ──────────────────────────────────── */
+const TODAY    = new Date();
+const CUR_YEAR = TODAY.getFullYear();
+const CUR_MON  = TODAY.getMonth() + 1; // 1-12
+
+/* ── Accelerator shared snapshot (fetched from repo) ── */
+let ACCEL_BAKED = {};
+fetch('./accel_snapshot.json?_=' + Date.now())
+  .then(r => r.ok ? r.json() : {})
+  .then(data => { ACCEL_BAKED = data || {}; })
+  .catch(() => {});
+// accel_snapshot.json is auto-generated by check_accel.py via GitHub Actions on every data refresh
+
+/* ══════════════════════════════════════════════════
+   STATIC FORECAST — UPDATE MANUALLY EACH MONTH
+   These override the computed forecast for the
+   selected month. Set to null to use deal data.
+   ══════════════════════════════════════════════════ */
+const STATIC_FORECAST = {
+  // ← Change this to the month you are encoding
+  month: 5,   // 1=Jan … 12=Dec
+  year:  2026,
+
+  // N/B (Sales Pipeline + Unified Channel Pipeline)
+  nb_mrr: 1265850,
+  nb_ef:  0,
+
+  // U/S (PH Upsell Pipeline)
+  us_mrr: 497668,
+  us_ef:  55500,
+};
+/* ════════════════════════════════════════════════ */
+
+// Stage weights for Weighted Pipeline calculation (matched to actual stage_label values)
+const STAGE_WEIGHTS = {
+  'Initial Demo Done':      0.10,
+  'Solutioning':            0.40,
+  'Commercial Negotiation': 0.60,
+  'Committed Accounts':     0.80,
+};
+
+// Fully excluded from data
+const EXCLUDED_PIPELINES   = ['TH Sales Pipeline'];
+// Deal name keywords excluded from OTP calculation
+const OTP_EXCLUDED_KEYWORDS = ['recruitment service'];
+// Forecast tab: N/B = Sales + Channels, U/S = Upsell
+const FC_NB_PIPELINES = ['Sales Pipeline', 'Unified Channel Pipeline'];
+const FC_US_PIPELINES = ['PH Upsell Pipeline'];
+// Hidden from dropdown but data still used (e.g. for U/S row)
+const HIDDEN_FROM_DROPDOWN = ['PH Upsell Pipeline'];
+// MRR table row definitions — each row is tied to a specific pipeline
+// seg: filter deals by this segment; targetSeg: filter gold_targets by this segment
+// pipePeriod: 'FY' = full year, 'CQ' = current quarter for weighted pipeline
+const MRR_ROWS = [
+  { label: 'ENT', pipelines: ['Sales Pipeline', 'Unified Channel Pipeline'], seg: 'ENT', targetPipe: 'Sales Pipeline', targetSeg: 'ENT', chanFrac: 0.5, pipePeriod: 'FY' },
+  { label: 'SME', pipelines: ['Sales Pipeline', 'Unified Channel Pipeline'], seg: 'SME', targetPipe: 'Sales Pipeline', targetSeg: 'SME', chanFrac: 0.5, pipePeriod: 'CQ' },
+  { label: 'U/S', pipelines: ['PH Upsell Pipeline'],                         seg: null,  targetPipe: 'PH Upsell Pipeline', targetSeg: null,  chanFrac: 0,   pipePeriod: 'CQ' },
+];
+
+// Maps HubSpot forecast_category values → internal panel key
+const FC_MAP = {
+  'CLOSED':        'actual',
+  'Closed Won':    'actual',
+  'COMMIT':        'commit',
+  'Commit':        'commit',
+  'BEST_CASE':     'pipeline',
+  'Best Case':     'pipeline',
+  'Forecast':      'pipeline',
+  'PIPELINE':      'upside',
+  'Pipeline':      'upside',
+  'Strong Upside': 'upside',
+  'Upside':        'upside',
+};
+
+const FC_COLORS = {
+  'CLOSED':        { bg:'#22c55e18', color:'#4ade80',  border:'#22c55e30' },
+  'Closed Won':    { bg:'#22c55e18', color:'#4ade80',  border:'#22c55e30' },
+  'COMMIT':        { bg:'#60a5fa18', color:'#93c5fd',  border:'#60a5fa30' },
+  'Commit':        { bg:'#60a5fa18', color:'#93c5fd',  border:'#60a5fa30' },
+  'BEST_CASE':     { bg:'#a78bfa18', color:'#c4b5fd',  border:'#a78bfa30' },
+  'Best Case':     { bg:'#a78bfa18', color:'#c4b5fd',  border:'#a78bfa30' },
+  'Forecast':      { bg:'#a78bfa18', color:'#c4b5fd',  border:'#a78bfa30' },
+  'PIPELINE':      { bg:'#fcd34d18', color:'#fcd34d',  border:'#fcd34d30' },
+  'Pipeline':      { bg:'#fcd34d18', color:'#fcd34d',  border:'#fcd34d30' },
+  'Strong Upside': { bg:'#fcd34d18', color:'#fcd34d',  border:'#fcd34d30' },
+  'Upside':        { bg:'#fcd34d18', color:'#fcd34d',  border:'#fcd34d30' },
+};
+
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+/* ── State ──────────────────────────────────────── */
+let allDeals    = [];
+let allTargets  = [];
+let allianceData = []; // Third Party line items by month
+let selFcYear  = CUR_YEAR;
+let selFcMon   = CUR_MON;
+let dataMode   = 'loading';
+
+/* ── Helpers ────────────────────────────────────── */
+function $id(id) { return document.getElementById(id); }
+function getPipeline() { const el = $id('filter-pipeline'); return el ? el.value : ''; }
+function getSegment()  { const el = $id('filter-segment');  return el ? el.value : ''; }
+
+function mrr(d)     { return parseFloat(d.mrr)        || 0; }
+function efMrr(d)   { return parseFloat(d.ef_mrr)     || 0; }
+function impl(d)    { return parseFloat(d.implem_fee) || 0; }
+const IMPLEM_PIPELINES = ['Sales Pipeline', 'Unified Channel Pipeline'];
+function otp(d)  { return (parseFloat(d.otp_only) || 0) + (parseFloat(d.mrr_lt_12) || 0); }
+function implNB(d) { return IMPLEM_PIPELINES.includes(d.pipeline_name) ? (parseFloat(d.implem_fee) || 0) : 0; }
+
+function sum(arr, fn) { return arr.reduce((s,d) => s + fn(d), 0); }
+function fmt(n)  { return n ? '₱' + Math.round(n).toLocaleString('en-PH') : '₱0'; }
+function pct(a,b){ return (b && b > 0) ? Math.round((a / b) * 100) : 0; }
+
+function weightedPipeline(deals) {
+  return deals.reduce((s, d) => s + (mrr(d) * (STAGE_WEIGHTS[d.stage_label] || 0)), 0);
+}
+
+function currentQtr() {
+  const q = Math.ceil(CUR_MON / 3);
+  return { start: (q - 1) * 3 + 1, end: q * 3 };
+}
+
+function inPeriod(deals, field, period) {
+  if (period === 'CQ') {
+    const { start, end } = currentQtr();
+    return deals.filter(d => {
+      const dt = parseDate(d[field]);
+      if (!dt || isNaN(dt)) return false;
+      const y = dt.getFullYear(), m = dt.getMonth() + 1;
+      return y === CUR_YEAR && m >= start && m <= end;
+    });
+  }
+  // FY — full current year
+  return inYTD(deals, field, CUR_YEAR);
+}
+
+function attColor(p) {
+  return p >= 100 ? '#4ade80' : p >= 60 ? '#fbbf24' : '#f87171';
+}
+function attClass(p) {
+  return p >= 100 ? 'ytd-over' : p >= 60 ? 'ytd-warn' : 'ytd-under';
+}
+
+function filterBase(deals) {
+  // Only hard-exclude TH; PH Upsell is allowed through for U/S row
+  let ds = deals.filter(d => !EXCLUDED_PIPELINES.includes(d.pipeline_name));
+  const pip = getPipeline();
+  const seg = getSegment();
+  if (pip) ds = ds.filter(d => d.pipeline_name === pip);
+  if (seg) ds = ds.filter(d => (d.segment || '').toUpperCase() === seg.toUpperCase());
+  return ds;
+}
+
+// Filter for a specific pipeline + segment (used by MRR table rows)
+function dealsByRow(pipelines, seg) {
+  const pipeArr = Array.isArray(pipelines) ? pipelines : [pipelines];
+  return allDeals.filter(d =>
+    !EXCLUDED_PIPELINES.includes(d.pipeline_name) &&
+    pipeArr.includes(d.pipeline_name) &&
+    (!seg || (d.segment || '').toUpperCase() === seg.toUpperCase())
+  );
+}
+
+function won(deals)  { return deals.filter(d => d.client_journey_stage === 'Customer'); }
+function open(deals) { return deals.filter(d => d.client_journey_stage === 'Opportunity'); }
+function isNB(d)     { return !/(upsell|renewal)/i.test(d.deal_type || ''); }
+function isUS(d)     { return /upsell/i.test(d.deal_type || ''); }
+
+function parseDate(str) {
+  if (!str || str === 'None' || str === 'null') return null;
+  // Strip time portion to avoid timezone shifts (Databricks returns full ISO strings)
+  const datePart = str.split('T')[0]; // e.g. '2026-05-13'
+  return new Date(datePart + 'T00:00:00Z'); // force UTC so month/year never shifts
+}
+
+function inYTD(deals, field, year, upToMon) {
+  return deals.filter(d => {
+    const dt = parseDate(d[field]);
+    if (!dt || isNaN(dt)) return false;
+    const y = dt.getFullYear(), m = dt.getMonth() + 1;
+    return y === year && (!upToMon || m <= upToMon);
+  });
+}
+
+function inMonth(deals, field, year, mon) {
+  return deals.filter(d => {
+    const dt = parseDate(d[field]);
+    if (!dt || isNaN(dt)) return false;
+    return dt.getFullYear() === year && dt.getMonth() + 1 === mon;
+  });
+}
+
+function byFC(deals, key) {
+  return deals.filter(d => FC_MAP[d.forecast_category || ''] === key);
+}
+
+function bySeg(deals, seg) {
+  return seg ? deals.filter(d => (d.segment||'').toUpperCase() === seg.toUpperCase()) : deals;
+}
+
+// Get YTD target for a specific pipeline + segment (MRR table rows)
+// Get target for a single specific month (not YTD)
+function getTargetForRowMon(pipeline, seg, year, mon, field) {
+  return allTargets.filter(t => {
+    const dt = parseDate(t.metric_month);
+    if (!dt || isNaN(dt)) return false;
+    const y = dt.getFullYear(), m = dt.getMonth() + 1;
+    return y === year && m === mon &&
+           t.pipeline_name === pipeline &&
+           (!seg || (t.segment||'').toUpperCase() === seg.toUpperCase());
+  }).reduce((s, t) => s + (parseFloat(t[field]) || 0), 0);
+}
+
+function getTargetForRow(pipeline, seg, year, upToMon, field) {
+  return allTargets.filter(t => {
+    const dt = parseDate(t.metric_month);
+    if (!dt || isNaN(dt)) return false;
+    const y = dt.getFullYear(), m = dt.getMonth() + 1;
+    const matchYear = y === year;
+    const matchMon  = !upToMon || m <= upToMon;
+    const matchSeg  = !seg || (t.segment||'').toUpperCase() === seg.toUpperCase();
+    const matchPip  = t.pipeline_name === pipeline;
+    return matchYear && matchMon && matchSeg && matchPip;
+  }).reduce((s, t) => s + (parseFloat(t[field]) || 0), 0);
+}
+
+// Get YTD target from gold_targets for a year (up to current month)
+function getYTDTarget(seg, year, upToMon, field) {
+  const pip = getPipeline();
+  return allTargets.filter(t => {
+    const dt = parseDate(t.metric_month);
+    if (!dt || isNaN(dt)) return false;
+    const y = dt.getFullYear(), m = dt.getMonth() + 1;
+    const matchYear = y === year;
+    const matchMon  = !upToMon || m <= upToMon;
+    const matchSeg  = !seg || (t.segment||'').toUpperCase() === seg.toUpperCase();
+    const matchPip  = !pip || t.pipeline_name === pip;
+    return matchYear && matchMon && matchSeg && matchPip;
+  }).reduce((s, t) => s + (parseFloat(t[field]) || 0), 0);
+}
+
+// Get monthly target
+function getMonthTarget(year, mon, seg, field) {
+  const pip = getPipeline();
+  return allTargets.filter(t => {
+    const dt = parseDate(t.metric_month);
+    if (!dt || isNaN(dt)) return false;
+    const y = dt.getFullYear(), m = dt.getMonth() + 1;
+    const matchSeg = !seg || (t.segment||'').toUpperCase() === seg.toUpperCase();
+    const matchPip = !pip || t.pipeline_name === pip;
+    return y === year && m === mon && matchSeg && matchPip;
+  }).reduce((s, t) => s + (parseFloat(t[field]) || 0), 0);
+}
+
+function attCell(p) {
+  const c = attColor(p);
+  return `<div class="att-cell">
+    <span class="att-pct" style="color:${c};">${p}%</span>
+    <div class="att-bar"><div class="att-fill" style="width:${Math.min(p,100)}%;background:${c};"></div></div>
+  </div>`;
+}
+
+function fcTag(cat) {
+  if (!cat) return '<span style="color:#ffffff20;font-size:11px;">—</span>';
+  const c = FC_COLORS[cat] || { bg:'#ffffff10', color:'#ffffff40', border:'#ffffff15' };
+  return `<span class="fc-cat-tag" style="background:${c.bg};color:${c.color};border:1px solid ${c.border};">${cat}</span>`;
+}
+
+/* ── Tab Switching ──────────────────────────────── */
+function switchTab(t) {
+  ['mrr','fc','deals','actuals'].forEach(id => {
+    const p = $id(id + '-panel');
+    if (p) { p.classList.remove('active'); p.style.display = 'none'; }
+    const tb = $id('tab-' + id);
+    if (tb) tb.classList.remove('active');
+  });
+  const panel = $id(t + '-panel');
+  if (panel) {
+    panel.classList.add('active');
+    panel.style.display = t === 'mrr' ? 'flex' : 'block';
+  }
+  const tab = $id('tab-' + t);
+  if (tab) tab.classList.add('active');
+  localStorage.setItem('sales_tab', t);
+  if (t === 'fc')      renderForecast();
+  if (t === 'deals')   renderDeals();
+  if (t === 'actuals') renderActuals();
+}
+
+/* ── Month Picker ───────────────────────────────── */
+function buildMonthPicker() {
+  const wrap = $id('month-picker');
+  if (!wrap) return;
+  let html = '';
+  // Show last 3 months + current + next 2
+  for (let offset = -3; offset <= 2; offset++) {
+    let y = CUR_YEAR, m = CUR_MON + offset;
+    while (m < 1)  { m += 12; y--; }
+    while (m > 12) { m -= 12; y++; }
+    const label  = MONTHS[m-1] + (y !== CUR_YEAR ? ' ' + y : '');
+    const active = (y === selFcYear && m === selFcMon) ? 'active' : '';
+    const hasSaved = localStorage.getItem(`fc_override_${y}_${m}`) ||
+                     (STATIC_FORECAST && STATIC_FORECAST.month === m && STATIC_FORECAST.year === y);
+    const dot = hasSaved ? ' has-override' : '';
+    html += `<button class="mpk-btn ${active}${dot}" onclick="selectMonth(${y},${m})" title="${hasSaved ? 'Manually set' : ''}">${label}</button>`;
+  }
+  wrap.innerHTML = html;
+}
+
+function selectMonth(y, m) {
+  selFcYear = y; selFcMon = m;
+  buildMonthPicker();
+  renderForecast();
+}
+
+/* ── MRR PERFORMANCE ────────────────────────────── */
+function renderMRR() {
+  let totalActual = 0, totalTarget = 0, totalLastYr = 0, totalWtdPipe = 0, html = '';
+
+  // Pre-compute Channels target once — split 50/50 between ENT and SME
+  const chanTarget = getTargetForRow('Unified Channel Pipeline', 'Channels', CUR_YEAR, CUR_MON, 'mrr_target');
+
+  MRR_ROWS.forEach(({ label, pipelines, seg, targetPipe, targetSeg, chanFrac, pipePeriod }) => {
+    const deals = dealsByRow(pipelines, seg);
+
+    // YTD Actual: won deals, close_date in current year up to current month
+    const wonYTD = won(inYTD(deals, 'close_date', CUR_YEAR, CUR_MON));
+    const actual = sum(wonYTD, mrr);
+
+    // YTD Target: own pipeline target + fraction of Channels target
+    const target = (targetPipe ? getTargetForRow(targetPipe, targetSeg, CUR_YEAR, CUR_MON, 'mrr_target') : 0)
+                 + chanFrac * chanTarget;
+
+    // YoY: same period last year
+    const wonLY  = won(inYTD(deals, 'close_date', CUR_YEAR - 1, CUR_MON));
+    const lastYr = sum(wonLY, mrr);
+    const yoyVal = lastYr ? Math.round(((actual - lastYr) / lastYr) * 100) : null;
+    const yoyStr  = yoyVal !== null ? (yoyVal >= 0 ? '+' : '') + yoyVal + '%' : '—';
+    const yoyColor= yoyVal === null ? '#ffffff40' : yoyVal >= 0 ? '#6fd4a0' : '#f87171';
+
+    // Weighted Pipeline: open deals filtered by period (FY or CQ), weighted by stage
+    const openPeriod = open(inPeriod(deals, 'projected_close_date', pipePeriod));
+    const wtdPipe    = weightedPipeline(openPeriod);
+    const periodLabel = pipePeriod === 'CQ' ? (() => { const {start,end}=currentQtr(); return `Q${Math.ceil(CUR_MON/3)} (${MONTHS[start-1]}–${MONTHS[end-1]})`; })() : 'FY';
+    // Coverage Ratio: Remaining Target ÷ Weighted Pipeline
+    const remaining = Math.max(0, target - actual);
+    const covRatio  = wtdPipe > 0 ? (remaining / wtdPipe) : null;
+
+    const p    = pct(actual, target);
+    const barW = Math.min(p, 100);
+    const barC = p >= 100 ? '#4ade80' : p >= 60 ? '#fbbf24' : '#f87171';
+
+    totalActual  += actual;
+    totalTarget  += target;
+    totalLastYr  += lastYr;
+    totalWtdPipe += wtdPipe;
+
+    const rowColor = label === 'U/S' ? '#a78bfa' : '#fff';
+    html += `<tr>
+      <td><span class="seg-label" style="color:${rowColor};">${label}</span></td>
+      <td><span class="money">${fmt(target)}</span></td>
+      <td>
+        <div class="actual-wrap">
+          <span class="money actual">${fmt(actual)}</span>
+          <div class="mini-bar"><div class="mini-fill" style="width:${barW}%;background:${barC};"></div></div>
+        </div>
+      </td>
+      <td><span class="yoy" style="color:${yoyColor};">${yoyStr}</span></td>
+      <td><span class="ytd ${attClass(p)}">${p}%</span></td>
+      <td>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+          <span class="money">${fmt(wtdPipe)}</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:700;color:#ffffff25;letter-spacing:0.06em;">${periodLabel}</span>
+          ${covRatio !== null
+            ? `<span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:${covRatio >= 1 ? '#4ade80' : covRatio >= 0.7 ? '#fbbf24' : '#f87171'};">${covRatio.toFixed(2)}x coverage</span>`
+            : `<span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#ffffff20;">—</span>`}
+        </div>
+      </td>
+    </tr>`;
+  });
+
+  // ── Total Sales row ──────────────────────────────
+  const totP      = pct(totalActual, totalTarget);
+  const totBarW   = Math.min(totP, 100);
+  const totBarC   = totP >= 100 ? '#4ade80' : totP >= 70 ? '#fbbf24' : '#f87171';
+  const totYoyVal = totalLastYr ? Math.round(((totalActual - totalLastYr) / totalLastYr) * 100) : null;
+  const totYoyStr = totYoyVal !== null ? (totYoyVal >= 0 ? '+' : '') + totYoyVal + '%' : '—';
+  const totYoyC   = totYoyVal === null ? '#ffffff40' : totYoyVal >= 0 ? '#6fd4a0' : '#f87171';
+  const totRemain = Math.max(0, totalTarget - totalActual);
+  const totCovR   = totalWtdPipe > 0 ? (totRemain / totalWtdPipe) : null;
+
+  html += `<tr style="border-top:2px solid #ffffff15;background:#ffffff04;">
+    <td><span class="seg-label" style="font-size:13px;letter-spacing:0.04em;color:#e8b86d;">Total Sales</span></td>
+    <td><span class="money" style="color:#ffffff70;">${fmt(totalTarget)}</span></td>
+    <td>
+      <div class="actual-wrap">
+        <span class="money actual" style="color:#e8b86d;font-weight:700;">${fmt(totalActual)}</span>
+        <div class="mini-bar"><div class="mini-fill" style="width:${totBarW}%;background:${totBarC};"></div></div>
+      </div>
+    </td>
+    <td><span class="yoy" style="color:${totYoyC};">${totYoyStr}</span></td>
+    <td><span class="ytd ${attClass(totP)}" style="font-weight:700;">${totP}%</span></td>
+    <td>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+        <span class="money">${fmt(totalWtdPipe)}</span>
+        ${totCovR !== null
+          ? `<span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:${totCovR >= 1 ? '#4ade80' : totCovR >= 0.7 ? '#fbbf24' : '#f87171'};">${totCovR.toFixed(2)}x coverage</span>`
+          : `<span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#ffffff20;">—</span>`}
+      </div>
+    </td>
+  </tr>`;
+
+  $id('mrr-tbody').innerHTML = html || '<tr><td colspan="6" class="empty-row">No data found</td></tr>';
+
+  // Overall sales attainment badge
+  const badge = $id('sales-att-badge');
+  if (badge && totalTarget > 0) {
+    const p = pct(totalActual, totalTarget);
+    badge.textContent = p + '%';
+    badge.style.color = attColor(p);
+  }
+
+  // Date chip
+  const dc = $id('mrr-date-chip');
+  if (dc) {
+    const d = new Date();
+    dc.textContent = MONTHS[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+  }
+}
+
+/* ── FORECAST DASHBOARD ─────────────────────────── */
+function fcBase(pipelines) {
+  return allDeals.filter(d =>
+    pipelines.includes(d.pipeline_name) &&
+    !EXCLUDED_PIPELINES.includes(d.pipeline_name)
+  );
+}
+
+// Sum monthly targets for specific pipelines
+function getFcMonthTarget(year, mon, pipelines, field) {
+  return allTargets.filter(t => {
+    const dt = parseDate(t.metric_month);
+    if (!dt || isNaN(dt)) return false;
+    return dt.getFullYear() === year && dt.getMonth() + 1 === mon &&
+           (!pipelines || pipelines.includes(t.pipeline_name));
+  }).reduce((s, t) => s + (parseFloat(t[field]) || 0), 0);
+}
+
+// targets: { nbMrr, nbEf, usMrr, usEf } — separate N/B and U/S targets
+function fcTableRows(nbDeals, usDeals, colorClass, showAtt, targets) {
+  const nbMrr = sum(nbDeals, mrr), nbEf = sum(nbDeals, efMrr);
+  const usMrr = sum(usDeals, mrr), usEf = sum(usDeals, efMrr);
+  const totMrr = nbMrr + usMrr, totEf = nbEf + usEf;
+  const totSales = totMrr + totEf;
+
+  if (showAtt) {
+    const { nbMrr: nbMT, nbEf: nbET, usMrr: usMT, usEf: usET } = targets || {};
+    const totMT = (nbMT||0) + (usMT||0), totET = (nbET||0) + (usET||0);
+    return `
+      <tr>
+        <td><span class="row-seg">N/B</span></td>
+        <td><span class="num">${fmt(nbMrr)}</span></td>
+        <td><span class="num">${fmt(nbEf)}</span></td>
+        <td><span class="num bright">${fmt(nbMrr+nbEf)}</span></td>
+        <td>${nbMT ? attCell(pct(nbMrr,nbMT)) : '<span class="num dim">—</span>'}</td>
+        <td>${nbET ? attCell(pct(nbEf, nbET)) : '<span class="num dim">—</span>'}</td>
+      </tr>
+      <tr>
+        <td><span class="row-seg">U/S</span></td>
+        <td><span class="num">${fmt(usMrr)}</span></td>
+        <td><span class="num">${fmt(usEf)}</span></td>
+        <td><span class="num bright">${fmt(usMrr+usEf)}</span></td>
+        <td>${usMT ? attCell(pct(usMrr,usMT)) : '<span class="num dim">—</span>'}</td>
+        <td>${usET ? attCell(pct(usEf, usET)) : '<span class="num dim">—</span>'}</td>
+      </tr>
+      <tr class="total-row">
+        <td><span class="row-seg total">Total</span></td>
+        <td><span class="num ${colorClass}">${fmt(totMrr)}</span></td>
+        <td><span class="num ${colorClass}">${fmt(totEf)}</span></td>
+        <td><span class="num ${colorClass}">${fmt(totSales)}</span></td>
+        <td>${totMT ? attCell(pct(totMrr,totMT)) : '<span class="num dim">—</span>'}</td>
+        <td>${totET ? attCell(pct(totEf, totET)) : '<span class="num dim">—</span>'}</td>
+      </tr>`;
+  }
+
+  return `
+    <tr>
+      <td><span class="row-seg">N/B</span></td>
+      <td><span class="num">${fmt(nbMrr)}</span></td>
+      <td><span class="num">${fmt(nbEf)}</span></td>
+      <td><span class="num bright">${fmt(nbMrr+nbEf)}</span></td>
+    </tr>
+    <tr>
+      <td><span class="row-seg">U/S</span></td>
+      <td><span class="num">${fmt(usMrr)}</span></td>
+      <td><span class="num">${fmt(usEf)}</span></td>
+      <td><span class="num bright">${fmt(usMrr+usEf)}</span></td>
+    </tr>
+    <tr class="total-row">
+      <td><span class="row-seg total">Total</span></td>
+      <td><span class="num ${colorClass}">${fmt(totMrr)}</span></td>
+      <td><span class="num ${colorClass}">${fmt(totEf)}</span></td>
+      <td><span class="num ${colorClass}">${fmt(totSales)}</span></td>
+    </tr>`;
+}
+
+function fcForecastRows(nbDeals, usDeals) {
+  const nbMrr = sum(nbDeals, mrr), nbEf = sum(nbDeals, efMrr);
+  const usMrr = sum(usDeals, mrr), usEf = sum(usDeals, efMrr);
+  const totMrr = nbMrr + usMrr, totEf = nbEf + usEf;
+  return `
+    <tr>
+      <td><span class="row-seg">N/B</span></td>
+      <td><span class="num">${fmt(nbMrr)}</span></td>
+      <td><span class="num">${fmt(nbEf)}</span></td>
+      <td><span class="num bright">${fmt(nbMrr+nbEf)}</span></td>
+    </tr>
+    <tr>
+      <td><span class="row-seg">U/S</span></td>
+      <td><span class="num">${fmt(usMrr)}</span></td>
+      <td><span class="num">${fmt(usEf)}</span></td>
+      <td><span class="num bright">${fmt(usMrr+usEf)}</span></td>
+    </tr>
+    <tr class="total-row">
+      <td><span class="row-seg total" style="color:#e8b86d;">Forecast</span></td>
+      <td><span class="num gold">${fmt(totMrr)}</span></td>
+      <td><span class="num gold">${fmt(totEf)}</span></td>
+      <td><span class="num gold">${fmt(totMrr+totEf)}</span></td>
+    </tr>`;
+}
+
+function renderForecast() {
+  // N/B = Sales Pipeline + Unified Channel Pipeline
+  // U/S = PH Upsell Pipeline
+  const nbBase = fcBase(FC_NB_PIPELINES);
+  const usBase = fcBase(FC_US_PIPELINES);
+  const y = selFcYear, m = selFcMon;
+
+  // Monthly targets split by N/B (Sales + Unified Channel) and U/S (Upsell)
+  const nbMrrTarget = getFcMonthTarget(y, m, FC_NB_PIPELINES, 'mrr_target');
+  const nbEfTarget  = getFcMonthTarget(y, m, FC_NB_PIPELINES, 'ef_mrr_target');
+  const usMrrTarget = getFcMonthTarget(y, m, FC_US_PIPELINES, 'mrr_target');
+  const usEfTarget  = getFcMonthTarget(y, m, FC_US_PIPELINES, 'ef_mrr_target');
+  const totalTarget = nbMrrTarget + nbEfTarget + usMrrTarget + usEfTarget;
+  const fcTargets   = { nbMrr: nbMrrTarget, nbEf: nbEfTarget, usMrr: usMrrTarget, usEf: usEfTarget };
+
+  // Update chips
+  const tc = $id('fc-target-chip');
+  if (tc) tc.textContent = 'Target: ' + (totalTarget ? fmt(totalTarget) : '—');
+  const dc = $id('fc-date-chip');
+  if (dc) dc.textContent = MONTHS[m-1] + ' ' + y;
+
+  // MONTH FORECAST: use static override if month matches, else compute from deals
+  const fcLabel = $id('fc-forecast-label');
+  if (fcLabel) fcLabel.textContent = MONTHS[m-1] + ' Forecast';
+
+  const lsKey = `fc_override_${y}_${m}`;
+  const lsOverride = JSON.parse(localStorage.getItem(lsKey) || 'null');
+  const staticBase = (STATIC_FORECAST && STATIC_FORECAST.month === m && STATIC_FORECAST.year === y) ? STATIC_FORECAST : null;
+  const useStatic = lsOverride || staticBase;
+  if (useStatic) {
+    const { nb_mrr, nb_ef, us_mrr, us_ef } = useStatic;
+    const totMrr = nb_mrr + us_mrr, totEf = nb_ef + us_ef;
+    $id('fc-forecast-body').innerHTML = `
+      <tr>
+        <td><span class="row-seg">N/B</span></td>
+        <td><span class="num">${fmt(nb_mrr)}</span></td>
+        <td><span class="num">${fmt(nb_ef)}</span></td>
+        <td><span class="num bright">${fmt(nb_mrr + nb_ef)}</span></td>
+      </tr>
+      <tr>
+        <td><span class="row-seg">U/S</span></td>
+        <td><span class="num">${fmt(us_mrr)}</span></td>
+        <td><span class="num">${fmt(us_ef)}</span></td>
+        <td><span class="num bright">${fmt(us_mrr + us_ef)}</span></td>
+      </tr>
+      <tr class="total-row">
+        <td><span class="row-seg total" style="color:#e8b86d;">Forecast</span></td>
+        <td><span class="num gold">${fmt(totMrr)}</span></td>
+        <td><span class="num gold">${fmt(totEf)}</span></td>
+        <td><span class="num gold">${fmt(totMrr + totEf)}</span></td>
+      </tr>`;
+  } else {
+    const openMonth = arr => open(inMonth(arr, 'projected_close_date', y, m));
+    const fcMonthNB = [...byFC(openMonth(nbBase), 'commit'), ...byFC(openMonth(nbBase), 'pipeline')];
+    const fcMonthUS = [...byFC(openMonth(usBase), 'commit'), ...byFC(openMonth(usBase), 'pipeline')];
+    $id('fc-forecast-body').innerHTML = fcForecastRows(fcMonthNB, fcMonthUS);
+  }
+
+  // For case summary, always compute from deals
+  const openMonth = arr => open(inMonth(arr, 'projected_close_date', y, m));
+  const fcMonthNB = [...byFC(openMonth(nbBase), 'commit'), ...byFC(openMonth(nbBase), 'pipeline')];
+  const fcMonthUS = [...byFC(openMonth(usBase), 'commit'), ...byFC(openMonth(usBase), 'pipeline')];
+
+  // ACTUAL: closed this month
+  const actNB = won(inMonth(nbBase, 'close_date', y, m));
+  const actUS = won(inMonth(usBase, 'close_date', y, m));
+
+  $id('fc-actual-body').innerHTML = fcTableRows(actNB, actUS, 'green', true, fcTargets);
+
+  // OTP = otp_only + mrr_lt_12 (both N/B and U/S), excl. Recruitment Service deals
+  // Implem Fee = implem_fee for Sales Pipeline + Unified Channel only
+  const noRecruit = d => !OTP_EXCLUDED_KEYWORDS.some(kw => (d.deal_name||'').toLowerCase().includes(kw));
+  const otpNB    = sum(actNB.filter(noRecruit), otp);
+  const otpUS    = sum(actUS.filter(noRecruit), otp);
+  const implFee  = sum([...actNB, ...actUS].filter(noRecruit), implNB);
+  $id('fc-actual-impl').innerHTML = `
+    <div class="impl-cell">
+      <div class="impl-label">Implem Fee</div>
+      <span class="impl-val" style="color:#e8b86d;">${fmt(implFee)}</span>
+    </div>
+    <div class="impl-cell">
+      <div class="impl-label">OTP · N/B</div>
+      <span class="impl-val teal">${fmt(otpNB)}</span>
+    </div>
+    <div class="impl-cell">
+      <div class="impl-label">OTP · U/S</div>
+      <span class="impl-val purple">${fmt(otpUS)}</span>
+    </div>`;
+
+  // COMMIT: open deals projected to close this month, forecast_category = commit
+  const commitNB = byFC(open(inMonth(nbBase, 'projected_close_date', y, m)), 'commit');
+  const commitUS = byFC(open(inMonth(usBase, 'projected_close_date', y, m)), 'commit');
+  $id('fc-commit-body').innerHTML = fcTableRows(commitNB, commitUS, 'blue', false);
+
+  // FORECAST PIPELINE: Best Case
+  const pipeNB = byFC(open(inMonth(nbBase, 'projected_close_date', y, m)), 'pipeline');
+  const pipeUS = byFC(open(inMonth(usBase, 'projected_close_date', y, m)), 'pipeline');
+  $id('fc-pipeline-body').innerHTML = fcTableRows(pipeNB, pipeUS, 'purple', false);
+
+  // STRONG UPSIDE: Pipeline
+  const upsideNB = byFC(open(inMonth(nbBase, 'projected_close_date', y, m)), 'upside');
+  const upsideUS = byFC(open(inMonth(usBase, 'projected_close_date', y, m)), 'upside');
+  $id('fc-upside-body').innerHTML = fcTableRows(upsideNB, upsideUS, 'amber', false);
+
+  // CASE SUMMARY
+  const acMrr = sum([...actNB,    ...actUS],    mrr);
+  const acEf  = sum([...actNB,    ...actUS],    efMrr);
+  const cmMrr = sum([...commitNB, ...commitUS], mrr);
+  const cmEf  = sum([...commitNB, ...commitUS], efMrr);
+  const fpMrr = sum([...pipeNB,   ...pipeUS],   mrr);
+  const fpEf  = sum([...pipeNB,   ...pipeUS],   efMrr);
+
+  $id('wc-mrr').textContent   = fmt(acMrr + cmMrr);
+  $id('wc-ef').textContent    = fmt(acEf  + cmEf);
+  $id('wc-sales').textContent = fmt(acMrr + acEf + cmMrr + cmEf);
+  $id('bc-mrr').textContent   = fmt(acMrr + cmMrr + fpMrr);
+  $id('bc-ef').textContent    = fmt(acEf  + cmEf  + fpEf);
+  $id('bc-sales').textContent = fmt(acMrr + acEf + cmMrr + cmEf + fpMrr + fpEf);
+}
+
+/* ── TOP DEALS ──────────────────────────────────── */
+function renderDeals() {
+  // Always show current month, pipeline-based split, open deals only, top 5
+  const nbBase = fcBase(FC_NB_PIPELINES);
+  const usBase = fcBase(FC_US_PIPELINES);
+
+  const sortByMRR = arr => arr.slice().sort((a, b) => (parseFloat(b.mrr)||0) - (parseFloat(a.mrr)||0));
+
+  // Commit + Forecast (Best Case) deals projected to close this month
+  const openMon = arr => open(inMonth(arr, 'projected_close_date', CUR_YEAR, CUR_MON));
+  const nbAll  = [...byFC(openMon(nbBase), 'commit'), ...byFC(openMon(nbBase), 'pipeline')];
+  const usAll  = [...byFC(openMon(usBase), 'commit'), ...byFC(openMon(usBase), 'pipeline')];
+  const nbTop5 = sortByMRR(nbAll).slice(0, 5);
+  const usTop5 = sortByMRR(usAll).slice(0, 5);
+
+  // Update header
+  $id('deals-month-title').textContent = MONTHS[CUR_MON-1] + ' ' + CUR_YEAR;
+
+  // Totals (top 5 only)
+  $id('nb-total').textContent = fmt(sum(nbTop5, mrr));
+  $id('us-total').textContent = fmt(sum(usTop5, mrr));
+  $id('nb-count').textContent = nbAll.length + ' deal' + (nbAll.length !== 1 ? 's' : '');
+  $id('us-count').textContent = usAll.length + ' deal' + (usAll.length !== 1 ? 's' : '');
+  $id('nb-badge').textContent = nbAll.length + ' DEALS';
+  $id('us-badge').textContent = usAll.length + ' DEALS';
+
+  function dealRow(d) {
+    const name = (d.deal_name || '—').substring(0, 30) + (d.deal_name && d.deal_name.length > 30 ? '…' : '');
+    const src  = d.department_source_clean || d.original_channel_source || '—';
+    const srcColors = {
+      'MKT Inbound':   { bg:'#f59e0b18', color:'#fbbf24', border:'#f59e0b30' },
+      'LDU Outbound':  { bg:'#f97316 18', color:'#fb923c', border:'#f9731630' },
+      'Sales Outbound':{ bg:'#22c55e18', color:'#4ade80', border:'#22c55e30' },
+      'Channels':      { bg:'#14b8a618', color:'#2dd4bf', border:'#14b8a630' },
+      'CSM':           { bg:'#0ea5e918', color:'#38bdf8', border:'#0ea5e930' },
+    };
+    const sc = srcColors[src] || { bg:'#ffffff10', color:'#ffffff40', border:'#ffffff15' };
+    const srcTag = `<span class="src-tag" style="background:${sc.bg};color:${sc.color};border:1px solid ${sc.border};">${src}</span>`;
+    return `<tr>
+      <td style="padding:10px 14px;font-size:12px;font-weight:600;color:#fff;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${d.deal_name||''}">${name}</td>
+      <td style="padding:10px 10px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#ffffff60;text-align:center;">${d.segment||'—'}</td>
+      <td style="padding:10px 10px;font-size:11px;color:#ffffff60;white-space:nowrap;">${(d.sales_rep||'—').split(' ')[0]}</td>
+      <td style="padding:10px 10px;font-size:11px;color:#ffffff40;white-space:nowrap;">${d.catalyst ? d.catalyst.split(' ')[0] : '—'}</td>
+      <td style="padding:10px 10px;">${srcTag}</td>
+      <td style="padding:10px 14px;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500;color:#fff;text-align:right;">${fmt(mrr(d))}</td>
+    </tr>`;
+  }
+
+  $id('nb-deals-body').innerHTML = nbTop5.length
+    ? nbTop5.map(dealRow).join('')
+    : '<tr><td colspan="5" class="empty-row">No deals found</td></tr>';
+
+  $id('us-deals-body').innerHTML = usTop5.length
+    ? usTop5.map(dealRow).join('')
+    : '<tr><td colspan="5" class="empty-row">No deals found</td></tr>';
+}
+
+/* ── Actuals Summary ────────────────────────────── */
+function renderActuals() {
+  const noRecruit = d => !OTP_EXCLUDED_KEYWORDS.some(kw => (d.deal_name||'').toLowerCase().includes(kw));
+  const nbBase = fcBase(FC_NB_PIPELINES);
+  const usBase = fcBase(FC_US_PIPELINES);
+
+  const MONTH_LABELS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+
+  // Build rows for each month Jan → current month
+  let nbRows = '', usRows = '', combRows = '';
+  let nbTotMrr=0, nbTotEf=0, nbTotImpl=0, nbTotOtp=0, nbTotLogos=0;
+  let usTotMrr=0, usTotEf=0, usTotImpl=0, usTotOtp=0, usTotDeals=0;
+
+  for (let m = 1; m <= CUR_MON; m++) {
+    const nbWon = won(inMonth(nbBase, 'close_date', CUR_YEAR, m));
+    const usWon = won(inMonth(usBase, 'close_date', CUR_YEAR, m));
+
+    const nbMrr   = sum(nbWon, mrr);
+    const nbEf    = sum(nbWon, efMrr);
+    const nbImpl  = sum(nbWon.filter(noRecruit), implNB);
+    const nbOtp   = sum(nbWon.filter(noRecruit), otp);
+    const nbLogos = nbWon.length;
+
+    const usMrr   = sum(usWon, mrr);
+    const usEf    = sum(usWon, efMrr);
+    const usImpl  = sum(usWon.filter(noRecruit), d => parseFloat(d.implem_fee) || 0);
+    const usOtp   = sum(usWon.filter(noRecruit), otp);
+    const usDeals = usWon.length;
+
+    nbTotMrr += nbMrr; nbTotEf += nbEf; nbTotImpl += nbImpl; nbTotOtp += nbOtp; nbTotLogos += nbLogos;
+    usTotMrr += usMrr; usTotEf += usEf; usTotImpl += usImpl; usTotOtp += usOtp; usTotDeals += usDeals;
+
+    const isCur = m === CUR_MON;
+    const cls   = isCur ? ' class="act-cur-mon"' : '';
+    const zc    = v => v === 0 ? ' class="act-zero"' : '';
+
+    nbRows += `<tr${cls}>
+      <td><span class="act-mon-label">${MONTH_LABELS[m-1]}</span></td>
+      <td${zc(nbMrr)}>${fmt(nbMrr)}</td>
+      <td${zc(nbEf)}>${fmt(nbEf)}</td>
+      <td${zc(nbImpl)}>${fmt(nbImpl)}</td>
+      <td${zc(nbOtp)}>${fmt(nbOtp)}</td>
+      <td style="color:#ffffff60;">${nbLogos || '<span class="act-zero">0</span>'}</td>
+    </tr>`;
+
+    usRows += `<tr${cls}>
+      <td><span class="act-mon-label">${MONTH_LABELS[m-1]}</span></td>
+      <td${zc(usMrr)}>${fmt(usMrr)}</td>
+      <td${zc(usEf)}>${fmt(usEf)}</td>
+      <td${zc(usImpl)}>${fmt(usImpl)}</td>
+      <td${zc(usOtp)}>${fmt(usOtp)}</td>
+      <td style="color:#ffffff60;">${usDeals || '<span class="act-zero">0</span>'}</td>
+    </tr>`;
+
+    const totMrr  = nbMrr  + usMrr;
+    const totEf   = nbEf   + usEf;
+    const totImpl = nbImpl + usImpl;
+    const totOtp  = nbOtp  + usOtp;
+    const totSales= totMrr + totEf;
+    const totDeals= nbLogos + usDeals;
+
+    combRows += `<tr${cls}>
+      <td><span class="act-mon-label">${MONTH_LABELS[m-1]}</span></td>
+      <td${zc(totMrr)}>${fmt(totMrr)}</td>
+      <td${zc(totEf)}>${fmt(totEf)}</td>
+      <td${zc(totImpl)}>${fmt(totImpl)}</td>
+      <td${zc(totOtp)}>${fmt(totOtp)}</td>
+      <td${zc(totSales)} style="color:#e8b86d;">${fmt(totSales)}</td>
+      <td style="color:#ffffff60;">${totDeals || '<span class="act-zero">0</span>'}</td>
+    </tr>`;
+  }
+
+  const numTd = v => `<td style="color:#e2e4ed;font-weight:600;">${fmt(v)}</td>`;
+  const cntTd = v => `<td style="color:#ffffff70;">${v}</td>`;
+
+  $id('act-nb-body').innerHTML   = nbRows;
+  $id('act-us-body').innerHTML   = usRows;
+  $id('act-combined-body').innerHTML = combRows;
+
+  $id('act-nb-foot').innerHTML = `<tr>
+    <td>YTD</td>
+    ${numTd(nbTotMrr)}${numTd(nbTotEf)}${numTd(nbTotImpl)}${numTd(nbTotOtp)}
+    ${cntTd(nbTotLogos)}
+  </tr>`;
+
+  $id('act-us-foot').innerHTML = `<tr>
+    <td>YTD</td>
+    ${numTd(usTotMrr)}${numTd(usTotEf)}${numTd(usTotImpl)}${numTd(usTotOtp)}
+    ${cntTd(usTotDeals)}
+  </tr>`;
+
+  const combTotMrr  = nbTotMrr  + usTotMrr;
+  const combTotEf   = nbTotEf   + usTotEf;
+  const combTotImpl = nbTotImpl + usTotImpl;
+  const combTotOtp  = nbTotOtp  + usTotOtp;
+  const combTotSales= combTotMrr + combTotEf;
+  $id('act-combined-foot').innerHTML = `<tr>
+    <td>YTD</td>
+    ${numTd(combTotMrr)}${numTd(combTotEf)}${numTd(combTotImpl)}${numTd(combTotOtp)}
+    <td style="color:#e8b86d;font-weight:700;">${fmt(combTotSales)}</td>
+    ${cntTd(nbTotLogos + usTotDeals)}
+  </tr>`;
+}
+
+/* ── Sales Performance Constants ────────────────── */
+const REP_TEAMS = {
+  'Katryn Saldajeno': { team:'ENT Builders',    color:'#60a5fa' },
+  'Miriam Pulido':    { team:'ENT Builders',    color:'#60a5fa' },
+  'Lana Pineda':      { team:'SME Jetzsetters', color:'#a78bfa' },
+  'Crystel Ambrocio': { team:'ENT Hunters',     color:'#34d399' },
+  'Ferdie Salvosa':   { team:'SME Jetzsetters', color:'#a78bfa' },
+  'Reine Suarez':     { team:'SME Jetzsetters', color:'#a78bfa' },
+  'Rona Pablo':       { team:'SME Jetzsetters', color:'#a78bfa' },
+  'Jethro Jamelo':    { team:'SME Jetzsetters', color:'#a78bfa' },
+  'Gel Riboroso':     { team:'SME Jetzsetters', color:'#a78bfa', resigned:true },
+  'Nicco Tioseco':    { team:'SME Jetzsetters', color:'#a78bfa' },
+  'Osheri Fima':      { team:'SME Strikers',    color:'#fb923c' },
+  'Riezhel Punzalan': { team:'SME Strikers',    color:'#fb923c' },
+  'Rizzalyn Berce':   { team:'SME Strikers',    color:'#fb923c' },
+  'Akisha Abella':    { team:'SME Strikers',    color:'#fb923c' },
+  'Brian Azarcon':    { team:'SME Strikers',    color:'#fb923c' },
+  'Mat Galuego':      { team:'ENT Hunters',     color:'#34d399' },
+  'Ric Rigodon':      { team:'Upsell',          color:'#e8b86d' },
+  'Chress Espineda':  { team:'Upsell',          color:'#e8b86d' },
+  'Kurt Ang':         { team:'Upsell',          color:'#e8b86d' },
+  'Javier Lopez':     { team:'Upsell',          color:'#e8b86d' },
+};
+
+// Per-rep monthly MRR quota — sourced from "Targets Per Rep" sheet in Upsell Overall Targets.xlsx
+// Format: { rep: { month_number: target } }
+const REP_MONTHLY_TARGET = {
+  'Katryn Saldajeno':  {1:80000,2:80000,3:100000,4:120000,5:120000,6:120000,7:120000,8:120000,9:120000,10:110000,11:110000,12:100000},
+  'Miriam Pulido':     {1:80000,2:80000,3:100000,4:120000,5:120000,6:120000,7:120000,8:120000,9:120000,10:110000,11:110000,12:100000},
+  'Lana Pineda':       {1:80000,2:80000,3:100000,4:120000,5:120000,6:120000,7:120000,8:120000,9:120000,10:110000,11:110000,12:100000},
+  'Crystel Ambrocio':  {1:80000,2:80000,3:100000,4:120000,5:120000,6:120000,7:120000,8:120000,9:120000,10:110000,11:110000,12:100000},
+  'Ferdie Salvosa':    {1:60000,2:60000,3:60000, 4:100000,5:100000,6:100000,7:100000,8:100000,9:100000,10:75000, 11:75000, 12:75000},
+  'Reine Suarez':      {1:60000,2:60000,3:60000, 4:100000,5:100000,6:100000,7:100000,8:100000,9:100000,10:75000, 11:75000, 12:75000},
+  'Rona Pablo':        {1:60000,2:60000,3:60000, 4:100000,5:100000,6:100000,7:100000,8:100000,9:100000,10:75000, 11:75000, 12:75000},
+  'Jethro Jamelo':     {1:60000,2:60000,3:80000, 4:110000,5:110000,6:110000,7:110000,8:110000,9:110000,10:90000, 11:75000, 12:75000},
+  'Gel Riboroso':      {1:60000,2:60000,3:60000, 4:100000,5:100000,6:100000,7:100000,8:100000,9:100000,10:75000, 11:75000, 12:75000},
+  'Nicco Tioseco':     {1:60000,2:60000,3:60000, 4:100000,5:100000,6:100000,7:100000,8:100000,9:100000,10:75000, 11:75000, 12:75000},
+  'Osheri Fima':       {1:80000,2:80000,3:100000,4:130000,5:130000,6:130000,7:130000,8:130000,9:130000,10:120000,11:120000,12:100000},
+  'Riezhel Punzalan':  {1:60000,2:60000,3:80000, 4:110000,5:110000,6:110000,7:110000,8:110000,9:110000,10:90000, 11:75000, 12:75000},
+  'Rizzalyn Berce':    {1:60000,2:60000,3:80000, 4:110000,5:110000,6:110000,7:110000,8:110000,9:110000,10:90000, 11:75000, 12:75000},
+  'Akisha Abella':     {1:60000,2:60000,3:60000, 4:100000,5:100000,6:100000,7:100000,8:100000,9:100000,10:75000, 11:75000, 12:75000},
+  'Brian Azarcon':     {1:60000,2:60000,3:80000, 4:110000,5:110000,6:110000,7:110000,8:110000,9:110000,10:90000, 11:75000, 12:75000},
+  'Mat Galuego':       {1:60000,2:60000,3:80000, 4:110000,5:110000,6:110000,7:110000,8:110000,9:110000,10:90000, 11:75000, 12:75000},
+  'Ric Rigodon':       {1:80000,2:80000,3:80000, 4:120000,5:120000,6:120000,7:120000,8:120000,9:120000,10:100000,11:100000,12:100000},
+  'Chress Espineda':   {1:80000,2:80000,3:80000, 4:120000,5:120000,6:120000,7:120000,8:120000,9:120000,10:100000,11:100000,12:100000},
+  'Kurt Ang':          {1:70000,2:70000,3:70000, 4:110000,5:110000,6:110000,7:110000,8:110000,9:110000,10:90000, 11:90000, 12:90000},
+  'Javier Lopez':      {1:80000,2:80000,3:80000, 4:120000,5:120000,6:120000,7:120000,8:120000,9:120000,10:100000,11:100000,12:100000},
+};
+
+// Alliance team monthly target (New Business + Upsell combined)
+const ALLIANCE_MONTHLY_TARGET = {
+  1:170000, 2:170000, 3:230000, 4:300000, 5:300000, 6:300000,
+  7:300000, 8:300000, 9:300000, 10:230000, 11:200000, 12:200000
+};
+function allianceYTDTarget(upToMon) {
+  let total = 0;
+  for (let m = 1; m <= upToMon; m++) total += (ALLIANCE_MONTHLY_TARGET[m] || 0);
+  return total;
+}
+
+// Helpers — use these instead of REP_MONTHLY_TARGET[rep] directly
+function repMonthTarget(rep, mon) {
+  const t = REP_MONTHLY_TARGET[rep];
+  return t ? (t[mon] || 0) : 0;
+}
+function repYTDTarget(rep, upToMon) {
+  let total = 0;
+  for (let m = 1; m <= upToMon; m++) total += repMonthTarget(rep, m);
+  return total;
+}
+function repEFYTDTarget(rep, upToMon) {
+  const team = REP_TEAMS[rep]?.team || '';
+  let pipe, seg;
+  if (team.startsWith('ENT'))  { pipe = 'Sales Pipeline'; seg = 'ENT'; }
+  else if (team.startsWith('SME')) { pipe = 'Sales Pipeline'; seg = 'SME'; }
+  else if (team === 'Upsell') { pipe = 'PH Upsell Pipeline'; seg = null; }
+  else return 0;
+  const segTgt = getTargetForRow(pipe, seg, CUR_YEAR, upToMon, 'ef_mrr_target');
+  const activeReps = Object.entries(REP_TEAMS).filter(([r, info]) => {
+    if (info.resigned) return false;
+    const t = info.team || '';
+    if (team.startsWith('ENT')) return t.startsWith('ENT');
+    if (team.startsWith('SME')) return t.startsWith('SME');
+    if (team === 'Upsell') return t === 'Upsell';
+    return false;
+  }).length;
+  return activeReps > 0 ? Math.round(segTgt / activeReps) : 0;
+}
+
+const TEAM_ORDER = ['ENT Builders','ENT Hunters','SME Jetzsetters','SME Strikers','Channels','Upsell','Alliance'];
+
+// Explicit aliases: maps database full name (lowercase) → canonical REP_TEAMS key
+const REP_ALIASES = {
+  'katryn angela saldajeno':       'Katryn Saldajeno',
+  'crystel jane insigne-ambrocio': 'Crystel Ambrocio',
+  'crystel jane insigne ambrocio': 'Crystel Ambrocio',
+  'jose fernando salvosa':         'Ferdie Salvosa',
+  'rona mae pablo':                'Rona Pablo',
+  'jethro jesse james jamelo':     'Jethro Jamelo',
+  'angeline riboroso':             'Gel Riboroso',
+  'niccolo tioseco':               'Nicco Tioseco',
+  'rizzalyn morada - berce':       'Rizzalyn Berce',
+  'rizzalyn morada berce':         'Rizzalyn Berce',
+  'brian dominic azarcon':         'Brian Azarcon',
+  'ricardo rigodon':               'Ric Rigodon',
+  'akisha a':                      'Akisha Abella',
+  'marie christine espineda':      'Chress Espineda',
+};
+
+// Normalized lookup for flexible name matching from deal.sales_rep
+const _REP_NORM = {};
+Object.keys(REP_TEAMS).forEach(n => {
+  _REP_NORM[n.trim().toLowerCase()] = n;
+  // Also index "firstname lastname" (first two words)
+  const parts = n.trim().toLowerCase().split(/\s+/);
+  if (parts.length >= 2) _REP_NORM[parts[0]+' '+parts[1]] = n;
+});
+
+function getRepCanonical(salesRep) {
+  if (!salesRep) return null;
+  const norm = salesRep.trim().toLowerCase().replace(/\s*-\s*/g, ' ');
+  if (REP_ALIASES[norm]) return REP_ALIASES[norm];
+  if (_REP_NORM[norm]) return _REP_NORM[norm];
+  const parts = norm.split(/\s+/);
+  if (parts.length >= 2) {
+    const k2 = parts[0]+' '+parts[1];
+    if (_REP_NORM[k2]) return _REP_NORM[k2];
+  }
+  return null;
+}
+
+function spRepDeals(repKey) {
+  return allDeals.filter(d =>
+    getRepCanonical(d.sales_rep) === repKey &&
+    !EXCLUDED_PIPELINES.includes(d.pipeline_name)
+  );
+}
+
+// Deals from tracked pipelines where the rep is NOT in REP_TEAMS (unassigned)
+const SP_TRACKED_PIPES = ['Sales Pipeline','Unified Channel Pipeline','PH Upsell Pipeline'];
+function spUnassignedDeals() {
+  return allDeals.filter(d =>
+    SP_TRACKED_PIPES.includes(d.pipeline_name) &&
+    !EXCLUDED_PIPELINES.includes(d.pipeline_name) &&
+    getRepCanonical(d.sales_rep) === null
+  );
+}
+
+function spAttClass(p) {
+  if (p >= 100) return 'over';
+  if (p >= 80)  return 'hi';
+  if (p >= 60)  return 'mid';
+  return 'under';
+}
+
+/* ── Mode & SP Tab Switching ────────────────────── */
+function switchMode(mode) {
+  const isOps = mode === 'salesops';
+  $id('salesops-section').style.display  = isOps ? '' : 'none';
+  $id('salesperf-section').style.display = isOps ? 'none' : '';
+  $id('mode-salesops').classList.toggle('active', isOps);
+  $id('mode-salesperf').classList.toggle('active', !isOps);
+  localStorage.setItem('sales_mode', mode);
+  if (isOps) {
+    switchTab(localStorage.getItem('sales_tab') || 'mrr');
+  } else {
+    switchSpTab(localStorage.getItem('sp_tab') || 'rep');
+  }
+}
+
+function switchSpTab(t) {
+  ['rep','seg','lead','teams','accel'].forEach(id => {
+    const p  = $id('sp-'+id+'-panel');
+    const tb = $id('sp-tab-'+id);
+    if (p)  { p.classList.remove('active');  p.style.display = 'none'; }
+    if (tb) tb.classList.remove('active');
+  });
+  const panel = $id('sp-'+t+'-panel');
+  const tab   = $id('sp-tab-'+t);
+  if (panel) { panel.classList.add('active'); panel.style.display = 'block'; }
+  if (tab)   tab.classList.add('active');
+  localStorage.setItem('sp_tab', t);
+  if (t === 'rep')   renderRepSummary();
+  if (t === 'seg')   renderSegmentSummary();
+  if (t === 'lead')  renderLeaderboard();
+  if (t === 'teams') renderTeams();
+  if (t === 'accel') renderAccelerator();
+}
+
+/* ── Rep Summary month filter ───────────────────── */
+let repFilterMon = 0; // 0 = YTD (Jan–CUR_MON); 1–12 = specific month
+
+function buildRepMonthFilter() {
+  const MON_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const pills = [{ label: 'YTD', val: 0 }];
+  for (let m = 1; m <= CUR_MON; m++) pills.push({ label: MON_NAMES[m-1], val: m });
+  const el = $id('rep-month-filter');
+  if (!el) return;
+  el.innerHTML = pills.map(p => {
+    const active = repFilterMon === p.val;
+    return `<button onclick="setRepMonFilter(${p.val})" style="
+      font-size:10px;font-weight:700;padding:3px 10px;border-radius:4px;cursor:pointer;
+      letter-spacing:0.06em;border:1px solid ${active ? '#e8b86d' : '#ffffff15'};
+      background:${active ? '#e8b86d18' : 'transparent'};
+      color:${active ? '#e8b86d' : '#ffffff45'};
+      transition:all .15s;">${p.label}</button>`;
+  }).join('');
+}
+
+function setRepMonFilter(m) {
+  repFilterMon = m;
+  buildRepMonthFilter();
+  renderRepSummary();
+}
+
+/* ── Rep Summary ────────────────────────────────── */
+function renderRepSummary() {
+  buildRepMonthFilter();
+
+  // Determine the period: YTD = Jan–CUR_MON; specific month = just that month
+  const isYTD  = repFilterMon === 0;
+  const moMon  = isYTD ? CUR_MON : repFilterMon;   // month used for "Mo." columns
+  const ytdEnd = isYTD ? CUR_MON : repFilterMon;   // cumulative up to this month
+  const MON_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const periodLabel = isYTD ? `YTD (Jan–${MON_NAMES[CUR_MON-1]})` : MON_NAMES[repFilterMon-1];
+
+  // Update column headers
+  const setTh = (id, txt) => { const el = $id(id); if (el) el.textContent = txt; };
+  if (isYTD) {
+    setTh('rep-th-quota',  'YTD Quota');
+    setTh('rep-th-won',    'YTD Won');
+    setTh('rep-th-att',    'YTD Att%');
+    setTh('rep-th-fcst',   'Mo. Forecast');
+    setTh('rep-th-actual', 'Mo. Actual');
+  } else {
+    setTh('rep-th-quota',  `${MON_NAMES[repFilterMon-1]} Quota`);
+    setTh('rep-th-won',    `${MON_NAMES[repFilterMon-1]} Won`);
+    setTh('rep-th-att',    'Att%');
+    setTh('rep-th-fcst',   repFilterMon === CUR_MON ? 'Mo. Forecast' : '—');
+    setTh('rep-th-actual', `${MON_NAMES[repFilterMon-1]} Actual`);
+  }
+
+  let html = '';
+  // Pre-compute attainment for sorting (use correct filter per mode)
+  const repAttMap = {};
+  Object.keys(REP_TEAMS).forEach(rep => {
+    const ds = spRepDeals(rep);
+    const wonMrr = isYTD
+      ? sum(won(inYTD(ds, 'close_date', CUR_YEAR, CUR_MON)), mrr)
+      : sum(won(inMonth(ds, 'close_date', CUR_YEAR, repFilterMon)), mrr);
+    const tgt = isYTD ? repYTDTarget(rep, CUR_MON) : repMonthTarget(rep, repFilterMon);
+    repAttMap[rep] = pct(wonMrr, tgt);
+  });
+  const sortedReps = Object.entries(REP_TEAMS).sort((a,b) => {
+    const ti = TEAM_ORDER.indexOf(a[1].team), tj = TEAM_ORDER.indexOf(b[1].team);
+    if (ti !== tj) return ti - tj;
+    if (!!a[1].resigned !== !!b[1].resigned) return a[1].resigned ? 1 : -1;
+    return repAttMap[b[0]] - repAttMap[a[0]];
+  });
+  let totalYTDTarget = 0, totalYTDWon = 0, totalYTDEF = 0, totalLogos = 0;
+  let totalMoFcst = 0, totalMoWon = 0;
+
+  sortedReps.forEach(([rep, info]) => {
+    const { team, color, resigned } = info;
+    const moTarget  = repMonthTarget(rep, moMon);   // selected month's quota (for Mo. Quota column)
+    const ytdTarget = isYTD ? repYTDTarget(rep, CUR_MON) : repMonthTarget(rep, repFilterMon);
+
+    const repDs  = spRepDeals(rep);
+    // Won deals: cumulative Jan→CUR_MON for YTD; just that month for specific month
+    const wonYTD = isYTD
+      ? won(inYTD(repDs, 'close_date', CUR_YEAR, CUR_MON))
+      : won(inMonth(repDs, 'close_date', CUR_YEAR, repFilterMon));
+    const ytdWon = sum(wonYTD, mrr);
+    const ytdEF  = sum(wonYTD, efMrr);
+    const logos  = wonYTD.length;
+    const ytdAtt = pct(ytdWon, ytdTarget);
+    const toGo   = Math.max(0, ytdTarget - ytdWon);
+
+    // Mo. columns: always refer to moMon
+    const openMo    = open(inMonth(repDs, 'projected_close_date', CUR_YEAR, moMon));
+    const fcstDeals = moMon === CUR_MON ? [...byFC(openMo,'commit'), ...byFC(openMo,'pipeline')] : [];
+    const moFcst    = sum(fcstDeals, mrr);
+    const moWon     = sum(won(inMonth(repDs, 'close_date', CUR_YEAR, moMon)), mrr);
+    const fcstAcc   = moFcst > 0 ? pct(moWon, moFcst) : null;
+
+    const attCls = spAttClass(ytdAtt);
+    const bg = color+'18', bd = color+'30';
+
+    if (!resigned) totalYTDTarget += ytdTarget;
+    totalYTDWon  += ytdWon;
+    totalYTDEF   += ytdEF;
+    totalLogos   += logos;
+    totalMoFcst  += moFcst;
+    totalMoWon   += moWon;
+
+    const repNameHtml = resigned
+      ? `<span style="color:#6b7280;" title="Resigned">${rep}</span>`
+      : rep;
+    const fcstCell = moMon === CUR_MON
+      ? `<td style="color:#c4b5fd;">${fmt(moFcst)}</td>`
+      : `<td><span style="color:#ffffff20;">—</span></td>`;
+    const fcstAccCell = (moMon === CUR_MON && fcstAcc !== null)
+      ? `<td><span style="color:${attColor(fcstAcc)};">${fcstAcc}%</span></td>`
+      : `<td><span style="color:#ffffff25;">—</span></td>`;
+
+    html += `<tr style="${resigned?'opacity:0.55;':''}">
+      <td>${repNameHtml}</td>
+      <td><span class="team-badge" style="background:${bg};color:${color};border:1px solid ${bd};">${team}</span></td>
+      <td>${fmt(ytdTarget)}</td>
+      <td style="color:#fff;font-weight:500;">${fmt(ytdWon)}</td>
+      <td><span class="sp-rep-att ${attCls}">${ytdAtt}%</span></td>
+      <td style="color:#f87171;">${toGo ? fmt(toGo) : '<span style="color:#4ade80;">✓</span>'}</td>
+      ${fcstCell}
+      <td style="color:#4ade80;">${fmt(moWon)}</td>
+      ${fcstAccCell}
+      <td style="color:#e8b86d;">${ytdEF ? fmt(ytdEF) : '<span style="color:#ffffff20;">—</span>'}</td>
+      <td style="color:#ffffff70;">${logos || '<span style="color:#ffffff25;">0</span>'}</td>
+      <td style="color:#ffffff40;">${fmt(moTarget)}</td>
+    </tr>`;
+  });
+
+  // ── Unassigned row ──
+  const unassDs    = spUnassignedDeals();
+  const unassYTD   = isYTD
+    ? won(inYTD(unassDs, 'close_date', CUR_YEAR, CUR_MON))
+    : won(inMonth(unassDs, 'close_date', CUR_YEAR, repFilterMon));
+  const unassWon   = sum(unassYTD, mrr);
+  const unassEF    = sum(unassYTD, efMrr);
+  const unassLogos = unassYTD.length;
+  const unasMoWon  = sum(won(inMonth(unassDs, 'close_date', CUR_YEAR, moMon)), mrr);
+
+  if (unassWon > 0 || unassLogos > 0) {
+    totalYTDWon += unassWon;
+    totalYTDEF  += unassEF;
+    totalLogos  += unassLogos;
+    totalMoWon  += unasMoWon;
+    html += `<tr style="opacity:0.6;border-top:1px dashed #ffffff12;">
+      <td><span style="color:#6b7280;font-style:italic;">Unassigned</span></td>
+      <td><span style="color:#6b7280;font-size:10px;">—</span></td>
+      <td><span style="color:#ffffff20;">—</span></td>
+      <td style="color:#fff;font-weight:500;">${fmt(unassWon)}</td>
+      <td><span style="color:#ffffff25;">—</span></td>
+      <td><span style="color:#ffffff20;">—</span></td>
+      <td><span style="color:#ffffff20;">—</span></td>
+      <td style="color:#4ade80;">${fmt(unasMoWon)}</td>
+      <td><span style="color:#ffffff25;">—</span></td>
+      <td style="color:#e8b86d;">${unassEF ? fmt(unassEF) : '<span style="color:#ffffff20;">—</span>'}</td>
+      <td style="color:#ffffff70;">${unassLogos || '<span style="color:#ffffff25;">0</span>'}</td>
+      <td><span style="color:#ffffff20;">—</span></td>
+    </tr>`;
+  }
+
+  // ── Grand total row ──
+  const totAtt     = pct(totalYTDWon, totalYTDTarget);
+  const totAttCls  = spAttClass(totAtt);
+  const totToGo    = Math.max(0, totalYTDTarget - totalYTDWon);
+  const totFcstAcc = totalMoFcst > 0 ? pct(totalMoWon, totalMoFcst) : null;
+  const totFcstCell = moMon === CUR_MON
+    ? `<td style="color:#c4b5fd;font-weight:600;">${fmt(totalMoFcst)}</td>`
+    : `<td><span style="color:#ffffff20;">—</span></td>`;
+  const totFcstAccCell = (moMon === CUR_MON && totFcstAcc !== null)
+    ? `<td><span style="color:${attColor(totFcstAcc)};font-weight:600;">${totFcstAcc}%</span></td>`
+    : `<td><span style="color:#ffffff25;">—</span></td>`;
+
+  html += `<tr style="border-top:2px solid #ffffff18;background:#ffffff05;">
+    <td style="font-weight:700;color:#e8b86d;letter-spacing:0.04em;">TOTAL</td>
+    <td></td>
+    <td style="color:#ffffff70;font-weight:600;">${fmt(totalYTDTarget)}</td>
+    <td style="color:#e8b86d;font-weight:700;">${fmt(totalYTDWon)}</td>
+    <td><span class="sp-rep-att ${totAttCls}" style="font-weight:700;">${totAtt}%</span></td>
+    <td style="color:#f87171;font-weight:600;">${totToGo ? fmt(totToGo) : '<span style="color:#4ade80;">✓</span>'}</td>
+    ${totFcstCell}
+    <td style="color:#4ade80;font-weight:700;">${fmt(totalMoWon)}</td>
+    ${totFcstAccCell}
+    <td style="color:#e8b86d;font-weight:600;">${totalYTDEF ? fmt(totalYTDEF) : '<span style="color:#ffffff20;">—</span>'}</td>
+    <td style="color:#ffffff70;font-weight:600;">${totalLogos}</td>
+    <td></td>
+  </tr>`;
+
+  $id('sp-rep-body').innerHTML = html || '<tr><td colspan="12" class="empty-row">No data found</td></tr>';
+}
+
+/* ── Segment Summary ────────────────────────────── */
+function renderSegmentSummary() {
+  const SEGS = [
+    { label:'ENT', pipelines:['Sales Pipeline','Unified Channel Pipeline'], seg:'ENT', color:'#60a5fa', chanFrac:0.5 },
+    { label:'SME', pipelines:['Sales Pipeline','Unified Channel Pipeline'], seg:'SME', color:'#a78bfa', chanFrac:0.5 },
+    { label:'U/S', pipelines:['PH Upsell Pipeline'], seg:null, color:'#e8b86d', chanFrac:0 },
+  ];
+
+  function getSegMonTgt(label, seg, mo, tf) {
+    if (label === 'U/S') {
+      return getTargetForRowMon('PH Upsell Pipeline', null, CUR_YEAR, mo, tf);
+    } else {
+      const chanT = getTargetForRowMon('Unified Channel Pipeline', 'Channels', CUR_YEAR, mo, tf);
+      return getTargetForRowMon('Sales Pipeline', seg, CUR_YEAR, mo, tf) + 0.5 * chanT;
+    }
+  }
+
+  function buildTable(fn, tf) {
+    const theadMons = MONTHS.map(m => `<th>${m}</th>`).join('');
+    let rows = '';
+    let totMonAct = new Array(12).fill(0), totMonTgt = new Array(12).fill(0);
+
+    SEGS.forEach(({ label, pipelines, seg, color }) => {
+      const deals = dealsByRow(pipelines, seg);
+      let tgtCells = '', actCells = '', achCells = '';
+      let ytdAct = 0, ytdTgt = 0;
+
+      for (let mo = 1; mo <= 12; mo++) {
+        const act = sum(won(inMonth(deals, 'close_date', CUR_YEAR, mo)), fn);
+        const tgt = getSegMonTgt(label, seg, mo, tf);
+        const isFut = mo > CUR_MON, isCur = mo === CUR_MON;
+
+        if (!isFut) {
+          ytdAct += act; ytdTgt += tgt;
+          totMonAct[mo-1] += act; totMonTgt[mo-1] += tgt;
+        }
+
+        const achVal = tgt > 0 ? pct(act, tgt) : 0;
+        const achC   = isFut ? '#ffffff15' : achVal >= 100 ? '#4ade80' : achVal >= 60 ? '#fbbf24' : '#f87171';
+        const dash   = `<span style="color:#ffffff12;">—</span>`;
+
+        tgtCells += `<td style="color:${isFut?'#ffffff15':'#ffffff45'};">${isFut ? dash : fmt(tgt)}</td>`;
+        actCells += `<td style="color:${isFut?'#ffffff15':isCur?'#e8b86d':'#fff'};font-weight:${isFut?'400':'500'};">${isFut ? dash : fmt(act)}</td>`;
+        achCells += `<td style="color:${achC};font-weight:600;font-size:10px;">${isFut ? dash : achVal + '%'}</td>`;
+      }
+
+      const overallAch = pct(ytdAct, ytdTgt);
+      const overallC   = overallAch >= 100 ? '#4ade80' : overallAch >= 60 ? '#fbbf24' : '#f87171';
+
+      rows += `
+        <tr class="seg-tgt-row">
+          <td class="seg-label-cell" rowspan="3" style="color:${color};">${label}</td>
+          <td class="seg-row-label">Target</td>
+          ${tgtCells}
+          <td style="color:#ffffff45;">${fmt(ytdTgt)}</td>
+          <td class="seg-row-label" rowspan="3" style="color:${overallC};font-size:13px;font-weight:700;text-align:right !important;">${overallAch}%</td>
+        </tr>
+        <tr class="seg-act-row">
+          <td class="seg-row-label" style="color:#4ade8070;">Actual</td>
+          ${actCells}
+          <td style="color:#fff;font-weight:600;">${fmt(ytdAct)}</td>
+        </tr>
+        <tr class="seg-ach-row">
+          <td class="seg-row-label">Ach%</td>
+          ${achCells}
+          <td></td>
+        </tr>`;
+    });
+
+    // Total rows
+    let totTgtCells = '', totActCells = '', totAchCells = '';
+    let grandTgt = 0, grandAct = 0;
+    for (let i = 0; i < 12; i++) {
+      const mo = i + 1, isFut = mo > CUR_MON;
+      const tgt = totMonTgt[i], act = totMonAct[i];
+      if (!isFut) { grandTgt += tgt; grandAct += act; }
+      const achVal = tgt > 0 ? pct(act, tgt) : 0;
+      const achC   = isFut ? '#ffffff15' : achVal >= 100 ? '#4ade80' : achVal >= 60 ? '#fbbf24' : '#f87171';
+      const dash   = `<span style="color:#ffffff12;">—</span>`;
+      totTgtCells += `<td style="color:${isFut?'#ffffff15':'#ffffff45'};">${isFut ? dash : fmt(tgt)}</td>`;
+      totActCells += `<td style="color:${isFut?'#ffffff15':'#fff'};font-weight:500;">${isFut ? dash : fmt(act)}</td>`;
+      totAchCells += `<td style="color:${achC};font-weight:600;font-size:10px;">${isFut ? dash : achVal + '%'}</td>`;
+    }
+    const totAch = pct(grandAct, grandTgt);
+    const totC   = totAch >= 100 ? '#4ade80' : totAch >= 60 ? '#fbbf24' : '#f87171';
+
+    rows += `
+      <tr class="seg-total-tgt-row">
+        <td class="seg-label-cell total-seg-label" rowspan="3">Total</td>
+        <td class="seg-row-label">Target</td>
+        ${totTgtCells}
+        <td style="color:#ffffff45;">${fmt(grandTgt)}</td>
+        <td class="seg-row-label" rowspan="3" style="color:${totC};font-size:13px;font-weight:700;text-align:right !important;">${totAch}%</td>
+      </tr>
+      <tr class="seg-total-act-row">
+        <td class="seg-row-label" style="color:#4ade8070;">Actual</td>
+        ${totActCells}
+        <td style="color:#fff;font-weight:700;">${fmt(grandAct)}</td>
+      </tr>
+      <tr class="seg-ach-row">
+        <td class="seg-row-label">Ach%</td>
+        ${totAchCells}
+        <td></td>
+      </tr>`;
+
+    return `<div class="panel" style="overflow:hidden;">
+      <div style="overflow-x:auto;">
+        <table class="seg-sum-table">
+          <thead><tr>
+            <th style="width:56px;">Segment</th>
+            <th style="width:52px;text-align:left;">Row</th>
+            ${theadMons}
+            <th>YTD Actual</th>
+            <th>Ach%</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div>`;
+  }
+
+  $id('sp-seg-body').innerHTML =
+    `<div class="panel-header" style="border-bottom:none;"><div class="panel-dot" style="background:#60a5fa;"></div><div class="panel-label"><span style="color:#60a5fa;">MRR</span> · Monthly Breakdown by Segment</div></div>` +
+    buildTable(mrr, 'mrr_target') +
+    `<div class="panel-header" style="border-bottom:none;margin-top:20px;"><div class="panel-dot" style="background:#e8b86d;"></div><div class="panel-label"><span style="color:#e8b86d;">E/F MRR</span> · Monthly Breakdown by Segment</div></div>` +
+    buildTable(efMrr, 'ef_mrr_target');
+}
+
+/* ── Leaderboard ────────────────────────────────── */
+function renderLeaderboard() {
+  const rows = Object.entries(REP_TEAMS).map(([rep, info]) => {
+    const ytdTgt   = repYTDTarget(rep, CUR_MON);
+    const ytdEFTgt = repEFYTDTarget(rep, CUR_MON);
+    const wonYTD   = won(inYTD(spRepDeals(rep), 'close_date', CUR_YEAR, CUR_MON));
+    const ytdWon   = sum(wonYTD, mrr);
+    const ytdEF    = sum(wonYTD, efMrr);
+    const ytdAtt   = pct(ytdWon, ytdTgt);
+    const ytdEFAtt = ytdEFTgt > 0 ? pct(ytdEF, ytdEFTgt) : null;
+    return { rep, team:info.team, color:info.color, ytdWon, ytdEF, ytdAtt, ytdEFAtt };
+  }).sort((a,b) => b.ytdAtt - a.ytdAtt);
+
+  let html = '';
+  rows.forEach((r, i) => {
+    const rank = i+1;
+    const trophy = rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':null;
+    const rankHtml = trophy
+      ? `<span class="lb-rank">${trophy}</span>`
+      : `<span style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#ffffff25;">${rank}</span>`;
+    const bg = r.color+'18', bd = r.color+'30';
+    const efAttHtml = r.ytdEFAtt !== null
+      ? `<span style="color:${attColor(r.ytdEFAtt)};font-weight:600;">${r.ytdEFAtt}%</span>`
+      : `<span style="color:#ffffff20;">—</span>`;
+    html += `<tr>
+      <td>${rankHtml}</td>
+      <td>${r.rep}</td>
+      <td><span class="team-badge" style="background:${bg};color:${r.color};border:1px solid ${bd};">${r.team}</span></td>
+      <td style="color:#fff;font-weight:500;">${fmt(r.ytdWon)}</td>
+      <td style="color:#e8b86d;">${r.ytdEF ? fmt(r.ytdEF) : '<span style="color:#ffffff20;">—</span>'}</td>
+      <td style="color:${attColor(r.ytdAtt)};font-weight:600;">${r.ytdAtt}%</td>
+      <td>${efAttHtml}</td>
+    </tr>`;
+  });
+  $id('sp-lead-body').innerHTML = html || '<tr><td colspan="7" class="empty-row">No data found</td></tr>';
+}
+
+/* ── Teams ──────────────────────────────────────── */
+function renderTeams() {
+  // Group reps by team
+  const teamMap = {};
+  Object.entries(REP_TEAMS).forEach(([rep, info]) => {
+    if (!teamMap[info.team]) teamMap[info.team] = { reps:[], color:info.color };
+    teamMap[info.team].reps.push(rep);
+  });
+
+  let html = '';
+  TEAM_ORDER.forEach(teamName => {
+    // Channels: show team-level YTD only, no individual rep rows
+    if (teamName === 'Channels') {
+      const chanColor = '#2dd4bf';
+      const chanTgt = getTargetForRow('Unified Channel Pipeline', 'Channels', CUR_YEAR, CUR_MON, 'mrr_target') || 0;
+      const chanAct = sum(won(inYTD(allDeals.filter(d => d.pipeline_name === 'Unified Channel Pipeline'), 'close_date', CUR_YEAR, CUR_MON)), mrr);
+      const chanAtt = pct(chanAct, chanTgt);
+      const chanAttC = chanAtt >= 100 ? '#4ade80' : chanAtt >= 80 ? '#38bdf8' : chanAtt >= 60 ? '#fbbf24' : '#f87171';
+      html += `<div class="team-card">
+        <div class="team-card-header">
+          <div class="team-card-dot" style="background:${chanColor};"></div>
+          <div class="team-card-name" style="color:${chanColor};">Channels</div>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:${chanAttC};">${chanAtt}%</span>
+        </div>
+        <div class="team-kpi-row">
+          <div class="team-kpi"><div class="team-kpi-label">YTD Target</div><div class="team-kpi-val" style="color:#ffffff60;">${fmt(chanTgt)}</div></div>
+          <div class="team-kpi"><div class="team-kpi-label">YTD Actual</div><div class="team-kpi-val" style="color:#fff;">${fmt(chanAct)}</div></div>
+          <div class="team-kpi"><div class="team-kpi-label">Attainment</div><div class="team-kpi-val" style="color:${chanAttC};font-weight:700;">${chanAtt}%</div></div>
+        </div>
+      </div>`;
+      return;
+    }
+
+    // Alliance: actuals from Third Party + Recruit+ line items
+    if (teamName === 'Alliance') {
+      const alliColor = '#f472b6';
+      const alliAct = allianceData.reduce((total, row) => {
+        if (!row.month) return total;
+        const dt = new Date(row.month);
+        if (dt.getFullYear() === CUR_YEAR && dt.getMonth() + 1 <= CUR_MON)
+          total += parseFloat(row.mrr || 0);
+        return total;
+      }, 0);
+      const alliTgt  = allianceYTDTarget(CUR_MON);
+      const alliAtt  = alliTgt > 0 ? pct(alliAct, alliTgt) : 0;
+      const alliAttC = alliAtt >= 100 ? '#4ade80' : alliAtt >= 60 ? '#fbbf24' : '#f87171';
+      html += `<div class="team-card">
+        <div class="team-card-header">
+          <div class="team-card-dot" style="background:${alliColor};"></div>
+          <div class="team-card-name" style="color:${alliColor};">Alliance</div>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:${alliAttC};">${alliTgt > 0 ? alliAtt+'%' : '—'}</span>
+        </div>
+        <div class="team-kpi-row">
+          <div class="team-kpi"><div class="team-kpi-label">YTD Target</div><div class="team-kpi-val" style="color:#ffffff60;">${alliTgt > 0 ? fmt(alliTgt) : '—'}</div></div>
+          <div class="team-kpi"><div class="team-kpi-label">YTD Actual</div><div class="team-kpi-val" style="color:#fff;">${fmt(alliAct)}</div></div>
+          <div class="team-kpi"><div class="team-kpi-label">Attainment</div><div class="team-kpi-val" style="color:${alliAttC};font-weight:700;">${alliTgt > 0 ? alliAtt+'%' : '—'}</div></div>
+        </div>
+      </div>`;
+      return;
+    }
+
+    const team = teamMap[teamName];
+    if (!team) return;
+
+    let teamTgt = 0, teamAct = 0;
+    // Calculate attainment per rep first, then sort descending (resigned reps go last)
+    const repData = team.reps.map(rep => {
+      const ytdTgt = repYTDTarget(rep, CUR_MON);
+      const ytdWon = sum(won(inYTD(spRepDeals(rep),'close_date',CUR_YEAR,CUR_MON)), mrr);
+      teamTgt += ytdTgt; teamAct += ytdWon;
+      return { rep, ytdTgt, ytdWon, att: pct(ytdWon, ytdTgt), isResigned: !!(REP_TEAMS[rep] && REP_TEAMS[rep].resigned) };
+    });
+    repData.sort((a,b) => a.isResigned !== b.isResigned ? (a.isResigned ? 1 : -1) : b.att - a.att);
+    const repRows = repData.map(({ rep, att, isResigned }) => {
+      const bc = att >= 100 ? '#4ade80' : att >= 80 ? '#38bdf8' : att >= 60 ? '#fbbf24' : '#f87171';
+      return `<div class="team-rep-row" style="${isResigned?'opacity:0.45;':''}">
+        <span class="team-rep-name" style="${isResigned?'color:#6b7280;':''}">${rep.split(' ')[0]} ${rep.split(' ')[1]||''}${isResigned?' <span style="font-size:9px;">(resigned)</span>':''}</span>
+        <div class="team-rep-bar-wrap">
+          <div class="team-rep-bar-fill" style="width:${Math.min(att,100)}%;background:${bc};"></div>
+        </div>
+        <span class="team-rep-pct" style="color:${bc};">${att}%</span>
+      </div>`;
+    }).join('');
+
+    const teamAtt  = pct(teamAct, teamTgt);
+    const teamAttC = teamAtt >= 100 ? '#4ade80' : teamAtt >= 80 ? '#38bdf8' : teamAtt >= 60 ? '#fbbf24' : '#f87171';
+
+    html += `<div class="team-card">
+      <div class="team-card-header">
+        <div class="team-card-dot" style="background:${team.color};"></div>
+        <div class="team-card-name" style="color:${team.color};">${teamName}</div>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:${teamAttC};">${teamAtt}%</span>
+      </div>
+      <div class="team-kpi-row">
+        <div class="team-kpi">
+          <div class="team-kpi-label">YTD Target</div>
+          <div class="team-kpi-val" style="color:#ffffff60;">${fmt(teamTgt)}</div>
+        </div>
+        <div class="team-kpi">
+          <div class="team-kpi-label">YTD Actual</div>
+          <div class="team-kpi-val" style="color:#fff;">${fmt(teamAct)}</div>
+        </div>
+        <div class="team-kpi">
+          <div class="team-kpi-label">Attainment</div>
+          <div class="team-kpi-val" style="color:${teamAttC};font-weight:700;">${teamAtt}%</div>
+        </div>
+      </div>
+      <div class="team-reps">${repRows}</div>
+    </div>`;
+  });
+
+  $id('sp-teams-body').innerHTML = html;
+}
+
+/* ── Accelerator ────────────────────────────────── */
+// Manual override storage key: accel_<year>_<rep>_<month> → 'hit'|'miss'|'skip'|null
+function _accelKey(rep, m)  { return `accel_${CUR_YEAR}_${rep}_${m}`; }
+function _accelBakedKey(rep, m) { return `${CUR_YEAR}_${rep}_${m}`; }
+function _accelGet(rep, m) {
+  // 1. Manual local override (localStorage) takes priority
+  const local = localStorage.getItem(_accelKey(rep, m));
+  if (local) return local;
+  // 2. Fall back to shared repo snapshot (visible to all users)
+  return ACCEL_BAKED[_accelBakedKey(rep, m)] || null;
+}
+function _accelSet(rep, m, val) { localStorage.setItem(_accelKey(rep, m), val); }
+
+function accelToggle(repEnc, m) {
+  const rep = decodeURIComponent(repEnc);
+  const cur = _accelGet(rep, m);
+  // Cycle: null/auto → 'hit' → 'miss' → 'skip' → 'hit' …
+  const next = (!cur || cur === 'skip') ? 'hit' : cur === 'hit' ? 'miss' : 'skip';
+  _accelSet(rep, m, next);
+  renderAccelerator();
+}
+
+
+function renderAccelerator() {
+  // Pre-compute YTD attainment for sorting within teams
+  const accelAttMap = {};
+  Object.keys(REP_TEAMS).forEach(rep => {
+    accelAttMap[rep] = pct(sum(won(inYTD(spRepDeals(rep),'close_date',CUR_YEAR,CUR_MON)), mrr), repYTDTarget(rep, CUR_MON));
+  });
+  const reps = Object.keys(REP_TEAMS).sort((a,b) => {
+    const ti = TEAM_ORDER.indexOf(REP_TEAMS[a].team), tj = TEAM_ORDER.indexOf(REP_TEAMS[b].team);
+    if (ti !== tj) return ti - tj;
+    if (!!REP_TEAMS[a].resigned !== !!REP_TEAMS[b].resigned) return REP_TEAMS[a].resigned ? 1 : -1;
+    return accelAttMap[b] - accelAttMap[a];
+  });
+  const theadMons = MONTHS.map((m,i) => {
+    const isCur = (i+1) === CUR_MON;
+    return `<th style="${isCur?'color:#e8b86d;':''}">${m}</th>`;
+  }).join('');
+
+  // Only show Save button to admins
+  const ACCEL_ADMINS = ['apanares@sprout.ph','lurbina@sprout.ph'];
+  const currentUser  = (localStorage.getItem('radar_user_email') || '').toLowerCase().trim();
+  const isAdmin      = ACCEL_ADMINS.includes(currentUser);
+  const saveBtn  = isAdmin ? `<button onclick="accelSaveSnapshot()" style="margin-left:12px;font-size:10px;padding:3px 10px;background:#1a3a24;border:1px solid #1DB954;border-radius:4px;color:#1DB954;cursor:pointer;font-weight:600;" title="Lock current ✓/✗ state so data refreshes won't change it">💾 Save</button>` : '';
+  const resetBtn = isAdmin ? `<button onclick="accelResetAll()" style="margin-left:6px;font-size:10px;padding:3px 10px;background:#ffffff08;border:1px solid #ffffff15;border-radius:4px;color:#ffffff40;cursor:pointer;" title="Clear all manual overrides">Reset</button>` : '';
+  const thead = `<thead><tr><th>Rep</th><th>Team ${saveBtn}${resetBtn}</th>${theadMons}</tr></thead>`;
+
+  let rows = '';
+  reps.forEach(rep => {
+    const { team, color } = REP_TEAMS[rep];
+    const moTarget = repMonthTarget(rep, CUR_MON);  // current month quota (accelerator unchanged)
+    const bg = color+'18', bd = color+'30';
+    const repEnc = encodeURIComponent(rep);
+    let cells = '';
+    for (let m = 1; m <= 12; m++) {
+      if (m > CUR_MON) {
+        const override = _accelGet(rep, m);
+        let inner;
+        if (override === 'hit') {
+          inner = `<span class="accel-hit" title="Manual: HIT — click to change">✓</span>`;
+        } else if (override === 'miss') {
+          inner = `<span class="accel-miss" title="Manual: MISS — click to change">✗</span>`;
+        } else {
+          inner = `<span class="accel-fut" style="cursor:pointer;" title="Click to mark hit or miss">—</span>`;
+        }
+        cells += `<td class="accel-cell" onclick="accelToggle('${repEnc}',${m})" style="cursor:pointer;">${inner}</td>`;
+      } else {
+        const override = _accelGet(rep, m);
+        let inner;
+        if (override === 'hit') {
+          inner = `<span class="accel-hit" title="Manual: HIT — click to change">✓</span>`;
+        } else if (override === 'miss') {
+          inner = `<span class="accel-miss" title="Manual: MISS — click to change">✗</span>`;
+        } else if (override === 'skip') {
+          inner = `<span class="accel-skip" title="Skipped — click to change">—</span>`;
+        } else {
+          // Auto-compute
+          const won_ = sum(won(inMonth(spRepDeals(rep),'close_date',CUR_YEAR,m)), mrr);
+          const hit  = won_ >= moTarget;
+          inner = `<span class="${hit?'accel-hit':'accel-miss'}" title="${fmt(won_)} vs ${fmt(moTarget)} — click to override">${hit?'✓':'✗'}</span>`;
+        }
+        cells += `<td class="accel-cell" onclick="accelToggle('${repEnc}',${m})">${inner}</td>`;
+      }
+    }
+    const resigned = REP_TEAMS[rep].resigned;
+    const accelNameHtml = resigned
+      ? `<span style="color:#6b7280;" title="Resigned">${rep}</span>`
+      : rep;
+    rows += `<tr style="${resigned?'opacity:0.55;':''}">
+      <td>${accelNameHtml}</td>
+      <td><span class="team-badge" style="background:${bg};color:${color};border:1px solid ${bd};">${team}</span></td>
+      ${cells}
+    </tr>`;
+  });
+
+  $id('sp-accel-body').innerHTML = `<table class="accel-table">${thead}<tbody>${rows}</tbody></table>`;
+}
+
+const ACCEL_SAVE_KEY = `accel_save_${CUR_YEAR}`;
+
+function accelResetAll() {
+  const lastSave = JSON.parse(localStorage.getItem(ACCEL_SAVE_KEY) || 'null');
+  if (lastSave) {
+    if (!confirm('Revert to your last saved state?')) return;
+    // Clear current overrides then restore from last save
+    Object.keys(REP_TEAMS).forEach(rep => {
+      for (let m = 1; m <= 12; m++) localStorage.removeItem(_accelKey(rep, m));
+    });
+    Object.entries(lastSave).forEach(([bakedKey, val]) => {
+      // bakedKey format: "2026_RepName_M" — parse back to rep/month
+      const parts = bakedKey.split('_');
+      const yr = parts[0], mon = parts[parts.length - 1];
+      const rep = parts.slice(1, -1).join('_');
+      if (yr === String(CUR_YEAR) && rep) _accelSet(rep, Number(mon), val);
+    });
+    renderAccelerator();
+    _accelToast('↩️ Reverted to last save');
+  } else {
+    if (!confirm('No save found. Clear all local overrides and revert to the auto-generated snapshot?')) return;
+    Object.keys(REP_TEAMS).forEach(rep => {
+      for (let m = 1; m <= 12; m++) localStorage.removeItem(_accelKey(rep, m));
+    });
+    renderAccelerator();
+    _accelToast('↩️ Reverted to auto-generated snapshot');
+  }
+}
+
+function _accelToast(msg, color) {
+  const t = document.createElement('div');
+  t.textContent = msg;
+  t.style.cssText = `position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#1a3a24;color:${color||'#1DB954'};border:1px solid ${color||'#1DB954'};padding:10px 22px;border-radius:8px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 4px 20px #00000060;white-space:nowrap;`;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+
+function accelSaveSnapshot() {
+  // Save the current displayed state to localStorage + write a "last save" checkpoint.
+  // Manual overrides (set by clicking cells) are preserved exactly as-is.
+  // Cells with no manual override fall back to ACCEL_BAKED or are computed from data.
+  // Current month with no override is left dynamic (not locked).
+  const checkpoint = {};
+  Object.keys(REP_TEAMS).forEach(rep => {
+    for (let m = 1; m <= CUR_MON; m++) {
+      const existing = _accelGet(rep, m); // localStorage first, then ACCEL_BAKED
+      let val = existing;
+      if (!val && m < CUR_MON) {
+        // Past month with no override — compute from data
+        const won_ = sum(won(inMonth(spRepDeals(rep), 'close_date', CUR_YEAR, m)), mrr);
+        val = won_ >= repMonthTarget(rep, m) ? 'hit' : 'miss';
+      }
+      if (val) {
+        _accelSet(rep, m, val);
+        checkpoint[_accelBakedKey(rep, m)] = val;
+      }
+      // Current month with no override: leave dynamic, don't checkpoint
+    }
+  });
+  localStorage.setItem(ACCEL_SAVE_KEY, JSON.stringify(checkpoint));
+  renderAccelerator();
+  _accelToast('✅ Changes saved');
+}
+
+/* ── Pipeline Filter ────────────────────────────── */
+function populatePipelineFilter() {
+  const sel = $id('filter-pipeline');
+  if (!sel) return;
+  const hidden = [...EXCLUDED_PIPELINES, ...HIDDEN_FROM_DROPDOWN];
+  const pipelines = [...new Set(allDeals.map(d => d.pipeline_name).filter(p => p && !hidden.includes(p)))].sort();
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">All Pipelines</option>' +
+    pipelines.map(p => `<option value="${p}" ${p===cur?'selected':''}>${p}</option>`).join('');
+}
+
+/* ── Full Render ────────────────────────────────── */
+function render() {
+  renderMRR();
+  const active = localStorage.getItem('sales_tab') || 'mrr';
+  if (active === 'fc')      renderForecast();
+  if (active === 'deals')   renderDeals();
+  if (active === 'actuals') renderActuals();
+}
+
+/* ── Sample Data ────────────────────────────────── */
+function loadSample() {
+  // Generate realistic sample deals so the dashboard shows something
+  const now = new Date();
+  const y = now.getFullYear(), m = now.getMonth() + 1;
+  const pad = n => String(n).padStart(2,'0');
+  const dt = (yr,mo,dy) => `${yr}-${pad(mo)}-${pad(dy)}`;
+
+  allDeals = [
+    // Won this month (Actual)
+    { deal_id:'1', deal_name:'ACME Corp',     deal_type:'New Business', pipeline_name:'Sales Pipeline', client_journey_stage:'Customer',    segment:'ENT', mrr:'85000',  ef_mrr:'0',     otp_only:'20000', mrr_lt_12:'10000', implem_fee:'50000', sales_rep:'Juan dela Cruz',  forecast_category:'Closed Won', close_date:dt(y,m,5),  projected_close_date:dt(y,m,5)  },
+    { deal_id:'2', deal_name:'Beta Solutions', deal_type:'New Business', pipeline_name:'Sales Pipeline', client_journey_stage:'Customer',    segment:'SME', mrr:'22000',  ef_mrr:'8000',  otp_only:'5000',  mrr_lt_12:'3000',  implem_fee:'15000', sales_rep:'Maria Santos',    forecast_category:'Closed Won', close_date:dt(y,m,8),  projected_close_date:dt(y,m,8)  },
+    { deal_id:'3', deal_name:'Gamma Inc',      deal_type:'Upsell',       pipeline_name:'PH Upsell Pipeline', client_journey_stage:'Customer',    segment:'ENT', mrr:'0',      ef_mrr:'35000', otp_only:'0',     mrr_lt_12:'0',     implem_fee:'0',     sales_rep:'Jose Reyes',      forecast_category:'Closed Won', close_date:dt(y,m,10), projected_close_date:dt(y,m,10) },
+    // Commit (open, this month)
+    { deal_id:'4', deal_name:'Delta PH',       deal_type:'New Business', pipeline_name:'Sales Pipeline', client_journey_stage:'Opportunity', segment:'ENT', mrr:'120000', ef_mrr:'0',     otp_only:'0',     implem_fee:'0',     sales_rep:'Juan dela Cruz',  forecast_category:'Commit',     close_date:null,       projected_close_date:dt(y,m,20) },
+    { deal_id:'5', deal_name:'Echo Systems',   deal_type:'Upsell',       pipeline_name:'Sales Pipeline', client_journey_stage:'Opportunity', segment:'SME', mrr:'18000',  ef_mrr:'12000', otp_only:'0',     implem_fee:'0',     sales_rep:'Maria Santos',    forecast_category:'Commit',     close_date:null,       projected_close_date:dt(y,m,22) },
+    // Best Case (open, this month)
+    { deal_id:'6', deal_name:'Foxtrot Ltd',    deal_type:'New Business', pipeline_name:'Sales Pipeline', client_journey_stage:'Opportunity', segment:'ENT', mrr:'95000',  ef_mrr:'0',     otp_only:'0',     implem_fee:'0',     sales_rep:'Ana Garcia',      forecast_category:'Best Case',  close_date:null,       projected_close_date:dt(y,m,25) },
+    { deal_id:'7', deal_name:'Golf Group',     deal_type:'New Business', pipeline_name:'Sales Pipeline', client_journey_stage:'Opportunity', segment:'SME', mrr:'28000',  ef_mrr:'5000',  otp_only:'0',     implem_fee:'0',     sales_rep:'Pedro Ramos',     forecast_category:'Best Case',  close_date:null,       projected_close_date:dt(y,m,28) },
+    // Pipeline / Strong Upside
+    { deal_id:'8', deal_name:'Hotel Chain',    deal_type:'New Business', pipeline_name:'Sales Pipeline', client_journey_stage:'Opportunity', segment:'ENT', mrr:'200000', ef_mrr:'50000', otp_only:'0',     implem_fee:'0',     sales_rep:'Ana Garcia',      forecast_category:'Pipeline',   close_date:null,       projected_close_date:dt(y,m,28) },
+    // Prior months (YTD)
+    { deal_id:'9',  deal_name:'Indigo Co',    deal_type:'New Business', pipeline_name:'Sales Pipeline', client_journey_stage:'Customer',    segment:'ENT', mrr:'90000',  ef_mrr:'0',     otp_only:'0',     implem_fee:'30000', sales_rep:'Juan dela Cruz',  forecast_category:'Closed Won', close_date:dt(y,m-1>0?m-1:12,15), projected_close_date:dt(y,m-1>0?m-1:12,15) },
+    { deal_id:'10', deal_name:'Juliet BPO',   deal_type:'New Business', pipeline_name:'Sales Pipeline', client_journey_stage:'Customer',    segment:'SME', mrr:'35000',  ef_mrr:'10000', otp_only:'5000',  implem_fee:'20000', sales_rep:'Maria Santos',    forecast_category:'Closed Won', close_date:dt(y,m-2>0?m-2:12,10), projected_close_date:dt(y,m-2>0?m-2:12,10) },
+    // Last year same period
+    { deal_id:'11', deal_name:'Kilo Retail',  deal_type:'New Business', pipeline_name:'Sales Pipeline', client_journey_stage:'Customer',    segment:'ENT', mrr:'70000',  ef_mrr:'0',     otp_only:'0',     implem_fee:'0',     sales_rep:'Jose Reyes',      forecast_category:'Closed Won', close_date:dt(y-1,m,12),   projected_close_date:dt(y-1,m,12)   },
+    { deal_id:'12', deal_name:'Lima Farms',   deal_type:'New Business', pipeline_name:'Sales Pipeline', client_journey_stage:'Customer',    segment:'SME', mrr:'25000',  ef_mrr:'5000',  otp_only:'0',     implem_fee:'0',     sales_rep:'Pedro Ramos',     forecast_category:'Closed Won', close_date:dt(y-1,m-1>0?m-1:12,18), projected_close_date:dt(y-1,m-1>0?m-1:12,18) },
+  ];
+
+  allTargets = [
+    // Current year monthly targets
+    ...Array.from({length:12},(_,i)=>({ metric_month:dt(y,i+1,1), pipeline_name:'Sales Pipeline', segment:'ENT', mrr_target:'150000', ef_mrr_target:'40000', ql_target:'10', won_target:'3' })),
+    ...Array.from({length:12},(_,i)=>({ metric_month:dt(y,i+1,1), pipeline_name:'Sales Pipeline', segment:'SME', mrr_target:'80000',  ef_mrr_target:'20000', ql_target:'15', won_target:'5' })),
+    // Last year
+    ...Array.from({length:12},(_,i)=>({ metric_month:dt(y-1,i+1,1), pipeline_name:'Sales Pipeline', segment:'ENT', mrr_target:'130000', ef_mrr_target:'30000', ql_target:'8', won_target:'3' })),
+    ...Array.from({length:12},(_,i)=>({ metric_month:dt(y-1,i+1,1), pipeline_name:'Sales Pipeline', segment:'SME', mrr_target:'70000',  ef_mrr_target:'15000', ql_target:'12', won_target:'4' })),
+  ];
+
+  populatePipelineFilter();
+  buildMonthPicker();
+  render();
+
+  const st = $id('sync-status');
+  if (st) { st.textContent = '⚠ Sample Data'; st.style.color = '#fbbf24'; }
+}
+
+/* ── Init ───────────────────────────────────────── */
+async function init() {
+  buildMonthPicker();
+
+  try {
+    const r = await fetch('data/dashboard.json?t=' + Date.now());
+    if (!r.ok) throw new Error('Not found');
+    const data = await r.json();
+    allDeals     = data.deals    || [];
+    allTargets   = data.targets  || [];
+    allianceData = data.alliance || [];
+
+    populatePipelineFilter();
+    render();
+
+    const st = $id('sync-status');
+    if (st) {
+      const ts = data.refreshed_at ? new Date(data.refreshed_at).toLocaleString('en-PH',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',timeZone:'Asia/Manila'}) : '';
+      st.textContent = '✓ Live' + (ts ? ' · ' + ts : '');
+      st.style.color = '#4ade8060';
+    }
+    const ref = $id('mrr-refresh');
+    if (ref && data.refreshed_at) {
+      ref.textContent = 'Last refreshed: ' + new Date(data.refreshed_at).toLocaleString('en-PH',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',timeZone:'Asia/Manila'});
+    }
+    // Mirror sync status to SP section
+    const spSt = $id('sp-sync-status');
+    if (spSt && data.refreshed_at) {
+      const ts = new Date(data.refreshed_at).toLocaleString('en-PH',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',timeZone:'Asia/Manila'});
+      spSt.textContent = '✓ Live · ' + ts;
+      spSt.style.color = '#4ade8060';
+    }
+  } catch(e) {
+    console.warn('No data/dashboard.json — showing sample data:', e.message);
+    loadSample();
+  }
+
+  // Restore saved mode (salesops or salesperf)
+  const savedMode = localStorage.getItem('sales_mode') || 'salesops';
+  switchMode(savedMode);
+}
+
+init();
+
+/* ══════════════════════════════════════════════════
+   FORECAST EDIT MODAL FUNCTIONS
+══════════════════════════════════════════════════ */
+function openFcModal() {
+  const lsKey     = `fc_override_${selFcYear}_${selFcMon}`;
+  const stored    = JSON.parse(localStorage.getItem(lsKey) || 'null');
+  const staticBase = (STATIC_FORECAST && STATIC_FORECAST.month === selFcMon && STATIC_FORECAST.year === selFcYear) ? STATIC_FORECAST : null;
+  const hasSaved  = !!stored || !!staticBase;
+  const src       = stored || staticBase || { nb_mrr: 0, nb_ef: 0, us_mrr: 0, us_ef: 0 };
+
+  $id('fc-modal-sub').textContent  = MONTHS[selFcMon - 1] + ' ' + selFcYear;
+  $id('fc-input-nb-mrr').value     = src.nb_mrr || 0;
+  $id('fc-input-nb-ef').value      = src.nb_ef  || 0;
+  $id('fc-input-us-mrr').value     = src.us_mrr || 0;
+  $id('fc-input-us-ef').value      = src.us_ef  || 0;
+
+  // Show Clear button only if this month has saved/static data
+  const clearBtn = $id('fc-modal-clear-btn');
+  if (clearBtn) clearBtn.style.display = hasSaved ? 'inline-block' : 'none';
+
+  $id('fc-modal-overlay').classList.add('open');
+  setTimeout(() => $id('fc-input-nb-mrr').focus(), 80);
+}
+function closeFcModal() {
+  $id('fc-modal-overlay').classList.remove('open');
+}
+function saveFcModal() {
+  const lsKey = `fc_override_${selFcYear}_${selFcMon}`;
+  const data = {
+    month:  selFcMon,
+    year:   selFcYear,
+    nb_mrr: +$id('fc-input-nb-mrr').value || 0,
+    nb_ef:  +$id('fc-input-nb-ef').value  || 0,
+    us_mrr: +$id('fc-input-us-mrr').value || 0,
+    us_ef:  +$id('fc-input-us-ef').value  || 0,
+  };
+  localStorage.setItem(lsKey, JSON.stringify(data));
+  closeFcModal();
+  buildMonthPicker();
+  renderForecast();
+}
+function clearFcModal() {
+  const lsKey = `fc_override_${selFcYear}_${selFcMon}`;
+  localStorage.removeItem(lsKey);
+  closeFcModal();
+  buildMonthPicker();
+  renderForecast();
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeFcModal();
+});
+</script>
+<!-- ═══════════════════════════════════════════════
+     FORECAST EDIT MODAL
+═══════════════════════════════════════════════ -->
+<div class="fc-modal-overlay" id="fc-modal-overlay" onclick="if(event.target===this)closeFcModal()">
+  <div class="fc-modal">
+    <div class="fc-modal-title">Edit Forecast</div>
+    <div class="fc-modal-sub" id="fc-modal-sub">May 2026</div>
+    <div class="fc-modal-grid">
+      <div class="fc-modal-field">
+        <label>N/B MRR</label>
+        <input type="number" id="fc-input-nb-mrr" placeholder="0">
+      </div>
+      <div class="fc-modal-field">
+        <label>N/B Fintech MRR</label>
+        <input type="number" id="fc-input-nb-ef" placeholder="0">
+      </div>
+      <div class="fc-modal-field">
+        <label>U/S MRR</label>
+        <input type="number" id="fc-input-us-mrr" placeholder="0">
+      </div>
+      <div class="fc-modal-field">
+        <label>U/S Fintech MRR</label>
+        <input type="number" id="fc-input-us-ef" placeholder="0">
+      </div>
+    </div>
+    <div class="fc-modal-actions">
+      <button class="fc-modal-clear" id="fc-modal-clear-btn" onclick="clearFcModal()" style="display:none;">Clear & use deal data</button>
+      <button class="fc-modal-cancel" onclick="closeFcModal()">Cancel</button>
+      <button class="fc-modal-save" onclick="saveFcModal()">Save</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>
