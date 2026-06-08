@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<script>(function(){var e=localStorage.getItem('radar_user_email');if(!e||!e.endsWith('@sprout.ph')){window.location.replace('https://sprout-revops.github.io/RADARApp-revops/radar_revops.html?redirect='+encodeURIComponent(window.location.href));}})()</script>
 <title>Channels Dashboard — Sprout Solutions</title>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
@@ -457,13 +456,13 @@ select.filter-control option{background:var(--surface2)}
 .kpi-funnel-section .kpi-value,
 .kpi-revenue-section .kpi-value{font-size:1.35rem}
 .kpi-funnel-section .kpi-grid{grid-template-columns:repeat(4,1fr)!important}
-.kpi-revenue-section .kpi-grid{grid-template-columns:repeat(3,1fr)!important}
+.kpi-revenue-section .kpi-grid{grid-template-columns:repeat(4,1fr)!important}
 
 /* ─── Responsive ─── */
 @media(max-width:1100px){
   .kpi-charts-wrapper{grid-template-columns:1fr;grid-template-rows:auto}
   .kpi-funnel-section .kpi-grid{grid-template-columns:repeat(4,1fr)!important}
-  .kpi-revenue-section .kpi-grid{grid-template-columns:repeat(3,1fr)!important}
+  .kpi-revenue-section .kpi-grid{grid-template-columns:repeat(4,1fr)!important}
 }
 @media(max-width:700px){
   .kpi-funnel-section .kpi-grid,
@@ -599,11 +598,11 @@ select.filter-control option{background:var(--surface2)}
             <div class="kpi-label">Won Deals</div>
             <div class="kpi-value" id="kpi-won">—</div>
             <div class="kpi-ly" id="kpi-won-ly"></div>
-            <div class="kpi-sub">close_date</div>
+            <div class="kpi-sub" id="kpi-won-target" style="margin-top:3px;">close_date</div>
           </div>
           <div class="kpi-card kpi-lost">
             <span class="kpi-icon">❌</span>
-            <div class="kpi-label">Lost</div>
+            <div class="kpi-label">Lost Deals</div>
             <div class="kpi-value" id="kpi-lost">—</div>
             <div class="kpi-ly" id="kpi-lost-ly"></div>
             <div class="kpi-sub">Closed Lost</div>
@@ -659,6 +658,18 @@ select.filter-control option{background:var(--surface2)}
             <div class="kpi-value" id="kpi-wmrr">—</div>
             <div class="kpi-ly" id="kpi-wmrr-ly"></div>
             <div class="kpi-sub">close_date</div>
+          </div>
+          <div class="kpi-card kpi-pmrr">
+            <span class="kpi-icon">🎯</span>
+            <div class="kpi-label">MRR Target</div>
+            <div class="kpi-value" id="kpi-mrr-target">—</div>
+            <div class="kpi-sub">period target</div>
+          </div>
+          <div class="kpi-card" style="--card-accent:#a78bfa;--card-color:#a78bfa;">
+            <span class="kpi-icon">📊</span>
+            <div class="kpi-label">MRR Attainment</div>
+            <div class="kpi-value" id="kpi-mrr-att">—</div>
+            <div class="kpi-sub" id="kpi-mrr-att-sub">vs target</div>
           </div>
           <div class="kpi-card kpi-efmrr">
             <span class="kpi-icon">⚡</span>
@@ -740,6 +751,7 @@ select.filter-control option{background:var(--surface2)}
     <div class="tabs-section">
       <div class="tabs-header">
         <button class="tab-btn active" data-tab="won">🏆 Won Deals</button>
+        <button class="tab-btn" data-tab="lost">❌ Lost Deals</button>
         <button class="tab-btn" data-tab="ptype">🏢 Partner Type</button>
         <button class="tab-btn" data-tab="reps">👤 Sales Reps</button>
         <button class="tab-btn" data-tab="leads">🎯 Leads</button>
@@ -777,6 +789,39 @@ select.filter-control option{background:var(--surface2)}
               </tr>
             </thead>
             <tbody id="tbody-won"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- LOST DEALS -->
+      <div class="tab-panel" id="panel-lost">
+        <div class="tbl-toolbar">
+          <span class="tbl-title">Lost Deals</span>
+          <span class="tbl-count" id="count-lost">0 rows</span>
+          <input class="tbl-search" placeholder="Search deals…" id="search-lost" autocomplete="off"/>
+          <button class="btn-export" onclick="exportCSV('lost','channels_lost_deals')">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M8 2v9M5 8l3 3 3-3M2 14h12"/>
+            </svg>
+            CSV
+          </button>
+        </div>
+        <div class="tbl-wrap">
+          <table class="data-table" id="tbl-lost">
+            <thead>
+              <tr>
+                <th onclick="sortTbl('lost','deal_id')">Deal ID <span class="sort-icon"></span></th>
+                <th onclick="sortTbl('lost','deal_name')">Deal Name <span class="sort-icon"></span></th>
+                <th onclick="sortTbl('lost','create_date')">Create Date <span class="sort-icon"></span></th>
+                <th onclick="sortTbl('lost','close_date')">Close Date <span class="sort-icon"></span></th>
+                <th onclick="sortTbl('lost','sales_rep')">Sales Rep <span class="sort-icon"></span></th>
+                <th onclick="sortTbl('lost','partner_name')">Partner <span class="sort-icon"></span></th>
+                <th onclick="sortTbl('lost','segment')">Segment <span class="sort-icon"></span></th>
+                <th onclick="sortTbl('lost','mrr')" class="num">MRR <span class="sort-icon"></span></th>
+                <th onclick="sortTbl('lost','reasons_for_lost')">Reason for Loss <span class="sort-icon"></span></th>
+              </tr>
+            </thead>
+            <tbody id="tbody-lost"></tbody>
           </table>
         </div>
       </div>
@@ -883,9 +928,9 @@ select.filter-control option{background:var(--surface2)}
       <!-- SQL DEALS -->
       <div class="tab-panel" id="panel-sql">
         <div class="tbl-toolbar">
-          <span class="tbl-title">SQL Deals</span>
+          <span class="tbl-title">Active Deals (IDD+)</span>
           <span class="tbl-count" id="count-sql">0 rows</span>
-          <input class="tbl-search" placeholder="Search SQL deals…" id="search-sql" autocomplete="off"/>
+          <input class="tbl-search" placeholder="Search deals…" id="search-sql" autocomplete="off"/>
           <button class="btn-export" onclick="exportCSV('sql','channels_sql_deals')">
             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M8 2v9M5 8l3 3 3-3M2 14h12"/>
@@ -900,12 +945,12 @@ select.filter-control option{background:var(--surface2)}
                 <th onclick="sortTbl('sql','deal_id')">Deal ID <span class="sort-icon"></span></th>
                 <th onclick="sortTbl('sql','deal_name')">Deal Name <span class="sort-icon"></span></th>
                 <th onclick="sortTbl('sql','create_date')">Create Date <span class="sort-icon"></span></th>
+                <th onclick="sortTbl('sql','close_date')">Close Date <span class="sort-icon"></span></th>
                 <th onclick="sortTbl('sql','projected_close_date')">Proj. Close <span class="sort-icon"></span></th>
                 <th onclick="sortTbl('sql','sales_rep')">Sales Rep <span class="sort-icon"></span></th>
                 <th onclick="sortTbl('sql','partner_name')">Partner <span class="sort-icon"></span></th>
                 <th onclick="sortTbl('sql','segment')">Segment <span class="sort-icon"></span></th>
-                <th onclick="sortTbl('sql','channel_source')">Channel <span class="sort-icon"></span></th>
-                <th onclick="sortTbl('sql','stage')">Stage <span class="sort-icon"></span></th>
+                <th onclick="sortTbl('sql','stage_label')">Stage <span class="sort-icon"></span></th>
                 <th onclick="sortTbl('sql','mrr')" class="num">MRR <span class="sort-icon"></span></th>
               </tr>
             </thead>
@@ -1000,7 +1045,8 @@ const S = {
   search: {},   // { tableId: 'string' }
   activeTab: 'won',
   charts: {},
-  allDeals: [],  // raw deals from dashboard.json — JS computes everything from here
+  allDeals:    [],  // raw deals from dashboard.json — JS computes everything from here
+  allTargets:  [],  // monthly targets from gold_targets
 };
 
 /* ─────────────────────────────────────────────
@@ -1646,6 +1692,23 @@ function renderKPIs(k) {
   document.getElementById('kpi-lost').textContent     = num(k.lost_deals);
   document.getElementById('kpi-winrate').textContent  = pct(k.win_rate);
   document.getElementById('kpi-wmrr').textContent     = php(k.won_mrr);
+  // MRR Target card
+  const mrrAtt = k.mrr_target > 0 ? Math.round(k.won_mrr / k.mrr_target * 100) : null;
+  const mrrAttColor = mrrAtt === null ? '#64748b' : mrrAtt >= 100 ? '#4ade80' : mrrAtt >= 60 ? '#fbbf24' : '#f87171';
+  const tgtEl = document.getElementById('kpi-mrr-target');
+  if (tgtEl) tgtEl.textContent = k.mrr_target > 0 ? php(k.mrr_target) : '—';
+  // MRR Attainment card
+  const attEl = document.getElementById('kpi-mrr-att');
+  const attSubEl = document.getElementById('kpi-mrr-att-sub');
+  if (attEl) { attEl.textContent = mrrAtt !== null ? mrrAtt + '%' : '—'; attEl.style.color = mrrAttColor; }
+  if (attSubEl) attSubEl.textContent = mrrAtt !== null ? `${php(k.won_mrr)} of ${php(k.mrr_target)}` : 'no target set';
+  // Won Deals Target & Attainment (sub-text)
+  const wonAtt = k.won_deals_target > 0 ? Math.round(k.won_deals / k.won_deals_target * 100) : null;
+  const wonAttColor = wonAtt === null ? '#64748b' : wonAtt >= 100 ? '#4ade80' : wonAtt >= 60 ? '#fbbf24' : '#f87171';
+  const wonTgtEl = document.getElementById('kpi-won-target');
+  if (wonTgtEl) wonTgtEl.innerHTML = k.won_deals_target > 0
+    ? `Target: ${Math.round(k.won_deals_target)} &nbsp;<span style="color:${wonAttColor};font-weight:700;">${wonAtt}%</span>`
+    : '';
   document.getElementById('kpi-efmrr').textContent    = php(k.ef_mrr_total);
   document.getElementById('kpi-pmrr').textContent     = php(k.pipeline_mrr);
   document.getElementById('kpi-ads').textContent      = php(k.avg_deal_size);
@@ -1732,7 +1795,7 @@ function renderWon() {
   if (!rows.length) { tb.innerHTML = emptyRow(11); return; }
   tb.innerHTML = rows.map(r => `
     <tr>
-      <td class="mono primary">${r.deal_id||'—'}</td>
+      <td class="mono primary"><a href="https://app.hubspot.com/contacts/${HUBSPOT_PORTAL}/record/0-3/${r.deal_id}" target="_blank" rel="noopener" style="color:var(--accent2);text-decoration:none" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">${r.deal_id||'—'}</a></td>
       <td class="primary"><a href="https://app.hubspot.com/contacts/${HUBSPOT_PORTAL}/record/0-3/${r.deal_id}" target="_blank" rel="noopener" style="color:var(--accent2);text-decoration:none" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">${esc2(r.deal_name)}</a></td>
       <td>${dt(r.create_date)}</td>
       <td>${dt(r.close_date)}</td>
@@ -1743,6 +1806,25 @@ function renderWon() {
       <td class="num" style="color:var(--purple)">${php(r.ef_mrr)}</td>
       <td class="num text-accent fw700">${php(r.combined_mrr)}</td>
       <td class="${String(r.otp).toUpperCase()==='Y'?'otp-y':'otp-n'} fw700">${r.otp||'—'}</td>
+    </tr>`).join('');
+}
+
+function renderLost() {
+  const rows = getRows('lost');
+  document.getElementById('count-lost').textContent = `${rows.length} rows`;
+  const tb = document.getElementById('tbody-lost');
+  if (!rows.length) { tb.innerHTML = emptyRow(9); return; }
+  tb.innerHTML = rows.map(r => `
+    <tr>
+      <td class="mono primary"><a href="https://app.hubspot.com/contacts/${HUBSPOT_PORTAL}/record/0-3/${r.deal_id}" target="_blank" rel="noopener" style="color:var(--accent2);text-decoration:none" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">${r.deal_id||'—'}</a></td>
+      <td class="primary">${esc2(r.deal_name)}</td>
+      <td>${dt(r.create_date)}</td>
+      <td>${dt(r.close_date)}</td>
+      <td>${r.sales_rep||'—'}</td>
+      <td>${r.partner_name||'Direct'}</td>
+      <td>${segBadge(r.segment)}</td>
+      <td class="num" style="color:var(--red);">${r.mrr ? php(r.mrr) : '—'}</td>
+      <td style="color:var(--text-muted);font-size:.8rem;">${r.reasons_for_lost||'—'}</td>
     </tr>`).join('');
 }
 
@@ -1925,16 +2007,16 @@ function renderSQL() {
   if (!rows.length) { tb.innerHTML = emptyRow(10); return; }
   tb.innerHTML = rows.map(r => `
     <tr>
-      <td class="mono primary">${r.deal_id||'—'}</td>
-      <td class="primary">${esc2(r.deal_name)}</td>
+      <td class="mono primary"><a href="https://app.hubspot.com/contacts/${HUBSPOT_PORTAL}/record/0-3/${r.deal_id}" target="_blank" rel="noopener" style="color:var(--accent2);text-decoration:none" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">${r.deal_id||'—'}</a></td>
+      <td class="primary"><a href="https://app.hubspot.com/contacts/${HUBSPOT_PORTAL}/record/0-3/${r.deal_id}" target="_blank" rel="noopener" style="color:var(--accent2);text-decoration:none" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">${esc2(r.deal_name)}</a></td>
       <td>${dt(r.create_date)}</td>
-      <td>${dt(r.projected_close_date)}</td>
+      <td>${r.close_date ? dt(r.close_date) : '<span style="color:var(--text-dim)">—</span>'}</td>
+      <td>${r.projected_close_date ? dt(r.projected_close_date) : '<span style="color:var(--text-dim)">—</span>'}</td>
       <td>${r.sales_rep||'—'}</td>
       <td>${r.partner_name||'Direct'}</td>
       <td>${segBadge(r.segment)}</td>
-      <td>${r.channel_source||'—'}</td>
-      <td>${stageBadge(r.stage)}</td>
-      <td class="num">${php(r.mrr)}</td>
+      <td>${stageBadge(r.stage_label || r.stage)}</td>
+      <td class="num">${r.mrr ? php(r.mrr) : '—'}</td>
     </tr>`).join('');
 }
 
@@ -2097,6 +2179,7 @@ function exportPartnerType() {
 
 function renderAllTables() {
   renderWon();
+  renderLost();
   renderPartnerType();
   renderPartners();
   renderReps();
@@ -2111,7 +2194,7 @@ function sortTbl(id, col) {
   const cur = S.sort[id];
   S.sort[id] = { col, dir: cur?.col === col && cur.dir === 'asc' ? 'desc' : 'asc' };
   updateSortHeaders(id, col);
-  ({won:renderWon,ptype:renderPartnerType,reps:renderReps,leads:renderLeads,sql:renderSQL})[id]?.();
+  ({won:renderWon,lost:renderLost,ptype:renderPartnerType,reps:renderReps,leads:renderLeads,sql:renderSQL})[id]?.();
 }
 window.sortTbl = sortTbl;
 
@@ -2237,11 +2320,28 @@ function computeFromDeals(deals, filters) {
   const lyVelRows = lyWonRows.filter(d => d.deal_velocity_days != null && d.deal_velocity_days !== '');
   const lyAvgVel  = lyVelRows.length ? +(lyVelRows.reduce((a, d) => a + +d.deal_velocity_days, 0) / lyVelRows.length).toFixed(1) : null;
 
+  // Targets: sum monthly targets that fall within the filtered date range
+  const tgtMrr   = S.allTargets.reduce((acc, t) => {
+    const m = String(t.metric_month).slice(0, 7); // 'YYYY-MM'
+    const mStart = m + '-01', mEnd = m + '-31';
+    if (startDate && mEnd < startDate) return acc;
+    if (endDate   && mStart > endDate) return acc;
+    return acc + (+t.mrr_target || 0);
+  }, 0);
+  const tgtDeals = S.allTargets.reduce((acc, t) => {
+    const m = String(t.metric_month).slice(0, 7);
+    const mStart = m + '-01', mEnd = m + '-31';
+    if (startDate && mEnd < startDate) return acc;
+    if (endDate   && mStart > endDate) return acc;
+    return acc + (+t.won_deals_target || 0);
+  }, 0);
+
   const kpi = {
     qualified_leads: ql,     sql_count: sqlCnt,   won_deals: won,         lost_deals: lost,
     won_mrr: wonMrr,         ef_mrr_total: efMrr, otp_total: otpTotal,    mrr_lt12_total: mrrLt12,
     implem_fee_total: implemFee, pipeline_mrr: pipelineMrr,
     win_rate: winRate, sql_rate: sqlRate, avg_deal_size: avgDS, avg_deal_velocity: avgVel,
+    mrr_target: tgtMrr, won_deals_target: tgtDeals,
     ly_qualified_leads: lyQl, ly_sql_count: lySqlCnt, ly_won_deals: lyWon, ly_lost_deals: lyLost,
     ly_won_mrr: lyWonMrr, ly_ef_mrr_total: lyEfMrr, ly_otp_total: lyOtpTotal, ly_mrr_lt12_total: lyMrrLt12,
     ly_implem_fee_total: lyImplemFee, ly_pipeline_mrr: lyPipelineMrr,
@@ -2350,6 +2450,15 @@ function computeFromDeals(deals, filters) {
     combined_mrr: (+d.mrr || 0) + (+d.ef_mrr || 0), otp: d.otp_only,
   })).sort((a, b) => (b.close_date || '').localeCompare(a.close_date || ''));
 
+  // ─── Lost Deals table ───
+  const lostTable = lostRows.map(d => ({
+    deal_id: d.deal_id, deal_name: d.deal_name,
+    create_date: d.create_date, close_date: d.close_date,
+    sales_rep: d.sales_rep, partner_name: d.partner_on_record || 'Direct',
+    segment: d.segment, mrr: +d.mrr || 0,
+    reasons_for_lost: d.reasons_for_lost || '—',
+  })).sort((a, b) => (b.close_date || '').localeCompare(a.close_date || ''));
+
   // ─── Leads table (create_date, qualified_lead=Yes) ───
   const leadsTable = byCreate.filter(d => d.qualified_lead === 'Yes').map(d => ({
     deal_id: d.deal_id, deal_name: d.deal_name,
@@ -2359,10 +2468,16 @@ function computeFromDeals(deals, filters) {
     stage: d.client_journey_stage, stage_label: d.stage_label, mrr: +d.mrr || 0,
   })).sort((a, b) => (b.create_date || '').localeCompare(a.create_date || ''));
 
-  // ─── SQL Deals table (create_date, QL=Yes, not MQL) ───
-  const sqlTable = byCreate.filter(d => d.qualified_lead === 'Yes' && d.client_journey_stage !== 'MQL').map(d => ({
+  // ─── SQL Deals table — ALL active deals from IDD onwards (no date filter) ───
+  // Opportunity only: IDD, Solutioning, Commercial Negotiation (excl. Won/Lost/Churn — separate tabs)
+  const sqlTable = deals.filter(d =>
+    d.client_journey_stage === 'Opportunity' &&
+    !/(renewal)/i.test(d.deal_type || '') &&
+    !/(renewal)/i.test(d.deal_name || '')
+  ).map(d => ({
     deal_id: d.deal_id, deal_name: d.deal_name,
-    create_date: d.create_date, projected_close_date: d.projected_close_date,
+    create_date: d.create_date, close_date: d.close_date,
+    projected_close_date: d.projected_close_date,
     sales_rep: d.sales_rep, partner_name: d.partner_on_record || 'Direct',
     segment: d.segment, channel_source: d.original_channel_source,
     stage: d.client_journey_stage, stage_label: d.stage_label, mrr: +d.mrr || 0,
@@ -2395,7 +2510,7 @@ function computeFromDeals(deals, filters) {
     pipeline_mrr: porRow.pipeline_mrr,
   })).sort((porA, porB) => porB.qls - porA.qls);
 
-  return { kpi, trend, funnel, partners, reps, won: wonTable, leads: leadsTable, sql: sqlTable, por: porTable };
+  return { kpi, trend, funnel, partners, reps, won: wonTable, lost: lostTable, leads: leadsTable, sql: sqlTable, por: porTable };
 }
 
 /* ─────────────────────────────────────────────
@@ -2406,6 +2521,7 @@ function applyComputed(computed) {
   updateFunnelTrendChart(computed.funnel);
   updateMrrTrendChart(computed.trend);
   S.tables.won      = computed.won;
+  S.tables.lost     = computed.lost;
   S.tables.partners = computed.partners;
   S.tables.reps     = computed.reps;
   S.tables.leads    = computed.leads;
@@ -2508,7 +2624,8 @@ async function loadAll() {
 
     if (json.deals && json.deals.length > 0) {
       // New raw-deals format — JS computes everything client-side
-      S.allDeals = json.deals;
+      S.allDeals   = json.deals;
+      S.allTargets = json.targets || [];
       // Set YTD defaults on first load (if user hasn't already set dates)
       const _today = new Date();
       const _y     = _today.getFullYear();
@@ -2620,6 +2737,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Wire search
   wireSearch('search-won',      'won',      renderWon);
+  wireSearch('search-lost',     'lost',     renderLost);
   wireSearch('search-reps',     'reps',     renderReps);
   wireSearch('search-leads',    'leads',    renderLeads);
   wireSearch('search-sql',      'sql',      renderSQL);

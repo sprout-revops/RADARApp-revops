@@ -80,6 +80,7 @@ SELECT
   mrr_lt_12,
   deal_velocity_days,
   sales_rep,
+  reasons_for_lost_deal AS reasons_for_lost,
   partner_on_record,
   client_type,
   CASE WHEN department_source_clean = 'MICRO' THEN 'SME'
@@ -97,12 +98,25 @@ WHERE pipeline_name = '{PIPELINE}'
 ORDER BY create_date DESC
 """
 
-deals = db_query('All Deals', RAW_SQL)
+TARGETS_SQL = f"""
+SELECT
+  metric_month,
+  SUM(CASE WHEN target_type = 'mrr_target'       THEN target_value ELSE 0 END) AS mrr_target,
+  SUM(CASE WHEN target_type = 'won_deals_target' THEN target_value ELSE 0 END) AS won_deals_target
+FROM shared.revops.gold_targets
+WHERE pipeline_name = '{PIPELINE}'
+GROUP BY metric_month
+ORDER BY metric_month DESC
+"""
+
+deals   = db_query('All Deals', RAW_SQL)
+targets = db_query('Targets',   TARGETS_SQL)
 
 data = {
     'refreshed_at': TODAY.isoformat() + 'T' + time.strftime('%H:%M:%S') + 'Z',
     'pipeline':     PIPELINE,
     'deals':        deals,
+    'targets':      targets,
 }
 
 os.makedirs('data', exist_ok=True)
