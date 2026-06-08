@@ -1,0 +1,2640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<script>(function(){var e=localStorage.getItem('radar_user_email');if(!e||!e.endsWith('@sprout.ph')){window.location.replace('https://sprout-revops.github.io/RADARApp-revops/radar_revops.html?redirect='+encodeURIComponent(window.location.href));}})()</script>
+<title>Channels Dashboard — Sprout Solutions</title>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<style>
+/* ═══════════════════════════════════════════════════════
+   DESIGN TOKENS — dark navy executive theme
+═══════════════════════════════════════════════════════ */
+:root {
+  --bg:          #070d1b;
+  --surface:     #0c1628;
+  --surface2:    #101f38;
+  --surface3:    #152847;
+  --border:      #1a2d4e;
+  --border2:     #1e3556;
+
+  --accent:      #0ea5e9;
+  --accent2:     #38bdf8;
+  --accent-dim:  rgba(14,165,233,.13);
+  --accent-bd:   rgba(14,165,233,.32);
+
+  --green:       #22c55e;
+  --green-dim:   rgba(34,197,94,.11);
+  --green-bd:    rgba(34,197,94,.3);
+  --yellow:      #f59e0b;
+  --yellow-dim:  rgba(245,158,11,.11);
+  --yellow-bd:   rgba(245,158,11,.3);
+  --red:         #ef4444;
+  --red-dim:     rgba(239,68,68,.11);
+  --red-bd:      rgba(239,68,68,.3);
+  --purple:      #a855f7;
+  --purple-dim:  rgba(168,85,247,.11);
+  --teal:        #14b8a6;
+  --orange:      #f97316;
+
+  --text:        #e2e8f0;
+  --text-dim:    #94a3b8;
+  --text-muted:  #4a5d7a;
+
+  --radius:      8px;
+  --radius-lg:   12px;
+  --shadow:      0 1px 4px rgba(0,0,0,.55);
+  --shadow-lg:   0 4px 20px rgba(0,0,0,.45);
+
+  --header-h:    54px;
+  --filter-h:    auto;
+  --tbl-body-h:  420px;
+}
+
+/* ─── Reset ─── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:13px;-webkit-font-smoothing:antialiased}
+body{background:var(--bg);color:var(--text);font-family:
+  'Rubik',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  min-height:100vh;overflow-x:hidden}
+button{cursor:pointer;border:none;background:none;font:inherit;color:inherit}
+input,select{font:inherit;color:inherit}
+a{color:var(--accent);text-decoration:none}
+
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--surface)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+/* ═══════════════════════════════════════════════════════
+   LAYOUT
+═══════════════════════════════════════════════════════ */
+.app{display:flex;flex-direction:column;min-height:100vh}
+
+/* ─── Header ─── */
+.header{
+  position:sticky;top:0;z-index:100;
+  height:var(--header-h);
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:12px;
+  padding:0 20px;
+  box-shadow:0 2px 12px rgba(0,0,0,.4);
+}
+.header-logo{
+  display:flex;align-items:center;gap:8px;
+  font-size:1.08rem;font-weight:700;letter-spacing:-.3px;
+  color:var(--text);white-space:nowrap;
+}
+.header-logo span.dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 6px var(--green);
+  display:inline-block;
+}
+.header-pipe{color:var(--border2);font-size:1.1rem}
+.header-title{
+  font-size:1.15rem;font-weight:800;color:var(--accent2);white-space:nowrap;
+  text-transform:uppercase;letter-spacing:.8px;
+}
+.header-spacer{flex:1}
+.last-refresh{font-size:.75rem;color:var(--text-muted);white-space:nowrap}
+.status-badge{
+  display:flex;align-items:center;gap:6px;
+  padding:4px 10px;border-radius:20px;
+  font-size:.72rem;font-weight:600;letter-spacing:.4px;
+  border:1px solid var(--border);
+  background:var(--surface2);
+  white-space:nowrap;
+}
+.status-badge .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.status-badge.live   .dot{background:var(--green);  box-shadow:0 0 6px var(--green)}
+.status-badge.failed .dot{background:var(--red);    box-shadow:0 0 6px var(--red)}
+.status-badge.sample .dot{background:var(--yellow); box-shadow:0 0 6px var(--yellow)}
+.status-badge.loading .dot{background:var(--accent);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+.btn-refresh{
+  display:flex;align-items:center;gap:5px;
+  padding:5px 12px;border-radius:6px;
+  background:var(--accent-dim);border:1px solid var(--accent-bd);
+  color:var(--accent2);font-size:.75rem;font-weight:600;
+  transition:background .15s;
+}
+.btn-refresh:hover{background:rgba(14,165,233,.22)}
+.btn-refresh svg{width:13px;height:13px}
+
+/* ─── Filter Bar ─── */
+.filter-bar{
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  padding:10px 20px 12px;
+}
+.filter-bar-toggle{
+  display:flex;align-items:center;gap:6px;
+  font-size:.75rem;color:var(--text-dim);font-weight:600;
+  cursor:pointer;user-select:none;margin-bottom:0;
+  padding:0;background:none;border:none;color:var(--text-dim);
+}
+.filter-bar-toggle svg{width:13px;height:13px;transition:transform .2s}
+.filter-bar-toggle.open svg{transform:rotate(180deg)}
+.filter-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
+  gap:8px;
+  margin-top:10px;
+}
+.filter-item{display:flex;flex-direction:column;gap:3px}
+.filter-label{font-size:.68rem;font-weight:600;color:var(--text-muted);letter-spacing:.3px;text-transform:uppercase}
+.filter-control{
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:6px;
+  padding:5px 8px;
+  font-size:.78rem;color:var(--text);
+  outline:none;
+  transition:border-color .15s;
+}
+.filter-control:focus{border-color:var(--accent-bd)}
+.filter-control[readonly]{opacity:.5;cursor:not-allowed;}
+select.filter-control option{background:var(--surface2)}
+.filter-actions{
+  display:flex;align-items:center;gap:8px;
+  margin-top:10px;
+  padding-top:10px;
+  border-top:1px solid var(--border);
+}
+.btn-apply{
+  padding:6px 16px;border-radius:6px;
+  background:var(--accent);color:#fff;
+  font-size:.78rem;font-weight:700;
+  transition:background .15s;
+}
+.btn-apply:hover{background:var(--accent2)}
+.btn-reset{
+  padding:6px 14px;border-radius:6px;
+  background:var(--surface2);border:1px solid var(--border2);
+  color:var(--text-dim);font-size:.78rem;font-weight:600;
+  transition:background .15s;
+}
+.btn-reset:hover{background:var(--surface3)}
+.pipeline-tag{
+  font-size:.7rem;color:var(--accent2);
+  background:var(--accent-dim);border:1px solid var(--accent-bd);
+  border-radius:10px;padding:2px 8px;margin-left:auto;
+}
+
+/* ─── Main Content ─── */
+.main{flex:1;padding:14px 20px;display:flex;flex-direction:column;gap:14px}
+
+/* ─── Section Titles ─── */
+.section-title{
+  font-size:.72rem;font-weight:800;letter-spacing:.8px;
+  text-transform:uppercase;color:var(--text-muted);
+  display:flex;align-items:center;gap:10px;margin-bottom:10px;
+}
+.section-title::after{content:'';flex:1;height:1px;background:linear-gradient(to right,var(--border),transparent)}
+
+/* ═══════════════════════════════════════════════════════
+   KPI CARDS
+═══════════════════════════════════════════════════════ */
+.kpi-grid{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:10px;
+}
+.kpi-card{
+  background: linear-gradient(135deg, var(--surface) 0%, var(--surface2) 100%);
+  border:1px solid var(--border);
+  border-radius:var(--radius-lg);
+  padding:14px 16px 12px;
+  position:relative;overflow:hidden;
+  transition:border-color .2s,box-shadow .2s,transform .15s;
+}
+.kpi-card:hover{border-color:var(--border2);box-shadow:0 8px 32px rgba(0,0,0,.45);transform:translateY(-1px)}
+.kpi-card::before{
+  content:'';
+  position:absolute;top:0;left:0;right:0;height:2px;
+  background:var(--card-accent, var(--accent));
+  border-radius:var(--radius-lg) var(--radius-lg) 0 0;
+}
+.kpi-label{
+  font-size:.68rem;font-weight:700;letter-spacing:.4px;
+  text-transform:uppercase;color:var(--text-muted);
+  margin-bottom:8px;
+}
+.kpi-value{
+  font-size:1.65rem;font-weight:800;
+  color:var(--card-color, var(--text));
+  line-height:1;letter-spacing:-.8px;
+  margin-bottom:4px;
+}
+.kpi-sub{font-size:.7rem;color:var(--text-muted)}
+.kpi-icon{
+  position:absolute;top:12px;right:14px;
+  font-size:1.2rem;opacity:.18;
+}
+
+/* Card accent colors */
+.kpi-leads  {--card-accent:var(--accent);   --card-color:var(--accent2)}
+.kpi-sql    {--card-accent:var(--purple);   --card-color:var(--purple)}
+.kpi-won    {--card-accent:var(--green);    --card-color:var(--green)}
+.kpi-lost   {--card-accent:var(--red);      --card-color:var(--red)}
+.kpi-wmrr   {--card-accent:var(--green);    --card-color:var(--green)}
+.kpi-efmrr  {--card-accent:var(--purple);   --card-color:var(--purple)}
+.kpi-pmrr   {--card-accent:var(--yellow);   --card-color:var(--yellow)}
+.kpi-wr     {--card-accent:var(--teal);     --card-color:var(--teal)}
+.kpi-ads    {--card-accent:var(--accent);   --card-color:var(--accent2)}
+.kpi-vel    {--card-accent:var(--orange);   --card-color:var(--orange)}
+.kpi-otp    {--card-accent:var(--teal);     --card-color:var(--teal)}
+.kpi-implem {--card-accent:var(--yellow);  --card-color:var(--yellow)}
+.kpi-cmrr   {--card-accent:var(--green);    --card-color:var(--green)}
+.kpi-cotp   {--card-accent:var(--purple);   --card-color:var(--purple)}
+
+.kpi-ly{font-size:.65rem;margin-top:4px;min-height:16px;display:flex;align-items:center;gap:4px;}
+.ly-good{color:#4ade80;background:rgba(34,197,94,.12);padding:1px 6px;border-radius:10px;font-weight:600}
+.ly-bad{color:#f87171;background:rgba(239,68,68,.12);padding:1px 6px;border-radius:10px;font-weight:600}
+.ly-neutral{color:#475569;}
+
+/* ═══════════════════════════════════════════════════════
+   CHARTS
+═══════════════════════════════════════════════════════ */
+.charts-row{
+  display:grid;
+  gap:12px;
+}
+.charts-row-a{grid-template-columns:38% 1fr}   /* funnel + MRR trend */
+.charts-row-b{grid-template-columns:30% 1fr}   /* segment  + rep bar */
+
+.chart-card{
+  background: linear-gradient(135deg, var(--surface) 0%, var(--surface2) 100%);
+  border:1px solid var(--border);
+  border-radius:var(--radius-lg);
+  padding:10px 14px;
+  display:flex;flex-direction:column;
+  min-height:160px;
+}
+.chart-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:6px;
+}
+.chart-title{
+  font-size:.78rem;font-weight:700;color:var(--text);
+  display:flex;align-items:center;gap:6px;
+}
+.chart-title .badge{
+  font-size:.65rem;font-weight:600;
+  padding:2px 7px;border-radius:10px;
+  background:var(--accent-dim);color:var(--accent2);
+  border:1px solid var(--accent-bd);
+}
+.chart-wrap{flex:1;position:relative;min-height:200px;max-height:230px}
+.chart-wrap canvas{width:100%!important;max-height:230px}
+
+
+/* ═══════════════════════════════════════════════════════
+   TABLES SECTION
+═══════════════════════════════════════════════════════ */
+.tabs-section{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius-lg);
+  overflow:hidden;
+}
+.tabs-header{
+  display:flex;align-items:center;
+  border-bottom:1px solid var(--border);
+  padding:0 4px;
+  background:var(--surface2);
+  overflow-x:auto;
+  gap:2px;
+}
+.tab-btn{
+  padding:8px 16px;font-size:.72rem;font-weight:700;
+  color:var(--text-dim);border-radius:var(--radius);
+  transition:all .15s;letter-spacing:.2px;
+  border-bottom:2px solid transparent;
+  white-space:nowrap;background:none;border:none;border-bottom:2px solid transparent;
+}
+.tab-btn:hover{color:var(--text);background:rgba(255,255,255,.04)}
+.tab-btn.active{color:var(--accent2);border-bottom-color:var(--accent);background:rgba(14,165,233,.07)}
+
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+.tbl-toolbar{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;
+  border-bottom:1px solid var(--border);
+  flex-wrap:wrap;
+}
+.tbl-title{
+  font-size:.78rem;font-weight:700;color:var(--text);
+  flex:1;min-width:120px;
+}
+.tbl-count{
+  font-size:.7rem;color:var(--text-muted);
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:10px;padding:2px 8px;
+}
+.tbl-search{
+  padding:5px 10px;
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:6px;font-size:.75rem;
+  width:180px;outline:none;
+  transition:border-color .15s;
+}
+.tbl-search:focus{border-color:var(--accent-bd)}
+.tbl-search::placeholder{color:var(--text-muted)}
+.btn-export{
+  display:flex;align-items:center;gap:5px;
+  padding:5px 11px;border-radius:6px;
+  background:var(--green-dim);border:1px solid var(--green-bd);
+  color:var(--green);font-size:.72rem;font-weight:700;
+  white-space:nowrap;
+  transition:background .15s;
+}
+.btn-export:hover{background:rgba(34,197,94,.2)}
+.btn-export svg{width:12px;height:12px}
+
+/* Table container */
+.tbl-wrap{
+  overflow-x:auto;
+  max-height:var(--tbl-body-h);
+  overflow-y:auto;
+}
+.data-table{
+  width:100%;border-collapse:collapse;font-size:.74rem;
+  table-layout:auto;
+}
+.data-table thead{position:sticky;top:0;z-index:10}
+.data-table thead th{
+  position:sticky;top:0;
+  background:var(--surface3);
+  color:var(--text-muted);
+  font-size:.65rem;font-weight:800;
+  letter-spacing:.6px;text-transform:uppercase;
+  padding:10px 10px;border-bottom:2px solid var(--border2);
+  white-space:nowrap;cursor:pointer;user-select:none;
+  text-align:left;
+}
+.data-table thead th:hover{color:var(--text-dim);background:var(--surface3)}
+.data-table thead th .sort-icon{opacity:.35;margin-left:3px;font-size:.6rem}
+.data-table thead th.sort-asc .sort-icon::after{content:'▲';opacity:1}
+.data-table thead th.sort-desc .sort-icon::after{content:'▼';opacity:1}
+.data-table tbody tr{
+  border-bottom:1px solid var(--border);
+  transition:background .1s;
+}
+.data-table tbody tr:hover td{background:rgba(14,165,233,.04);}
+.data-table tbody td{
+  padding:7px 10px;color:var(--text-dim);
+  white-space:nowrap;
+}
+.data-table tbody td.primary{color:var(--text);font-weight:600}
+.data-table tbody td.num{text-align:right;font-variant-numeric:tabular-nums}
+.data-table tbody td.mono{font-family:monospace;font-size:.72rem}
+
+/* Stage badge */
+.stage-badge{
+  display:inline-block;padding:2px 8px;border-radius:10px;
+  font-size:.65rem;font-weight:700;border:1px solid;
+  text-transform:uppercase;letter-spacing:.3px;
+}
+.stage-won  {background:var(--green-dim);color:var(--green);border-color:var(--green-bd)}
+.stage-lost {background:var(--red-dim);color:var(--red);border-color:var(--red-bd)}
+.stage-open {background:var(--accent-dim);color:var(--accent2);border-color:var(--accent-bd)}
+.stage-dq   {background:var(--yellow-dim);color:var(--yellow);border-color:var(--yellow-bd)}
+
+/* OTP badge */
+.otp-y{color:var(--green);font-weight:700}
+.otp-n{color:var(--red)}
+
+/* Segment badge */
+.seg-sme{background:var(--accent-dim);color:var(--accent2);border-color:var(--accent-bd)}
+.seg-ent{background:var(--purple-dim);color:var(--purple);border-color:rgba(168,85,247,.3)}
+.seg-mid{background:var(--teal);color:#000;border-color:var(--teal)}
+
+/* Empty state */
+.empty-state{
+  text-align:center;padding:48px 20px;
+  color:var(--text-muted);font-size:.82rem;
+}
+.empty-state svg{width:36px;height:36px;opacity:.2;margin-bottom:10px}
+
+/* ─── Loading overlay ─── */
+#loading-overlay{
+  position:fixed;inset:0;z-index:999;
+  background:var(--bg);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:16px;transition:opacity .4s;
+}
+#loading-overlay.hidden{opacity:0;pointer-events:none}
+.spinner{
+  width:36px;height:36px;border-radius:50%;
+  border:3px solid var(--border);
+  border-top-color:var(--accent);
+  animation:spin .7s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-label{font-size:.82rem;color:var(--text-dim);font-weight:600}
+.loading-sub{font-size:.72rem;color:var(--text-muted)}
+
+/* ─── KPI + Charts 2×2 grid layout ─── */
+.kpi-charts-wrapper{
+  display:grid;
+  grid-template-columns:44% 1fr;
+  grid-template-rows:auto auto;
+  gap:12px;
+  align-items:start;
+}
+/* Each KPI section sits in one grid cell, chart card in the adjacent cell */
+.kpi-funnel-section{}
+.kpi-revenue-section{}
+/* Reduce font slightly so cards fit in the narrower left column */
+.kpi-funnel-section .kpi-value,
+.kpi-revenue-section .kpi-value{font-size:1.35rem}
+.kpi-funnel-section .kpi-grid{grid-template-columns:repeat(4,1fr)!important}
+.kpi-revenue-section .kpi-grid{grid-template-columns:repeat(3,1fr)!important}
+
+/* ─── Responsive ─── */
+@media(max-width:1100px){
+  .kpi-charts-wrapper{grid-template-columns:1fr;grid-template-rows:auto}
+  .kpi-funnel-section .kpi-grid{grid-template-columns:repeat(4,1fr)!important}
+  .kpi-revenue-section .kpi-grid{grid-template-columns:repeat(3,1fr)!important}
+}
+@media(max-width:700px){
+  .kpi-funnel-section .kpi-grid,
+  .kpi-revenue-section .kpi-grid{grid-template-columns:repeat(2,1fr)!important}
+  .header-title{display:none}
+}
+
+/* Partner grouped table */
+.partner-grouped .group-header td{background:rgba(14,165,233,.08);color:#94a3b8;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:6px 10px;}
+.partner-grouped .group-total td{background:rgba(255,255,255,.03);font-weight:700;border-top:1px solid var(--border);}
+.partner-grouped .grand-total td{background:rgba(14,165,233,.05);font-weight:700;font-size:.8rem;border-top:2px solid #0ea5e9;color:#e2e8f0;}
+.partner-grouped .dist-pct{color:#64748b;font-size:.75rem;}
+
+/* ─── Utilities ─── */
+.hidden{display:none!important}
+.text-green{color:var(--green)}
+.text-red{color:var(--red)}
+.text-yellow{color:var(--yellow)}
+.text-accent{color:var(--accent2)}
+.text-muted{color:var(--text-muted)}
+.fw700{font-weight:700}
+</style>
+</head>
+<body>
+
+<!-- ═══ LOADING OVERLAY ═══ -->
+<div id="loading-overlay">
+  <div class="spinner"></div>
+  <div class="loading-label">Loading Channels Dashboard</div>
+  <div class="loading-sub" id="loading-msg">Connecting to backend…</div>
+</div>
+
+<!-- ═══ APP ═══ -->
+<div class="app">
+
+  <!-- ─── HEADER ─── -->
+  <header class="header">
+    <div class="header-logo">
+      <span class="dot"></span> Sprout Solutions
+    </div>
+    <span class="header-pipe">|</span>
+    <span class="header-title">Channels Dashboard</span>
+    <div class="header-spacer"></div>
+    <span class="last-refresh" id="last-refresh">—</span>
+    <div class="status-badge loading" id="status-badge">
+      <span class="dot"></span>
+      <span id="status-text">Loading</span>
+    </div>
+    <button class="btn-refresh" id="btn-refresh" title="Refresh all data">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M13.5 8a5.5 5.5 0 1 1-1.36-3.6M13.5 2v3.5H10"/>
+      </svg>
+      Refresh
+    </button>
+    <span id="data-range-chip" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#64748b;font-size:11px;font-weight:600;padding:5px 12px;border-radius:6px;">📅 —</span>
+  </header>
+
+  <!-- (Credentials modal removed — data is now fetched server-side via GitHub Actions) -->
+
+  <!-- ─── FILTER BAR ─── -->
+  <div class="filter-bar">
+    <button class="filter-bar-toggle open" id="filter-toggle">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M2 4h12M5 8h6M7 12h2"/>
+      </svg>
+      Filters
+      <span class="pipeline-tag" id="pipeline-tag">📡 Unified Channel Pipeline</span>
+      <svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-left:4px;width:10px">
+        <path d="M1 1l4 4 4-4"/>
+      </svg>
+    </button>
+
+    <div id="filter-body">
+      <div class="filter-grid">
+        <!-- Date Range Filters -->
+        <div class="filter-item">
+          <label class="filter-label">Start Date</label>
+          <input type="date" id="f-start" class="filter-control"/>
+        </div>
+        <div class="filter-item">
+          <label class="filter-label">End Date</label>
+          <input type="date" id="f-end" class="filter-control"/>
+        </div>
+        <!-- Segment -->
+        <div class="filter-item">
+          <label class="filter-label">Segment</label>
+          <select id="f-segment" class="filter-control">
+            <option value="">All Segments</option>
+            <option value="SME">SME</option>
+            <option value="Enterprise">Enterprise</option>
+            <option value="Mid-Market">Mid-Market</option>
+          </select>
+        </div>
+      </div>
+      <div class="filter-actions">
+        <button class="btn-apply" id="btn-apply">Apply Filters</button>
+        <button class="btn-reset" id="btn-reset">Reset</button>
+        <span class="text-muted" style="font-size:.7rem;margin-left:8px">
+          * Lead/Funnel metrics use <strong>create_date</strong> &nbsp;·&nbsp;
+          Revenue uses <strong>close_date</strong> &nbsp;·&nbsp;
+          Pipeline uses <strong>projected_close_date</strong>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ MAIN CONTENT ═══ -->
+  <div class="main">
+
+    <!-- ─── KPI CARDS + CHARTS (2×2 grid: top-left↔top-right, bottom-left↔bottom-right) ─── -->
+    <div class="kpi-charts-wrapper">
+
+      <!-- TOP-LEFT: Funnel & Efficiency KPIs -->
+      <div class="kpi-funnel-section">
+        <div class="section-title">Executive KPIs</div>
+        <div class="kpi-grid">
+          <div class="kpi-card kpi-leads">
+            <span class="kpi-icon">🎯</span>
+            <div class="kpi-label">Qualified Leads</div>
+            <div class="kpi-value" id="kpi-leads">—</div>
+            <div class="kpi-ly" id="kpi-leads-ly"></div>
+            <div class="kpi-sub">create_date</div>
+          </div>
+          <div class="kpi-card kpi-sql">
+            <span class="kpi-icon">🔍</span>
+            <div class="kpi-label">SQL</div>
+            <div class="kpi-value" id="kpi-sql">—</div>
+            <div class="kpi-ly" id="kpi-sql-ly"></div>
+            <div class="kpi-sub"><span id="kpi-sql-rate">—</span> SQL Rate</div>
+          </div>
+          <div class="kpi-card kpi-won">
+            <span class="kpi-icon">🏆</span>
+            <div class="kpi-label">Won Deals</div>
+            <div class="kpi-value" id="kpi-won">—</div>
+            <div class="kpi-ly" id="kpi-won-ly"></div>
+            <div class="kpi-sub">close_date</div>
+          </div>
+          <div class="kpi-card kpi-lost">
+            <span class="kpi-icon">❌</span>
+            <div class="kpi-label">Lost</div>
+            <div class="kpi-value" id="kpi-lost">—</div>
+            <div class="kpi-ly" id="kpi-lost-ly"></div>
+            <div class="kpi-sub">Closed Lost</div>
+          </div>
+          <div class="kpi-card kpi-wr">
+            <span class="kpi-icon">📊</span>
+            <div class="kpi-label">Win Rate</div>
+            <div class="kpi-value" id="kpi-winrate">—</div>
+            <div class="kpi-ly" id="kpi-winrate-ly"></div>
+            <div class="kpi-sub">Won ÷ (Won + Lost)</div>
+          </div>
+          <div class="kpi-card kpi-ads">
+            <span class="kpi-icon">📦</span>
+            <div class="kpi-label">Avg Deal Size</div>
+            <div class="kpi-value" id="kpi-ads">—</div>
+            <div class="kpi-ly" id="kpi-ads-ly"></div>
+            <div class="kpi-sub">Won MRR avg</div>
+          </div>
+          <div class="kpi-card kpi-vel">
+            <span class="kpi-icon">⏱</span>
+            <div class="kpi-label">Avg Deal Velocity</div>
+            <div class="kpi-value" id="kpi-vel">—</div>
+            <div class="kpi-ly" id="kpi-vel-ly"></div>
+            <div class="kpi-sub">Create → Close (days)</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TOP-RIGHT: QL & SQL Trend chart -->
+      <div class="chart-card" style="align-self:stretch">
+        <div class="chart-header">
+          <div class="chart-title">
+            <span class="section-title" style="margin-bottom:0">Trends</span>
+          </div>
+        </div>
+        <div class="chart-header" style="margin-top:6px">
+          <div class="chart-title">
+            QL &amp; SQL Trend
+            <span class="badge">Month-over-Month</span>
+          </div>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="chart-funnel"></canvas>
+        </div>
+      </div>
+
+      <!-- BOTTOM-LEFT: Revenue KPIs -->
+      <div class="kpi-revenue-section">
+        <div class="kpi-grid">
+          <div class="kpi-card kpi-wmrr">
+            <span class="kpi-icon">💰</span>
+            <div class="kpi-label">Won MRR</div>
+            <div class="kpi-value" id="kpi-wmrr">—</div>
+            <div class="kpi-ly" id="kpi-wmrr-ly"></div>
+            <div class="kpi-sub">close_date</div>
+          </div>
+          <div class="kpi-card kpi-efmrr">
+            <span class="kpi-icon">⚡</span>
+            <div class="kpi-label">EF MRR</div>
+            <div class="kpi-value" id="kpi-efmrr">—</div>
+            <div class="kpi-ly" id="kpi-efmrr-ly"></div>
+            <div class="kpi-sub">Embedded Fintech</div>
+          </div>
+          <div class="kpi-card kpi-cmrr">
+            <span class="kpi-icon">💎</span>
+            <div class="kpi-label">Combined MRR</div>
+            <div class="kpi-value" id="kpi-combined-mrr">—</div>
+            <div class="kpi-ly" id="kpi-combined-mrr-ly"></div>
+            <div class="kpi-sub">MRR + EF MRR</div>
+          </div>
+          <div class="kpi-card kpi-otp">
+            <span class="kpi-icon">💳</span>
+            <div class="kpi-label">OTP</div>
+            <div class="kpi-value" id="kpi-otp">—</div>
+            <div class="kpi-ly" id="kpi-otp-ly"></div>
+            <div class="kpi-sub">OTP + MRR &lt;12mo</div>
+          </div>
+          <div class="kpi-card kpi-implem">
+            <span class="kpi-icon">🔧</span>
+            <div class="kpi-label">Implem Fee</div>
+            <div class="kpi-value" id="kpi-implem">—</div>
+            <div class="kpi-ly" id="kpi-implem-ly"></div>
+            <div class="kpi-sub">Implementation fee</div>
+          </div>
+          <div class="kpi-card kpi-pmrr">
+            <span class="kpi-icon">📈</span>
+            <div class="kpi-label">Pipeline MRR</div>
+            <div class="kpi-value" id="kpi-pmrr">—</div>
+            <div class="kpi-ly" id="kpi-pmrr-ly"></div>
+            <div class="kpi-sub">projected_close_date</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BOTTOM-RIGHT: MRR Trend chart -->
+      <div class="chart-card" style="align-self:stretch">
+        <div class="chart-header">
+          <div class="chart-title">
+            MRR Trend
+            <span class="badge">Won MRR · EF MRR</span>
+          </div>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="chart-mrr-trend"></canvas>
+        </div>
+      </div>
+
+    </div><!-- /kpi-charts-wrapper -->
+
+    <!-- ─── PARTNER ON RECORD SUMMARY ─── -->
+    <div class="chart-card" style="margin-top:12px">
+      <div class="chart-header">
+        <div class="chart-title">🤝 QLs by Partner on Record <span class="badge" id="count-por"></span></div>
+      </div>
+      <div class="tbl-wrap" style="max-height:280px">
+        <table class="data-table" id="tbl-por">
+          <thead>
+            <tr>
+              <th>Partner on Record</th>
+              <th class="num">QLs</th>
+              <th class="num">SQLs</th>
+              <th class="num">Won</th>
+              <th class="num">Won MRR</th>
+              <th class="num">Win Rate</th>
+              <th class="num">Pipeline MRR</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-por"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ─── TABBED TABLES ─── -->
+    <div class="tabs-section">
+      <div class="tabs-header">
+        <button class="tab-btn active" data-tab="won">🏆 Won Deals</button>
+        <button class="tab-btn" data-tab="ptype">🏢 Partner Type</button>
+        <button class="tab-btn" data-tab="reps">👤 Sales Reps</button>
+        <button class="tab-btn" data-tab="leads">🎯 Leads</button>
+        <button class="tab-btn" data-tab="sql">🔍 SQL Deals</button>
+      </div>
+
+      <!-- WON DEALS -->
+      <div class="tab-panel active" id="panel-won">
+        <div class="tbl-toolbar">
+          <span class="tbl-title">Won Deals</span>
+          <span class="tbl-count" id="count-won">0 rows</span>
+          <input class="tbl-search" placeholder="Search deals…" id="search-won" autocomplete="off"/>
+          <button class="btn-export" onclick="exportCSV('won','channels_won_deals')">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M8 2v9M5 8l3 3 3-3M2 14h12"/>
+            </svg>
+            CSV
+          </button>
+        </div>
+        <div class="tbl-wrap">
+          <table class="data-table" id="tbl-won">
+            <thead>
+              <tr>
+                <th onclick="sortTbl('won','deal_id')">Deal ID <span class="sort-icon"></span></th>
+                <th onclick="sortTbl('won','deal_name')">Deal Name <span class="sort-icon"></span></th>
+                <th onclick="sortTbl('won','create_date')">Create Date <span class="sort-icon"></span></th>
+                <th onclick="sortTbl('won','close_date')">Close Date <span class="sort-icon"></span></th>
+                <th onclick="sortTbl('won','sales_rep')">Sales Rep <span class="sort-icon"></span></th>
+                <th onclick="sortTbl('won','partner_name')">Partner <span class="sort-icon"></span></th>
+                <th onclick="sortTbl('won','segment')">Segment <span class="sort-icon"></span></th>
+                <th onclick="sortTbl('won','mrr')" class="num">MRR <span class="sort-icon"></span></th>
+                <th onclick="sortTbl('won','ef_mrr')" class="num">Embedded Fintech MRR <span class="sort-icon"></span></th>
+                <th onclick="sortTbl('won','combined_mrr')" class="num">Combined MRR <span class="sort-icon"></span></th>
+                <th onclick="sortTbl('won','otp')">OTP <span class="sort-icon"></span></th>
+              </tr>
+            </thead>
+            <tbody id="tbody-won"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- PARTNER TYPE — Summary by type (SPP / VAR / MSP / Others / Direct) -->
+      <div class="tab-panel" id="panel-ptype">
+        <div class="tbl-toolbar">
+          <span class="tbl-title">Partner Type Summary</span>
+          <button class="btn-export" onclick="exportPartnerType()">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M8 2v9M5 8l3 3 3-3M2 14h12"/>
+            </svg>
+            CSV
+          </button>
+        </div>
+        <div class="tbl-wrap">
+          <table class="data-table partner-grouped" id="tbl-ptype">
+            <thead>
+              <tr>
+                <th>Partner Type</th>
+                <th class="num">MRR</th>
+                <th class="num">% Share</th>
+                <th class="num">EF MRR</th>
+                <th class="num">Combined MRR</th>
+                <th class="num">% Share</th>
+                <th class="num">OTP</th>
+                <th class="num">Implem Fee</th>
+                <th class="num">Combined OTP</th>
+                <th class="num">Won</th>
+                <th class="num">Lost</th>
+                <th class="num">Win Rate</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-ptype"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SALES REPS -->
+      <div class="tab-panel" id="panel-reps">
+        <div class="tbl-toolbar">
+          <span class="tbl-title">Sales Rep Performance</span>
+          <span class="tbl-count" id="count-reps">0 rows</span>
+          <input class="tbl-search" placeholder="Search reps…" id="search-reps" autocomplete="off"/>
+          <button class="btn-export" onclick="exportCSV('reps','channels_rep_performance')">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M8 2v9M5 8l3 3 3-3M2 14h12"/>
+            </svg>
+            CSV
+          </button>
+        </div>
+        <div class="tbl-wrap">
+          <table class="data-table" id="tbl-reps">
+            <thead>
+              <tr>
+                <th onclick="sortTbl('reps','sales_rep')">Sales Rep <span class="sort-icon"></span></th>
+                <th onclick="sortTbl('reps','total_deals')" class="num">Total Deals <span class="sort-icon"></span></th>
+                <th onclick="sortTbl('reps','won_deals')" class="num">Won <span class="sort-icon"></span></th>
+                <th onclick="sortTbl('reps','won_mrr')" class="num">Won MRR <span class="sort-icon"></span></th>
+                <th onclick="sortTbl('reps','win_rate')" class="num">Win Rate <span class="sort-icon"></span></th>
+                <th onclick="sortTbl('reps','pipeline_mrr')" class="num">Pipeline MRR <span class="sort-icon"></span></th>
+                <th onclick="sortTbl('reps','coverage')" class="num">Coverage <span class="sort-icon"></span></th>
+              </tr>
+            </thead>
+            <tbody id="tbody-reps"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- LEADS -->
+      <div class="tab-panel" id="panel-leads">
+        <div class="tbl-toolbar">
+          <span class="tbl-title">Qualified Leads</span>
+          <span class="tbl-count" id="count-leads">0 rows</span>
+          <input class="tbl-search" placeholder="Search leads…" id="search-leads" autocomplete="off"/>
+          <button class="btn-export" onclick="exportCSV('leads','channels_leads')">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M8 2v9M5 8l3 3 3-3M2 14h12"/>
+            </svg>
+            CSV
+          </button>
+        </div>
+        <div class="tbl-wrap">
+          <table class="data-table" id="tbl-leads">
+            <thead>
+              <tr>
+                <th onclick="sortTbl('leads','deal_id')">Deal ID <span class="sort-icon"></span></th>
+                <th onclick="sortTbl('leads','deal_name')">Deal Name <span class="sort-icon"></span></th>
+                <th onclick="sortTbl('leads','create_date')">Create Date <span class="sort-icon"></span></th>
+                <th onclick="sortTbl('leads','projected_close_date')">Proj. Close <span class="sort-icon"></span></th>
+                <th onclick="sortTbl('leads','sales_rep')">Sales Rep <span class="sort-icon"></span></th>
+                <th onclick="sortTbl('leads','partner_name')">Partner <span class="sort-icon"></span></th>
+                <th onclick="sortTbl('leads','segment')">Segment <span class="sort-icon"></span></th>
+                <th onclick="sortTbl('leads','channel_source')">Channel <span class="sort-icon"></span></th>
+                <th onclick="sortTbl('leads','stage')">Stage <span class="sort-icon"></span></th>
+                <th onclick="sortTbl('leads','mrr')" class="num">MRR <span class="sort-icon"></span></th>
+              </tr>
+            </thead>
+            <tbody id="tbody-leads"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SQL DEALS -->
+      <div class="tab-panel" id="panel-sql">
+        <div class="tbl-toolbar">
+          <span class="tbl-title">SQL Deals</span>
+          <span class="tbl-count" id="count-sql">0 rows</span>
+          <input class="tbl-search" placeholder="Search SQL deals…" id="search-sql" autocomplete="off"/>
+          <button class="btn-export" onclick="exportCSV('sql','channels_sql_deals')">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M8 2v9M5 8l3 3 3-3M2 14h12"/>
+            </svg>
+            CSV
+          </button>
+        </div>
+        <div class="tbl-wrap">
+          <table class="data-table" id="tbl-sql">
+            <thead>
+              <tr>
+                <th onclick="sortTbl('sql','deal_id')">Deal ID <span class="sort-icon"></span></th>
+                <th onclick="sortTbl('sql','deal_name')">Deal Name <span class="sort-icon"></span></th>
+                <th onclick="sortTbl('sql','create_date')">Create Date <span class="sort-icon"></span></th>
+                <th onclick="sortTbl('sql','projected_close_date')">Proj. Close <span class="sort-icon"></span></th>
+                <th onclick="sortTbl('sql','sales_rep')">Sales Rep <span class="sort-icon"></span></th>
+                <th onclick="sortTbl('sql','partner_name')">Partner <span class="sort-icon"></span></th>
+                <th onclick="sortTbl('sql','segment')">Segment <span class="sort-icon"></span></th>
+                <th onclick="sortTbl('sql','channel_source')">Channel <span class="sort-icon"></span></th>
+                <th onclick="sortTbl('sql','stage')">Stage <span class="sort-icon"></span></th>
+                <th onclick="sortTbl('sql','mrr')" class="num">MRR <span class="sort-icon"></span></th>
+              </tr>
+            </thead>
+            <tbody id="tbody-sql"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /tabs-section -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- ═══════════════════════════════════════════════════════
+     JAVASCRIPT
+═══════════════════════════════════════════════════════ -->
+<script>
+'use strict';
+
+/* ─────────────────────────────────────────────
+   CONFIG
+───────────────────────────────────────────── */
+const PIPELINE_DEFAULT = 'Unified Channel Pipeline';
+const HUBSPOT_PORTAL = '2500439'; // Sprout Solutions HubSpot portal ID
+
+/* ─────────────────────────────────────────────
+   DATABRICKS LIVE CONNECTION
+───────────────────────────────────────────── */
+const LC = {
+  KEY: 'ch_dash_conn',
+  load() { try { return JSON.parse(localStorage.getItem(this.KEY) || '{}'); } catch(e) { return {}; } },
+  save(h, p, t) { localStorage.setItem(this.KEY, JSON.stringify({ hostname: h, httpPath: p, token: t })); },
+  clear() { localStorage.removeItem(this.KEY); },
+  warehouseId() { const p = this.load().httpPath || ''; return p.split('/').pop(); },
+  isConfigured() { const c = this.load(); return !!(c.hostname && c.httpPath && c.token); }
+};
+
+async function dbQuery(sql) {
+  const c = LC.load();
+  if (!c.hostname || !c.token) throw new Error('Not connected — click ⚙️ Settings to enter your Databricks credentials.');
+  const url = 'https://' + c.hostname + '/api/2.0/sql/statements';
+  let res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + c.token, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ warehouse_id: LC.warehouseId(), statement: sql, wait_timeout: '30s', on_wait_timeout: 'CONTINUE', format: 'JSON_ARRAY' }),
+    signal: AbortSignal.timeout(90_000),
+  });
+  if (!res.ok) {
+    if (res.status === 401) throw new Error('Databricks PAT expired or invalid — update in ⚙️ Settings.');
+    if (res.status === 403) throw new Error('Access denied — check warehouse permissions.');
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || 'HTTP ' + res.status);
+  }
+  let body = await res.json();
+  while (body.status && ['PENDING','RUNNING'].includes(body.status.state)) {
+    await new Promise(r => setTimeout(r, 2000));
+    const poll = await fetch('https://' + c.hostname + '/api/2.0/sql/statements/' + body.statement_id, { headers: { 'Authorization': 'Bearer ' + c.token } });
+    body = await poll.json();
+  }
+  if (body.status && body.status.state === 'FAILED') throw new Error((body.status.error && body.status.error.message) || 'Query failed.');
+  const cols = ((body.manifest && body.manifest.schema && body.manifest.schema.columns) || []).map(col => col.name);
+  return ((body.result && body.result.data_array) || []).map(row => { const obj = {}; cols.forEach((col, i) => { obj[col] = row[i]; }); return obj; });
+}
+
+/* ─────────────────────────────────────────────
+   STATE
+───────────────────────────────────────────── */
+const S = {
+  mode:       'loading',  // 'live' | 'failed' | 'sample'
+  filters: {
+    startDate:    '',
+    endDate:      '',
+    pipelineName: PIPELINE_DEFAULT,
+    segment:      '',
+  },
+  data: {
+    kpi:      null,
+    trend:    [],
+    funnel:   [],
+    partners: [],
+    reps:     [],
+    won:      [],
+    leads:    [],
+    sql:      [],
+  },
+  tables: {
+    won: [], partners: [], reps: [], leads: [], sql: [], por: [],  // por = partner-on-record summary
+  },
+  raw: {   // unfiltered source data for client-side filtering
+    won: [], leads: [], sql: [],
+  },
+  sort:   {},   // { tableId: { col, dir } }
+  search: {},   // { tableId: 'string' }
+  activeTab: 'won',
+  charts: {},
+  allDeals: [],  // raw deals from dashboard.json — JS computes everything from here
+};
+
+/* ─────────────────────────────────────────────
+   FORMATTING UTILITIES
+───────────────────────────────────────────── */
+const php = v =>
+  v == null || v === '' ? '—'
+  : '₱' + Number(v).toLocaleString('en-PH', { maximumFractionDigits: 0 });
+
+const num = v =>
+  v == null || v === '' ? '—' : Number(v).toLocaleString();
+
+const pct = v =>
+  v == null || v === '' ? '—' : Number(v).toFixed(1) + '%';
+
+const days = v =>
+  v == null || v === '' ? '—' : Number(v).toFixed(1) + 'd';
+
+const dt = v => {
+  if (!v) return '—';
+  const s = String(v);
+  return s.includes('T') ? s.split('T')[0] : s.split(' ')[0];
+};
+
+/* Compact ₱ for chart axes */
+const phpK = v =>
+  Math.abs(v) >= 1_000_000
+    ? '₱' + (v / 1_000_000).toFixed(1) + 'M'
+    : '₱' + (v / 1_000).toFixed(0) + 'K';
+
+/* ─────────────────────────────────────────────
+   SQL ESCAPE (prevent injection via filter values)
+───────────────────────────────────────────── */
+const esc = v => String(v ?? '').replace(/'/g, "''").replace(/[;\n\r]/g, ' ');
+
+/* ─────────────────────────────────────────────
+   WHERE CLAUSE BUILDERS
+   Strict date-column separation per business rules:
+     Leads/Funnel  → create_date
+     Revenue       → close_date
+     Pipeline MRR  → projected_close_date
+───────────────────────────────────────────── */
+function shiftYear(dateStr, years) {
+  if (!dateStr) return '';
+  const parts = dateStr.split('-');
+  parts[0] = String(Number(parts[0]) + years);
+  return parts.join('-');
+}
+
+function baseConditions(dateCol, lyShift = 0) {
+  const f = S.filters;
+  const conds = [
+    `pipeline_name = '${esc(f.pipelineName || PIPELINE_DEFAULT)}'`,
+    `deal_type NOT IN ('Renewal', 'renewal', 'Upsell - Renewal')`,
+    `LOWER(deal_name) NOT LIKE '%renewal%'`,
+  ];
+
+  const sd = lyShift ? shiftYear(f.startDate, lyShift) : f.startDate;
+  const ed = lyShift ? shiftYear(f.endDate,   lyShift) : f.endDate;
+  if (sd) conds.push(`${dateCol} >= '${sd}'`);
+  if (ed) conds.push(`${dateCol} <= '${ed}'`);
+
+  // Segment — normalise MICRO → SME
+  if (f.segment) {
+    if (f.segment === 'SME') {
+      conds.push(`department_source_clean IN ('SME','MICRO')`);
+    } else {
+      conds.push(
+        `CASE WHEN department_source_clean = 'MICRO' THEN 'SME'`
+        + ` ELSE department_source_clean END = '${esc(f.segment)}'`
+      );
+    }
+  }
+
+  return conds;
+}
+
+const WHERE = {
+  lead:       () => 'WHERE\n  ' + baseConditions('create_date').join('\n  AND '),
+  revenue:    () => 'WHERE\n  ' + baseConditions('close_date').join('\n  AND '),
+  pipeline:   () => 'WHERE\n  ' + baseConditions('projected_close_date').join('\n  AND '),
+  leadLY:     () => 'WHERE\n  ' + baseConditions('create_date', -1).join('\n  AND '),
+  revenueLY:  () => 'WHERE\n  ' + baseConditions('close_date', -1).join('\n  AND '),
+  pipelineLY: () => 'WHERE\n  ' + baseConditions('projected_close_date', -1).join('\n  AND '),
+};
+
+/* ─────────────────────────────────────────────
+   SQL QUERIES
+───────────────────────────────────────────── */
+// ─── Datapedia-aligned metric definitions ───────────────────────────────────
+// QL     = qualified_lead = 'Yes'                          (create_date)
+// SQL    = qualified_lead = 'Yes' AND client_journey_stage <> 'MQL' (create_date)
+// Won    = client_journey_stage = 'Customer'               (close_date)
+// Lost   = client_journey_stage = 'Closed Lost'            (close_date)
+// Win %  = Won / (Won + Lost) × 100                       (close_date)
+// SQL %  = SQL / QL × 100                                  (create_date)
+// Pipeline = client_journey_stage = 'Opportunity'          (projected_close_date)
+// ─────────────────────────────────────────────────────────────────────────────
+
+function qKPI() {
+  const wL   = WHERE.lead();
+  const wR   = WHERE.revenue();
+  const wP   = WHERE.pipeline();
+  const wLly = WHERE.leadLY();
+  const wRly = WHERE.revenueLY();
+  const wPly = WHERE.pipelineLY();
+  return `
+WITH
+  leads_base AS (
+    SELECT deal_id, qualified_lead, client_journey_stage
+    FROM shared.revops.silver_deals ${wL}
+  ),
+  revenue_base AS (
+    SELECT deal_id, mrr, ef_mrr, otp_only, mrr_lt_12, implem_fee, deal_velocity_days, client_journey_stage
+    FROM shared.revops.silver_deals ${wR}
+  ),
+  pipeline_base AS (
+    SELECT deal_id, mrr
+    FROM shared.revops.silver_deals ${wP}
+      AND client_journey_stage = 'Opportunity'
+      AND projected_close_date IS NOT NULL
+  ),
+  leads_ly AS (
+    SELECT deal_id, qualified_lead, client_journey_stage
+    FROM shared.revops.silver_deals ${wLly}
+  ),
+  revenue_ly AS (
+    SELECT deal_id, mrr, ef_mrr, otp_only, mrr_lt_12, implem_fee, deal_velocity_days, client_journey_stage
+    FROM shared.revops.silver_deals ${wRly}
+  ),
+  pipeline_ly AS (
+    SELECT deal_id, mrr
+    FROM shared.revops.silver_deals ${wPly}
+      AND client_journey_stage = 'Opportunity'
+      AND projected_close_date IS NOT NULL
+  )
+SELECT
+  /* ── CURRENT PERIOD ── */
+  (SELECT COUNT(DISTINCT deal_id) FROM leads_base WHERE qualified_lead = 'Yes')                AS qualified_leads,
+  (SELECT COUNT(DISTINCT deal_id) FROM leads_base WHERE qualified_lead = 'Yes' AND client_journey_stage <> 'MQL') AS sql_count,
+  (SELECT COUNT(DISTINCT deal_id) FROM revenue_base WHERE client_journey_stage = 'Customer')   AS won_deals,
+  (SELECT COUNT(DISTINCT deal_id) FROM revenue_base WHERE client_journey_stage = 'Closed Lost') AS lost_deals,
+  (SELECT COALESCE(SUM(mrr),0)    FROM revenue_base WHERE client_journey_stage = 'Customer')   AS won_mrr,
+  (SELECT COALESCE(SUM(ef_mrr),0) FROM revenue_base WHERE client_journey_stage = 'Customer')   AS ef_mrr_total,
+  (SELECT COALESCE(SUM(otp_only),0)   FROM revenue_base WHERE client_journey_stage = 'Customer') AS otp_total,
+  (SELECT COALESCE(SUM(implem_fee),0) FROM revenue_base WHERE client_journey_stage = 'Customer') AS implem_fee_total,
+  (SELECT COALESCE(SUM(mrr_lt_12),0)  FROM revenue_base WHERE client_journey_stage = 'Customer') AS mrr_lt12_total,
+  (SELECT COALESCE(SUM(mrr),0)    FROM pipeline_base)                                          AS pipeline_mrr,
+  (SELECT ROUND(100.0 * COUNT(DISTINCT CASE WHEN client_journey_stage='Customer' THEN deal_id END)
+     / NULLIF(COUNT(DISTINCT CASE WHEN client_journey_stage IN ('Customer','Closed Lost') THEN deal_id END),0),1)
+   FROM revenue_base)                                                                           AS win_rate,
+  (SELECT ROUND(SUM(mrr)/NULLIF(COUNT(DISTINCT deal_id),0),0) FROM revenue_base WHERE client_journey_stage='Customer') AS avg_deal_size,
+  (SELECT ROUND(AVG(deal_velocity_days),1) FROM revenue_base WHERE client_journey_stage='Customer' AND deal_velocity_days IS NOT NULL) AS avg_deal_velocity,
+  (SELECT ROUND(100.0 * COUNT(DISTINCT CASE WHEN qualified_lead='Yes' AND client_journey_stage<>'MQL' THEN deal_id END)
+     / NULLIF(COUNT(DISTINCT CASE WHEN qualified_lead='Yes' THEN deal_id END),0),1)
+   FROM leads_base)                                                                             AS sql_rate,
+
+  /* ── LAST YEAR ── */
+  (SELECT COUNT(DISTINCT deal_id) FROM leads_ly WHERE qualified_lead = 'Yes')                  AS ly_qualified_leads,
+  (SELECT COUNT(DISTINCT deal_id) FROM leads_ly WHERE qualified_lead = 'Yes' AND client_journey_stage <> 'MQL') AS ly_sql_count,
+  (SELECT COUNT(DISTINCT deal_id) FROM revenue_ly WHERE client_journey_stage = 'Customer')     AS ly_won_deals,
+  (SELECT COUNT(DISTINCT deal_id) FROM revenue_ly WHERE client_journey_stage = 'Closed Lost')  AS ly_lost_deals,
+  (SELECT COALESCE(SUM(mrr),0)    FROM revenue_ly WHERE client_journey_stage = 'Customer')     AS ly_won_mrr,
+  (SELECT COALESCE(SUM(ef_mrr),0) FROM revenue_ly WHERE client_journey_stage = 'Customer')     AS ly_ef_mrr_total,
+  (SELECT COALESCE(SUM(otp_only),0)   FROM revenue_ly WHERE client_journey_stage = 'Customer') AS ly_otp_total,
+  (SELECT COALESCE(SUM(implem_fee),0) FROM revenue_ly WHERE client_journey_stage = 'Customer') AS ly_implem_fee_total,
+  (SELECT COALESCE(SUM(mrr_lt_12),0)  FROM revenue_ly WHERE client_journey_stage = 'Customer') AS ly_mrr_lt12_total,
+  (SELECT COALESCE(SUM(mrr),0)    FROM pipeline_ly)                                            AS ly_pipeline_mrr,
+  (SELECT ROUND(100.0 * COUNT(DISTINCT CASE WHEN client_journey_stage='Customer' THEN deal_id END)
+     / NULLIF(COUNT(DISTINCT CASE WHEN client_journey_stage IN ('Customer','Closed Lost') THEN deal_id END),0),1)
+   FROM revenue_ly)                                                                             AS ly_win_rate,
+  (SELECT ROUND(SUM(mrr)/NULLIF(COUNT(DISTINCT deal_id),0),0) FROM revenue_ly WHERE client_journey_stage='Customer') AS ly_avg_deal_size,
+  (SELECT ROUND(AVG(deal_velocity_days),1) FROM revenue_ly WHERE client_journey_stage='Customer' AND deal_velocity_days IS NOT NULL) AS ly_avg_deal_velocity`;
+}
+
+// MRR TREND — Won MRR + EF MRR use close_date, client_journey_stage=Customer
+function qMrrTrend() {
+  const wR = WHERE.revenue();
+  return `
+SELECT
+  DATE_FORMAT(close_date,'yyyy-MM')                                                        AS month,
+  COALESCE(SUM(CASE WHEN client_journey_stage = 'Customer' THEN mrr    END),0)            AS won_mrr,
+  COALESCE(SUM(CASE WHEN client_journey_stage = 'Customer' THEN ef_mrr END),0)            AS ef_mrr
+FROM shared.revops.silver_deals
+${wR}
+  AND close_date IS NOT NULL
+GROUP BY DATE_FORMAT(close_date,'yyyy-MM')
+ORDER BY month ASC
+LIMIT 24`;
+}
+
+// QL & SQL MoM TREND — grouped bar, create_date
+function qFunnelTrend() {
+  const wL = WHERE.lead();
+  return `
+SELECT
+  DATE_FORMAT(create_date,'yyyy-MM')                                                              AS month,
+  COUNT(DISTINCT CASE WHEN qualified_lead = 'Yes' THEN deal_id END)                              AS ql_count,
+  COUNT(DISTINCT CASE WHEN qualified_lead = 'Yes' AND client_journey_stage <> 'MQL' THEN deal_id END) AS sql_count
+FROM shared.revops.silver_deals
+${wL}
+  AND create_date IS NOT NULL
+GROUP BY DATE_FORMAT(create_date,'yyyy-MM')
+ORDER BY month ASC
+LIMIT 24`;
+}
+
+
+// PARTNER PERFORMANCE
+// QL + SQL rate use create_date; Win Rate = Won/(Won+Lost) per datapedia
+function qPartners() {
+  const wL = WHERE.lead();
+  return `
+SELECT
+  COALESCE(partner_on_record,'Direct')                                             AS partner,
+  COALESCE(original_channel_source,'Unknown')                                      AS channel_source,
+  COUNT(DISTINCT CASE WHEN qualified_lead = 'Yes' THEN deal_id END)                AS qualified_leads,
+  COUNT(DISTINCT CASE WHEN qualified_lead = 'Yes'
+    AND client_journey_stage <> 'MQL' THEN deal_id END)                            AS sql_count,
+  COUNT(DISTINCT CASE WHEN client_journey_stage = 'Customer' THEN deal_id END)     AS won_deals,
+  COALESCE(SUM(CASE WHEN client_journey_stage = 'Customer' THEN mrr END),0)        AS won_mrr,
+  /* Win Rate = Won / (Won + Lost) */
+  ROUND(100.0
+    * COUNT(DISTINCT CASE WHEN client_journey_stage = 'Customer' THEN deal_id END)
+    / NULLIF(COUNT(DISTINCT CASE WHEN client_journey_stage IN ('Customer','Closed Lost') THEN deal_id END),0),1) AS win_rate,
+  /* SQL Rate = SQL / QL */
+  ROUND(100.0
+    * COUNT(DISTINCT CASE WHEN qualified_lead = 'Yes' AND client_journey_stage <> 'MQL' THEN deal_id END)
+    / NULLIF(COUNT(DISTINCT CASE WHEN qualified_lead = 'Yes' THEN deal_id END),0),1) AS sql_rate
+FROM shared.revops.silver_deals
+${wL}
+GROUP BY 1,2
+ORDER BY won_mrr DESC
+LIMIT 50`;
+}
+
+// PARTNER GROUPED — grouped by client type (SPP/MSP/VAR/Others/Direct)
+// Uses close_date; client_type derived from partner_on_record prefix
+function qPartnerGrouped() {
+  const wR = WHERE.revenue();
+  return `
+WITH partner_base AS (
+  SELECT
+    CASE
+      WHEN partner_on_record LIKE 'SPP_%' THEN 'SPP'
+      WHEN partner_on_record LIKE 'MSP_%' THEN 'MSP'
+      WHEN partner_on_record LIKE 'VAR_%' THEN 'VAR'
+      WHEN partner_on_record IS NULL OR TRIM(partner_on_record) = '' THEN 'Direct'
+      ELSE 'Others'
+    END                                                                          AS client_type,
+    COALESCE(partner_on_record, 'Direct')                                        AS partner,
+    COALESCE(SUM(CASE WHEN client_journey_stage = 'Customer' THEN mrr      END),0) AS mrr_only,
+    COALESCE(SUM(CASE WHEN client_journey_stage = 'Customer' THEN ef_mrr   END),0) AS ef_mrr,
+    COALESCE(SUM(CASE WHEN client_journey_stage = 'Customer' THEN otp_only  END),0) AS otp,
+    COALESCE(SUM(CASE WHEN client_journey_stage = 'Customer' THEN implem_fee END),0) AS implem_fee,
+    COUNT(DISTINCT CASE WHEN client_journey_stage = 'Customer'    THEN deal_id END) AS won_deals,
+    COUNT(DISTINCT CASE WHEN client_journey_stage = 'Closed Lost' THEN deal_id END) AS lost_deals
+  FROM shared.revops.silver_deals
+  ${wR}
+    AND client_journey_stage IN ('Customer','Closed Lost')
+  GROUP BY 1, 2
+),
+grand AS (
+  SELECT SUM(mrr_only) AS t_mrr, SUM(ef_mrr) AS t_ef,
+         SUM(mrr_only+ef_mrr) AS t_combined, SUM(otp) AS t_otp
+  FROM partner_base
+)
+SELECT
+  p.client_type, p.partner,
+  p.mrr_only,
+  ROUND(p.mrr_only    * 100.0 / NULLIF(g.t_mrr,      0), 2) AS mrr_dist_pct,
+  p.ef_mrr,
+  ROUND(p.ef_mrr      * 100.0 / NULLIF(g.t_ef,       0), 2) AS ef_dist_pct,
+  p.mrr_only + p.ef_mrr                                       AS combined_mrr,
+  ROUND((p.mrr_only+p.ef_mrr) * 100.0 / NULLIF(g.t_combined, 0), 2) AS combined_dist_pct,
+  p.otp,
+  ROUND(p.otp         * 100.0 / NULLIF(g.t_otp,      0), 2) AS otp_dist_pct,
+  p.implem_fee,
+  p.won_deals, p.lost_deals,
+  ROUND(p.won_deals * 100.0 / NULLIF(p.won_deals + p.lost_deals, 0), 1) AS win_rate
+FROM partner_base p CROSS JOIN grand g
+ORDER BY p.client_type, p.partner`;
+}
+
+// SALES REP PERFORMANCE
+// Win Rate = Won / (Won + Lost); Pipeline = client_journey_stage=Opportunity
+function qReps() {
+  const wL = WHERE.lead();
+  const wP = WHERE.pipeline();
+  return `
+WITH
+  rep_deals AS (
+    SELECT
+      sales_rep,
+      COUNT(DISTINCT deal_id)                                                                AS total_deals,
+      COUNT(DISTINCT CASE WHEN qualified_lead='Yes' AND client_journey_stage<>'MQL' THEN deal_id END) AS sql_count,
+      COUNT(DISTINCT CASE WHEN client_journey_stage = 'Customer' THEN deal_id END)          AS won_deals,
+      COALESCE(SUM(CASE WHEN client_journey_stage = 'Customer' THEN mrr END),0)             AS won_mrr,
+      /* Win Rate = Won / (Won + Lost) */
+      ROUND(100.0
+        * COUNT(DISTINCT CASE WHEN client_journey_stage = 'Customer' THEN deal_id END)
+        / NULLIF(COUNT(DISTINCT CASE WHEN client_journey_stage IN ('Customer','Closed Lost') THEN deal_id END),0),1) AS win_rate
+    FROM shared.revops.silver_deals
+    ${wL}
+    GROUP BY sales_rep
+  ),
+  rep_pipe AS (
+    SELECT
+      sales_rep,
+      COALESCE(SUM(mrr),0) AS pipeline_mrr
+    FROM shared.revops.silver_deals
+    ${wP}
+      AND client_journey_stage = 'Opportunity'
+    GROUP BY sales_rep
+  )
+SELECT
+  l.sales_rep,
+  l.total_deals,
+  l.sql_count,
+  l.won_deals,
+  l.won_mrr,
+  l.win_rate,
+  COALESCE(p.pipeline_mrr,0) AS pipeline_mrr
+FROM rep_deals l
+LEFT JOIN rep_pipe p ON l.sales_rep = p.sales_rep
+ORDER BY l.won_mrr DESC
+LIMIT 30`;
+}
+
+// WON DEALS TABLE — client_journey_stage=Customer, close_date
+function qWonDeals() {
+  const wR = WHERE.revenue();
+  return `
+SELECT
+  deal_id,
+  deal_name,
+  create_date,
+  close_date,
+  sales_rep,
+  partner_on_record                                                                AS partner_name,
+  CASE WHEN department_source_clean='MICRO' THEN 'SME'
+       ELSE department_source_clean END                                             AS segment,
+  mrr,
+  ef_mrr,
+  COALESCE(mrr,0)+COALESCE(ef_mrr,0)                                             AS combined_mrr,
+  otp_only                                                                         AS otp
+FROM shared.revops.silver_deals
+${wR}
+  AND client_journey_stage = 'Customer'
+ORDER BY close_date DESC
+LIMIT 500`;
+}
+
+// LEADS TABLE — qualified_lead=Yes, create_date (datapedia QL definition)
+function qLeads() {
+  const wL = WHERE.lead();
+  return `
+SELECT
+  deal_id,
+  deal_name,
+  create_date,
+  projected_close_date,
+  sales_rep,
+  partner_on_record                                                                AS partner_name,
+  CASE WHEN department_source_clean='MICRO' THEN 'SME'
+       ELSE department_source_clean END                                             AS segment,
+  original_channel_source                                                          AS channel_source,
+  client_journey_stage                                                             AS stage,
+  stage_label,
+  mrr
+FROM shared.revops.silver_deals
+${wL}
+  AND qualified_lead = 'Yes'
+ORDER BY create_date DESC
+LIMIT 500`;
+}
+
+// SQL DEALS TABLE — qualified_lead=Yes AND client_journey_stage<>MQL (datapedia SQL definition)
+function qSQLDeals() {
+  const wL = WHERE.lead();
+  return `
+SELECT
+  deal_id,
+  deal_name,
+  create_date,
+  projected_close_date,
+  sales_rep,
+  partner_on_record                                                                AS partner_name,
+  CASE WHEN department_source_clean='MICRO' THEN 'SME'
+       ELSE department_source_clean END                                             AS segment,
+  original_channel_source                                                          AS channel_source,
+  client_journey_stage                                                             AS stage,
+  stage_label,
+  mrr
+FROM shared.revops.silver_deals
+${wL}
+  AND qualified_lead = 'Yes'
+  AND client_journey_stage <> 'MQL'
+ORDER BY create_date DESC
+LIMIT 500`;
+}
+
+/* ─────────────────────────────────────────────
+   BACKEND API
+───────────────────────────────────────────── */
+async function apiFetch(sql) {
+  return dbQuery(sql);
+}
+
+async function checkHealth() {
+  if (!LC.isConfigured()) throw new Error('Not configured');
+  await dbQuery('SELECT 1 AS ping');
+  return { status: 'ok' };
+}
+
+/* ─────────────────────────────────────────────
+   SAMPLE / FALLBACK DATA
+───────────────────────────────────────────── */
+const SAMPLE = {
+  kpi: {
+    qualified_leads: 247, sql_count: 89, won_deals: 34, lost_deals: 28,
+    won_mrr: 1_245_000, ef_mrr_total: 318_000, pipeline_mrr: 4_780_000,
+    win_rate: 38.2, avg_deal_size: 36_618, avg_deal_velocity: 45.3, sql_rate: 36.0,
+    otp_total: 45_000, implem_fee_total: 28_000, mrr_lt12_total: 260_000,
+    ly_qualified_leads: 198, ly_sql_count: 71, ly_won_deals: 27, ly_lost_deals: 34,
+    ly_won_mrr: 980_000, ly_ef_mrr_total: 245_000, ly_pipeline_mrr: 3_950_000,
+    ly_win_rate: 31.5, ly_avg_deal_size: 32_400, ly_avg_deal_velocity: 52.1,
+    ly_otp_total: 38_000, ly_implem_fee_total: 22_000, ly_mrr_lt12_total: 195_000,
+  },
+  trend: [
+    {month:'2025-06',won_mrr:820_000,ef_mrr:180_000},
+    {month:'2025-07',won_mrr:950_000,ef_mrr:220_000},
+    {month:'2025-08',won_mrr:1_100_000,ef_mrr:260_000},
+    {month:'2025-09',won_mrr:980_000,ef_mrr:195_000},
+    {month:'2025-10',won_mrr:1_350_000,ef_mrr:310_000},
+    {month:'2025-11',won_mrr:1_180_000,ef_mrr:285_000},
+    {month:'2025-12',won_mrr:1_480_000,ef_mrr:340_000},
+    {month:'2026-01',won_mrr:920_000,ef_mrr:210_000},
+    {month:'2026-02',won_mrr:1_050_000,ef_mrr:240_000},
+    {month:'2026-03',won_mrr:1_320_000,ef_mrr:305_000},
+    {month:'2026-04',won_mrr:1_245_000,ef_mrr:318_000},
+    {month:'2026-05',won_mrr:580_000,ef_mrr:145_000},
+  ],
+  funnel: [
+    {month:'2025-06',ql_count:18,sql_count:7},
+    {month:'2025-07',ql_count:22,sql_count:9},
+    {month:'2025-08',ql_count:25,sql_count:11},
+    {month:'2025-09',ql_count:20,sql_count:8},
+    {month:'2025-10',ql_count:30,sql_count:13},
+    {month:'2025-11',ql_count:27,sql_count:10},
+    {month:'2025-12',ql_count:32,sql_count:14},
+    {month:'2026-01',ql_count:19,sql_count:8},
+    {month:'2026-02',ql_count:24,sql_count:10},
+    {month:'2026-03',ql_count:28,sql_count:12},
+    {month:'2026-04',ql_count:25,sql_count:11},
+    {month:'2026-05',ql_count:12,sql_count:5},
+  ],
+  partners: [
+    {client_type:'SPP',partner:'SPP_Adventus',mrr_only:80000,mrr_dist_pct:47.3,ef_mrr:0,ef_dist_pct:0,combined_mrr:80000,combined_dist_pct:47.3,otp:0,otp_dist_pct:0,implem_fee:0,won_deals:1,lost_deals:0,win_rate:100.0},
+    {client_type:'MSP',partner:'MSP_BridgeSea',mrr_only:18300,mrr_dist_pct:10.8,ef_mrr:0,ef_dist_pct:0,combined_mrr:18300,combined_dist_pct:10.8,otp:0,otp_dist_pct:0,implem_fee:0,won_deals:1,lost_deals:0,win_rate:100.0},
+    {client_type:'Others',partner:'spp',mrr_only:36500,mrr_dist_pct:21.6,ef_mrr:7500,ef_dist_pct:100,combined_mrr:44000,combined_dist_pct:26.0,otp:0,otp_dist_pct:0,implem_fee:0,won_deals:1,lost_deals:4,win_rate:20.0},
+  ],
+  reps: [
+    {sales_rep:'Maria Santos',     total_deals:52,won_deals:10,won_mrr:342_000,win_rate:19.2,pipeline_mrr:1_450_000},
+    {sales_rep:'Juan Reyes',       total_deals:48,won_deals:8, won_mrr:298_000,win_rate:16.7,pipeline_mrr:1_220_000},
+    {sales_rep:'Ana Cruz',         total_deals:45,won_deals:7, won_mrr:265_000,win_rate:15.6,pipeline_mrr:980_000},
+    {sales_rep:'Carlos Dela Rosa', total_deals:39,won_deals:5, won_mrr:218_000,win_rate:12.8,pipeline_mrr:780_000},
+    {sales_rep:'Sofia Mendoza',    total_deals:36,won_deals:4, won_mrr:122_000,win_rate:11.1,pipeline_mrr:350_000},
+  ],
+  won: [
+    {deal_id:'CH-10234',deal_name:'ACME Corp — Sprout HR Full Suite',    create_date:'2026-01-15',close_date:'2026-03-10',sales_rep:'Maria Santos',    partner_name:'Partner Alpha', segment:'Enterprise',mrr:85_000,ef_mrr:22_000,combined_mrr:107_000,otp:'Y'},
+    {deal_id:'CH-10235',deal_name:'Global Tech — Core HR Module',         create_date:'2026-01-22',close_date:'2026-03-18',sales_rep:'Juan Reyes',       partner_name:'Partner Beta',  segment:'SME',       mrr:42_000,ef_mrr:10_000,combined_mrr:52_000, otp:'Y'},
+    {deal_id:'CH-10236',deal_name:'NextGen Solutions — HR Basic',         create_date:'2026-02-05',close_date:'2026-03-25',sales_rep:'Ana Cruz',          partner_name:'Partner Gamma', segment:'SME',       mrr:28_000,ef_mrr:0,     combined_mrr:28_000, otp:'N'},
+    {deal_id:'CH-10237',deal_name:'Pinnacle Inc — Enterprise Suite',      create_date:'2026-02-10',close_date:'2026-04-01',sales_rep:'Maria Santos',    partner_name:'Partner Alpha', segment:'Enterprise',mrr:120_000,ef_mrr:35_000,combined_mrr:155_000,otp:'Y'},
+    {deal_id:'CH-10238',deal_name:'Bright Future — SME Pack',             create_date:'2026-02-14',close_date:'2026-04-05',sales_rep:'Carlos Dela Rosa', partner_name:'Partner Delta', segment:'SME',       mrr:18_000,ef_mrr:0,     combined_mrr:18_000, otp:'N'},
+    {deal_id:'CH-10239',deal_name:'Metro Industries — Mid-Market',        create_date:'2026-02-20',close_date:'2026-04-10',sales_rep:'Juan Reyes',       partner_name:'Direct',        segment:'Mid-Market',mrr:55_000,ef_mrr:12_000,combined_mrr:67_000, otp:'Y'},
+    {deal_id:'CH-10240',deal_name:'Vision Corp — Sprout Payroll',         create_date:'2026-02-25',close_date:'2026-04-15',sales_rep:'Sofia Mendoza',    partner_name:'Partner Epsilon',segment:'SME',      mrr:22_000,ef_mrr:5_000, combined_mrr:27_000, otp:'Y'},
+    {deal_id:'CH-10241',deal_name:'Sunrise Holdings — Enterprise HR',     create_date:'2026-03-01',close_date:'2026-04-22',sales_rep:'Ana Cruz',          partner_name:'Partner Beta',  segment:'Enterprise',mrr:98_000,ef_mrr:28_000,combined_mrr:126_000,otp:'Y'},
+  ],
+  leads: [
+    {deal_id:'L-20001',deal_name:'Alpha Company',    create_date:'2026-04-01',projected_close_date:'2026-06-01',sales_rep:'Maria Santos',    partner_name:'Partner Alpha', segment:'SME',       channel_source:'Referral',stage:'SQL / Discovery',mrr:35_000},
+    {deal_id:'L-20002',deal_name:'Beta Corp',        create_date:'2026-04-05',projected_close_date:'2026-07-01',sales_rep:'Juan Reyes',       partner_name:'Partner Beta',  segment:'Enterprise',channel_source:'Reseller', stage:'Demo / Meeting',  mrr:95_000},
+    {deal_id:'L-20003',deal_name:'Gamma Inc',        create_date:'2026-04-10',projected_close_date:'2026-06-15',sales_rep:'Ana Cruz',          partner_name:'Partner Gamma', segment:'SME',       channel_source:'Referral',stage:'MQL / New Lead',  mrr:18_000},
+    {deal_id:'L-20004',deal_name:'Delta Solutions',  create_date:'2026-04-12',projected_close_date:'2026-07-15',sales_rep:'Carlos Dela Rosa', partner_name:'Direct',        segment:'Mid-Market',channel_source:'Inbound',  stage:'Proposal Sent',   mrr:62_000},
+    {deal_id:'L-20005',deal_name:'Epsilon Tech',     create_date:'2026-04-15',projected_close_date:'2026-08-01',sales_rep:'Sofia Mendoza',    partner_name:'Partner Epsilon',segment:'SME',      channel_source:'Event',   stage:'SQL / Discovery', mrr:24_000},
+  ],
+  sql: [
+    {deal_id:'S-30001',deal_name:'Alpha Company',  create_date:'2026-04-01',projected_close_date:'2026-06-01',sales_rep:'Maria Santos',    partner_name:'Partner Alpha', segment:'SME',       channel_source:'Referral',stage:'SQL / Discovery',mrr:35_000},
+    {deal_id:'S-30002',deal_name:'Beta Corp',      create_date:'2026-04-05',projected_close_date:'2026-07-01',sales_rep:'Juan Reyes',       partner_name:'Partner Beta',  segment:'Enterprise',channel_source:'Reseller', stage:'Demo / Meeting',  mrr:95_000},
+    {deal_id:'S-30003',deal_name:'Delta Solutions',create_date:'2026-04-12',projected_close_date:'2026-07-15',sales_rep:'Carlos Dela Rosa', partner_name:'Direct',        segment:'Mid-Market',channel_source:'Inbound',  stage:'Proposal Sent',   mrr:62_000},
+    {deal_id:'S-30004',deal_name:'Epsilon Tech',   create_date:'2026-04-15',projected_close_date:'2026-08-01',sales_rep:'Sofia Mendoza',    partner_name:'Partner Epsilon',segment:'SME',      channel_source:'Event',   stage:'SQL / Discovery', mrr:24_000},
+  ],
+};
+
+/* ─────────────────────────────────────────────
+   STATUS BADGE
+───────────────────────────────────────────── */
+function showErrorToast(msg) {
+  let toast = document.getElementById('err-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'err-toast';
+    toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#7f1d1d;color:#fca5a5;border:1px solid #ef4444;border-radius:8px;padding:12px 20px;font-size:13px;z-index:9999;max-width:600px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.5);';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = '⚠️ Databricks Error: ' + msg;
+  toast.style.display = 'block';
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => { toast.style.display = 'none'; }, 12000);
+}
+
+function setStatus(mode, label) {
+  S.mode = mode;
+  try {
+    const badge = document.getElementById('status-badge');
+    const text  = document.getElementById('status-text');
+    if (badge) badge.className = 'status-badge ' + mode;
+    if (text)  text.textContent = label;
+  } catch(e) { /* badge update failed — mode is still set */ }
+}
+
+/* ─────────────────────────────────────────────
+   CHART INITIALISATION
+───────────────────────────────────────────── */
+// Shared Chart.js defaults
+Chart.defaults.color          = '#94a3b8';
+Chart.defaults.font.family    = 'Inter, system-ui, sans-serif';
+Chart.defaults.font.size      = 11;
+Chart.defaults.borderColor    = 'rgba(26,45,78,.6)';
+Chart.defaults.plugins.legend.labels.boxWidth = 10;
+Chart.defaults.plugins.legend.labels.padding  = 14;
+Chart.register(ChartDataLabels);
+
+function buildChart(id, config) {
+  const existing = S.charts[id];
+  if (existing) existing.destroy();
+  const ctx = document.getElementById(id).getContext('2d');
+  S.charts[id] = new Chart(ctx, config);
+  return S.charts[id];
+}
+
+function initCharts() {
+  // QL & SQL MoM Trend — grouped vertical bar
+  buildChart('chart-funnel', {
+    type: 'bar',
+    data: { labels: [], datasets: [
+      { label: 'Qualified Leads (QL)', data: [], backgroundColor: 'rgba(14,165,233,.75)', borderRadius: 3 },
+      { label: 'SQL',                  data: [], backgroundColor: 'rgba(168,85,247,.75)', borderRadius: 3 },
+    ]},
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      layout: { padding: { top: 18 } },
+      plugins: {
+        legend: { position: 'top', labels: { color: '#94a3b8', font: { size: 10 } } },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y}` } },
+        datalabels: {
+          anchor: 'end', align: 'top',
+          color: '#cbd5e1', font: { size: 9, weight: '700' },
+          formatter: v => v > 0 ? v : null,
+        },
+      },
+      scales: {
+        x: { grid: { color: 'rgba(26,45,78,.5)' }, ticks: { color: '#64748b', font: { size: 10 } } },
+        y: { display: false },
+      },
+    },
+  });
+
+  // MRR Trend — grouped bar, Won MRR + EF MRR
+  buildChart('chart-mrr-trend', {
+    type: 'bar',
+    data: { labels: [], datasets: [
+      { label: 'Won MRR',             data: [], backgroundColor: 'rgba(34,197,94,.75)',  borderRadius: 3 },
+      { label: 'Embedded Fintech MRR', data: [], backgroundColor: 'rgba(168,85,247,.75)', borderRadius: 3 },
+    ]},
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      layout: { padding: { top: 18 } },
+      plugins: {
+        legend: { position: 'top', labels: { color: '#94a3b8', font: { size: 10 } } },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${phpK(ctx.parsed.y)}` } },
+        datalabels: {
+          anchor: 'end', align: 'top',
+          color: '#cbd5e1', font: { size: 9, weight: '700' },
+          formatter: v => v > 0 ? phpK(v) : null,
+        },
+      },
+      scales: {
+        x: { grid: { color: 'rgba(26,45,78,.5)' }, ticks: { color: '#64748b', font: { size: 10 } } },
+        y: { display: false },
+      },
+    },
+  });
+
+}
+
+/* ─────────────────────────────────────────────
+   CHART UPDATE
+───────────────────────────────────────────── */
+function updateFunnelTrendChart(data) {
+  const ch = S.charts['chart-funnel'];
+  const sorted = [...data].sort((a,b) => (a.month||'').localeCompare(b.month||''));
+  ch.data.labels = sorted.map(d => d.month);
+  ch.data.datasets[0].data = sorted.map(d => Number(d.ql_count  || 0));
+  ch.data.datasets[1].data = sorted.map(d => Number(d.sql_count || 0));
+  ch.update();
+}
+
+function updateMrrTrendChart(trend) {
+  const ch = S.charts['chart-mrr-trend'];
+  const sorted = [...trend].sort((a,b) => (a.month||'').localeCompare(b.month||''));
+  ch.data.labels = sorted.map(d => d.month);
+  ch.data.datasets[0].data = sorted.map(d => Number(d.won_mrr || 0));
+  ch.data.datasets[1].data = sorted.map(d => Number(d.ef_mrr  || 0));
+  ch.update();
+}
+
+
+/* ─────────────────────────────────────────────
+   KPI RENDER
+───────────────────────────────────────────── */
+function renderKPIs(k) {
+  // Helper: render vs LY badge
+  // higherIsBetter: true for most metrics, false for Lost and Velocity (lower = better)
+  function lyBadge(elId, cur, ly, higherIsBetter) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    const c = Number(cur || 0), l = Number(ly || 0);
+    if (!l) { el.innerHTML = '<span class="ly-neutral">— vs LY</span>'; return; }
+    const diffPct = ((c - l) / Math.abs(l) * 100).toFixed(1);
+    const up = c >= l;
+    const good = higherIsBetter ? up : !up;
+    const arrow = up ? '▲' : '▼';
+    const cls   = good ? 'ly-good' : 'ly-bad';
+    el.innerHTML = `<span class="${cls}">${arrow} ${Math.abs(diffPct)}% vs LY</span>`;
+  }
+
+  // Values
+  document.getElementById('kpi-leads').textContent    = num(k.qualified_leads);
+  document.getElementById('kpi-sql').textContent      = num(k.sql_count);
+  document.getElementById('kpi-sql-rate').textContent = pct(k.sql_rate);
+  document.getElementById('kpi-won').textContent      = num(k.won_deals);
+  document.getElementById('kpi-lost').textContent     = num(k.lost_deals);
+  document.getElementById('kpi-winrate').textContent  = pct(k.win_rate);
+  document.getElementById('kpi-wmrr').textContent     = php(k.won_mrr);
+  document.getElementById('kpi-efmrr').textContent    = php(k.ef_mrr_total);
+  document.getElementById('kpi-pmrr').textContent     = php(k.pipeline_mrr);
+  document.getElementById('kpi-ads').textContent      = php(k.avg_deal_size);
+  document.getElementById('kpi-vel').textContent      = days(k.avg_deal_velocity);
+  document.getElementById('kpi-otp').textContent          = php((+k.otp_total||0) + (+k.mrr_lt12_total||0));
+  document.getElementById('kpi-implem').textContent        = php(k.implem_fee_total);
+  document.getElementById('kpi-combined-mrr').textContent = php((+k.won_mrr||0) + (+k.ef_mrr_total||0));
+
+  // vs LY badges (higherIsBetter: false = lower is better → green when value drops)
+  lyBadge('kpi-leads-ly',        k.qualified_leads,                              k.ly_qualified_leads,  true);
+  lyBadge('kpi-sql-ly',          k.sql_count,                                    k.ly_sql_count,        true);
+  lyBadge('kpi-won-ly',          k.won_deals,                                    k.ly_won_deals,        true);
+  lyBadge('kpi-lost-ly',         k.lost_deals,                                   k.ly_lost_deals,       false);
+  lyBadge('kpi-winrate-ly',      k.win_rate,                                     k.ly_win_rate,         true);
+  lyBadge('kpi-ads-ly',          k.avg_deal_size,                                k.ly_avg_deal_size,    true);
+  lyBadge('kpi-vel-ly',          k.avg_deal_velocity,                            k.ly_avg_deal_velocity,false);
+  lyBadge('kpi-wmrr-ly',         k.won_mrr,                                      k.ly_won_mrr,          true);
+  lyBadge('kpi-efmrr-ly',        k.ef_mrr_total,                                 k.ly_ef_mrr_total,     true);
+  lyBadge('kpi-combined-mrr-ly', (+k.won_mrr||0)+(+k.ef_mrr_total||0),          (+k.ly_won_mrr||0)+(+k.ly_ef_mrr_total||0), true);
+  lyBadge('kpi-otp-ly',          (+k.otp_total||0)+(+k.mrr_lt12_total||0),      (+k.ly_otp_total||0)+(+k.ly_mrr_lt12_total||0), true);
+  lyBadge('kpi-implem-ly',       k.implem_fee_total,                             k.ly_implem_fee_total, true);
+  lyBadge('kpi-pmrr-ly',         k.pipeline_mrr,                                 k.ly_pipeline_mrr,     true);
+}
+
+/* ─────────────────────────────────────────────
+   TABLE UTILITIES
+───────────────────────────────────────────── */
+function stageBadge(stage) {
+  if (!stage) return '—';
+  const s = stage.toLowerCase();
+  if (s.includes('won'))          return `<span class="stage-badge stage-won">${stage}</span>`;
+  if (s.includes('lost'))         return `<span class="stage-badge stage-lost">${stage}</span>`;
+  if (s.includes('disqualified')) return `<span class="stage-badge stage-dq">${stage}</span>`;
+  return `<span class="stage-badge stage-open">${stage}</span>`;
+}
+
+function segBadge(seg) {
+  if (!seg) return '—';
+  const cl = seg === 'Enterprise' ? 'seg-ent' : seg === 'Mid-Market' ? 'seg-mid' : 'seg-sme';
+  return `<span class="stage-badge ${cl}">${seg}</span>`;
+}
+
+function sortData(arr, id) {
+  const s = S.sort[id];
+  if (!s) return arr;
+  return [...arr].sort((a, b) => {
+    const va = a[s.col], vb = b[s.col];
+    const isNum = !isNaN(Number(va)) && !isNaN(Number(vb));
+    const diff = isNum ? Number(va) - Number(vb)
+                        : String(va ?? '').localeCompare(String(vb ?? ''));
+    return s.dir === 'asc' ? diff : -diff;
+  });
+}
+
+function filterData(arr, term) {
+  if (!term) return arr;
+  const t = term.toLowerCase();
+  return arr.filter(row =>
+    Object.values(row).some(v => String(v ?? '').toLowerCase().includes(t))
+  );
+}
+
+function getRows(id) {
+  return filterData(sortData(S.tables[id] || [], id), S.search[id] || '');
+}
+
+function updateSortHeaders(tblId, col) {
+  document.querySelectorAll(`#tbl-${tblId} thead th`).forEach(th => {
+    th.classList.remove('sort-asc','sort-desc');
+    const fn = th.getAttribute('onclick') || '';
+    if (fn.includes(`'${col}'`)) {
+      th.classList.add(S.sort[tblId]?.dir === 'asc' ? 'sort-asc' : 'sort-desc');
+    }
+  });
+}
+
+/* ─────────────────────────────────────────────
+   TABLE RENDERERS
+───────────────────────────────────────────── */
+function renderWon() {
+  const rows = getRows('won');
+  document.getElementById('count-won').textContent = `${rows.length} rows`;
+  const tb = document.getElementById('tbody-won');
+  if (!rows.length) { tb.innerHTML = emptyRow(11); return; }
+  tb.innerHTML = rows.map(r => `
+    <tr>
+      <td class="mono primary">${r.deal_id||'—'}</td>
+      <td class="primary"><a href="https://app.hubspot.com/contacts/${HUBSPOT_PORTAL}/record/0-3/${r.deal_id}" target="_blank" rel="noopener" style="color:var(--accent2);text-decoration:none" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">${esc2(r.deal_name)}</a></td>
+      <td>${dt(r.create_date)}</td>
+      <td>${dt(r.close_date)}</td>
+      <td>${r.sales_rep||'—'}</td>
+      <td>${r.partner_name||'Direct'}</td>
+      <td>${segBadge(r.segment)}</td>
+      <td class="num text-green fw700">${php(r.mrr)}</td>
+      <td class="num" style="color:var(--purple)">${php(r.ef_mrr)}</td>
+      <td class="num text-accent fw700">${php(r.combined_mrr)}</td>
+      <td class="${String(r.otp).toUpperCase()==='Y'?'otp-y':'otp-n'} fw700">${r.otp||'—'}</td>
+    </tr>`).join('');
+}
+
+function renderPartners() {
+  const data = S.tables.partners || [];
+  const tbody = document.getElementById('tbody-partners');
+  if (!tbody) return; // panel removed — skip
+  if (!data.length) { tbody.innerHTML = '<tr><td colspan="14" style="text-align:center;color:var(--text-dim);padding:24px">No data</td></tr>'; return; }
+
+  // Group by client_type
+  const groups = {};
+  data.forEach(r => {
+    const ct = r.client_type || 'Others';
+    if (!groups[ct]) groups[ct] = [];
+    groups[ct].push(r);
+  });
+
+  // Grand totals
+  const gt = { mrr:0, ef:0, comb:0, otp:0, impl:0, won:0, lost:0 };
+  data.forEach(r => {
+    gt.mrr  += +r.mrr_only || 0;
+    gt.ef   += +r.ef_mrr   || 0;
+    gt.comb += (+r.mrr_only||0) + (+r.ef_mrr||0);
+    gt.otp  += +r.otp      || 0;
+    gt.impl += +r.implem_fee || 0;
+    gt.won  += +r.won_deals  || 0;
+    gt.lost += +r.lost_deals || 0;
+  });
+
+  const gpct  = (v, t) => t ? (v*100/t).toFixed(2)+'%' : '0.00%';
+  const gwr   = (w, l) => (w+l) ? (w*100/(w+l)).toFixed(1)+'%' : '—';
+  const mnum = v => Number(v||0).toLocaleString('en-PH',{minimumFractionDigits:0,maximumFractionDigits:0});
+  const mpct = v => v != null ? Number(v).toFixed(2)+'%' : '0.00%';
+
+  let html = '';
+
+  const ORDER = ['SPP','VAR','MSP','Conglomerate','Channel Partner','Top 50','TAL / ENT','Direct','Others'];
+  const sortedTypes = [...new Set([...ORDER.filter(k=>groups[k]), ...Object.keys(groups).filter(k=>!ORDER.includes(k))])];
+
+  sortedTypes.forEach(ct => {
+    const rows = groups[ct];
+    // Group subtotals
+    const sub = { mrr:0, ef:0, otp:0, impl:0, won:0, lost:0 };
+    rows.forEach(r => {
+      sub.mrr  += +r.mrr_only    || 0;
+      sub.ef   += +r.ef_mrr      || 0;
+      sub.otp  += +r.otp         || 0;
+      sub.impl += +r.implem_fee  || 0;
+      sub.won  += +r.won_deals   || 0;
+      sub.lost += +r.lost_deals  || 0;
+    });
+    const subComb = sub.mrr + sub.ef;
+
+    // Group header row
+    html += `<tr class="group-header"><td colspan="14">${ct}</td></tr>`;
+
+    // Detail rows
+    rows.forEach(r => {
+      const comb = (+r.mrr_only||0) + (+r.ef_mrr||0);
+      html += `<tr>
+        <td></td>
+        <td>${r.partner||'—'}</td>
+        <td class="num">${mnum(r.mrr_only)}</td>
+        <td class="num dist-pct">${mpct(r.mrr_dist_pct)}</td>
+        <td class="num">${mnum(r.ef_mrr)}</td>
+        <td class="num dist-pct">${mpct(r.ef_dist_pct)}</td>
+        <td class="num">${mnum(comb)}</td>
+        <td class="num dist-pct">${mpct(r.combined_dist_pct)}</td>
+        <td class="num">${mnum(r.otp)}</td>
+        <td class="num dist-pct">${mpct(r.otp_dist_pct)}</td>
+        <td class="num">${mnum(r.implem_fee)}</td>
+        <td class="num">${r.won_deals||0}</td>
+        <td class="num">${r.lost_deals||0}</td>
+        <td class="num">${gwr(+r.won_deals||0, +r.lost_deals||0)}</td>
+      </tr>`;
+    });
+
+    // Subtotal row
+    html += `<tr class="group-total">
+      <td>Total</td>
+      <td></td>
+      <td class="num">${mnum(sub.mrr)}</td>
+      <td class="num dist-pct">${gpct(sub.mrr, gt.mrr)}</td>
+      <td class="num">${mnum(sub.ef)}</td>
+      <td class="num dist-pct">${gpct(sub.ef, gt.ef)}</td>
+      <td class="num">${mnum(subComb)}</td>
+      <td class="num dist-pct">${gpct(subComb, gt.comb)}</td>
+      <td class="num">${mnum(sub.otp)}</td>
+      <td class="num dist-pct">${gpct(sub.otp, gt.otp)}</td>
+      <td class="num">${mnum(sub.impl)}</td>
+      <td class="num">${sub.won}</td>
+      <td class="num">${sub.lost}</td>
+      <td class="num">${gwr(sub.won, sub.lost)}</td>
+    </tr>`;
+  });
+
+  // Grand total row
+  const gtComb = gt.mrr + gt.ef;
+  html += `<tr class="grand-total">
+    <td colspan="2">Grand Total</td>
+    <td class="num">${mnum(gt.mrr)}</td>
+    <td class="num">100.00%</td>
+    <td class="num">${mnum(gt.ef)}</td>
+    <td class="num">${gt.ef ? '100.00%' : '—'}</td>
+    <td class="num">${mnum(gtComb)}</td>
+    <td class="num">100.00%</td>
+    <td class="num">${mnum(gt.otp)}</td>
+    <td class="num">${gt.otp ? '100.00%' : '—'}</td>
+    <td class="num">${mnum(gt.impl)}</td>
+    <td class="num">${gt.won}</td>
+    <td class="num">${gt.lost}</td>
+    <td class="num">${gwr(gt.won, gt.lost)}</td>
+  </tr>`;
+
+  tbody.innerHTML = html;
+}
+
+function exportPartnerGrouped() {
+  const data = S.tables.partners || [];
+  if (!data.length) return;
+  const headers = ['Client Type','Partner','MRR Only','MRR Dist%','EF MRR','EF Dist%','Combined MRR','Comb Dist%','OTP','OTP Dist%','Implem Fee','Won','Lost','Win Rate'];
+  const rows = data.map(r => [
+    r.client_type, r.partner, r.mrr_only, r.mrr_dist_pct+'%', r.ef_mrr, r.ef_dist_pct+'%',
+    (+r.mrr_only||0)+(+r.ef_mrr||0), r.combined_dist_pct+'%',
+    r.otp, r.otp_dist_pct+'%', r.implem_fee, r.won_deals, r.lost_deals,
+    r.win_rate != null ? r.win_rate+'%' : '—'
+  ]);
+  const csv = [headers, ...rows].map(r => r.map(v => `"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([csv],{type:'text/csv'})), download: 'channels_partner_detailed.csv' });
+  a.click();
+}
+window.exportPartnerGrouped = exportPartnerGrouped;
+
+function renderReps() {
+  const rows = getRows('reps');
+  document.getElementById('count-reps').textContent = `${rows.length} rows`;
+  const tb = document.getElementById('tbody-reps');
+  if (!rows.length) { tb.innerHTML = emptyRow(7); return; }
+  tb.innerHTML = rows.map((r, i) => {
+    const coverage = r.won_mrr && r.pipeline_mrr
+      ? (Number(r.pipeline_mrr) / Number(r.won_mrr)).toFixed(1) + 'x'
+      : '—';
+    return `
+    <tr>
+      <td class="primary">${i===0?'🥇':i===1?'🥈':i===2?'🥉':''} ${esc2(r.sales_rep)}</td>
+      <td class="num">${num(r.total_deals)}</td>
+      <td class="num fw700 text-green">${num(r.won_deals)}</td>
+      <td class="num fw700 text-green">${php(r.won_mrr)}</td>
+      <td class="num text-accent">${pct(r.win_rate)}</td>
+      <td class="num text-yellow">${php(r.pipeline_mrr)}</td>
+      <td class="num">${coverage}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderLeads() {
+  const rows = getRows('leads');
+  document.getElementById('count-leads').textContent = `${rows.length} rows`;
+  const tb = document.getElementById('tbody-leads');
+  if (!rows.length) { tb.innerHTML = emptyRow(10); return; }
+  tb.innerHTML = rows.map(r => `
+    <tr>
+      <td class="mono primary">${r.deal_id||'—'}</td>
+      <td class="primary">${esc2(r.deal_name)}</td>
+      <td>${dt(r.create_date)}</td>
+      <td>${dt(r.projected_close_date)}</td>
+      <td>${r.sales_rep||'—'}</td>
+      <td>${r.partner_name||'Direct'}</td>
+      <td>${segBadge(r.segment)}</td>
+      <td>${r.channel_source||'—'}</td>
+      <td>${stageBadge(r.stage)}</td>
+      <td class="num">${php(r.mrr)}</td>
+    </tr>`).join('');
+}
+
+function renderSQL() {
+  const rows = getRows('sql');
+  document.getElementById('count-sql').textContent = `${rows.length} rows`;
+  const tb = document.getElementById('tbody-sql');
+  if (!rows.length) { tb.innerHTML = emptyRow(10); return; }
+  tb.innerHTML = rows.map(r => `
+    <tr>
+      <td class="mono primary">${r.deal_id||'—'}</td>
+      <td class="primary">${esc2(r.deal_name)}</td>
+      <td>${dt(r.create_date)}</td>
+      <td>${dt(r.projected_close_date)}</td>
+      <td>${r.sales_rep||'—'}</td>
+      <td>${r.partner_name||'Direct'}</td>
+      <td>${segBadge(r.segment)}</td>
+      <td>${r.channel_source||'—'}</td>
+      <td>${stageBadge(r.stage)}</td>
+      <td class="num">${php(r.mrr)}</td>
+    </tr>`).join('');
+}
+
+function renderPartnerOR() {
+  const rows = S.tables.por || [];
+  const tbody = document.getElementById('tbody-por');
+  if (!tbody) return;
+  const countEl = document.getElementById('count-por');
+  if (countEl) countEl.textContent = `${rows.length} partner${rows.length !== 1 ? 's' : ''}`;
+  if (!rows.length) { tbody.innerHTML = emptyRow(7); return; }
+  tbody.innerHTML = rows.map(porRow => `
+    <tr>
+      <td class="primary">${esc2(porRow.partner)}</td>
+      <td class="num">${porRow.qls}</td>
+      <td class="num">${porRow.sqls}</td>
+      <td class="num">${porRow.won}</td>
+      <td class="num">${php(porRow.won_mrr)}</td>
+      <td class="num">${porRow.win_rate != null ? porRow.win_rate + '%' : '—'}</td>
+      <td class="num">${php(porRow.pipeline_mrr)}</td>
+    </tr>`).join('');
+}
+
+function emptyRow(cols) {
+  return `<tr><td colspan="${cols}"><div class="empty-state">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+    </svg>
+    <div>No data found for the current filters.</div>
+  </div></td></tr>`;
+}
+
+function esc2(s) { return String(s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function togglePtypeGroup(gid) {
+  document.querySelectorAll(`.ptype-detail[data-group="${gid}"]`).forEach(row => {
+    row.style.display = row.style.display === 'none' ? '' : 'none';
+  });
+}
+window.togglePtypeGroup = togglePtypeGroup;
+
+function renderPartnerType() {
+  const data = S.tables.partners || [];
+  const tbody = document.getElementById('tbody-ptype');
+  if (!data.length) { tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;color:var(--text-dim);padding:24px">No data</td></tr>'; return; }
+
+  // Aggregate by client_type AND collect per-partner detail
+  const agg = {};
+  data.forEach(r => {
+    const ct = r.client_type || 'Others';
+    if (!agg[ct]) agg[ct] = { mrr:0, ef:0, otp:0, impl:0, won:0, lost:0, rows:[] };
+    agg[ct].mrr  += +r.mrr_only   || 0;
+    agg[ct].ef   += +r.ef_mrr     || 0;
+    agg[ct].otp  += +r.otp        || 0;
+    agg[ct].impl += +r.implem_fee || 0;
+    agg[ct].won  += +r.won_deals  || 0;
+    agg[ct].lost += +r.lost_deals || 0;
+    agg[ct].rows.push(r);
+  });
+
+  const gt = { mrr:0, ef:0, comb:0, otp:0, impl:0, combinedOtp:0, won:0, lost:0 };
+  Object.values(agg).forEach(a => { gt.mrr+=a.mrr; gt.ef+=a.ef; gt.otp+=a.otp; gt.impl+=a.impl; gt.won+=a.won; gt.lost+=a.lost; });
+  gt.comb = gt.mrr + gt.ef; gt.combinedOtp = gt.otp + gt.impl;
+
+  const mnum = v => Number(v||0).toLocaleString('en-PH',{minimumFractionDigits:0,maximumFractionDigits:0});
+  const gpct = (v,t) => t ? (v*100/t).toFixed(1)+'%' : '—';
+  const gwr  = (w,l) => (w+l) ? (w*100/(w+l)).toFixed(1)+'%' : '—';
+
+  const ORDER = ['SPP','VAR','MSP','Conglomerate','Channel Partner','Top 50','TAL / ENT','Direct','Others'];
+  const sortedTypes = [...ORDER.filter(k=>agg[k]), ...Object.keys(agg).filter(k=>!ORDER.includes(k))];
+
+  let html = '';
+  sortedTypes.forEach(ct => {
+    const a = agg[ct];
+    const comb = a.mrr + a.ef;
+    const combOtp = a.otp + a.impl;
+    const gid = `ptype-group-${ct.replace(/\W/g,'_')}`;
+    html += `<tr class="group-header" style="cursor:pointer" onclick="togglePtypeGroup('${gid}')">
+      <td style="font-weight:700">&#9658; ${ct}</td>
+      <td class="num">${mnum(a.mrr)}</td>
+      <td class="num dist-pct">${gpct(a.mrr,gt.mrr)}</td>
+      <td class="num">${mnum(a.ef)}</td>
+      <td class="num">${mnum(comb)}</td>
+      <td class="num dist-pct">${gpct(comb,gt.comb)}</td>
+      <td class="num">${mnum(a.otp)}</td>
+      <td class="num">${mnum(a.impl)}</td>
+      <td class="num">${mnum(combOtp)}</td>
+      <td class="num">${a.won}</td>
+      <td class="num">${a.lost}</td>
+      <td class="num">${gwr(a.won,a.lost)}</td>
+    </tr>`;
+    // Detail rows (hidden by default)
+    a.rows.forEach(r => {
+      const rc = (+r.mrr_only||0)+(+r.ef_mrr||0);
+      const rco = (+r.otp||0)+(+r.implem_fee||0);
+      html += `<tr class="ptype-detail" data-group="${gid}" style="display:none;background:rgba(255,255,255,.02)">
+        <td style="padding-left:24px;color:var(--text-dim)">${r.partner||'—'}</td>
+        <td class="num">${mnum(r.mrr_only)}</td>
+        <td class="num dist-pct">${gpct(+r.mrr_only||0,gt.mrr)}</td>
+        <td class="num">${mnum(r.ef_mrr)}</td>
+        <td class="num">${mnum(rc)}</td>
+        <td class="num dist-pct">${gpct(rc,gt.comb)}</td>
+        <td class="num">${mnum(r.otp)}</td>
+        <td class="num">${mnum(r.implem_fee)}</td>
+        <td class="num">${mnum(rco)}</td>
+        <td class="num">${r.won_deals||0}</td>
+        <td class="num">${r.lost_deals||0}</td>
+        <td class="num">${gwr(+r.won_deals||0,+r.lost_deals||0)}</td>
+      </tr>`;
+    });
+  });
+
+  html += `<tr class="grand-total">
+    <td>Grand Total</td>
+    <td class="num">${mnum(gt.mrr)}</td><td class="num">100%</td>
+    <td class="num">${mnum(gt.ef)}</td>
+    <td class="num">${mnum(gt.comb)}</td><td class="num">100%</td>
+    <td class="num">${mnum(gt.otp)}</td>
+    <td class="num">${mnum(gt.impl)}</td>
+    <td class="num">${mnum(gt.combinedOtp)}</td>
+    <td class="num">${gt.won}</td><td class="num">${gt.lost}</td>
+    <td class="num">${gwr(gt.won,gt.lost)}</td>
+  </tr>`;
+
+  tbody.innerHTML = html;
+}
+
+function exportPartnerType() {
+  const data = S.tables.partners || [];
+  if (!data.length) return;
+  const agg = {};
+  data.forEach(r => {
+    const ct = r.client_type || 'Others';
+    if (!agg[ct]) agg[ct] = { mrr:0, ef:0, otp:0, impl:0, won:0, lost:0, partners: new Set() };
+    agg[ct].mrr  += +r.mrr_only   || 0;
+    agg[ct].ef   += +r.ef_mrr     || 0;
+    agg[ct].otp  += +r.otp        || 0;
+    agg[ct].impl += +r.implem_fee || 0;
+    agg[ct].won  += +r.won_deals  || 0;
+    agg[ct].lost += +r.lost_deals || 0;
+    if (r.partner && r.partner !== ct) agg[ct].partners.add(r.partner);
+  });
+  const ORDER = ['SPP','VAR','MSP','Conglomerate','Channel Partner','Top 50','TAL / ENT','Direct','Others'];
+  const sortedTypes = [...ORDER.filter(k => agg[k]), ...Object.keys(agg).filter(k => !ORDER.includes(k))];
+  const headers = ['Partner Type','MRR','MRR Share%','EF MRR','Combined MRR','Comb MRR Share%','OTP','Implem Fee','Combined OTP','Won','Lost','Win Rate'];
+  const rows = sortedTypes.map(ct => {
+    const a = agg[ct];
+    const comb = a.mrr + a.ef;
+    const total_comb = Object.values(agg).reduce((s,x)=>s+x.mrr+x.ef,0);
+    const total_mrr  = Object.values(agg).reduce((s,x)=>s+x.mrr,0);
+    return [ct, a.partners.size||1, a.mrr, total_mrr ? (a.mrr*100/total_mrr).toFixed(1)+'%' : '0%',
+            a.ef, comb, total_comb ? (comb*100/total_comb).toFixed(1)+'%' : '0%',
+            a.otp, a.impl, a.otp+a.impl, a.won, a.lost,
+            (a.won+a.lost) ? (a.won*100/(a.won+a.lost)).toFixed(1)+'%' : '—'];
+  });
+  const csv = [headers,...rows].map(r=>r.map(v=>`"${v}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download = 'channels_partner_type.csv'; a.click();
+}
+
+function renderAllTables() {
+  renderWon();
+  renderPartnerType();
+  renderPartners();
+  renderReps();
+  renderLeads();
+  renderSQL();
+}
+
+/* ─────────────────────────────────────────────
+   SORT
+───────────────────────────────────────────── */
+function sortTbl(id, col) {
+  const cur = S.sort[id];
+  S.sort[id] = { col, dir: cur?.col === col && cur.dir === 'asc' ? 'desc' : 'asc' };
+  updateSortHeaders(id, col);
+  ({won:renderWon,ptype:renderPartnerType,reps:renderReps,leads:renderLeads,sql:renderSQL})[id]?.();
+}
+window.sortTbl = sortTbl;
+
+/* ─────────────────────────────────────────────
+   SEARCH
+───────────────────────────────────────────── */
+function wireSearch(inputId, tableId, renderFn) {
+  let timer;
+  document.getElementById(inputId)?.addEventListener('input', e => {
+    clearTimeout(timer);
+    timer = setTimeout(() => { S.search[tableId] = e.target.value; renderFn(); }, 180);
+  });
+}
+
+/* ─────────────────────────────────────────────
+   CSV EXPORT
+───────────────────────────────────────────── */
+function exportCSV(tableId, filename) {
+  const data = S.tables[tableId];
+  if (!data?.length) { alert('No data to export.'); return; }
+  const keys = Object.keys(data[0]);
+  const rows = [
+    keys.join(','),
+    ...data.map(r => keys.map(k => JSON.stringify(r[k] ?? '')).join(','))
+  ];
+  const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `${filename}_${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+window.exportCSV = exportCSV;
+
+/* ─────────────────────────────────────────────
+   COMPUTE ALL KPIs FROM RAW DEALS
+   Strict date-column separation per business rules:
+     QL / SQL / Funnel  → create_date
+     Revenue (Won/Lost) → close_date
+     Pipeline MRR       → projected_close_date
+───────────────────────────────────────────── */
+function computeFromDeals(deals, filters) {
+  const { startDate, endDate, segment } = filters;
+
+  const inRange = (d, sd, ed) => {
+    if (!d) return false;
+    const s = String(d).split('T')[0].split(' ')[0];
+    if (sd && s < sd) return false;
+    if (ed && s > ed) return false;
+    return true;
+  };
+
+  const shiftYr = (ds, y) => {
+    if (!ds) return '';
+    const p = ds.split('-'); p[0] = String(+p[0] + y); return p.join('-');
+  };
+
+  const lyStart = shiftYr(startDate, -1);
+  const lyEnd   = shiftYr(endDate,   -1);
+
+  const segMatch = d => {
+    if (!segment) return true;
+    const s = (d.segment || '').toUpperCase();
+    if (segment.toUpperCase() === 'SME') return s === 'SME' || s === 'MICRO';
+    return s === segment.toUpperCase();
+  };
+
+  const sum = (arr, k) => arr.reduce((a, r) => a + (+r[k] || 0), 0);
+
+  // Current period subsets by date column
+  const byCreate = deals.filter(d => segMatch(d) && inRange(d.create_date, startDate, endDate));
+  const byClose  = deals.filter(d => segMatch(d) && inRange(d.close_date,  startDate, endDate));
+  const byProj   = deals.filter(d => segMatch(d) && inRange(d.projected_close_date, startDate, endDate));
+
+  // Last year subsets
+  const lyByCreate = deals.filter(d => segMatch(d) && inRange(d.create_date, lyStart, lyEnd));
+  const lyByClose  = deals.filter(d => segMatch(d) && inRange(d.close_date,  lyStart, lyEnd));
+  const lyByProj   = deals.filter(d => segMatch(d) && inRange(d.projected_close_date, lyStart, lyEnd));
+
+  // Won / Lost / Pipeline subsets
+  const wonRows    = byClose.filter(d => d.client_journey_stage === 'Customer');
+  const lostRows   = byClose.filter(d => d.client_journey_stage === 'Closed Lost');
+  const pipeRows   = byProj.filter(d => d.client_journey_stage === 'Opportunity' && d.projected_close_date);
+  const lyWonRows  = lyByClose.filter(d => d.client_journey_stage === 'Customer');
+  const lyLostRows = lyByClose.filter(d => d.client_journey_stage === 'Closed Lost');
+  const lyPipeRows = lyByProj.filter(d => d.client_journey_stage === 'Opportunity' && d.projected_close_date);
+
+  // Distinct deal counts for QL / SQL (create_date)
+  const ql       = new Set(byCreate.filter(d => d.qualified_lead === 'Yes').map(d => d.deal_id)).size;
+  const sqlCnt   = new Set(byCreate.filter(d => d.qualified_lead === 'Yes' && d.client_journey_stage !== 'MQL').map(d => d.deal_id)).size;
+  const lyQl     = new Set(lyByCreate.filter(d => d.qualified_lead === 'Yes').map(d => d.deal_id)).size;
+  const lySqlCnt = new Set(lyByCreate.filter(d => d.qualified_lead === 'Yes' && d.client_journey_stage !== 'MQL').map(d => d.deal_id)).size;
+
+  const won    = wonRows.length;
+  const lost   = lostRows.length;
+  const lyWon  = lyWonRows.length;
+  const lyLost = lyLostRows.length;
+
+  const wonMrr      = sum(wonRows, 'mrr');
+  const efMrr       = sum(wonRows, 'ef_mrr');
+  const otpTotal    = sum(wonRows, 'otp_only');
+  const mrrLt12     = sum(wonRows, 'mrr_lt_12');
+  const implemFee   = sum(wonRows, 'implem_fee');
+  const pipelineMrr = sum(pipeRows, 'mrr');
+  const lyWonMrr      = sum(lyWonRows, 'mrr');
+  const lyEfMrr       = sum(lyWonRows, 'ef_mrr');
+  const lyOtpTotal    = sum(lyWonRows, 'otp_only');
+  const lyMrrLt12     = sum(lyWonRows, 'mrr_lt_12');
+  const lyImplemFee   = sum(lyWonRows, 'implem_fee');
+  const lyPipelineMrr = sum(lyPipeRows, 'mrr');
+
+  const winRate  = (won + lost) ? +(won * 100 / (won + lost)).toFixed(1) : null;
+  const sqlRate  = ql ? +(sqlCnt * 100 / ql).toFixed(1) : null;
+  const avgDS    = won ? Math.round(wonMrr / won) : null;
+  const velRows  = wonRows.filter(d => d.deal_velocity_days != null && d.deal_velocity_days !== '');
+  const avgVel   = velRows.length ? +(velRows.reduce((a, d) => a + +d.deal_velocity_days, 0) / velRows.length).toFixed(1) : null;
+
+  const lyWinRate = (lyWon + lyLost) ? +(lyWon * 100 / (lyWon + lyLost)).toFixed(1) : null;
+  const lyAvgDS   = lyWon ? Math.round(lyWonMrr / lyWon) : null;
+  const lyVelRows = lyWonRows.filter(d => d.deal_velocity_days != null && d.deal_velocity_days !== '');
+  const lyAvgVel  = lyVelRows.length ? +(lyVelRows.reduce((a, d) => a + +d.deal_velocity_days, 0) / lyVelRows.length).toFixed(1) : null;
+
+  const kpi = {
+    qualified_leads: ql,     sql_count: sqlCnt,   won_deals: won,         lost_deals: lost,
+    won_mrr: wonMrr,         ef_mrr_total: efMrr, otp_total: otpTotal,    mrr_lt12_total: mrrLt12,
+    implem_fee_total: implemFee, pipeline_mrr: pipelineMrr,
+    win_rate: winRate, sql_rate: sqlRate, avg_deal_size: avgDS, avg_deal_velocity: avgVel,
+    ly_qualified_leads: lyQl, ly_sql_count: lySqlCnt, ly_won_deals: lyWon, ly_lost_deals: lyLost,
+    ly_won_mrr: lyWonMrr, ly_ef_mrr_total: lyEfMrr, ly_otp_total: lyOtpTotal, ly_mrr_lt12_total: lyMrrLt12,
+    ly_implem_fee_total: lyImplemFee, ly_pipeline_mrr: lyPipelineMrr,
+    ly_win_rate: lyWinRate, ly_avg_deal_size: lyAvgDS, ly_avg_deal_velocity: lyAvgVel,
+  };
+
+  // ─── MRR Trend: group Customer deals by month of close_date ───
+  const mrrMap = {};
+  byClose.filter(d => d.client_journey_stage === 'Customer' && d.close_date).forEach(d => {
+    const m = String(d.close_date).slice(0, 7);
+    if (!mrrMap[m]) mrrMap[m] = { month: m, won_mrr: 0, ef_mrr: 0 };
+    mrrMap[m].won_mrr += +d.mrr    || 0;
+    mrrMap[m].ef_mrr  += +d.ef_mrr || 0;
+  });
+  const trend = Object.values(mrrMap).sort((a, b) => a.month.localeCompare(b.month)).slice(-24);
+
+  // ─── Funnel Trend: group QL deals by month of create_date ───
+  const funnelMap  = {};
+  const funnelSeen = {};
+  byCreate.filter(d => d.qualified_lead === 'Yes' && d.create_date).forEach(d => {
+    const m = String(d.create_date).slice(0, 7);
+    if (!funnelMap[m])  { funnelMap[m]  = { month: m, ql_count: 0, sql_count: 0 }; funnelSeen[m] = { ql: new Set(), sql: new Set() }; }
+    if (!funnelSeen[m].ql.has(d.deal_id))  { funnelMap[m].ql_count++;  funnelSeen[m].ql.add(d.deal_id); }
+    if (d.client_journey_stage !== 'MQL' && !funnelSeen[m].sql.has(d.deal_id)) { funnelMap[m].sql_count++; funnelSeen[m].sql.add(d.deal_id); }
+  });
+  const funnel = Object.values(funnelMap).sort((a, b) => a.month.localeCompare(b.month)).slice(-24);
+
+  // ─── Partner Grouped (close_date, Customer + Closed Lost) ───
+  // client_type from silver_deals.client_type — extract prefix (SPP_X → SPP, VAR_X → VAR, etc.)
+  const getClientType = d => {
+    const raw = (d.client_type || '').trim().toUpperCase();
+    if (!raw || raw === 'NONE') return 'Direct';
+    if (raw.startsWith('SPP'))         return 'SPP';
+    if (raw.startsWith('VAR'))         return 'VAR';
+    if (raw.startsWith('MSP'))         return 'MSP';
+    if (raw.startsWith('CONGLOMERATE'))return 'Conglomerate';
+    if (raw.startsWith('CHANNEL'))     return 'Channel Partner';
+    if (raw.startsWith('TOP 50'))      return 'Top 50';
+    if (raw.startsWith('TAL'))         return 'TAL / ENT';
+    return raw.split('_')[0] || 'Others';
+  };
+  let gtMrr = 0, gtEf = 0, gtOtp = 0;
+  const partnerMap = {};
+  byClose.filter(d => d.client_journey_stage === 'Customer' || d.client_journey_stage === 'Closed Lost').forEach(d => {
+    const ct  = getClientType(d);
+    const pnm = d.partner_on_record || 'Direct';
+    const key = ct + '|||' + pnm;
+    if (!partnerMap[key]) partnerMap[key] = { client_type: ct, partner: pnm, mrr_only: 0, ef_mrr: 0, otp: 0, implem_fee: 0, won_deals: 0, lost_deals: 0 };
+    const p = partnerMap[key];
+    if (d.client_journey_stage === 'Customer') {
+      p.mrr_only   += +d.mrr        || 0;
+      p.ef_mrr     += +d.ef_mrr     || 0;
+      p.otp        += (+d.otp_only  || 0) + (+d.mrr_lt_12 || 0);
+      p.implem_fee += +d.implem_fee || 0;
+      p.won_deals++;
+      gtMrr += +d.mrr    || 0;
+      gtEf  += +d.ef_mrr || 0;
+      gtOtp += (+d.otp_only || 0) + (+d.mrr_lt_12 || 0);
+    } else {
+      p.lost_deals++;
+    }
+  });
+  const partners = Object.values(partnerMap).map(p => ({
+    ...p,
+    mrr_dist_pct:      gtMrr      ? +(p.mrr_only               * 100 / gtMrr).toFixed(2)      : 0,
+    ef_dist_pct:       gtEf       ? +(p.ef_mrr                 * 100 / gtEf).toFixed(2)       : 0,
+    combined_mrr:      p.mrr_only + p.ef_mrr,
+    combined_dist_pct: (gtMrr+gtEf) ? +((p.mrr_only+p.ef_mrr) * 100 / (gtMrr+gtEf)).toFixed(2) : 0,
+    otp_dist_pct:      gtOtp      ? +(p.otp                    * 100 / gtOtp).toFixed(2)      : 0,
+    win_rate: (p.won_deals + p.lost_deals) ? +(p.won_deals * 100 / (p.won_deals + p.lost_deals)).toFixed(1) : null,
+  }));
+
+  // ─── Sales Reps ───
+  const repMap = {};
+  const getR = (name) => {
+    const r = name || 'Unknown';
+    if (!repMap[r]) repMap[r] = { sales_rep: r, total_deals: 0, sql_count: 0, won_deals: 0, won_mrr: 0, pipeline_mrr: 0, _wl: 0 };
+    return repMap[r];
+  };
+  byCreate.forEach(d => {
+    const r = getR(d.sales_rep);
+    r.total_deals++;
+    if (d.qualified_lead === 'Yes' && d.client_journey_stage !== 'MQL') r.sql_count++;
+  });
+  byClose.forEach(d => {
+    const r = getR(d.sales_rep);
+    if (d.client_journey_stage === 'Customer')    { r.won_deals++; r.won_mrr += +d.mrr || 0; r._wl++; }
+    if (d.client_journey_stage === 'Closed Lost') { r._wl++; }
+  });
+  byProj.filter(d => d.client_journey_stage === 'Opportunity').forEach(d => {
+    getR(d.sales_rep).pipeline_mrr += +d.mrr || 0;
+  });
+  const reps = Object.values(repMap).map(r => ({
+    sales_rep: r.sales_rep, total_deals: r.total_deals, sql_count: r.sql_count,
+    won_deals: r.won_deals, won_mrr: r.won_mrr,
+    win_rate: r._wl ? +(r.won_deals * 100 / r._wl).toFixed(1) : null,
+    pipeline_mrr: r.pipeline_mrr,
+  })).sort((a, b) => b.won_mrr - a.won_mrr);
+
+  // ─── Won Deals table ───
+  const wonTable = wonRows.map(d => ({
+    deal_id: d.deal_id, deal_name: d.deal_name,
+    create_date: d.create_date, close_date: d.close_date,
+    sales_rep: d.sales_rep, partner_name: d.partner_on_record || 'Direct',
+    segment: d.segment, mrr: +d.mrr || 0, ef_mrr: +d.ef_mrr || 0,
+    combined_mrr: (+d.mrr || 0) + (+d.ef_mrr || 0), otp: d.otp_only,
+  })).sort((a, b) => (b.close_date || '').localeCompare(a.close_date || ''));
+
+  // ─── Leads table (create_date, qualified_lead=Yes) ───
+  const leadsTable = byCreate.filter(d => d.qualified_lead === 'Yes').map(d => ({
+    deal_id: d.deal_id, deal_name: d.deal_name,
+    create_date: d.create_date, projected_close_date: d.projected_close_date,
+    sales_rep: d.sales_rep, partner_name: d.partner_on_record || 'Direct',
+    segment: d.segment, channel_source: d.original_channel_source,
+    stage: d.client_journey_stage, stage_label: d.stage_label, mrr: +d.mrr || 0,
+  })).sort((a, b) => (b.create_date || '').localeCompare(a.create_date || ''));
+
+  // ─── SQL Deals table (create_date, QL=Yes, not MQL) ───
+  const sqlTable = byCreate.filter(d => d.qualified_lead === 'Yes' && d.client_journey_stage !== 'MQL').map(d => ({
+    deal_id: d.deal_id, deal_name: d.deal_name,
+    create_date: d.create_date, projected_close_date: d.projected_close_date,
+    sales_rep: d.sales_rep, partner_name: d.partner_on_record || 'Direct',
+    segment: d.segment, channel_source: d.original_channel_source,
+    stage: d.client_journey_stage, stage_label: d.stage_label, mrr: +d.mrr || 0,
+  })).sort((a, b) => (b.create_date || '').localeCompare(a.create_date || ''));
+
+  // ─── Partner on Record QL pivot ───
+  const porMap = {};
+  const getPOR = name => {
+    const key = name || '__unattributed__';
+    if (!porMap[key]) porMap[key] = { partner: name || 'Unattributed', qls: 0, sqls: 0, won: 0, lost: 0, won_mrr: 0, pipeline_mrr: 0 };
+    return porMap[key];
+  };
+  byCreate.filter(d => d.qualified_lead === 'Yes').forEach(d => {
+    const porRow = getPOR(d.partner_on_record);
+    porRow.qls++;
+    if (d.client_journey_stage !== 'MQL') porRow.sqls++;
+  });
+  byClose.forEach(d => {
+    const porRow = getPOR(d.partner_on_record);
+    if (d.client_journey_stage === 'Customer')    { porRow.won++; porRow.won_mrr += +d.mrr || 0; }
+    if (d.client_journey_stage === 'Closed Lost') { porRow.lost++; }
+  });
+  byProj.filter(d => d.client_journey_stage === 'Opportunity').forEach(d => {
+    getPOR(d.partner_on_record).pipeline_mrr += +d.mrr || 0;
+  });
+  const porTable = Object.values(porMap).map(porRow => ({
+    partner: porRow.partner, qls: porRow.qls, sqls: porRow.sqls,
+    won: porRow.won, won_mrr: porRow.won_mrr,
+    win_rate: (porRow.won + porRow.lost) ? +(porRow.won * 100 / (porRow.won + porRow.lost)).toFixed(1) : null,
+    pipeline_mrr: porRow.pipeline_mrr,
+  })).sort((porA, porB) => porB.qls - porA.qls);
+
+  return { kpi, trend, funnel, partners, reps, won: wonTable, leads: leadsTable, sql: sqlTable, por: porTable };
+}
+
+/* ─────────────────────────────────────────────
+   APPLY COMPUTED DATA TO DASHBOARD
+───────────────────────────────────────────── */
+function applyComputed(computed) {
+  renderKPIs(computed.kpi);
+  updateFunnelTrendChart(computed.funnel);
+  updateMrrTrendChart(computed.trend);
+  S.tables.won      = computed.won;
+  S.tables.partners = computed.partners;
+  S.tables.reps     = computed.reps;
+  S.tables.leads    = computed.leads;
+  S.tables.sql      = computed.sql;
+  S.tables.por      = computed.por;
+  S.raw.won   = computed.won;
+  S.raw.leads = computed.leads;
+  S.raw.sql   = computed.sql;
+  renderAllTables();
+  renderPartnerOR();
+}
+
+/* ─────────────────────────────────────────────
+   CLIENT-SIDE FILTER — re-computes everything from raw deals
+───────────────────────────────────────────── */
+function applyClientFilters() {
+  readFilters();
+  if (!S.allDeals.length) return;
+  applyComputed(computeFromDeals(S.allDeals, S.filters));
+}
+
+/* ─────────────────────────────────────────────
+   FILTER PANEL
+───────────────────────────────────────────── */
+function readFilters() {
+  S.filters.startDate    = document.getElementById('f-start').value;
+  S.filters.endDate      = document.getElementById('f-end').value;
+  S.filters.pipelineName = PIPELINE_DEFAULT;
+  S.filters.segment      = document.getElementById('f-segment').value;
+  document.getElementById('pipeline-tag').textContent = '📡 ' + S.filters.pipelineName;
+}
+
+function resetFilters() {
+  const today = new Date();
+  const y = today.getFullYear();
+  document.getElementById('f-start').value = `${y}-01-01`;
+  document.getElementById('f-end').value   = today.toISOString().split('T')[0];
+  const seg = document.getElementById('f-segment');
+  if (seg) seg.value = '';
+  applyClientFilters();
+}
+
+/* ─────────────────────────────────────────────
+   LOADING MSG
+───────────────────────────────────────────── */
+function setLoadMsg(s) {
+  const el = document.getElementById('loading-msg');
+  if (el) el.textContent = s;
+}
+
+/* ─────────────────────────────────────────────
+   APPLY LIVE DATA
+───────────────────────────────────────────── */
+function applyData(d) {
+  // KPIs
+  if (d.kpi?.[0]) renderKPIs(d.kpi[0]);
+
+  // Charts
+  updateFunnelTrendChart(d.funnel || []);
+  updateMrrTrendChart(d.trend || []);
+
+  // Tables
+  S.tables.won      = d.won      || [];
+  S.tables.partners = d.partners || [];
+  S.tables.reps     = d.reps     || [];
+  S.tables.leads    = d.leads    || [];
+  S.tables.sql      = d.sql      || [];
+
+  renderAllTables();
+
+  // Refresh timestamp handled by loadAll() from JSON metadata
+}
+
+function applySample() {
+  applyData({
+    kpi:      [SAMPLE.kpi],
+    trend:    SAMPLE.trend,
+    funnel:   SAMPLE.funnel,
+    partners: SAMPLE.partners,
+    reps:     SAMPLE.reps,
+    won:      SAMPLE.won,
+    leads:    SAMPLE.leads,
+    sql:      SAMPLE.sql,
+  });
+}
+
+/* ─────────────────────────────────────────────
+   MAIN LOAD
+───────────────────────────────────────────── */
+async function loadAll() {
+  const overlay = document.getElementById('loading-overlay');
+  if (overlay) { overlay.classList.remove('hidden'); overlay.style.display = 'flex'; }
+  setStatus('loading', 'Loading…');
+  setLoadMsg('Loading dashboard data…');
+
+  try {
+    const res = await fetch('./data/dashboard.json?' + Date.now());
+    if (!res.ok) throw new Error('data/dashboard.json not found (HTTP ' + res.status + ')');
+    const json = await res.json();
+
+    if (json.deals && json.deals.length > 0) {
+      // New raw-deals format — JS computes everything client-side
+      S.allDeals = json.deals;
+      // Set YTD defaults on first load (if user hasn't already set dates)
+      const _today = new Date();
+      const _y     = _today.getFullYear();
+      const _fS = document.getElementById('f-start');
+      const _fE = document.getElementById('f-end');
+      if (!_fS.value) _fS.value = `${_y}-01-01`;
+      if (!_fE.value) _fE.value = _today.toISOString().split('T')[0];
+      readFilters();
+      applyComputed(computeFromDeals(S.allDeals, S.filters));
+      setStatus('live', '🟢 Live');
+      updateDataRangeChip(json);
+    } else if (json.kpi && json.kpi.length > 0) {
+      // Legacy pre-aggregated format (fallback)
+      S.raw.won   = json.won   || [];
+      S.raw.leads = json.leads || [];
+      S.raw.sql   = json.sql   || [];
+      applyData({ kpi: json.kpi, trend: json.trend, funnel: json.funnel,
+                  partners: json.partners, reps: json.reps, won: json.won,
+                  leads: json.leads, sql: json.sql });
+      setStatus('live', '🟢 Live');
+      updateDataRangeChip(json);
+    } else {
+      // No real data yet — show sample
+      applySample();
+      setStatus('sample', '⚠️ Sample Data — first refresh pending');
+      updateDataRangeChip(null);
+    }
+
+    // Update last-refresh timestamp from JSON metadata
+    if (json.refreshed_at && json.refreshed_at !== '__PENDING__') {
+      const ts = new Date(json.refreshed_at);
+      document.getElementById('last-refresh').textContent =
+        'Data as of ' + ts.toLocaleDateString('en-PH', { month:'short', day:'numeric', year:'numeric' }) +
+        ' ' + ts.toLocaleTimeString('en-PH', { hour:'2-digit', minute:'2-digit' });
+    }
+
+  } catch (err) {
+    console.error('Failed to load data:', err.message);
+    applySample();
+    setStatus('sample', '⚠️ Sample Data — ' + err.message);
+    showErrorToast(err.message);
+  } finally {
+    if (overlay) { overlay.style.display = 'none'; overlay.classList.add('hidden'); }
+    // Safety net: never leave badge stuck on "Loading"
+    if (S.mode === 'loading') {
+      if (S.allDeals && S.allDeals.length > 0) setStatus('live', '🟢 Live');
+      else setStatus('sample', '⚠️ Sample Data');
+    }
+  }
+}
+
+function updateDataRangeChip(json) {
+  const chip = document.getElementById('data-range-chip');
+  if (!chip) return;
+  if (!json) { chip.textContent = '📅 —'; return; }
+  const n = (json.deals || []).length;
+  chip.textContent = '📅 ' + (n ? n.toLocaleString() + ' deals · 3yr history' : 'No deals');
+  chip.title = 'Pipeline: ' + (json.pipeline || '') + ' | Refreshed: ' + (json.refreshed_at || '—');
+}
+
+/* ─────────────────────────────────────────────
+   TABS
+───────────────────────────────────────────── */
+function switchTab(id) {
+  S.activeTab = id;
+  document.querySelectorAll('.tab-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.tab === id)
+  );
+  document.querySelectorAll('.tab-panel').forEach(p =>
+    p.classList.toggle('active', p.id === `panel-${id}`)
+  );
+}
+
+/* ─────────────────────────────────────────────
+   FILTER TOGGLE
+───────────────────────────────────────────── */
+function wireFilterToggle() {
+  const toggle = document.getElementById('filter-toggle');
+  const body   = document.getElementById('filter-body');
+  toggle.addEventListener('click', () => {
+    const open = toggle.classList.toggle('open');
+    body.style.display = open ? '' : 'none';
+  });
+}
+
+/* ─────────────────────────────────────────────
+   INIT
+───────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  // Default date range — current year
+  const today = new Date();
+  const y = today.getFullYear();
+  document.getElementById('f-start').value = `${y}-01-01`;
+  document.getElementById('f-end').value   = today.toISOString().split('T')[0];
+  readFilters();
+
+  // Init charts
+  initCharts();
+
+  // Wire filter actions
+  document.getElementById('btn-apply').addEventListener('click', applyClientFilters);
+  document.getElementById('btn-reset').addEventListener('click', resetFilters);
+  document.getElementById('btn-refresh').addEventListener('click', loadAll);
+
+  // Wire tabs
+  document.querySelectorAll('.tab-btn').forEach(btn =>
+    btn.addEventListener('click', () => switchTab(btn.dataset.tab))
+  );
+
+  // Wire search
+  wireSearch('search-won',      'won',      renderWon);
+  wireSearch('search-reps',     'reps',     renderReps);
+  wireSearch('search-leads',    'leads',    renderLeads);
+  wireSearch('search-sql',      'sql',      renderSQL);
+
+  // Filter panel toggle
+  wireFilterToggle();
+
+  // Initial data load
+  loadAll();
+
+  // (credentials modal removed — data is fetched server-side via fetch_data.py / GitHub Actions)
+});
+
+// Credentials UI removed — data is now pre-fetched by GitHub Actions (fetch_data.py)
+// and stored in data/dashboard.json. No browser-side Databricks calls needed.
+</script>
+</body>
+</html>

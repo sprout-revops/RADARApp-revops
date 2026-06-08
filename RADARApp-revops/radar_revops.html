@@ -439,8 +439,6 @@ body{font-family:'Rubik','Bahnschrift Light SemiCondensed','Bahnschrift',Arial,s
 .dg-embed-back{background:rgba(255,255,255,.06);color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Rubik',Arial,sans-serif;transition:all .15s;display:inline-flex;align-items:center;gap:6px}
 .dg-embed-back:hover{background:rgba(255,255,255,.1);color:#fff}
 .dg-embed-title{font-size:13px;font-weight:700;color:#e2e8f0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.dg-embed-ext{background:rgba(29,185,84,.1);color:#1DB954;border:1px solid rgba(29,185,84,.25);border-radius:6px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;text-decoration:none;font-family:'Rubik',Arial,sans-serif;transition:all .15s;white-space:nowrap;display:inline-flex;align-items:center;gap:5px}
-.dg-embed-ext:hover{background:rgba(29,185,84,.2);border-color:#1DB954}
 .dg-embed-frame{flex:1;border:none;width:100%;background:#0a0a0a}
 .submit-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
 .submit-modal-overlay.open{display:flex}
@@ -2209,7 +2207,6 @@ python fetch_data.py
     <div class="dg-embed-bar">
       <button class="dg-embed-back" onclick="closeDashboardEmbed()">← Back to Dashboards</button>
       <span class="dg-embed-title" id="dg-embed-title"></span>
-      <a class="dg-embed-ext" id="dg-embed-ext" href="#" target="_blank">↗ Open in new tab</a>
     </div>
     <iframe class="dg-embed-frame" id="dg-embed-frame" src="" allowfullscreen></iframe>
   </div>
@@ -5029,7 +5026,7 @@ const DASHBOARDS = [
     creator: "RevOps Analytics Team",
     date: "May 2026",
     tags: ["Revenue","Funnel","Pipeline","Sales","Channels"],
-    url: "https://sprout-revops.github.io/channels-dashboard/",
+    url: "dashboards/channels-dashboard/dashboard.html",
     status: "live"
   },
   {
@@ -5038,7 +5035,7 @@ const DASHBOARDS = [
     creator: "RevOps Analytics Team",
     date: "May 2026",
     tags: ["Revenue","Funnel","Pipeline","Sales","Forecast"],
-    url: "https://sprout-revops.github.io/sales-dashboard/",
+    url: "dashboards/sales-dashboard/index.html",
     status: "live"
   },
   {
