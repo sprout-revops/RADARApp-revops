@@ -926,9 +926,9 @@ USE SCHEMA revops;
    Won Leads     | All MQL deals WHERE client_journey_stage = 'Customer'
                  | Filtered by: create_date (same cohort as MQL)
    Lost Leads    | All MQL deals WHERE client_journey_stage = 'Closed Lost'
-   UQL           | department_source_clean = 'MKT Inbound'
-                 | AND pipeline_name = 'PH Upsell Pipeline'
+   UQL           | pipeline_name = 'PH Upsell Pipeline'
                  | No qualified_lead filter required
+                 | No department_source filter
                  | Filtered by: create_date
 
    ⚠️ MQL = MKT Inbound. Always apply department_source_clean = 'MKT Inbound' for MQL metrics.
@@ -967,8 +967,8 @@ Join gold_targets using: metric_month, pipeline_name, segment, department_source
 • SQL          → COUNT(DISTINCT deal_id) from MQL base WHERE client_journey_stage <> 'MQL'
 • Won Leads    → COUNT(DISTINCT deal_id) from MQL base WHERE client_journey_stage = 'Customer' | date basis: create_date
 • Lost Leads   → COUNT(DISTINCT deal_id) from MQL base WHERE client_journey_stage = 'Closed Lost'
-• UQL          → COUNT(DISTINCT deal_id) WHERE department_source_clean = 'MKT Inbound'
-                  AND pipeline_name = 'PH Upsell Pipeline' | no qualified_lead filter | date basis: create_date
+• UQL          → COUNT(DISTINCT deal_id) WHERE pipeline_name = 'PH Upsell Pipeline'
+                  | no qualified_lead filter | no department_source filter | date basis: create_date
 • MQL TMRR     → SUM(mrr) from MQL base using projected_close_date
 • SQL TMRR     → SUM(mrr) where client_journey_stage = 'Opportunity'
 • Won MRR      → SUM(mrr) from Won base | date basis: create_date
@@ -1393,7 +1393,7 @@ DATABRICKS_TOKEN</div>
 <div class="builder-mrow" data-cat="Funnel" data-n="SQL Conversion Rate" data-name="sql conversion rate" data-def="% of qualified leads that become sql"><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">SQL Conversion Rate</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Funnel</span><span class="builder-mrow-def">% of Qualified Leads that become SQL</span></div></div></div>
 <div class="builder-mrow" data-cat="Funnel" data-n="Sales Disqualified" data-name="sales disqualified" data-def="deals disqualified by sales during demo stage"><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Sales Disqualified</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Funnel</span><span class="builder-mrow-def">Deals disqualified by Sales during demo stage</span></div></div></div>
 <div class="builder-mrow" data-cat="Funnel" data-n="Sales Qualified Leads (SQL)" data-name="sales qualified leads (sql)" data-def="also known as sql are leads that the sales team will work on to convert them into clients."><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Sales Qualified Leads (SQL)</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Funnel</span><span class="builder-mrow-def">Also known as SQL are leads that the Sales team will work on to convert them into clients.</span></div></div></div>
-<div class="builder-mrow" data-cat="Funnel" data-n="Upsell Qualified Leads (UQL)" data-name="upsell qualified leads (uql)" data-def="leads qualified by marketing/ csm/ sales"><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Upsell Qualified Leads (UQL)</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Funnel</span><span class="builder-mrow-def">Leads qualified by Marketing/ CSM/ Sales</span></div></div></div>
+<div class="builder-mrow" data-cat="Funnel" data-n="Upsell Qualified Leads (UQL)" data-name="upsell qualified leads (uql)" data-def="all deals in PH Upsell Pipeline | no department source filter"><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Upsell Qualified Leads (UQL)</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Funnel</span><span class="builder-mrow-def">Leads qualified by Marketing/ CSM/ Sales</span></div></div></div>
 <div class="builder-mrow" data-cat="Funnel" data-n="WON/ SQL" data-name="won/ sql" data-def="percentage of sales qualified leads (sql/active) that converted into closed-won deals. sql count is based on customers that are currently active within the selected month."><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">WON/ SQL</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Funnel</span><span class="builder-mrow-def">Percentage of Sales Qualified Leads (SQL/ACTIVE) that converted into Closed-Won deals. SQL count is based on customers that are currently active within the selected month.</span></div></div></div>
 <div class="builder-mrow" data-cat="Marketing_Efficiency" data-n="Cost per Lead (CPL)" data-name="cost per lead (cpl)" data-def="average marketing cost per lead generated"><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Cost per Lead (CPL)</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Marketing</span><span class="builder-mrow-def">Average marketing cost per lead generated</span></div></div></div>
 <div class="builder-mrow" data-cat="Product_Performance" data-n="Attach Rate (Industry–Product)" data-name="attach rate (industry–product)" data-def="percentage of companies in an industry that purchased a specific product."><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Attach Rate (Industry–Product)</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Product</span><span class="builder-mrow-def">Percentage of companies in an industry that purchased a specific product.</span></div></div></div>
