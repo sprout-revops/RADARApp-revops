@@ -3638,7 +3638,11 @@ filterMetrics = function() {
     const q = (document.getElementById('dp-search') && document.getElementById('dp-search').value || '').toLowerCase();
     const active = document.querySelector('.cat-btn.active');
     const cat = active ? active.dataset.cat : '';
-    const f = window._LIVE_METRICS.filter(function(m) {
+    // Merge: live metrics + any local METRICS not already in live (by name)
+    const liveNames = new Set(window._LIVE_METRICS.map(function(m) { return (m.name||'').toLowerCase(); }));
+    const localOnly = METRICS.filter(function(m) { return m.name && !liveNames.has(m.name.toLowerCase()); });
+    const merged = window._LIVE_METRICS.concat(localOnly);
+    const f = merged.filter(function(m) {
       const mc = !cat || m.category === cat;
       const mq = !q || m.name.toLowerCase().includes(q) || (m.definition || '').toLowerCase().includes(q) || (m.business_question || '').toLowerCase().includes(q);
       return mc && mq;
