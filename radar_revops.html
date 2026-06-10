@@ -939,7 +939,8 @@ USE SCHEMA revops;
 4. DATE LOGIC:
    Pipeline (TMRR)              → projected_close_date
    Won / Revenue (general)      → close_date
-   MKT Inbound Funnel (MQL/SQL/Won/UQL) → create_date
+   Funnel (MQL/SQL/Won) → create_date
+   UQL (PH Upsell Pipeline) → create_date
 
 5. MRR LOGIC:
    mrr    → recurring revenue
@@ -6509,7 +6510,7 @@ var RADAR_METRICS = [
   { id:'lead_to_won',     label:'Lead to Won Conversion %', desc:'% of total leads that convert into Closed-Won deals. Formula: Won Leads / Total Leads',                                        sql:"SELECT DATE_TRUNC('month',create_date) AS metric_month, COUNT(DISTINCT CASE WHEN client_journey_stage='Customer' THEN deal_id END)*1.0 / NULLIF(COUNT(DISTINCT deal_id),0) AS lead_to_won_rate FROM shared.revops.silver_deals WHERE create_date IS NOT NULL AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%' GROUP BY 1 ORDER BY 1 DESC", table:'silver_deals' },
   // ── Funnel (additions) ────────────────────────────────────────────────────
   { id:'ql_count',        label:'Qualified Leads (QL)',    desc:'All leads qualified by Marketing, LDU, or Sales. Filter: Count as Qualified = Yes',                                               sql:"SELECT DATE_TRUNC('month',create_date) AS metric_month, pipeline_name, department_source_clean, COUNT(DISTINCT deal_id) AS ql_count FROM shared.revops.silver_deals WHERE create_date IS NOT NULL AND count_as_qualified = 'Yes' AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%' GROUP BY 1,2,3 ORDER BY 1 DESC", table:'silver_deals' },
-  { id:'uql_count',       label:'Upsell Qualified Leads (UQL)', desc:'Qualified upsell leads. Filter: Pipeline = PH Upsell Pipeline, Count as Qualified = Yes',                                   sql:"SELECT DATE_TRUNC('month',create_date) AS metric_month, COUNT(DISTINCT deal_id) AS uql_count FROM shared.revops.silver_deals WHERE create_date IS NOT NULL AND pipeline_name LIKE '%Upsell%' AND count_as_qualified = 'Yes' AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%' GROUP BY 1 ORDER BY 1 DESC", table:'silver_deals' },
+  { id:'uql_count',       label:'Upsell Qualified Leads (UQL)', desc:'All deals in PH Upsell Pipeline. No qualified_lead filter, no department_source filter.',                                sql:"SELECT DATE_TRUNC('month',create_date) AS metric_month, COUNT(DISTINCT deal_id) AS uql_count FROM shared.revops.silver_deals WHERE create_date IS NOT NULL AND pipeline_name = 'PH Upsell Pipeline' AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%' GROUP BY 1 ORDER BY 1 DESC", table:'silver_deals' },
   { id:'sales_disqualified', label:'Sales Disqualified',   desc:'Deals disqualified by Sales during demo stage. Formula: DISTINCT COUNT(Deal IDs) where stage = Disqualified',                    sql:"SELECT DATE_TRUNC('month',create_date) AS metric_month, COUNT(DISTINCT deal_id) AS sales_disqualified FROM shared.revops.silver_deals WHERE create_date IS NOT NULL AND stage_label='Disqualified' AND count_as_qualified='Yes' AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%' GROUP BY 1 ORDER BY 1 DESC", table:'silver_deals' },
 ];
 </script>
