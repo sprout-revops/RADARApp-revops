@@ -112,6 +112,18 @@ GROUP BY metric_month, pipeline_name, segment_official, department_source_clean
 ORDER BY metric_month DESC
 """
 
+REP_TARGETS_SQL = """
+SELECT
+  metric_month,
+  pipeline_name,
+  target_type,
+  sales_rep,
+  CAST(target_value AS DOUBLE) AS target_value
+FROM shared.revops.gold_targets_per_rep
+WHERE metric_month >= ADD_MONTHS(CURRENT_DATE, -12)
+ORDER BY sales_rep, metric_month
+"""
+
 ALLIANCE_SQL = """
 SELECT
   DATE_TRUNC('month', d.close_date) AS month,
@@ -128,9 +140,10 @@ GROUP BY DATE_TRUNC('month', d.close_date),
 ORDER BY month DESC
 """
 
-deals    = db_query('Deals',    DEALS_SQL)
-targets  = db_query('Targets',  TARGETS_SQL)
-alliance = db_query('Alliance', ALLIANCE_SQL)
+deals       = db_query('Deals',       DEALS_SQL)
+targets     = db_query('Targets',     TARGETS_SQL)
+rep_targets = db_query('Rep Targets', REP_TARGETS_SQL)
+alliance    = db_query('Alliance',    ALLIANCE_SQL)
 
 PHT = timezone(timedelta(hours=8))
 now_pht = datetime.now(PHT)
@@ -138,6 +151,7 @@ data = {
     'refreshed_at': now_pht.isoformat(),
     'deals':        deals,
     'targets':      targets,
+    'rep_targets':  rep_targets,
     'alliance':     alliance,
 }
 
@@ -146,4 +160,4 @@ with open('data/dashboard.json', 'w') as f:
     json.dump(data, f)
 
 size_kb = os.path.getsize('data/dashboard.json') // 1024
-print(f"\nDone! {len(deals)} deals + {len(targets)} target rows -> data/dashboard.json ({size_kb} KB)")
+print(f"\nDone! {len(deals)} deals + {len(targets)} target rows + {len(rep_targets)} rep target rows -> data/dashboard.json ({size_kb} KB)")

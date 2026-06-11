@@ -844,6 +844,8 @@ const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov
 let allDeals    = [];
 let allTargets  = [];
 let allianceData = []; // Third Party line items by month
+let repMRRTargets = {}; // canonical rep name -> {month: value}
+let repEFTargets  = {}; // canonical rep name -> {month: value}
 let selFcYear  = CUR_YEAR;
 let selFcMon   = CUR_MON;
 let dataMode   = 'loading';
@@ -1589,28 +1591,7 @@ const REP_TEAMS = {
 
 // Per-rep monthly MRR quota — sourced from "Targets Per Rep" sheet in Upsell Overall Targets.xlsx
 // Format: { rep: { month_number: target } }
-const REP_MONTHLY_TARGET = {
-  'Katryn Saldajeno':  {1:80000,2:80000,3:100000,4:120000,5:120000,6:120000,7:120000,8:120000,9:120000,10:110000,11:110000,12:100000},
-  'Miriam Pulido':     {1:80000,2:80000,3:100000,4:120000,5:120000,6:120000,7:120000,8:120000,9:120000,10:110000,11:110000,12:100000},
-  'Lana Pineda':       {1:80000,2:80000,3:100000,4:120000,5:120000,6:120000,7:120000,8:120000,9:120000,10:110000,11:110000,12:100000},
-  'Crystel Ambrocio':  {1:80000,2:80000,3:100000,4:120000,5:120000,6:120000,7:120000,8:120000,9:120000,10:110000,11:110000,12:100000},
-  'Ferdie Salvosa':    {1:60000,2:60000,3:60000, 4:100000,5:100000,6:100000,7:100000,8:100000,9:100000,10:75000, 11:75000, 12:75000},
-  'Reine Suarez':      {1:60000,2:60000,3:60000, 4:100000,5:100000,6:100000,7:100000,8:100000,9:100000,10:75000, 11:75000, 12:75000},
-  'Rona Pablo':        {1:60000,2:60000,3:60000, 4:100000,5:100000,6:100000,7:100000,8:100000,9:100000,10:75000, 11:75000, 12:75000},
-  'Jethro Jamelo':     {1:60000,2:60000,3:80000, 4:110000,5:110000,6:110000,7:110000,8:110000,9:110000,10:90000, 11:75000, 12:75000},
-  'Gel Riboroso':      {1:60000,2:60000,3:60000, 4:100000,5:100000,6:100000,7:100000,8:100000,9:100000,10:75000, 11:75000, 12:75000},
-  'Nicco Tioseco':     {1:60000,2:60000,3:60000, 4:100000,5:100000,6:100000,7:100000,8:100000,9:100000,10:75000, 11:75000, 12:75000},
-  'Osheri Fima':       {1:80000,2:80000,3:100000,4:130000,5:130000,6:130000,7:130000,8:130000,9:130000,10:120000,11:120000,12:100000},
-  'Riezhel Punzalan':  {1:60000,2:60000,3:80000, 4:110000,5:110000,6:110000,7:110000,8:110000,9:110000,10:90000, 11:75000, 12:75000},
-  'Rizzalyn Berce':    {1:60000,2:60000,3:80000, 4:110000,5:110000,6:110000,7:110000,8:110000,9:110000,10:90000, 11:75000, 12:75000},
-  'Akisha Abella':     {1:60000,2:60000,3:60000, 4:100000,5:100000,6:100000,7:100000,8:100000,9:100000,10:75000, 11:75000, 12:75000},
-  'Brian Azarcon':     {1:60000,2:60000,3:80000, 4:110000,5:110000,6:110000,7:110000,8:110000,9:110000,10:90000, 11:75000, 12:75000},
-  'Mat Galuego':       {1:60000,2:60000,3:80000, 4:110000,5:110000,6:110000,7:110000,8:110000,9:110000,10:90000, 11:75000, 12:75000},
-  'Ric Rigodon':       {1:80000,2:80000,3:80000, 4:120000,5:120000,6:120000,7:120000,8:120000,9:120000,10:100000,11:100000,12:100000},
-  'Chress Espineda':   {1:80000,2:80000,3:80000, 4:120000,5:120000,6:120000,7:120000,8:120000,9:120000,10:100000,11:100000,12:100000},
-  'Kurt Ang':          {1:70000,2:70000,3:70000, 4:110000,5:110000,6:110000,7:110000,8:110000,9:110000,10:90000, 11:90000, 12:90000},
-  'Javier Lopez':      {1:80000,2:80000,3:80000, 4:120000,5:120000,6:120000,7:120000,8:120000,9:120000,10:100000,11:100000,12:100000},
-};
+// Rep targets loaded dynamically from gold_targets_per_rep via dashboard.json
 
 // Alliance team monthly target (New Business + Upsell combined)
 const ALLIANCE_MONTHLY_TARGET = {
@@ -1623,10 +1604,8 @@ function allianceYTDTarget(upToMon) {
   return total;
 }
 
-// Helpers — use these instead of REP_MONTHLY_TARGET[rep] directly
 function repMonthTarget(rep, mon) {
-  const t = REP_MONTHLY_TARGET[rep];
-  return t ? (t[mon] || 0) : 0;
+  return (repMRRTargets[rep] || {})[mon] || 0;
 }
 function repYTDTarget(rep, upToMon) {
   let total = 0;
@@ -1634,22 +1613,9 @@ function repYTDTarget(rep, upToMon) {
   return total;
 }
 function repEFYTDTarget(rep, upToMon) {
-  const team = REP_TEAMS[rep]?.team || '';
-  let pipe, seg;
-  if (team.startsWith('ENT'))  { pipe = 'Sales Pipeline'; seg = 'ENT'; }
-  else if (team.startsWith('SME')) { pipe = 'Sales Pipeline'; seg = 'SME'; }
-  else if (team === 'Upsell') { pipe = 'PH Upsell Pipeline'; seg = null; }
-  else return 0;
-  const segTgt = getTargetForRow(pipe, seg, CUR_YEAR, upToMon, 'ef_mrr_target');
-  const activeReps = Object.entries(REP_TEAMS).filter(([r, info]) => {
-    if (info.resigned) return false;
-    const t = info.team || '';
-    if (team.startsWith('ENT')) return t.startsWith('ENT');
-    if (team.startsWith('SME')) return t.startsWith('SME');
-    if (team === 'Upsell') return t === 'Upsell';
-    return false;
-  }).length;
-  return activeReps > 0 ? Math.round(segTgt / activeReps) : 0;
+  let total = 0;
+  for (let m = 1; m <= upToMon; m++) total += ((repEFTargets[rep] || {})[m] || 0);
+  return total;
 }
 
 const TEAM_ORDER = ['ENT Builders','ENT Hunters','SME Jetzsetters','SME Strikers','Channels','Upsell','Alliance'];
@@ -1670,6 +1636,8 @@ const REP_ALIASES = {
   'ricardo rigodon':               'Ric Rigodon',
   'akisha a':                      'Akisha Abella',
   'marie christine espineda':      'Chress Espineda',
+  'crystel ambrosio':              'Crystel Ambrocio',
+  'rizzalyn morada':               'Rizzalyn Berce',
 };
 
 // Normalized lookup for flexible name matching from deal.sales_rep
@@ -2464,6 +2432,22 @@ async function init() {
     allDeals     = data.deals    || [];
     allTargets   = data.targets  || [];
     allianceData = data.alliance || [];
+
+    repMRRTargets = {};
+    repEFTargets  = {};
+    (data.rep_targets || []).forEach(row => {
+      const canonical = getRepCanonical(row.sales_rep);
+      if (!canonical) return;
+      const mon = parseInt((row.metric_month || '').slice(5, 7));
+      const val = parseFloat(row.target_value) || 0;
+      if (row.target_type === 'MRR') {
+        if (!repMRRTargets[canonical]) repMRRTargets[canonical] = {};
+        repMRRTargets[canonical][mon] = val;
+      } else if (row.target_type === 'EF MRR') {
+        if (!repEFTargets[canonical]) repEFTargets[canonical] = {};
+        repEFTargets[canonical][mon] = val;
+      }
+    });
 
     populatePipelineFilter();
     render();
