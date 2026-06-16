@@ -2539,7 +2539,8 @@ function computeFromDeals(deals, filters) {
     if (d.client_journey_stage === 'Customer')    { porRow.won++; porRow.won_mrr += +d.mrr || 0; }
     if (d.client_journey_stage === 'Closed Lost') { porRow.lost++; }
   });
-  byProj.filter(d => d.client_journey_stage === 'Opportunity').forEach(d => {
+  // Pipeline MRR: all currently open opportunities — not date-filtered, shows live pipeline per partner
+  deals.filter(d => segMatch(d) && d.client_journey_stage === 'Opportunity').forEach(d => {
     getPOR(d.partner_on_record).pipeline_mrr += +d.mrr || 0;
   });
   const porTable = Object.values(porMap).map(porRow => ({
