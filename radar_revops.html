@@ -4201,32 +4201,26 @@ FROM shared.revops.gold_monthly_exec_summary
 ORDER BY metric_month DESC, pipeline_name, segment;` },
 
   { title: 'Q23 · Revenue Share MRR by Month', sql: `SELECT
-  DATE_TRUNC('month', d.close_date) AS metric_month,
-  d.pipeline_name,
-  CASE WHEN UPPER(d.segment) = 'MICRO' THEN 'SME' ELSE d.segment END AS segment,
-  SUM(COALESCE(li.revenue_share, 0)) AS revenue_share_mrr
-FROM shared.revops.silver_line_items li
-JOIN shared.revops.silver_deals d ON li.deal_id = d.deal_id
-WHERE d.close_date IS NOT NULL
-  AND d.client_journey_stage = 'Customer'
-  AND LOWER(COALESCE(d.deal_name, '')) NOT LIKE '%renewal%'
-  AND li.clan IN ('Partner - Referral', 'Partner - Reseller')
-  AND li.contract_term_months >= 12
+  DATE_TRUNC('month', close_date) AS metric_month,
+  pipeline_name,
+  CASE WHEN UPPER(segment) = 'MICRO' THEN 'SME' ELSE segment END AS segment,
+  SUM(COALESCE(revshare_mrr, 0)) AS revenue_share_mrr
+FROM shared.revops.silver_deals
+WHERE close_date IS NOT NULL
+  AND client_journey_stage = 'Customer'
+  AND LOWER(COALESCE(deal_name, '')) NOT LIKE '%renewal%'
 GROUP BY 1, 2, 3
 ORDER BY 1 DESC, 2, 3;` },
 
   { title: 'Q24 · Revenue Share OTP by Month', sql: `SELECT
-  DATE_TRUNC('month', d.close_date) AS metric_month,
-  d.pipeline_name,
-  CASE WHEN UPPER(d.segment) = 'MICRO' THEN 'SME' ELSE d.segment END AS segment,
-  SUM(COALESCE(li.revenue_share, 0)) AS revenue_share_otp
-FROM shared.revops.silver_line_items li
-JOIN shared.revops.silver_deals d ON li.deal_id = d.deal_id
-WHERE d.close_date IS NOT NULL
-  AND d.client_journey_stage = 'Customer'
-  AND LOWER(COALESCE(d.deal_name, '')) NOT LIKE '%renewal%'
-  AND li.clan IN ('Partner - Referral', 'Partner - Reseller')
-  AND (li.contract_term_months < 12 OR li.recurring_billing_frequency = 'One Time Payment')
+  DATE_TRUNC('month', close_date) AS metric_month,
+  pipeline_name,
+  CASE WHEN UPPER(segment) = 'MICRO' THEN 'SME' ELSE segment END AS segment,
+  SUM(COALESCE(revshare_otp, 0)) AS revenue_share_otp
+FROM shared.revops.silver_deals
+WHERE close_date IS NOT NULL
+  AND client_journey_stage = 'Customer'
+  AND LOWER(COALESCE(deal_name, '')) NOT LIKE '%renewal%'
 GROUP BY 1, 2, 3
 ORDER BY 1 DESC, 2, 3;` },
 
@@ -6638,8 +6632,8 @@ var RADAR_METRICS = [
   { id:'collections_rate',      label:'Collections Rate',        desc:'Total Collected / Total Billed x 100. Excludes Cancelled - CM/CN.',                                                    sql:"SELECT ROUND(SUM(CASE WHEN invoice_status = 'Paid' THEN applied_payment_amount ELSE 0 END) * 100.0 / NULLIF(SUM(invoice_amount), 0), 1) AS collections_rate_pct FROM shared.revops.netsuite_invoices_summary WHERE invoice_status != 'Cancelled - CM/CN'", table:'netsuite_invoices_summary' },
   { id:'overdue_invoice_count', label:'# Overdue Invoices',      desc:'COUNT(invoice_id) where invoice_status = Overdue.',                                                                    sql:"SELECT COUNT(invoice_id) AS overdue_invoice_count, SUM(remaining_balance) AS overdue_amount FROM shared.revops.netsuite_invoices_summary WHERE invoice_status = 'Overdue'", table:'netsuite_invoices_summary' },
   { id:'avg_days_to_pay',       label:'Avg Days to Pay',         desc:'AVG(days_open) where invoice_status = Paid.',                                                                          sql:"SELECT ROUND(AVG(CAST(days_open AS INT)), 1) AS avg_days_to_pay FROM shared.revops.netsuite_invoices_summary WHERE invoice_status = 'Paid' AND days_open IS NOT NULL AND days_open != ''", table:'netsuite_invoices_summary' },
-  { id:'revenue_share_mrr',     label:'Revenue Share MRR',       desc:'MRR from Revenue Share partners (Managed Reseller or Managed Referral Clan). Recognized only if contract term >= 12 months. Filter: Clan = Partner - Referral, Partner - Reseller.',  sql:"SELECT DATE_TRUNC('month', d.close_date) AS metric_month, d.pipeline_name, SUM(COALESCE(li.revenue_share, 0)) AS revenue_share_mrr FROM shared.revops.silver_line_items li JOIN shared.revops.silver_deals d ON li.deal_id = d.deal_id WHERE d.close_date IS NOT NULL AND d.client_journey_stage = 'Customer' AND LOWER(COALESCE(d.deal_name, '')) NOT LIKE '%renewal%' AND li.clan IN ('Partner - Referral', 'Partner - Reseller') AND li.contract_term_months >= 12 GROUP BY 1, 2 ORDER BY 1 DESC", table:'silver_line_items + silver_deals' },
-  { id:'revenue_share_otp',     label:'Revenue Share OTP',       desc:'One-Time Payment revenue from Revenue Share partners. Includes true OTP and short-term contracts (< 12 months). Filter: Clan = Partner - Referral, Partner - Reseller.',              sql:"SELECT DATE_TRUNC('month', d.close_date) AS metric_month, d.pipeline_name, SUM(COALESCE(li.revenue_share, 0)) AS revenue_share_otp FROM shared.revops.silver_line_items li JOIN shared.revops.silver_deals d ON li.deal_id = d.deal_id WHERE d.close_date IS NOT NULL AND d.client_journey_stage = 'Customer' AND LOWER(COALESCE(d.deal_name, '')) NOT LIKE '%renewal%' AND li.clan IN ('Partner - Referral', 'Partner - Reseller') AND (li.contract_term_months < 12 OR li.recurring_billing_frequency = 'One Time Payment') GROUP BY 1, 2 ORDER BY 1 DESC", table:'silver_line_items + silver_deals' },
+  { id:'revenue_share_mrr',     label:'Revenue Share MRR',       desc:'MRR from Revenue Share partners (Managed Reseller or Managed Referral Clan). Recognized only if contract term >= 12 months. Filter: Clan = Partner - Referral, Partner - Reseller.',  sql:"SELECT DATE_TRUNC('month', close_date) AS metric_month, pipeline_name, SUM(COALESCE(revshare_mrr, 0)) AS revenue_share_mrr FROM shared.revops.silver_deals WHERE close_date IS NOT NULL AND client_journey_stage = 'Customer' AND LOWER(COALESCE(deal_name, '')) NOT LIKE '%renewal%' GROUP BY 1, 2 ORDER BY 1 DESC", table:'silver_deals' },
+  { id:'revenue_share_otp',     label:'Revenue Share OTP',       desc:'One-Time Payment revenue from Revenue Share partners. Includes true OTP and short-term contracts (< 12 months). Filter: Clan = Partner - Referral, Partner - Reseller.',              sql:"SELECT DATE_TRUNC('month', close_date) AS metric_month, pipeline_name, SUM(COALESCE(revshare_otp, 0)) AS revenue_share_otp FROM shared.revops.silver_deals WHERE close_date IS NOT NULL AND client_journey_stage = 'Customer' AND LOWER(COALESCE(deal_name, '')) NOT LIKE '%renewal%' GROUP BY 1, 2 ORDER BY 1 DESC", table:'silver_deals' },
   { id:'active_headcount',      label:'Active Headcount',        desc:'SUM(GREATEST(hr_headcount, payroll_headcount)). Date: month_date.',                                                    sql:"SELECT DATE_TRUNC('month', month_date) AS metric_month, COUNT(DISTINCT hubspot_company_record_id) AS active_companies, SUM(GREATEST(hr_headcount, payroll_headcount)) AS active_headcount FROM shared.revops.company_active_headcount GROUP BY 1 ORDER BY 1 DESC", table:'company_active_headcount' },
   { id:'mom_headcount_growth',  label:'MoM Headcount Growth',    desc:'MoM change in SUM(GREATEST(hr_headcount, payroll_headcount)).',                                                        sql:"SELECT curr.metric_month, curr.active_headcount, prev.active_headcount AS prev_headcount, (curr.active_headcount - prev.active_headcount) AS mom_growth, ROUND((curr.active_headcount - prev.active_headcount) * 100.0 / NULLIF(prev.active_headcount, 0), 1) AS mom_growth_pct FROM (SELECT DATE_TRUNC('month', month_date) AS metric_month, SUM(GREATEST(hr_headcount, payroll_headcount)) AS active_headcount FROM shared.revops.company_active_headcount GROUP BY 1) curr LEFT JOIN (SELECT DATE_TRUNC('month', month_date) AS metric_month, SUM(GREATEST(hr_headcount, payroll_headcount)) AS active_headcount FROM shared.revops.company_active_headcount GROUP BY 1) prev ON curr.metric_month = ADD_MONTHS(prev.metric_month, 1) ORDER BY curr.metric_month DESC", table:'company_active_headcount' },
   { id:'uql_count',       label:'Upsell Qualified Leads (UQL)', desc:'All deals in PH Upsell Pipeline. No stage filter, no qualified_lead filter, no department_source filter.',         sql:"SELECT DATE_TRUNC('month',create_date) AS metric_month, COUNT(DISTINCT deal_id) AS uql_count FROM shared.revops.silver_deals WHERE create_date IS NOT NULL AND pipeline_name = 'PH Upsell Pipeline' AND deal_type NOT IN ('Renewal','Upsell - Renewal') AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%' GROUP BY 1 ORDER BY 1 DESC", table:'silver_deals' },
