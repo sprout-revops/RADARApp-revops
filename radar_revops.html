@@ -2255,6 +2255,8 @@ python fetch_data.py
         <div class="metric-chip" data-id="ef_mrr" onclick="this.classList.toggle('selected')"><div class="mc-label">EF Monthly Recurring Revenue (EF MRR)</div><div class="mc-sub">ReadyCash/ReadyWage MRR — term ≥ 12 months</div></div>
         <div class="metric-chip" data-id="otp_revenue" onclick="this.classList.toggle('selected')"><div class="mc-label">OTP Revenue</div><div class="mc-sub">One-time payment revenue — otp_only + mrr_lt_12 (contracts &lt; 12 months)</div></div>
         <div class="metric-chip" data-id="implem_fee" onclick="this.classList.toggle('selected')"><div class="mc-label">Implementation Fee</div><div class="mc-sub">One-time implementation fee from closed-won deals — implem_fee</div></div>
+        <div class="metric-chip" data-id="revenue_share_mrr" onclick="this.classList.toggle('selected')"><div class="mc-label">Revenue Share MRR</div><div class="mc-sub">MRR from Revenue Share partners (Reseller/Referral Clan) — term ≥ 12 months</div></div>
+        <div class="metric-chip" data-id="revenue_share_otp" onclick="this.classList.toggle('selected')"><div class="mc-label">Revenue Share OTP</div><div class="mc-sub">OTP revenue from Revenue Share partners — term &lt; 12 months or one-time billing</div></div>
         <!-- Sales Productivity -->
         <div class="mc-group-label">⚡ Sales Productivity</div>
         <div class="metric-chip" data-id="won_deals" onclick="this.classList.toggle('selected')"><div class="mc-label">Won Deals</div><div class="mc-sub">DISTINCT COUNT of deals — Contract Signed, Project Handover, Sales Churn</div></div>
@@ -4195,6 +4197,36 @@ SELECT
   mrr_in_pipeline
 FROM shared.revops.gold_monthly_exec_summary
 ORDER BY metric_month DESC, pipeline_name, segment;` },
+
+  { title: 'Q12 · Revenue Share MRR by Month', sql: `SELECT
+  DATE_TRUNC('month', d.close_date) AS metric_month,
+  d.pipeline_name,
+  CASE WHEN UPPER(d.segment) = 'MICRO' THEN 'SME' ELSE d.segment END AS segment,
+  SUM(COALESCE(li.revenue_share, 0)) AS revenue_share_mrr
+FROM shared.revops.silver_line_items li
+JOIN shared.revops.silver_deals d ON li.deal_id = d.deal_id
+WHERE d.close_date IS NOT NULL
+  AND d.client_journey_stage = 'Customer'
+  AND LOWER(COALESCE(d.deal_name, '')) NOT LIKE '%renewal%'
+  AND li.revenue_share > 0
+  AND li.contract_term_months >= 12
+GROUP BY 1, 2, 3
+ORDER BY 1 DESC, 2, 3;` },
+
+  { title: 'Q13 · Revenue Share OTP by Month', sql: `SELECT
+  DATE_TRUNC('month', d.close_date) AS metric_month,
+  d.pipeline_name,
+  CASE WHEN UPPER(d.segment) = 'MICRO' THEN 'SME' ELSE d.segment END AS segment,
+  SUM(COALESCE(li.revenue_share, 0)) AS revenue_share_otp
+FROM shared.revops.silver_line_items li
+JOIN shared.revops.silver_deals d ON li.deal_id = d.deal_id
+WHERE d.close_date IS NOT NULL
+  AND d.client_journey_stage = 'Customer'
+  AND LOWER(COALESCE(d.deal_name, '')) NOT LIKE '%renewal%'
+  AND li.revenue_share > 0
+  AND (li.contract_term_months < 12 OR li.recurring_billing_frequency = 'One Time Payment')
+GROUP BY 1, 2, 3
+ORDER BY 1 DESC, 2, 3;` },
 
   { title: '🏗️ gold_monthly_exec_summary — Full CREATE TABLE SQL', sql: `-- ══════════════════════════════════════════════════════════════════
 -- TABLE: shared.revops.gold_monthly_exec_summary
