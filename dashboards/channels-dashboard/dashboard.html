@@ -1260,26 +1260,44 @@ LIMIT 24`;
 // QL + SQL rate use create_date; Win Rate = Won/(Won+Lost) per datapedia
 function qPartners() {
   const wL = WHERE.lead();
+  const wP = WHERE.pipeline();
   return `
+WITH
+  lead_base AS (
+    SELECT
+      COALESCE(partner_on_record,'Direct')  AS partner,
+      COALESCE(original_channel_source,'Unknown') AS channel_source,
+      deal_id, qualified_lead, client_journey_stage, mrr
+    FROM shared.revops.silver_deals
+    ${wL}
+  ),
+  pipe_base AS (
+    SELECT
+      COALESCE(partner_on_record,'Direct') AS partner,
+      COALESCE(SUM(mrr),0)                 AS pipeline_mrr
+    FROM shared.revops.silver_deals
+    ${wP}
+      AND client_journey_stage = 'Opportunity'
+    GROUP BY 1
+  )
 SELECT
-  COALESCE(partner_on_record,'Direct')                                             AS partner,
-  COALESCE(original_channel_source,'Unknown')                                      AS channel_source,
-  COUNT(DISTINCT CASE WHEN qualified_lead = 'Yes' THEN deal_id END)                AS qualified_leads,
-  COUNT(DISTINCT CASE WHEN qualified_lead = 'Yes'
-    AND client_journey_stage <> 'MQL' THEN deal_id END)                            AS sql_count,
-  COUNT(DISTINCT CASE WHEN client_journey_stage = 'Customer' THEN deal_id END)     AS won_deals,
-  COALESCE(SUM(CASE WHEN client_journey_stage = 'Customer' THEN mrr END),0)        AS won_mrr,
-  /* Win Rate = Won / (Won + Lost) */
+  l.partner,
+  l.channel_source,
+  COUNT(DISTINCT CASE WHEN l.qualified_lead = 'Yes' THEN l.deal_id END)            AS qualified_leads,
+  COUNT(DISTINCT CASE WHEN l.qualified_lead = 'Yes'
+    AND l.client_journey_stage <> 'MQL' THEN l.deal_id END)                        AS sql_count,
+  COUNT(DISTINCT CASE WHEN l.client_journey_stage = 'Customer' THEN l.deal_id END) AS won_deals,
+  COALESCE(SUM(CASE WHEN l.client_journey_stage = 'Customer' THEN l.mrr END),0)    AS won_mrr,
   ROUND(100.0
-    * COUNT(DISTINCT CASE WHEN client_journey_stage = 'Customer' THEN deal_id END)
-    / NULLIF(COUNT(DISTINCT CASE WHEN client_journey_stage IN ('Customer','Closed Lost') THEN deal_id END),0),1) AS win_rate,
-  /* SQL Rate = SQL / QL */
+    * COUNT(DISTINCT CASE WHEN l.client_journey_stage = 'Customer' THEN l.deal_id END)
+    / NULLIF(COUNT(DISTINCT CASE WHEN l.client_journey_stage IN ('Customer','Closed Lost') THEN l.deal_id END),0),1) AS win_rate,
   ROUND(100.0
-    * COUNT(DISTINCT CASE WHEN qualified_lead = 'Yes' AND client_journey_stage <> 'MQL' THEN deal_id END)
-    / NULLIF(COUNT(DISTINCT CASE WHEN qualified_lead = 'Yes' THEN deal_id END),0),1) AS sql_rate
-FROM shared.revops.silver_deals
-${wL}
-GROUP BY 1,2
+    * COUNT(DISTINCT CASE WHEN l.qualified_lead = 'Yes' AND l.client_journey_stage <> 'MQL' THEN l.deal_id END)
+    / NULLIF(COUNT(DISTINCT CASE WHEN l.qualified_lead = 'Yes' THEN l.deal_id END),0),1) AS sql_rate,
+  COALESCE(p.pipeline_mrr, 0) AS pipeline_mrr
+FROM lead_base l
+LEFT JOIN pipe_base p ON l.partner = p.partner
+GROUP BY l.partner, l.channel_source, p.pipeline_mrr
 ORDER BY won_mrr DESC
 LIMIT 50`;
 }
