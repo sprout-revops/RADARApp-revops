@@ -4198,7 +4198,7 @@ SELECT
 FROM shared.revops.gold_monthly_exec_summary
 ORDER BY metric_month DESC, pipeline_name, segment;` },
 
-  { title: 'Q12 · Revenue Share MRR by Month', sql: `SELECT
+  { title: 'Q23 · Revenue Share MRR by Month', sql: `SELECT
   DATE_TRUNC('month', d.close_date) AS metric_month,
   d.pipeline_name,
   CASE WHEN UPPER(d.segment) = 'MICRO' THEN 'SME' ELSE d.segment END AS segment,
@@ -4213,7 +4213,7 @@ WHERE d.close_date IS NOT NULL
 GROUP BY 1, 2, 3
 ORDER BY 1 DESC, 2, 3;` },
 
-  { title: 'Q13 · Revenue Share OTP by Month', sql: `SELECT
+  { title: 'Q24 · Revenue Share OTP by Month', sql: `SELECT
   DATE_TRUNC('month', d.close_date) AS metric_month,
   d.pipeline_name,
   CASE WHEN UPPER(d.segment) = 'MICRO' THEN 'SME' ELSE d.segment END AS segment,
