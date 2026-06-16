@@ -5281,7 +5281,7 @@ renderDashboards();
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.r*2.5, 0, Math.PI*2);
       const g = ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r*2.5);
-      g.addColorStop(0, p.color.replace(')',',0.3)').replace('rgb','rgba').replace('#',''));
+      g.addColorStop(0, /^#/.test(p.color) ? p.color + '4d' : p.color.replace(')',',0.3)').replace('rgb','rgba'));
       g.addColorStop(1, 'transparent');
       ctx.fillStyle = p.color + '18';
       ctx.fill();
