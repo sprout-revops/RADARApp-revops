@@ -3381,8 +3381,11 @@ const LC = {
   },
 
   warehouseId() {
-    const m = this.path.match(/warehouses\/([^/]+)/);
-    return m ? m[1] : '';
+    const m = this.path.match(/(?:warehouses|endpoints)\/([^/?]+)/);
+    if (m) return m[1];
+    // fallback: last non-empty path segment
+    const parts = this.path.replace(/\/$/, '').split('/').filter(Boolean);
+    return parts.length ? parts[parts.length - 1] : '';
   }
 };
 
