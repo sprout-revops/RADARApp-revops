@@ -4248,7 +4248,27 @@ GROUP BY 1, 2
 HAVING revshare_mrr <> 0 OR revshare_otp <> 0
 ORDER BY 1 DESC, revshare_mrr DESC;` },
 
-  { title: 'Q26 · MRR by Product (incl. EF)', sql: `-- SUM(li.mrr WHERE term >= 12) = SUM(deals.mrr + deals.ef_mrr) — exact match verified
+  { title: 'Q26 · MRR by Month (deal level)', sql: `-- Deal-level monthly summary: mrr + ef_mrr + mrr_lt_12 + otp_only + implem_fee
+-- Use this as the reference to validate product-level breakdowns (Q27, Q28)
+SELECT
+  DATE_TRUNC('month', close_date)                                  AS metric_month,
+  pipeline_name,
+  CASE WHEN UPPER(segment) = 'MICRO' THEN 'SME' ELSE segment END  AS segment,
+  SUM(COALESCE(mrr, 0))                                           AS mrr,
+  SUM(COALESCE(ef_mrr, 0))                                        AS ef_mrr,
+  SUM(COALESCE(mrr, 0) + COALESCE(ef_mrr, 0))                    AS mrr_plus_ef,
+  SUM(COALESCE(mrr_lt_12, 0))                                     AS mrr_lt_12,
+  SUM(COALESCE(otp_only, 0))                                      AS otp_only,
+  SUM(COALESCE(implem_fee, 0))                                    AS implem_fee
+FROM shared.revops.silver_deals
+WHERE close_date IS NOT NULL
+  AND client_journey_stage = 'Customer'
+  AND deal_type NOT IN ('Renewal','Upsell - Renewal')
+  AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%'
+GROUP BY 1, 2, 3
+ORDER BY 1 DESC, 2, 3;` },
+
+  { title: 'Q27 · MRR by Product (incl. EF)', sql: `-- SUM(li.mrr WHERE term >= 12) = SUM(deals.mrr + deals.ef_mrr) — exact match verified
 -- Includes Embedded Finance products (ReadyCash, ReadyWage); term >= 12 months same as deal ETL
 SELECT
   DATE_TRUNC('month', d.close_date)            AS metric_month,
