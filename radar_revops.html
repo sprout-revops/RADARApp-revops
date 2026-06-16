@@ -4248,7 +4248,23 @@ GROUP BY 1, 2
 HAVING revshare_mrr <> 0 OR revshare_otp <> 0
 ORDER BY 1 DESC, revshare_mrr DESC;` },
 
-  { title: 'Q26 · Implementation Fee by Product', sql: `-- Matches silver_deals.implem_fee rollup
+  { title: 'Q26 · MRR by Product (incl. EF)', sql: `-- SUM(li.mrr) ≈ SUM(deals.mrr + deals.ef_mrr) — verified monthly
+-- Includes Embedded Finance products (ReadyCash, ReadyWage)
+SELECT
+  DATE_TRUNC('month', d.close_date)            AS metric_month,
+  COALESCE(li.parent_product, li.product_name) AS product,
+  SUM(COALESCE(li.mrr, 0))                     AS mrr
+FROM shared.revops.silver_line_items li
+JOIN shared.revops.silver_deals d ON li.deal_id = d.deal_id
+WHERE d.close_date IS NOT NULL
+  AND d.client_journey_stage = 'Customer'
+  AND d.deal_type NOT IN ('Renewal','Upsell - Renewal')
+  AND LOWER(COALESCE(d.deal_name,'')) NOT LIKE '%renewal%'
+  AND li.mrr > 0
+GROUP BY 1, 2
+ORDER BY 1 DESC, mrr DESC;` },
+
+  { title: 'Q27 · Implementation Fee by Product', sql: `-- Matches silver_deals.implem_fee rollup
 SELECT
   DATE_TRUNC('month', d.close_date)            AS metric_month,
   COALESCE(li.parent_product, li.product_name) AS product,
