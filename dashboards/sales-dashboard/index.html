@@ -2433,6 +2433,10 @@ async function init() {
     allTargets   = data.targets  || [];
     allianceData = data.alliance || [];
 
+    // Manual segment overrides — deal_id → segment
+    const SEGMENT_OVERRIDES = { '31987433646': 'ENT' };
+    allDeals.forEach(d => { if (SEGMENT_OVERRIDES[String(d.deal_id)]) d.segment = SEGMENT_OVERRIDES[String(d.deal_id)]; });
+
     repMRRTargets = {};
     repEFTargets  = {};
     (data.rep_targets || []).forEach(row => {
