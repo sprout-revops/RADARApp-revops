@@ -85,7 +85,8 @@ SELECT
   client_type,
   CASE WHEN department_source_clean = 'MICRO' THEN 'SME'
        ELSE department_source_clean END  AS segment,
-  original_channel_source
+  original_channel_source,
+  headcount
 FROM shared.revops.silver_deals
 WHERE pipeline_name = '{PIPELINE}'
   AND deal_type NOT IN ('Renewal', 'renewal', 'Upsell - Renewal')

@@ -733,13 +733,13 @@ select.filter-control option{background:var(--surface2)}
         <table class="data-table" id="tbl-por">
           <thead>
             <tr>
-              <th>Partner on Record</th>
-              <th class="num">QLs</th>
-              <th class="num">SQLs</th>
-              <th class="num">Won</th>
-              <th class="num">Won MRR</th>
-              <th class="num">Win Rate</th>
-              <th class="num">Pipeline MRR</th>
+              <th onclick="sortPOR('partner')">Partner on Record <span class="sort-icon"></span></th>
+              <th class="num" onclick="sortPOR('qls')">QLs <span class="sort-icon"></span></th>
+              <th class="num" onclick="sortPOR('sqls')">SQLs <span class="sort-icon"></span></th>
+              <th class="num" onclick="sortPOR('won')">Won <span class="sort-icon"></span></th>
+              <th class="num" onclick="sortPOR('won_mrr')">Won MRR <span class="sort-icon"></span></th>
+              <th class="num" onclick="sortPOR('win_rate')">Win Rate <span class="sort-icon"></span></th>
+              <th class="num" onclick="sortPOR('pipeline_mrr')">Pipeline MRR <span class="sort-icon"></span></th>
             </tr>
           </thead>
           <tbody id="tbody-por"></tbody>
@@ -915,6 +915,7 @@ select.filter-control option{background:var(--surface2)}
                 <th onclick="sortTbl('leads','sales_rep')">Sales Rep <span class="sort-icon"></span></th>
                 <th onclick="sortTbl('leads','partner_name')">Partner <span class="sort-icon"></span></th>
                 <th onclick="sortTbl('leads','segment')">Segment <span class="sort-icon"></span></th>
+                <th onclick="sortTbl('leads','headcount')" class="num">Headcount <span class="sort-icon"></span></th>
                 <th onclick="sortTbl('leads','channel_source')">Channel <span class="sort-icon"></span></th>
                 <th onclick="sortTbl('leads','stage')">Stage <span class="sort-icon"></span></th>
                 <th onclick="sortTbl('leads','mrr')" class="num">MRR <span class="sort-icon"></span></th>
@@ -1984,7 +1985,7 @@ function renderLeads() {
   const rows = getRows('leads');
   document.getElementById('count-leads').textContent = `${rows.length} rows`;
   const tb = document.getElementById('tbody-leads');
-  if (!rows.length) { tb.innerHTML = emptyRow(10); return; }
+  if (!rows.length) { tb.innerHTML = emptyRow(11); return; }
   tb.innerHTML = rows.map(r => `
     <tr>
       <td class="mono primary">${r.deal_id||'—'}</td>
@@ -1994,6 +1995,7 @@ function renderLeads() {
       <td>${r.sales_rep||'—'}</td>
       <td>${r.partner_name||'Direct'}</td>
       <td>${segBadge(r.segment)}</td>
+      <td class="num">${r.headcount != null ? Number(r.headcount).toLocaleString() : '—'}</td>
       <td>${r.channel_source||'—'}</td>
       <td>${stageBadge(r.stage)}</td>
       <td class="num">${php(r.mrr)}</td>
@@ -2020,13 +2022,32 @@ function renderSQL() {
     </tr>`).join('');
 }
 
+const _porSort = { col: 'qls', dir: -1 };
+
+function sortPOR(col) {
+  if (_porSort.col === col) { _porSort.dir *= -1; } else { _porSort.col = col; _porSort.dir = -1; }
+  document.querySelectorAll('#tbl-por thead th .sort-icon').forEach(el => el.textContent = '');
+  const ths = document.querySelectorAll('#tbl-por thead th');
+  const cols = ['partner','qls','sqls','won','won_mrr','win_rate','pipeline_mrr'];
+  const idx = cols.indexOf(col);
+  if (idx >= 0 && ths[idx]) ths[idx].querySelector('.sort-icon').textContent = _porSort.dir === 1 ? ' ▲' : ' ▼';
+  renderPartnerOR();
+}
+
 function renderPartnerOR() {
-  const rows = S.tables.por || [];
+  let rows = [...(S.tables.por || [])];
   const tbody = document.getElementById('tbody-por');
   if (!tbody) return;
   const countEl = document.getElementById('count-por');
   if (countEl) countEl.textContent = `${rows.length} partner${rows.length !== 1 ? 's' : ''}`;
   if (!rows.length) { tbody.innerHTML = emptyRow(7); return; }
+  const { col, dir } = _porSort;
+  rows.sort((a, b) => {
+    const av = a[col], bv = b[col];
+    if (av == null && bv == null) return 0;
+    if (av == null) return 1; if (bv == null) return -1;
+    return typeof av === 'string' ? av.localeCompare(bv) * dir : (av - bv) * dir;
+  });
   tbody.innerHTML = rows.map(porRow => `
     <tr>
       <td class="primary">${esc2(porRow.partner)}</td>
