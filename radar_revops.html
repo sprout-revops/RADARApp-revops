@@ -4248,58 +4248,7 @@ GROUP BY 1, 2
 HAVING revshare_mrr <> 0 OR revshare_otp <> 0
 ORDER BY 1 DESC, revshare_mrr DESC;` },
 
-  { title: 'Q26 · MRR by Product', sql: `-- li.mrr = hs_mrr (already monthly amount) — matches silver_deals.mrr rollup
-SELECT
-  DATE_TRUNC('month', d.close_date)            AS metric_month,
-  COALESCE(li.parent_product, li.product_name) AS product,
-  SUM(COALESCE(li.mrr, 0))                     AS mrr
-FROM shared.revops.silver_line_items li
-JOIN shared.revops.silver_deals d ON li.deal_id = d.deal_id
-WHERE d.close_date IS NOT NULL
-  AND d.client_journey_stage = 'Customer'
-  AND d.deal_type NOT IN ('Renewal','Upsell - Renewal')
-  AND LOWER(COALESCE(d.deal_name,'')) NOT LIKE '%renewal%'
-  AND li.contract_term_months >= 12
-  AND li.mrr > 0
-GROUP BY 1, 2
-ORDER BY 1 DESC, mrr DESC;` },
-
-  { title: 'Q27 · MRR_LT12 by Product (Short-Term Contracts)', sql: `-- MRR_LT12 = unit_price × contract_term_months for 1–11 month contracts
--- Matches silver_deals.mrr_lt_12 rollup
-SELECT
-  DATE_TRUNC('month', d.close_date)            AS metric_month,
-  COALESCE(li.parent_product, li.product_name) AS product,
-  SUM(COALESCE(li.unit_price, 0) * COALESCE(li.contract_term_months, 0)) AS mrr_lt_12
-FROM shared.revops.silver_line_items li
-JOIN shared.revops.silver_deals d ON li.deal_id = d.deal_id
-WHERE d.close_date IS NOT NULL
-  AND d.client_journey_stage = 'Customer'
-  AND d.deal_type NOT IN ('Renewal','Upsell - Renewal')
-  AND LOWER(COALESCE(d.deal_name,'')) NOT LIKE '%renewal%'
-  AND li.contract_term_months > 0 AND li.contract_term_months < 12
-GROUP BY 1, 2
-HAVING mrr_lt_12 > 0
-ORDER BY 1 DESC, mrr_lt_12 DESC;` },
-
-  { title: 'Q28 · OTP Revenue by Product', sql: `-- OTP = One Time Payment billing items, excl. Implementation products
--- Matches silver_deals.otp_only rollup
-SELECT
-  DATE_TRUNC('month', d.close_date)            AS metric_month,
-  COALESCE(li.parent_product, li.product_name) AS product,
-  SUM(COALESCE(li.amount, 0))                  AS otp_revenue
-FROM shared.revops.silver_line_items li
-JOIN shared.revops.silver_deals d ON li.deal_id = d.deal_id
-WHERE d.close_date IS NOT NULL
-  AND d.client_journey_stage = 'Customer'
-  AND d.deal_type NOT IN ('Renewal','Upsell - Renewal')
-  AND LOWER(COALESCE(d.deal_name,'')) NOT LIKE '%renewal%'
-  AND LOWER(COALESCE(li.recurring_billing_frequency,'')) = 'one time payment'
-  AND li.product_name NOT LIKE '%Implementation%'
-  AND li.amount > 0
-GROUP BY 1, 2
-ORDER BY 1 DESC, otp_revenue DESC;` },
-
-  { title: 'Q29 · Implementation Fee by Product', sql: `-- Matches silver_deals.implem_fee rollup
+  { title: 'Q26 · Implementation Fee by Product', sql: `-- Matches silver_deals.implem_fee rollup
 SELECT
   DATE_TRUNC('month', d.close_date)            AS metric_month,
   COALESCE(li.parent_product, li.product_name) AS product,
