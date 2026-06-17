@@ -4225,7 +4225,7 @@ GROUP BY 1, 2, 3
 ORDER BY 1 DESC, 2, 3;` },
 
   { title: 'Q25 · Revenue Share by Product (MRR + OTP)', sql: `-- RevShare MRR: revenue_share / 12 (normalize to monthly, same as silver_deals.revshare_mrr)
--- RevShare OTP: revenue_share as-is (short-term or one-time)
+-- RevShare OTP: revenue_share as-is for short-term OR one-time payment OR blank billing_freq
 SELECT
   DATE_TRUNC('month', d.close_date)            AS metric_month,
   COALESCE(li.parent_product, li.product_name) AS product,
@@ -4233,7 +4233,7 @@ SELECT
            THEN COALESCE(li.revenue_share, 0) / 12
            ELSE 0 END)                           AS revshare_mrr,
   SUM(CASE WHEN li.contract_term_months < 12
-            OR LOWER(COALESCE(li.recurring_billing_frequency,'')) = 'one time payment'
+            OR COALESCE(LOWER(li.recurring_billing_frequency), '') IN ('one time payment', '')
            THEN COALESCE(li.revenue_share, 0)
            ELSE 0 END)                           AS revshare_otp
 FROM shared.revops.silver_line_items li
@@ -4285,7 +4285,32 @@ WHERE d.close_date IS NOT NULL
 GROUP BY 1, 2
 ORDER BY 1 DESC, mrr DESC;` },
 
-  { title: 'Q27 · Implementation Fee by Product', sql: `-- Matches silver_deals.implem_fee rollup
+  { title: 'Q28 · OTP by Product', sql: `-- OTP from line items (clan-filtered, closed-won deals)
+-- True OTP: mrr=0, amount>0, not an implementation fee, billing_freq = 'one time payment' OR blank/NULL → use li.amount
+-- Short-term recurring: mrr>0, contract_term < 12 → use li.mrr
+SELECT
+  DATE_TRUNC('month', d.close_date)            AS metric_month,
+  COALESCE(li.parent_product, li.product_name) AS product,
+  SUM(CASE WHEN COALESCE(li.mrr, 0) = 0
+                AND COALESCE(li.amount, 0) > 0
+                AND LOWER(COALESCE(li.product_name,'')) NOT LIKE '%implementation%'
+                AND COALESCE(LOWER(li.recurring_billing_frequency), '') IN ('one time payment', '')
+           THEN li.amount
+           WHEN COALESCE(li.mrr, 0) > 0 AND li.contract_term_months < 12
+           THEN li.mrr
+           ELSE 0 END)  AS otp
+FROM shared.revops.silver_line_items li
+JOIN shared.revops.silver_deals d ON li.deal_id = d.deal_id
+WHERE d.close_date IS NOT NULL
+  AND d.client_journey_stage = 'Customer'
+  AND d.deal_type NOT IN ('Renewal','Upsell - Renewal')
+  AND LOWER(COALESCE(d.deal_name,'')) NOT LIKE '%renewal%'
+  AND li.clan IN ('Partner - Referral','Partner - Reseller')
+GROUP BY 1, 2
+HAVING otp > 0
+ORDER BY 1 DESC, otp DESC;` },
+
+  { title: 'Q29 · Implementation Fee by Product', sql: `-- Matches silver_deals.implem_fee rollup
 SELECT
   DATE_TRUNC('month', d.close_date)            AS metric_month,
   COALESCE(li.parent_product, li.product_name) AS product,
