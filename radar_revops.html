@@ -584,23 +584,8 @@ body{font-family:'Rubik','Bahnschrift Light SemiCondensed','Bahnschrift',Arial,s
 </head>
 <body>
 
-<!-- ── LOGIN OVERLAY ── -->
-<div id="login-overlay" class="login-overlay">
-  <div class="login-card">
-    <div class="login-logo">RADAR</div>
-    <div class="login-tagline">RevOps Analytics, Data &amp; Reporting · Sprout Solutions</div>
-    <p style="font-size:12px;color:rgba(255,255,255,.35);margin-bottom:24px;line-height:1.6;">Sign in with your Sprout Google account to continue. Access is restricted to approved users only.</p>
-    <div id="google-signin-btn" style="display:flex;justify-content:center;"></div>
-    <button id="gsi-fallback-btn" onclick="triggerGoogleSignIn()" style="display:flex;width:100%;padding:11px 0;background:#fff;color:#3c4043;border:none;border-radius:6px;font-size:14px;font-weight:500;cursor:pointer;font-family:Roboto,Arial,sans-serif;align-items:center;justify-content:center;gap:10px;">
-      <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/><path fill="none" d="M0 0h48v48H0z"/></svg>
-      Sign in with Google
-    </button>
-    <div class="login-error" id="login-error" style="text-align:center;margin-top:14px;"></div>
-  </div>
-</div>
-
-<!-- ── APP ROOT (hidden until login) ── -->
-<div id="app-root" style="display:none">
+<!-- ── APP ROOT ── -->
+<div id="app-root">
 
 <div class="header">
   <div class="header-left">
@@ -612,8 +597,9 @@ body{font-family:'Rubik','Bahnschrift Light SemiCondensed','Bahnschrift',Arial,s
   </div>
   <div style="display:flex;align-items:center;gap:10px;padding:0 18px;flex-shrink:0">
     <div class="conn-badge" id="conn-badge" onclick="openConnModal()"><span class="conn-dot" id="conn-dot"></span><span id="conn-badge-text">Not Connected</span></div>
-    <span class="user-pill" id="user-email-display"></span>
-    <button class="logout-btn" onclick="radarLogout()">Sign Out</button>
+    <span class="user-pill" id="user-email-display" style="display:none"></span>
+    <button class="logout-btn" id="radar-signout-btn" onclick="radarLogout()" style="display:none">Sign Out</button>
+    <button class="logout-btn" id="radar-signin-btn" onclick="triggerGoogleSignIn()" style="color:#1DB954;border-color:rgba(29,185,84,.3)">&#x1F511; Sign In for DIY</button>
   </div>
 </div>
 
@@ -4560,32 +4546,22 @@ function parseJwt(token) {
 
 function handleGoogleSignIn(response) {
   const payload = parseJwt(response.credential);
-  if (!payload || !payload.email) {
-    document.getElementById('login-error').textContent = 'Sign-in failed. Please try again.';
-    return;
-  }
+  if (!payload || !payload.email) return;
   const email = payload.email.toLowerCase();
-  if (!isSproutEmail(email)) {
-    document.getElementById('login-error').textContent = '⛔ Access restricted. Contact lurbina@sprout.ph to request access.';
-    // Sign out of Google so user can try a different account
-    if (window.google) google.accounts.id.disableAutoSelect();
-    return;
-  }
   localStorage.setItem('radar_user_email', email);
-  document.getElementById('login-error').textContent = '';
-  var params = new URLSearchParams(window.location.search);
-  var redirect = params.get('redirect');
-  if (redirect && redirect.startsWith('https://sprout-revops.github.io/')) {
-    window.location.href = redirect;
-    return;
-  }
-  document.getElementById('login-overlay').style.display = 'none';
-  document.getElementById('app-root').style.display = 'block';
-  document.getElementById('user-email-display').textContent = email;
+  radarShowUser(email);
+}
+
+function radarShowUser(email) {
+  var isDiy = ['lurbina@sprout.ph','jsayseng@sprout.ph'].indexOf(email) >= 0;
+  var pill = document.getElementById('user-email-display');
+  var signout = document.getElementById('radar-signout-btn');
+  var signin = document.getElementById('radar-signin-btn');
   var diyTab = document.getElementById('tab-diy');
-  if (diyTab) {
-    diyTab.style.display = (['lurbina@sprout.ph','jsayseng@sprout.ph'].indexOf(email) >= 0) ? '' : 'none';
-  }
+  if (pill) { pill.textContent = email; pill.style.display = ''; }
+  if (signout) signout.style.display = '';
+  if (signin) signin.style.display = 'none';
+  if (diyTab) diyTab.style.display = isDiy ? '' : 'none';
 }
 
 function radarLogout() {
@@ -4595,9 +4571,14 @@ function radarLogout() {
     google.accounts.id.disableAutoSelect();
     if (email) google.accounts.id.revoke(email, () => {});
   }
-  document.getElementById('app-root').style.display = 'none';
-  document.getElementById('login-overlay').style.display = 'flex';
-  document.getElementById('login-error').textContent = '';
+  var pill = document.getElementById('user-email-display');
+  var signout = document.getElementById('radar-signout-btn');
+  var signin = document.getElementById('radar-signin-btn');
+  var diyTab = document.getElementById('tab-diy');
+  if (pill) { pill.textContent = ''; pill.style.display = 'none'; }
+  if (signout) signout.style.display = 'none';
+  if (signin) signin.style.display = '';
+  if (diyTab) diyTab.style.display = 'none';
 }
 
 // Init Google Sign-In once the GSI library is ready
@@ -4645,29 +4626,19 @@ function showFallbackBtn() {
   if (fb) fb.style.display = 'flex';
 }
 
-// Check existing session on load
+// Restore session on load — RADAR is always open; only DIY tab is restricted
 (function() {
   const stored = localStorage.getItem('radar_user_email');
-  if (stored && isSproutEmail(stored)) {
-    document.getElementById('login-overlay').style.display = 'none';
-    document.getElementById('app-root').style.display = 'block';
-    document.getElementById('user-email-display').textContent = stored;
-    var diyTab = document.getElementById('tab-diy');
-    if (diyTab) {
-      diyTab.style.display = (['lurbina@sprout.ph','jsayseng@sprout.ph'].indexOf(stored) >= 0) ? '' : 'none';
-    }
+  if (stored) {
+    radarShowUser(stored);
+  }
+  // Init GSI in background so prompt() works when user clicks Sign In for DIY
+  if (window.google) {
+    initGoogleSignIn();
   } else {
-    // Wait for GSI to load then render the button
-    if (window.google) {
-      initGoogleSignIn();
-    } else {
-      window._radarGsiReady = true;
-      // Fallback polling in case onload fires before flag is set
-      const interval = setInterval(() => {
-        if (window.google) { clearInterval(interval); initGoogleSignIn(); }
-      }, 100);
-      // Fallback button is always visible — no need to show/hide
-    }
+    const interval = setInterval(() => {
+      if (window.google) { clearInterval(interval); initGoogleSignIn(); }
+    }, 100);
   }
 })();
 
