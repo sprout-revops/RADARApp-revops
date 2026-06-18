@@ -3159,9 +3159,9 @@ function goToBuilder() {
 .diy-step-num{width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0}
 .diy-step-pill.active .diy-step-num{background:#1DB954;color:#000}
 .diy-step-arrow{color:rgba(255,255,255,.15);font-size:16px;flex-shrink:0}
-/* Wizard panels */
-.diy-wizard-panel{display:none}
-.diy-wizard-panel.active{display:block}
+/* Wizard panels — reuse builder-step-panel within section-diy */
+#section-diy .builder-step-panel{display:none}
+#section-diy .builder-step-panel.active{display:block}
 /* Section label */
 .diy-section-label{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.3);margin:0 0 10px;padding-top:4px}
 .diy-section-divider{border:none;border-top:1px solid rgba(255,255,255,.06);margin:22px 0}
@@ -3270,86 +3270,101 @@ function goToBuilder() {
 
 <div class="diy-body">
 
-  <!-- Step nav -->
-  <div class="diy-steps-nav">
-    <div class="diy-step-pill active" id="diy-pill-1" onclick="diyGoStep(1)">
-      <span class="diy-step-num">1</span> Select Tables
-    </div>
-    <div class="diy-step-arrow">&rsaquo;</div>
-    <div class="diy-step-pill" id="diy-pill-2" onclick="diyGoStep(2)">
-      <span class="diy-step-num">2</span> Filters &amp; Slicers
-    </div>
-    <div class="diy-step-arrow">&rsaquo;</div>
-    <div class="diy-step-pill" id="diy-pill-3" onclick="diyGoStep(3)">
-      <span class="diy-step-num">3</span> Metrics
-    </div>
-    <div class="diy-step-arrow">&rsaquo;</div>
-    <div class="diy-step-pill" id="diy-pill-4" onclick="diyGoStep(4)">
-      <span class="diy-step-num">4</span> Config &amp; Save
-    </div>
-  </div>
-
   <!-- STEP 1: Select Tables -->
-  <div class="diy-wizard-panel active" id="diy-panel-1">
-    <div class="diy-section-label">Select Data Tables</div>
-    <div class="diy-tables-grid" id="diy-tables-grid"><!-- Populated by JS --></div>
-    <div class="diy-nav-row">
+  <div class="builder-step-panel active" id="diy-panel-1">
+    <div class="builder-panel-header">
+      <div>
+        <div class="builder-panel-title">Step 1 of 4 &mdash; Select Data Tables</div>
+        <div class="builder-panel-sub">Choose which <code style="font-size:11px">shared.revops</code> tables your dashboard will query. Related tables are highlighted when a table is selected.</div>
+      </div>
+    </div>
+    <div style="padding:20px 24px">
+      <div class="diy-tables-grid" id="diy-tables-grid"><!-- Populated by JS --></div>
+    </div>
+    <div class="builder-footer">
       <div></div>
-      <button class="diy-btn diy-btn-primary" onclick="diyGoStep(2)">Next: Filters &amp; Slicers &rarr;</button>
+      <button class="builder-btn-next" onclick="diyGoStep(2)">Next &rarr;</button>
     </div>
   </div>
 
   <!-- STEP 2: Filters & Slicers -->
-  <div class="diy-wizard-panel" id="diy-panel-2">
-    <div class="diy-section-label">Data Scope &mdash; Date Filter Style</div>
-    <div class="diy-scope-row">
-      <div class="diy-scope-toggle selected" id="dscope-between" onclick="diySelectScope('between')">
-        <div class="diy-scope-toggle-title">&#x1F4C5; Date Between</div>
-        <div class="diy-scope-toggle-desc">Custom start &amp; end date range picker &mdash; best for ad-hoc analysis</div>
-      </div>
-      <div class="diy-scope-toggle" id="dscope-monthly" onclick="diySelectScope('monthly')">
-        <div class="diy-scope-toggle-title">&#x1F4C6; Monthly Dropdown</div>
-        <div class="diy-scope-toggle-desc">Month-by-month selector &mdash; best for recurring monthly reviews</div>
+  <div class="builder-step-panel" id="diy-panel-2">
+    <div class="builder-panel-header">
+      <div>
+        <div class="builder-panel-title">Step 2 of 4 &mdash; Filters &amp; Slicers</div>
+        <div class="builder-panel-sub">Choose the date filter style and select which slicers will appear in the dashboard.</div>
       </div>
     </div>
-    <hr class="diy-section-divider">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-      <div class="diy-section-label" style="margin:0">Dashboard Slicers <span style="font-size:10px;font-weight:400;color:rgba(255,255,255,.25);text-transform:none;letter-spacing:0">&mdash; select which filters appear in the dashboard</span></div>
-      <button class="diy-btn diy-btn-ghost diy-btn-sm" onclick="diyToggleAllSlicers()">Toggle All</button>
+    <div class="builder-config-body">
+      <div class="bd-section">
+        <div class="bd-section-title">Date Filter Style</div>
+        <div class="diy-scope-row">
+          <div class="diy-scope-toggle selected" id="dscope-between" onclick="diySelectScope('between')">
+            <div class="diy-scope-toggle-title">&#x1F4C5; Date Between</div>
+            <div class="diy-scope-toggle-desc">Custom start &amp; end date range picker &mdash; best for ad-hoc analysis</div>
+          </div>
+          <div class="diy-scope-toggle" id="dscope-monthly" onclick="diySelectScope('monthly')">
+            <div class="diy-scope-toggle-title">&#x1F4C6; Monthly Dropdown</div>
+            <div class="diy-scope-toggle-desc">Month-by-month selector &mdash; best for recurring monthly reviews</div>
+          </div>
+        </div>
+      </div>
+      <div class="bd-section">
+        <div class="bd-section-title" style="display:flex;align-items:center;justify-content:space-between">
+          <span>Dashboard Slicers <span style="font-size:10px;font-weight:400;text-transform:none;letter-spacing:0;color:rgba(255,255,255,.35)">&mdash; which filters appear in the dashboard</span></span>
+          <button class="diy-btn diy-btn-ghost diy-btn-sm" onclick="diyToggleAllSlicers()">Toggle All</button>
+        </div>
+        <div class="diy-slicer-grid" id="diy-slicer-grid"><!-- Populated by JS --></div>
+      </div>
     </div>
-    <div class="diy-slicer-grid" id="diy-slicer-grid"><!-- Populated by JS --></div>
-    <div class="diy-nav-row">
+    <div class="builder-footer">
       <button class="diy-btn diy-btn-ghost" onclick="diyGoStep(1)">&larr; Back</button>
-      <button class="diy-btn diy-btn-primary" onclick="diyGoStep(3)">Next: Select Metrics &rarr;</button>
+      <button class="builder-btn-next" onclick="diyGoStep(3)">Next &rarr;</button>
     </div>
   </div>
 
   <!-- STEP 3: Metrics -->
-  <div class="diy-wizard-panel" id="diy-panel-3">
-    <div class="diy-metrics-header">
-      <input class="diy-metrics-search" id="diy-metric-search" placeholder="Search metrics&hellip;" oninput="diyFilterMetrics()">
+  <div class="builder-step-panel" id="diy-panel-3">
+    <div class="builder-panel-header">
+      <div>
+        <div class="builder-panel-title">Step 3 of 4 &mdash; Select Metrics</div>
+        <div class="builder-panel-sub">Pick the metrics to include. Definitions and SQL logic come from the Datapedia.</div>
+      </div>
       <span class="diy-metrics-count-badge" id="diy-metrics-count-badge">0 selected</span>
     </div>
-    <div class="diy-cat-tabs" id="diy-cat-tabs">
-      <button class="diy-cat-tab active" data-cat="" onclick="diyCatFilter(this)">All</button>
-      <button class="diy-cat-tab" data-cat="Funnel" onclick="diyCatFilter(this)">Funnel</button>
-      <button class="diy-cat-tab" data-cat="Revenue" onclick="diyCatFilter(this)">Revenue</button>
-      <button class="diy-cat-tab" data-cat="Sales_Productivity" onclick="diyCatFilter(this)">Sales</button>
-      <button class="diy-cat-tab" data-cat="Finance" onclick="diyCatFilter(this)">Finance</button>
-      <button class="diy-cat-tab" data-cat="Customer_Health" onclick="diyCatFilter(this)">CS</button>
-      <button class="diy-cat-tab" data-cat="Marketing_Efficiency" onclick="diyCatFilter(this)">Marketing</button>
-      <button class="diy-cat-tab" data-cat="Product_Performance" onclick="diyCatFilter(this)">Product</button>
+    <div style="padding:16px 24px 0">
+      <div class="diy-metrics-header">
+        <input class="diy-metrics-search" id="diy-metric-search" placeholder="Search metrics&hellip;" oninput="diyFilterMetrics()">
+      </div>
+      <div class="diy-cat-tabs" id="diy-cat-tabs">
+        <button class="diy-cat-tab active" data-cat="" onclick="diyCatFilter(this)">All</button>
+        <button class="diy-cat-tab" data-cat="Funnel" onclick="diyCatFilter(this)">Funnel</button>
+        <button class="diy-cat-tab" data-cat="Revenue" onclick="diyCatFilter(this)">Revenue</button>
+        <button class="diy-cat-tab" data-cat="Sales_Productivity" onclick="diyCatFilter(this)">Sales</button>
+        <button class="diy-cat-tab" data-cat="Finance" onclick="diyCatFilter(this)">Finance</button>
+        <button class="diy-cat-tab" data-cat="Customer_Health" onclick="diyCatFilter(this)">CS</button>
+        <button class="diy-cat-tab" data-cat="Marketing_Efficiency" onclick="diyCatFilter(this)">Marketing</button>
+        <button class="diy-cat-tab" data-cat="Product_Performance" onclick="diyCatFilter(this)">Product</button>
+      </div>
     </div>
-    <div class="diy-metrics-grid" id="diy-metrics-grid"><!-- Populated by JS --></div>
-    <div class="diy-nav-row">
+    <div style="padding:0 24px 8px">
+      <div class="diy-metrics-grid" id="diy-metrics-grid"><!-- Populated by JS --></div>
+    </div>
+    <div class="builder-footer">
       <button class="diy-btn diy-btn-ghost" onclick="diyGoStep(2)">&larr; Back</button>
-      <button class="diy-btn diy-btn-primary" onclick="diyGoStep(4)">Next: Config &amp; Save &rarr;</button>
+      <button class="builder-btn-next" onclick="diyGoStep(4)">Next &rarr;</button>
     </div>
   </div>
 
   <!-- STEP 4: Config & Save -->
-  <div class="diy-wizard-panel" id="diy-panel-4">
-    <div class="builder-config-body" style="padding:0">
+  <div class="builder-step-panel" id="diy-panel-4">
+    <div class="builder-panel-header">
+      <div>
+        <div class="builder-panel-title">Step 4 of 4 &mdash; Configure &amp; Save</div>
+        <div class="builder-panel-sub">Name your dashboard, choose the team and layout, then save to your list.</div>
+      </div>
+    </div>
+    <div class="builder-config-body">
 
       <div class="bd-section">
         <div class="bd-section-title">Dashboard Name</div>
@@ -3422,7 +3437,7 @@ function goToBuilder() {
     <div class="diy-saved-list" id="diy-saved-list">
       <div style="font-size:12px;color:rgba(255,255,255,.25);padding:8px 0">No saved dashboards yet.</div>
     </div>
-    <div class="diy-nav-row">
+    <div class="builder-footer">
       <button class="diy-btn diy-btn-ghost" onclick="diyGoStep(3)">&larr; Back</button>
       <button class="diy-btn diy-btn-ghost" onclick="diyReset()">Start Over</button>
     </div>
@@ -3642,12 +3657,7 @@ function diyGoStep(n){
   diyState.step = n;
   for(var i=1;i<=4;i++){
     var panel = document.getElementById('diy-panel-'+i);
-    var pill  = document.getElementById('diy-pill-'+i);
     if(panel) panel.classList.toggle('active', i===n);
-    if(pill){
-      pill.classList.toggle('active', i===n);
-      pill.classList.toggle('done', i<n);
-    }
   }
   if(n===4) diyBuildSummary();
   var content = document.querySelector('.content-area');
