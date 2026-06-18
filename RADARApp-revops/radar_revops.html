@@ -622,6 +622,7 @@ body{font-family:'Rubik','Bahnschrift Light SemiCondensed','Bahnschrift',Arial,s
     <div class="sidebar-tab" id="tab-db" onclick="switchTab('db')">🗄️ Database</div>
     <div class="sidebar-tab" id="tab-dp" onclick="switchTab('dp')">📖 DataPedia</div>
     <div class="sidebar-tab" id="tab-dash" onclick="switchTab('dash')">📊 Dashboard Studio</div>
+    <div class="sidebar-tab" id="tab-diy" onclick="switchTab('diy')" style="display:none">🧪 DIY Builder</div>
     <div class="sidebar-tab" id="tab-dashboards" onclick="switchTab('dashboards')">📱 Dashboards</div>
     <div class="sidebar-tab" id="tab-connect" onclick="switchTab('connect')">🔌 Connect to RADAR</div>
     <div class="sidebar-tab" id="tab-request" onclick="switchTab('request')">🗂️ Request Data</div>
@@ -1374,106 +1375,357 @@ DATABRICKS_TOKEN</div>
   </div>
 
   <!-- Step 1: Pick Metrics -->
+  <!-- ── BUILDER V2 STYLES ── -->
+  <style>
+  /* Hidden metrics grid kept for prompt-generation compat */
+  #builder-metrics-grid{display:none}
+  /* Table selector */
+  .bv2-section-label{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.3);margin:0 24px 10px;padding-top:20px}
+  .bv2-table-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0 24px 4px}
+  .bv2-table-card{background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.09);border-radius:12px;padding:14px 14px 12px;cursor:pointer;transition:all .18s ease;position:relative;overflow:hidden}
+  .bv2-table-card:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18);transform:translateY(-1px)}
+  .bv2-table-card.selected{background:rgba(29,185,84,.13);border-color:rgba(29,185,84,.55);box-shadow:0 0 14px rgba(29,185,84,.15)}
+  .bv2-table-card.selected::after{content:'✓';position:absolute;top:8px;right:10px;font-size:11px;font-weight:700;color:#1DB954}
+  .bv2-tc-icon{font-size:22px;margin-bottom:6px;line-height:1}
+  .bv2-tc-name{font-size:13px;font-weight:700;color:#e2e8f0;margin-bottom:3px}
+  .bv2-tc-meta{font-size:10px;color:rgba(255,255,255,.35);margin-bottom:6px}
+  .bv2-tc-badges{display:flex;flex-wrap:wrap;gap:4px}
+  .bv2-join-badge{font-size:9px;padding:2px 7px;border-radius:20px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.35);font-weight:600;transition:all .2s}
+  .bv2-join-badge.active{background:rgba(29,185,84,.2);border-color:rgba(29,185,84,.5);color:#1DB954}
+  /* Global filters strip */
+  .bv2-filters-strip{margin:0 24px;padding:12px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .bv2-filters-label{font-size:10px;color:rgba(255,255,255,.35);font-weight:600;letter-spacing:.5px;white-space:nowrap}
+  .bv2-filter-chip{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;border:1.5px solid rgba(29,185,84,.45);background:rgba(29,185,84,.12);color:#1DB954;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;user-select:none}
+  .bv2-filter-chip .bv2-chip-dot{width:6px;height:6px;border-radius:50%;background:#1DB954;flex-shrink:0;transition:background .15s}
+  .bv2-filter-chip.off{border-color:rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:rgba(255,255,255,.35)}
+  .bv2-filter-chip.off .bv2-chip-dot{background:rgba(255,255,255,.25)}
+  /* Field picker */
+  .bv2-picker-layout{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 24px 20px}
+  .bv2-picker-left{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;overflow:hidden;display:flex;flex-direction:column;min-height:300px}
+  .bv2-picker-right{display:flex;flex-direction:column;gap:10px}
+  .bv2-picker-search{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.07)}
+  .bv2-picker-search input{width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:7px;color:#e2e8f0;font-family:Rubik,sans-serif;font-size:12px;padding:6px 10px;outline:none}
+  .bv2-picker-search input::placeholder{color:rgba(255,255,255,.25)}
+  .bv2-picker-search input:focus{border-color:rgba(29,185,84,.4);background:rgba(29,185,84,.05)}
+  .bv2-field-list{flex:1;overflow-y:auto;padding:4px 0}
+  .bv2-field-group-label{padding:6px 12px 3px;font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,.25)}
+  .bv2-field-row{display:flex;align-items:center;gap:8px;padding:6px 12px;cursor:default;position:relative;transition:background .1s}
+  .bv2-field-row:hover{background:rgba(255,255,255,.06)}
+  .bv2-dtype{font-size:8px;font-weight:700;padding:2px 5px;border-radius:4px;letter-spacing:.5px;flex-shrink:0}
+  .bv2-dtype.num{background:rgba(59,130,246,.2);color:#60a5fa}
+  .bv2-dtype.dt{background:rgba(139,92,246,.2);color:#a78bfa}
+  .bv2-dtype.bool{background:rgba(234,179,8,.2);color:#fbbf24}
+  .bv2-dtype.str{background:rgba(255,255,255,.1);color:rgba(255,255,255,.5)}
+  .bv2-field-name{font-size:12px;color:#e2e8f0;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .bv2-field-actions{display:none;gap:4px;flex-shrink:0}
+  .bv2-field-row:hover .bv2-field-actions{display:flex}
+  .bv2-fadd{font-size:10px;font-weight:700;padding:2px 8px;border-radius:5px;border:none;cursor:pointer;transition:all .12s}
+  .bv2-fadd.metric{background:rgba(29,185,84,.2);color:#1DB954;border:1px solid rgba(29,185,84,.3)}
+  .bv2-fadd.metric:hover{background:rgba(29,185,84,.35)}
+  .bv2-fadd.filter{background:rgba(99,179,237,.15);color:#63b3ed;border:1px solid rgba(99,179,237,.25)}
+  .bv2-fadd.filter:hover{background:rgba(99,179,237,.28)}
+  /* Right zones */
+  .bv2-zone{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:12px;flex:1;min-height:120px}
+  .bv2-zone-title{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+  .bv2-zone-title span.cnt{background:rgba(29,185,84,.25);color:#1DB954;border-radius:20px;padding:1px 7px;font-size:9px}
+  .bv2-zone-chips{display:flex;flex-wrap:wrap;gap:6px;min-height:32px}
+  .bv2-zone-empty{font-size:11px;color:rgba(255,255,255,.2);font-style:italic}
+  .bv2-mchip{display:inline-flex;align-items:center;gap:5px;background:rgba(29,185,84,.15);border:1px solid rgba(29,185,84,.35);color:#86efac;border-radius:20px;padding:3px 8px 3px 10px;font-size:11px;font-weight:500}
+  .bv2-fchip{display:inline-flex;align-items:center;gap:5px;background:rgba(99,179,237,.12);border:1px solid rgba(99,179,237,.25);color:#93c5fd;border-radius:20px;padding:3px 8px 3px 10px;font-size:11px;font-weight:500}
+  .bv2-chip-x{cursor:pointer;font-size:13px;line-height:1;color:rgba(255,255,255,.4);margin-left:2px}
+  .bv2-chip-x:hover{color:#fff}
+  </style>
+
   <div class="builder-step-panel active" id="builder-step-1">
     <div class="builder-panel-header">
       <div>
-        <div class="builder-panel-title">Step 1 of 3 — Select Metrics <span style="font-size:10px;opacity:.4;font-weight:400">v20260519j</span></div>
-        <div class="builder-panel-sub">Choose the metrics to include in your dashboard. Selected metrics will be included with their exact definitions, formulas, and SQL logic.</div>
+        <div class="builder-panel-title">Step 1 of 3 — Design Your Dashboard <span style="font-size:10px;opacity:.4;font-weight:400">v2</span></div>
+        <div class="builder-panel-sub">Select your data tables, configure global filters, then pick the fields you want as metrics or filters.</div>
       </div>
-      <div class="builder-selected-count" id="builder-selected-count">0 metrics selected</div>
+      <div class="builder-selected-count" id="builder-selected-count">0 fields selected</div>
     </div>
 
-    <div class="builder-controls">
-      <div class="search-box" style="max-width:320px">
-        <span class="sicon">🔍</span>
-        <input type="text" id="builder-search" placeholder="Search metrics..." oninput="builderFilterMetrics()">
+    <!-- 1. TABLE SELECTOR -->
+    <div class="bv2-section-label">1 — Select Tables</div>
+    <div class="bv2-table-grid" id="bv2-table-grid">
+      <div class="bv2-table-card" data-tbl="deals" onclick="bv2ToggleTable(this)">
+        <div class="bv2-tc-icon">📋</div>
+        <div class="bv2-tc-name">deals</div>
+        <div class="bv2-tc-meta">HubSpot · 13 fields</div>
+        <div class="bv2-tc-badges">
+          <span class="bv2-join-badge" data-join="deals-accounts">accounts</span>
+          <span class="bv2-join-badge" data-join="deals-users">users</span>
+          <span class="bv2-join-badge" data-join="deals-activities">activities</span>
+        </div>
       </div>
-      <div class="builder-cat-filters" id="builder-cat-filters"></div>
+      <div class="bv2-table-card" data-tbl="subscriptions" onclick="bv2ToggleTable(this)">
+        <div class="bv2-tc-icon">💳</div>
+        <div class="bv2-tc-name">subscriptions</div>
+        <div class="bv2-tc-meta">Chargebee · 11 fields</div>
+        <div class="bv2-tc-badges">
+          <span class="bv2-join-badge" data-join="subscriptions-accounts">accounts</span>
+        </div>
+      </div>
+      <div class="bv2-table-card" data-tbl="leads" onclick="bv2ToggleTable(this)">
+        <div class="bv2-tc-icon">🎯</div>
+        <div class="bv2-tc-name">leads</div>
+        <div class="bv2-tc-meta">HubSpot · 10 fields</div>
+        <div class="bv2-tc-badges">
+          <span class="bv2-join-badge" data-join="leads-users">users</span>
+          <span class="bv2-join-badge" data-join="leads-accounts">accounts</span>
+        </div>
+      </div>
+      <div class="bv2-table-card" data-tbl="accounts" onclick="bv2ToggleTable(this)">
+        <div class="bv2-tc-icon">🏢</div>
+        <div class="bv2-tc-name">accounts</div>
+        <div class="bv2-tc-meta">HubSpot · 10 fields</div>
+        <div class="bv2-tc-badges">
+          <span class="bv2-join-badge" data-join="deals-accounts">deals</span>
+          <span class="bv2-join-badge" data-join="subscriptions-accounts">subscriptions</span>
+          <span class="bv2-join-badge" data-join="leads-accounts">leads</span>
+          <span class="bv2-join-badge" data-join="activities-accounts">activities</span>
+        </div>
+      </div>
+      <div class="bv2-table-card" data-tbl="activities" onclick="bv2ToggleTable(this)">
+        <div class="bv2-tc-icon">⚡</div>
+        <div class="bv2-tc-name">activities</div>
+        <div class="bv2-tc-meta">HubSpot · 9 fields</div>
+        <div class="bv2-tc-badges">
+          <span class="bv2-join-badge" data-join="deals-activities">deals</span>
+          <span class="bv2-join-badge" data-join="activities-accounts">accounts</span>
+          <span class="bv2-join-badge" data-join="activities-users">users</span>
+        </div>
+      </div>
+      <div class="bv2-table-card" data-tbl="users" onclick="bv2ToggleTable(this)">
+        <div class="bv2-tc-icon">👤</div>
+        <div class="bv2-tc-name">users</div>
+        <div class="bv2-tc-meta">HubSpot + HR · 8 fields</div>
+        <div class="bv2-tc-badges">
+          <span class="bv2-join-badge" data-join="deals-users">deals</span>
+          <span class="bv2-join-badge" data-join="leads-users">leads</span>
+          <span class="bv2-join-badge" data-join="activities-users">activities</span>
+        </div>
+      </div>
     </div>
 
-    <div id="builder-debug" style="font-size:10px;color:#f59e0b;padding:2px 24px 0;min-height:14px"></div>
-    <div class="builder-metrics-grid" id="builder-metrics-grid">
-<div class="builder-mrow" data-cat="Funnel" data-n="DQ Rate" data-name="dq rate" data-def="% of leads marked disqualified"><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">DQ Rate</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Funnel</span><span class="builder-mrow-def">% of leads marked Disqualified</span></div></div></div>
-<div class="builder-mrow" data-cat="Funnel" data-n="Lead to Won Conversion %" data-name="lead to won conversion %" data-def="percentage of total leads that convert into closed-won deals."><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Lead to Won Conversion %</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Funnel</span><span class="builder-mrow-def">Percentage of total leads that convert into Closed-Won deals.</span></div></div></div>
-<div class="builder-mrow" data-cat="Funnel" data-n="Marketing Qualified Leads (MQL)" data-name="marketing qualified leads (mql)" data-def="leads qualified by marketing using bant with probability to buy ≥ 40"><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Marketing Qualified Leads (MQL)</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Funnel</span><span class="builder-mrow-def">Leads qualified by Marketing using BANT with Probability to Buy ≥ 40</span></div></div></div>
-<div class="builder-mrow" data-cat="Funnel" data-n="Outbound Qualified Leads (OQL)" data-name="outbound qualified leads (oql)" data-def="leads qualified by ldu outbound using bant with probability to buy ≥ 40"><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Outbound Qualified Leads (OQL)</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Funnel</span><span class="builder-mrow-def">Leads qualified by LDU Outbound using BANT with Probability to Buy ≥ 40</span></div></div></div>
-<div class="builder-mrow" data-cat="Funnel" data-n="Qualified Leads (QL)" data-name="qualified leads (ql)" data-def="leads qualified by marketing/ ldu/ sales"><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Qualified Leads (QL)</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Funnel</span><span class="builder-mrow-def">Leads qualified by Marketing/ LDU/ Sales</span></div></div></div>
-<div class="builder-mrow" data-cat="Funnel" data-n="SQL Conversion Rate" data-name="sql conversion rate" data-def="% of qualified leads that become sql"><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">SQL Conversion Rate</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Funnel</span><span class="builder-mrow-def">% of Qualified Leads that become SQL</span></div></div></div>
-<div class="builder-mrow" data-cat="Funnel" data-n="Sales Disqualified" data-name="sales disqualified" data-def="deals disqualified by sales during demo stage"><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Sales Disqualified</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Funnel</span><span class="builder-mrow-def">Deals disqualified by Sales during demo stage</span></div></div></div>
-<div class="builder-mrow" data-cat="Funnel" data-n="Sales Qualified Leads (SQL)" data-name="sales qualified leads (sql)" data-def="also known as sql are leads that the sales team will work on to convert them into clients."><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Sales Qualified Leads (SQL)</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Funnel</span><span class="builder-mrow-def">Also known as SQL are leads that the Sales team will work on to convert them into clients.</span></div></div></div>
-<div class="builder-mrow" data-cat="Finance" data-n="Total Billed" data-name="total billed" data-def="sum invoice_amount | date: invoice_date | source: netsuite_invoices_summary"><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Total Billed</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Finance</span><span class="builder-mrow-def">SUM(invoice_amount) by invoice_date</span></div></div></div>
-<div class="builder-mrow" data-cat="Finance" data-n="Total Collected" data-name="total collected" data-def="sum applied_payment_amount | invoice_status = Paid"><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Total Collected</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Finance</span><span class="builder-mrow-def">SUM(applied_payment_amount) — Paid invoices</span></div></div></div>
-<div class="builder-mrow" data-cat="Finance" data-n="Outstanding Balance" data-name="outstanding balance" data-def="sum remaining_balance | invoice_status IN (Open, Overdue)"><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Outstanding Balance</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Finance</span><span class="builder-mrow-def">SUM(remaining_balance) — Open + Overdue</span></div></div></div>
-<div class="builder-mrow" data-cat="Finance" data-n="Overdue Amount" data-name="overdue amount" data-def="sum remaining_balance | invoice_status = Overdue"><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Overdue Amount</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Finance</span><span class="builder-mrow-def">SUM(remaining_balance) — Overdue only</span></div></div></div>
-<div class="builder-mrow" data-cat="Finance" data-n="Collections Rate" data-name="collections rate" data-def="total collected / total billed x 100 | excludes cancelled"><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Collections Rate</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Finance</span><span class="builder-mrow-def">Total Collected / Total Billed × 100</span></div></div></div>
-<div class="builder-mrow" data-cat="Finance" data-n="# Overdue Invoices" data-name="# overdue invoices" data-def="count invoice_id | invoice_status = Overdue"><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name"># Overdue Invoices</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Finance</span><span class="builder-mrow-def">COUNT(invoice_id) — invoice_status = Overdue</span></div></div></div>
-<div class="builder-mrow" data-cat="Finance" data-n="Average Days to Pay" data-name="average days to pay" data-def="avg(days_open) | invoice_status = Paid"><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Average Days to Pay</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Finance</span><span class="builder-mrow-def">AVG(days_open) — Paid invoices</span></div></div></div>
-<div class="builder-mrow" data-cat="Customer_Health" data-n="Active Headcount" data-name="active headcount" data-def="sum GREATEST(hr_headcount, payroll_headcount) | date: month_date | source: company_active_headcount"><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Active Headcount</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">CS</span><span class="builder-mrow-def">SUM(GREATEST(hr, payroll)) — monthly</span></div></div></div>
-<div class="builder-mrow" data-cat="Customer_Health" data-n="MoM Headcount Growth" data-name="mom headcount growth" data-def="current month active headcount minus prior month | source: company_active_headcount"><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">MoM Headcount Growth</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">CS</span><span class="builder-mrow-def">Current vs prior month active headcount</span></div></div></div>
-<div class="builder-mrow" data-cat="Funnel" data-n="Upsell Qualified Leads (UQL)" data-name="upsell qualified leads (uql)" data-def="all deals in PH Upsell Pipeline | no stage filter | no department source filter"><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Upsell Qualified Leads (UQL)</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Funnel</span><span class="builder-mrow-def">All deals in PH Upsell Pipeline — no stage filter</span></div></div></div>
-<div class="builder-mrow" data-cat="Funnel" data-n="WON/ SQL" data-name="won/ sql" data-def="percentage of sales qualified leads (sql/active) that converted into closed-won deals. sql count is based on customers that are currently active within the selected month."><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">WON/ SQL</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Funnel</span><span class="builder-mrow-def">Percentage of Sales Qualified Leads (SQL/ACTIVE) that converted into Closed-Won deals. SQL count is based on customers that are currently active within the selected month.</span></div></div></div>
-<div class="builder-mrow" data-cat="Marketing_Efficiency" data-n="Cost per Lead (CPL)" data-name="cost per lead (cpl)" data-def="average marketing cost per lead generated"><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Cost per Lead (CPL)</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Marketing</span><span class="builder-mrow-def">Average marketing cost per lead generated</span></div></div></div>
-<div class="builder-mrow" data-cat="Product_Performance" data-n="Attach Rate (Industry–Product)" data-name="attach rate (industry–product)" data-def="percentage of companies in an industry that purchased a specific product."><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Attach Rate (Industry–Product)</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Product</span><span class="builder-mrow-def">Percentage of companies in an industry that purchased a specific product.</span></div></div></div>
-<div class="builder-mrow" data-cat="Product_Performance" data-n="Attach Rate (Product → Product)" data-name="attach rate (product → product)" data-def="percentage of companies that purchased product b among companies that purchased product a."><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Attach Rate (Product → Product)</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Product</span><span class="builder-mrow-def">Percentage of companies that purchased Product B among companies that purchased Product A.</span></div></div></div>
-<div class="builder-mrow" data-cat="Product_Performance" data-n="Attach Rate (Segment–Product)" data-name="attach rate (segment–product)" data-def="percentage of companies in a segment that purchased a specific product."><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Attach Rate (Segment–Product)</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Product</span><span class="builder-mrow-def">Percentage of companies in a segment that purchased a specific product.</span></div></div></div>
-<div class="builder-mrow" data-cat="Revenue" data-n="Annual Recurring Revenue (ARR)" data-name="annual recurring revenue (arr)" data-def="expected yearly recurring revenue from signed clients"><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Annual Recurring Revenue (ARR)</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Revenue</span><span class="builder-mrow-def">Expected yearly recurring revenue from signed clients</span></div></div></div>
-<div class="builder-mrow" data-cat="Revenue" data-n="EF Monthly Recurring Revenue (EF MRR)" data-name="ef monthly recurring revenue (ef mrr)" data-def="readycash/ readywage monthly recurring revenue from signed proposal. recognized only if contract term ≥ 12 months."><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">EF Monthly Recurring Revenue (EF MRR)</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Revenue</span><span class="builder-mrow-def">ReadyCash/ ReadyWage monthly recurring revenue from signed proposal. Recognized only if contract term ≥ 12 months.</span></div></div></div>
-<div class="builder-mrow" data-cat="Revenue" data-n="Monthly Recurring Revenue (MRR)" data-name="monthly recurring revenue (mrr)" data-def="monthly recurring revenue from signed proposal. recognized only if contract term ≥ 12 months."><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Monthly Recurring Revenue (MRR)</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Revenue</span><span class="builder-mrow-def">Monthly recurring revenue from signed proposal. Recognized only if contract term ≥ 12 months.</span></div></div></div>
-<div class="builder-mrow" data-cat="Revenue" data-n="OTP Revenue" data-name="otp revenue" data-def="one-time payment revenue. otp_only + mrr_lt_12 (contracts shorter than 12 months). not counted in standard mrr."><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">OTP Revenue</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Revenue</span><span class="builder-mrow-def">One-time payment revenue — otp_only + mrr_lt_12 (contracts &lt; 12 months). Not counted in standard MRR.</span></div></div></div>
-<div class="builder-mrow" data-cat="Revenue" data-n="Implementation Fee" data-name="implementation fee" data-def="one-time implementation fee collected at deal close. separate from mrr — not recurring revenue."><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Implementation Fee</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Revenue</span><span class="builder-mrow-def">One-time implementation fee collected at deal close. Separate from MRR — not recurring revenue.</span></div></div></div>
-<div class="builder-mrow" data-cat="Sales_Productivity" data-n="Average Deal Size (ADS)" data-name="average deal size (ads)" data-def="average mrr of won deals"><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Average Deal Size (ADS)</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Sales</span><span class="builder-mrow-def">Average MRR of won deals</span></div></div></div>
-<div class="builder-mrow" data-cat="Sales_Productivity" data-n="Average Deal Velocity (ADV)" data-name="average deal velocity (adv)" data-def="the average number of days it takes to close a deal, measured from deal creation to deal close date."><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Average Deal Velocity (ADV)</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Sales</span><span class="builder-mrow-def">The average number of days it takes to close a deal, measured from deal creation to deal close date.</span></div></div></div>
-<div class="builder-mrow" data-cat="Sales_Productivity" data-n="Coverage Ratio" data-name="coverage ratio" data-def="determines the health of the sales pipeline relative to the sales target. the industry standard for the coverage ratio is at 5x the target for the full year and 3x for the quarter."><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Coverage Ratio</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Sales</span><span class="builder-mrow-def">Determines the health of the sales pipeline relative to the sales target. The industry standard for the coverage ratio is at 5X the target for the full year and 3x for the quarter.</span></div></div></div>
-<div class="builder-mrow" data-cat="Sales_Productivity" data-n="Lost Deals" data-name="lost deals" data-def="a deal pursued by sales but did not successfully close to becoming a client."><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Lost Deals</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Sales</span><span class="builder-mrow-def">A deal pursued by sales but did not successfully close to becoming a client.</span></div></div></div>
-<div class="builder-mrow" data-cat="Sales_Productivity" data-n="Pipeline MRR" data-name="pipeline mrr" data-def="total mrr of all active pipeline deals"><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Pipeline MRR</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Sales</span><span class="builder-mrow-def">Total MRR of all active pipeline deals</span></div></div></div>
-<div class="builder-mrow" data-cat="Sales_Productivity" data-n="Quota Attainment %" data-name="quota attainment %" data-def="percentage of assigned quota achieved by a rep or team."><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Quota Attainment %</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Sales</span><span class="builder-mrow-def">Percentage of assigned quota achieved by a rep or team.</span></div></div></div>
-<div class="builder-mrow" data-cat="Sales_Productivity" data-n="Sales Churn Rate" data-name="sales churn rate" data-def="% of contract signed deals that did not proceed to implementation within 60 days."><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Sales Churn Rate</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Sales</span><span class="builder-mrow-def">% of Contract Signed deals that did not proceed to Implementation within 60 days.</span></div></div></div>
-<div class="builder-mrow" data-cat="Sales_Productivity" data-n="Upsell Rate" data-name="upsell rate" data-def="% of existing customers that purchased additional products."><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Upsell Rate</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Sales</span><span class="builder-mrow-def">% of existing customers that purchased additional products.</span></div></div></div>
-<div class="builder-mrow" data-cat="Sales_Productivity" data-n="WON/ CLOSED" data-name="won/ closed" data-def="% of won deals against all closed deals"><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">WON/ CLOSED</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Sales</span><span class="builder-mrow-def">% of won deals against all closed deals</span></div></div></div>
-<div class="builder-mrow" data-cat="Sales_Productivity" data-n="Weighted Pipeline MRR" data-name="weighted pipeline mrr" data-def="expected pipeline revenue based on deal probability"><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Weighted Pipeline MRR</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Sales</span><span class="builder-mrow-def">Expected pipeline revenue based on deal probability</span></div></div></div>
-<div class="builder-mrow" data-cat="Sales_Productivity" data-n="Won Deals" data-name="won deals" data-def="deals completed with a signed proposal"><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Won Deals</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Sales</span><span class="builder-mrow-def">Deals completed with a signed proposal</span></div></div></div>
-</div>
-<script>
-(function(){
-  var grid = document.getElementById('builder-metrics-grid');
-  var dbg  = document.getElementById('builder-debug');
-  if (!grid) { if (dbg) dbg.textContent = 'ERR: grid not found'; return; }
-  if (dbg) dbg.textContent = 'v5 ready';
-  grid.addEventListener('click', function(e) {
-    // Walk up to find .builder-mrow (no closest() for max compat)
-    var row = e.target;
-    while (row && row !== grid) {
-      if (row.className && row.className.indexOf('builder-mrow') >= 0) break;
-      row = row.parentNode;
-    }
-    if (!row || row === grid) return;
-    var cb = row.querySelector('input[type=checkbox]');
-    if (!cb) return;
-    // Toggle checkbox if user didn't click it directly
-    if (e.target.tagName !== 'INPUT') cb.checked = !cb.checked;
-    // Sync _builderSelectedIds (used by step 2 & 3)
-    var name = row.getAttribute('data-n');
-    if (name && window._builderSelectedIds) {
-      if (cb.checked) window._builderSelectedIds.add(name);
-      else            window._builderSelectedIds.delete(name);
-    }
-    // Update counter and Next button
-    var n = grid.querySelectorAll('input[type=checkbox]:checked').length;
-    var countEl = document.getElementById('builder-selected-count');
-    if (countEl) countEl.textContent = n + ' metric' + (n !== 1 ? 's' : '') + ' selected';
-    var btn = document.getElementById('builder-next-1');
-    if (btn) btn.disabled = n === 0;
-    row.classList.toggle('selected', cb.checked);
-    if (dbg) dbg.textContent = 'v5: ' + n + ' selected';
-  });
-})();
-</script>
+    <!-- 2. GLOBAL FILTERS STRIP -->
+    <div class="bv2-section-label" style="margin-top:16px">2 — Global Filters</div>
+    <div style="padding:0 24px 4px;font-size:11px;color:rgba(255,255,255,.3);margin-bottom:6px">Always available on this dashboard — toggle off to exclude</div>
+    <div style="padding:0 24px">
+      <div class="bv2-filters-strip">
+        <span class="bv2-filters-label">Global filters</span>
+        <span class="bv2-filter-chip" data-gf="date_range" onclick="bv2ToggleGf(this)"><span class="bv2-chip-dot"></span>Date range</span>
+        <span class="bv2-filter-chip" data-gf="owner" onclick="bv2ToggleGf(this)"><span class="bv2-chip-dot"></span>Owner</span>
+        <span class="bv2-filter-chip" data-gf="team" onclick="bv2ToggleGf(this)"><span class="bv2-chip-dot"></span>Team</span>
+        <span class="bv2-filter-chip" data-gf="region" onclick="bv2ToggleGf(this)"><span class="bv2-chip-dot"></span>Region</span>
+      </div>
+    </div>
+
+    <!-- 3. FIELD PICKER -->
+    <div class="bv2-section-label" style="margin-top:16px">3 — Pick Fields</div>
+    <div class="bv2-picker-layout">
+      <!-- LEFT: field list -->
+      <div class="bv2-picker-left">
+        <div class="bv2-picker-search">
+          <input type="text" id="bv2-field-search" placeholder="Search fields..." oninput="bv2FilterFields()">
+        </div>
+        <div class="bv2-field-list" id="bv2-field-list">
+          <div style="padding:20px;text-align:center;color:rgba(255,255,255,.2);font-size:12px">Select a table above to see its fields</div>
+        </div>
+      </div>
+      <!-- RIGHT: zones -->
+      <div class="bv2-picker-right">
+        <div class="bv2-zone">
+          <div class="bv2-zone-title">Metrics <span class="cnt" id="bv2-metric-cnt">0</span></div>
+          <div class="bv2-zone-chips" id="bv2-metric-zone"><span class="bv2-zone-empty">Add fields with +M</span></div>
+        </div>
+        <div class="bv2-zone">
+          <div class="bv2-zone-title">Additional Filters <span class="cnt" id="bv2-filter-cnt">0</span></div>
+          <div class="bv2-zone-chips" id="bv2-filter-zone"><span class="bv2-zone-empty">Add fields with +F</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hidden metrics grid for backward-compat with prompt generator -->
+    <div id="builder-metrics-grid" style="display:none"></div>
 
     <div class="builder-footer">
       <div></div>
-      <button class="builder-btn-next" id="builder-next-1" onclick="builderGoStep(2)" disabled>Next →</button>
+      <button class="builder-btn-next" id="builder-next-1" onclick="builderGoStepV2(2)">Next →</button>
     </div>
   </div>
+
+  <script>
+  // ── BUILDER V2 DATA ──
+  var BV2_SCHEMA = {
+    deals: [
+      {f:'deal_id',t:'str'},{f:'amount',t:'num'},{f:'owner_id',t:'str'},{f:'account_id',t:'str'},
+      {f:'stage',t:'str'},{f:'deal_type',t:'str'},{f:'close_date',t:'dt'},{f:'created_date',t:'dt'},
+      {f:'is_won',t:'bool'},{f:'is_closed',t:'bool'},{f:'days_in_stage',t:'num'},{f:'region',t:'str'},{f:'probability',t:'num'}
+    ],
+    subscriptions: [
+      {f:'account_id',t:'str'},{f:'plan_name',t:'str'},{f:'status',t:'str'},{f:'mrr',t:'num'},{f:'arr',t:'num'},
+      {f:'expansion_mrr',t:'num'},{f:'contraction_mrr',t:'num'},{f:'start_date',t:'dt'},{f:'churn_date',t:'dt'},
+      {f:'region',t:'str'},{f:'month',t:'dt'}
+    ],
+    leads: [
+      {f:'owner_id',t:'str'},{f:'lifecycle_stage',t:'str'},{f:'lead_source',t:'str'},{f:'is_converted',t:'bool'},
+      {f:'created_date',t:'dt'},{f:'converted_date',t:'dt'},{f:'country',t:'str'},{f:'industry',t:'str'}
+    ],
+    accounts: [
+      {f:'account_name',t:'str'},{f:'owner_id',t:'str'},{f:'industry',t:'str'},{f:'employee_count',t:'num'},
+      {f:'region',t:'str'},{f:'lifecycle_stage',t:'str'},{f:'tier',t:'str'},{f:'created_date',t:'dt'}
+    ],
+    activities: [
+      {f:'activity_type',t:'str'},{f:'owner_id',t:'str'},{f:'account_id',t:'str'},{f:'deal_id',t:'str'},
+      {f:'activity_date',t:'dt'},{f:'is_completed',t:'bool'},{f:'duration_seconds',t:'num'}
+    ],
+    users: [
+      {f:'full_name',t:'str'},{f:'email',t:'str'},{f:'team',t:'str'},{f:'role',t:'str'},
+      {f:'region',t:'str'},{f:'is_active',t:'bool'},{f:'start_date',t:'dt'}
+    ]
+  };
+  var BV2_JOINS = [
+    'deals-accounts','deals-users','deals-activities',
+    'subscriptions-accounts',
+    'leads-users','leads-accounts',
+    'activities-deals','activities-accounts','activities-users'
+  ];
+  var _bv2SelectedTables = new Set();
+  var _bv2Metrics = []; // [{tbl, field}]
+  var _bv2Filters = []; // [{tbl, field}]
+  var _bv2FieldSearch = '';
+
+  function bv2ToggleTable(card) {
+    var tbl = card.dataset.tbl;
+    if (_bv2SelectedTables.has(tbl)) {
+      _bv2SelectedTables.delete(tbl);
+      card.classList.remove('selected');
+    } else {
+      _bv2SelectedTables.add(tbl);
+      card.classList.add('selected');
+    }
+    bv2UpdateJoinBadges();
+    bv2RenderFieldList();
+    bv2UpdateCount();
+  }
+
+  function bv2UpdateJoinBadges() {
+    document.querySelectorAll('.bv2-join-badge').forEach(function(b) {
+      var join = b.dataset.join;
+      var parts = join.split('-');
+      // A join lights up if BOTH tables in the pair are selected
+      var active = _bv2SelectedTables.has(parts[0]) && _bv2SelectedTables.has(parts[1]);
+      b.classList.toggle('active', active);
+    });
+  }
+
+  function bv2ToggleGf(chip) {
+    chip.classList.toggle('off');
+  }
+
+  function bv2RenderFieldList() {
+    var list = document.getElementById('bv2-field-list');
+    if (!list) return;
+    var q = (_bv2FieldSearch || '').toLowerCase();
+    if (_bv2SelectedTables.size === 0) {
+      list.innerHTML = '<div style="padding:20px;text-align:center;color:rgba(255,255,255,.2);font-size:12px">Select a table above to see its fields</div>';
+      return;
+    }
+    var html = '';
+    _bv2SelectedTables.forEach(function(tbl) {
+      var fields = BV2_SCHEMA[tbl] || [];
+      var filtered = q ? fields.filter(function(f){ return f.f.indexOf(q) >= 0; }) : fields;
+      if (filtered.length === 0) return;
+      html += '<div class="bv2-field-group-label">' + tbl + '</div>';
+      filtered.forEach(function(fd) {
+        html += '<div class="bv2-field-row">' +
+          '<span class="bv2-dtype ' + fd.t + '">' + fd.t.toUpperCase() + '</span>' +
+          '<span class="bv2-field-name">' + fd.f + '</span>' +
+          '<span class="bv2-field-actions">' +
+            '<button class="bv2-fadd metric" onclick="bv2AddField(\'' + tbl + '\',\'' + fd.f + '\',\'metric\')">+M</button>' +
+            '<button class="bv2-fadd filter" onclick="bv2AddField(\'' + tbl + '\',\'' + fd.f + '\',\'filter\')">+F</button>' +
+          '</span>' +
+        '</div>';
+      });
+    });
+    list.innerHTML = html || '<div style="padding:20px;text-align:center;color:rgba(255,255,255,.2);font-size:12px">No fields match your search</div>';
+  }
+
+  function bv2FilterFields() {
+    _bv2FieldSearch = (document.getElementById('bv2-field-search')||{}).value || '';
+    bv2RenderFieldList();
+  }
+
+  function bv2AddField(tbl, field, zone) {
+    var key = tbl + '.' + field;
+    if (zone === 'metric') {
+      if (_bv2Metrics.find(function(x){return x.key===key;})) return;
+      _bv2Metrics.push({tbl:tbl, field:field, key:key});
+      bv2RenderZone('metric');
+    } else {
+      if (_bv2Filters.find(function(x){return x.key===key;})) return;
+      _bv2Filters.push({tbl:tbl, field:field, key:key});
+      bv2RenderZone('filter');
+    }
+    bv2UpdateCount();
+  }
+
+  function bv2RemoveField(key, zone) {
+    if (zone === 'metric') {
+      _bv2Metrics = _bv2Metrics.filter(function(x){return x.key!==key;});
+      bv2RenderZone('metric');
+    } else {
+      _bv2Filters = _bv2Filters.filter(function(x){return x.key!==key;});
+      bv2RenderZone('filter');
+    }
+    bv2UpdateCount();
+  }
+
+  function bv2RenderZone(zone) {
+    var items = zone === 'metric' ? _bv2Metrics : _bv2Filters;
+    var el = document.getElementById('bv2-' + zone + '-zone');
+    var cntEl = document.getElementById('bv2-' + zone + '-cnt');
+    if (!el) return;
+    if (items.length === 0) {
+      el.innerHTML = '<span class="bv2-zone-empty">Add fields with +' + (zone==='metric'?'M':'F') + '</span>';
+    } else {
+      el.innerHTML = items.map(function(x) {
+        var cls = zone === 'metric' ? 'bv2-mchip' : 'bv2-fchip';
+        return '<span class="' + cls + '">' + x.key + '<span class="bv2-chip-x" onclick="bv2RemoveField(\'' + x.key + '\',\'' + zone + '\')">&times;</span></span>';
+      }).join('');
+    }
+    if (cntEl) cntEl.textContent = items.length;
+  }
+
+  function bv2UpdateCount() {
+    var n = _bv2Metrics.length + _bv2Filters.length;
+    var el = document.getElementById('builder-selected-count');
+    if (el) el.textContent = n + ' field' + (n!==1?'s':'') + ' selected';
+  }
+
+  // Override builderGoStep so step 1 → 2 transition works with v2 state
+  function builderGoStepV2(n) {
+    // Store v2 selections into the prompt-generator state
+    window._bv2SelectedTablesForPrompt = Array.from(_bv2SelectedTables);
+    window._bv2MetricsForPrompt = _bv2Metrics.slice();
+    window._bv2FiltersForPrompt = _bv2Filters.slice();
+    window._bv2GlobalFilters = [];
+    document.querySelectorAll('.bv2-filter-chip:not(.off)').forEach(function(c){ window._bv2GlobalFilters.push(c.dataset.gf); });
+    // Proceed to step 2
+    _builderCurrentStep = n;
+    for (var i=1;i<=3;i++) {
+      var p = document.getElementById('builder-step-'+i);
+      if (p) p.style.display = i===n?'block':'none';
+      var d = document.getElementById('bsi-'+i);
+      if (d) { d.classList.remove('active','done'); if(i<n)d.classList.add('done'); else if(i===n)d.classList.add('active'); }
+      var l = document.getElementById('bsl-'+i);
+      if (l) l.classList.toggle('done',i<n);
+    }
+    var c = document.querySelector('.content-area');
+    if (c) c.scrollTop = 0;
+  }
+  </script>
 
   <!-- Step 2: Configure -->
   <div class="builder-step-panel" id="builder-step-2" style="display:none">
@@ -2025,9 +2277,10 @@ DATABRICKS_TOKEN</div>
     <div style="padding:0 24px 16px">
       <textarea class="builder-prompt-textarea" id="builder-prompt-output" readonly></textarea>
 
-      <div style="display:flex;gap:10px;margin-top:12px">
+      <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
         <button class="builder-btn-copy" id="builder-copy-btn" onclick="builderCopyPrompt()">📋 Copy Prompt</button>
         <button class="builder-btn-back" onclick="builderGoStep(1)">🔄 Start Over</button>
+        <button id="builder-save-dash-btn" onclick="myDashSaveCurrent()" style="background:rgba(29,185,84,.18);border:1.5px solid rgba(29,185,84,.45);color:#1DB954;font-family:Rubik,sans-serif;font-size:12px;font-weight:700;padding:8px 16px;border-radius:8px;cursor:pointer;transition:all .15s" onmouseover="this.style.background='rgba(29,185,84,.28)'" onmouseout="this.style.background='rgba(29,185,84,.18)'">💾 Save to My Dashboards</button>
       </div>
 
       <div class="builder-tip-box">
@@ -2204,6 +2457,21 @@ python fetch_data.py
 
 <!-- PART 4 — DASHBOARDS -->
 <div class="section" id="section-dashboards">
+
+  <!-- ── MY DASHBOARDS (local, editable) ── -->
+  <div id="my-dashboards-section" style="padding:24px 24px 0">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div>
+        <div style="font-size:15px;font-weight:700;color:#e2e8f0">My Dashboards</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:2px">Dashboards you built with the DIY Builder — edit or rebuild anytime</div>
+      </div>
+      <button onclick="goToBuilder()" style="background:rgba(29,185,84,.18);border:1.5px solid rgba(29,185,84,.45);color:#1DB954;font-family:Rubik,sans-serif;font-size:12px;font-weight:700;padding:8px 16px;border-radius:8px;cursor:pointer;transition:all .15s" onmouseover="this.style.background='rgba(29,185,84,.28)'" onmouseout="this.style.background='rgba(29,185,84,.18)'">+ New Dashboard</button>
+    </div>
+    <div id="my-dashboards-list"></div>
+  </div>
+
+  <div style="border-bottom:1px solid rgba(255,255,255,.07);margin:20px 24px 0"></div>
+
   <div class="dg-hero">
     <div>
       <h1>📱 Team Dashboards</h1>
@@ -2228,6 +2496,161 @@ python fetch_data.py
     <iframe class="dg-embed-frame" id="dg-embed-frame" src="" allowfullscreen></iframe>
   </div>
 </div>
+
+<script>
+// ── MY DASHBOARDS — local storage ──
+var MY_DASH_KEY = 'radar_my_dashboards';
+
+function myDashLoad() {
+  try { return JSON.parse(localStorage.getItem(MY_DASH_KEY) || '[]'); } catch(e) { return []; }
+}
+function myDashSave(list) {
+  localStorage.setItem(MY_DASH_KEY, JSON.stringify(list));
+}
+
+function myDashRender() {
+  var list = myDashLoad();
+  var el = document.getElementById('my-dashboards-list');
+  if (!el) return;
+  if (!list || list.length === 0) {
+    el.innerHTML = '<div style="background:rgba(255,255,255,.03);border:1px dashed rgba(255,255,255,.1);border-radius:12px;padding:28px;text-align:center">'
+      + '<div style="font-size:28px;margin-bottom:10px">🛠️</div>'
+      + '<div style="font-size:13px;font-weight:600;color:rgba(255,255,255,.5);margin-bottom:6px">No dashboards yet — build your first one above</div>'
+      + '<div style="font-size:11px;color:rgba(255,255,255,.25);margin-bottom:16px">Use the DIY Dashboard Builder to generate a Claude prompt and build a dashboard in minutes.</div>'
+      + '<button onclick="goToBuilder()" style="background:rgba(29,185,84,.15);border:1.5px solid rgba(29,185,84,.4);color:#1DB954;font-family:Rubik,sans-serif;font-size:12px;font-weight:700;padding:8px 18px;border-radius:8px;cursor:pointer">Open Builder →</button>'
+      + '</div>';
+    return;
+  }
+  el.innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px">'
+    + list.map(function(d, i) {
+      var tables = (d.tables||[]).join(', ') || '—';
+      var metrics = (d.metrics||[]).length;
+      var updated = d.updated ? new Date(d.updated).toLocaleDateString() : '—';
+      return '<div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:12px;padding:16px;position:relative">'
+        + '<div style="font-size:14px;font-weight:700;color:#e2e8f0;margin-bottom:4px">'+escHtml(d.name||'Untitled Dashboard')+'</div>'
+        + '<div style="font-size:10px;color:rgba(255,255,255,.3);margin-bottom:8px">Updated '+updated+'</div>'
+        + '<div style="font-size:11px;color:rgba(255,255,255,.35);margin-bottom:4px">Tables: '+escHtml(tables)+'</div>'
+        + '<div style="font-size:11px;color:rgba(255,255,255,.35);margin-bottom:12px">'+metrics+' metric'+(metrics!==1?'s':'')+'</div>'
+        + '<div style="display:flex;gap:8px">'
+        + '<button onclick="myDashEdit('+i+')" style="flex:1;background:rgba(29,185,84,.15);border:1px solid rgba(29,185,84,.35);color:#1DB954;font-family:Rubik,sans-serif;font-size:11px;font-weight:700;padding:6px 12px;border-radius:7px;cursor:pointer">✏️ Edit</button>'
+        + '<button onclick="myDashDelete('+i+')" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.4);font-family:Rubik,sans-serif;font-size:11px;padding:6px 10px;border-radius:7px;cursor:pointer" title="Delete">🗑</button>'
+        + '</div>'
+        + '</div>';
+    }).join('')
+    + '</div>';
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function myDashEdit(idx) {
+  var list = myDashLoad();
+  var d = list[idx];
+  if (!d) return;
+  // Pre-populate builder v2 state
+  window._bv2EditIdx = idx;
+  window._bv2EditMode = true;
+  // Restore table selections
+  _bv2SelectedTables = new Set(d.tables || []);
+  _bv2Metrics = (d.metrics || []).map(function(k){ var p=k.split('.'); return {tbl:p[0],field:p[1]||k,key:k}; });
+  _bv2Filters = (d.fieldFilters || []).map(function(k){ var p=k.split('.'); return {tbl:p[0],field:p[1]||k,key:k}; });
+  // Navigate to builder step 1
+  goToBuilder();
+  // Allow DOM to update then sync UI
+  setTimeout(function() {
+    // Sync table card selections
+    document.querySelectorAll('.bv2-table-card').forEach(function(card) {
+      var selected = _bv2SelectedTables.has(card.dataset.tbl);
+      card.classList.toggle('selected', selected);
+    });
+    bv2UpdateJoinBadges();
+    bv2RenderFieldList();
+    // Sync metric/filter zones
+    bv2RenderZone('metric');
+    bv2RenderZone('filter');
+    bv2UpdateCount();
+    // Restore global filters
+    var gf = d.globalFilters || ['date_range','owner','team','region'];
+    document.querySelectorAll('.bv2-filter-chip').forEach(function(chip) {
+      chip.classList.toggle('off', gf.indexOf(chip.dataset.gf) < 0);
+    });
+    // Update builder header to show edit mode
+    var title = document.querySelector('#builder-step-1 .builder-panel-title');
+    if (title) title.innerHTML = 'Step 1 of 3 — Edit Dashboard <span style="font-size:10px;opacity:.4;font-weight:400">v2 · edit mode</span>';
+    // Swap Next button label
+    var nextBtn = document.getElementById('builder-next-1');
+    if (nextBtn) nextBtn.textContent = 'Next →';
+  }, 150);
+}
+
+function myDashDelete(idx) {
+  var list = myDashLoad();
+  if (!confirm('Delete "' + (list[idx] && list[idx].name ? list[idx].name : 'this dashboard') + '"?')) return;
+  list.splice(idx, 1);
+  myDashSave(list);
+  myDashRender();
+}
+
+function myDashSaveCurrent() {
+  // Called from Step 3 "Save to My Dashboards" button
+  var name = (document.getElementById('bd-name')||{}).value || 'Untitled Dashboard';
+  var tables = window._bv2SelectedTablesForPrompt || [];
+  var metrics = (window._bv2MetricsForPrompt||[]).map(function(x){return x.key;});
+  var fieldFilters = (window._bv2FiltersForPrompt||[]).map(function(x){return x.key;});
+  var globalFilters = window._bv2GlobalFilters || [];
+  var list = myDashLoad();
+  var entry = { name: name, tables: tables, metrics: metrics, fieldFilters: fieldFilters, globalFilters: globalFilters, updated: new Date().toISOString() };
+  if (window._bv2EditMode && typeof window._bv2EditIdx === 'number') {
+    list[window._bv2EditIdx] = entry;
+    window._bv2EditMode = false;
+    window._bv2EditIdx = null;
+  } else {
+    list.push(entry);
+  }
+  myDashSave(list);
+  alert('Dashboard "' + name + '" saved to My Dashboards.');
+}
+
+function goToBuilder() {
+  // Switch to the Dashboard Studio section, DIY tab
+  var planDiy = document.getElementById('plan-diy');
+  var planBody = planDiy && planDiy.closest('.plan-body');
+  // Activate section-dash
+  document.querySelectorAll('.section').forEach(function(s){ s.classList.remove('active'); s.style.display=''; });
+  document.querySelectorAll('.sidebar-tab').forEach(function(t){ t.classList.remove('active'); });
+  var dashSection = document.getElementById('section-dash');
+  if (dashSection) { dashSection.classList.add('active'); dashSection.style.display='block'; }
+  var dashTab = document.querySelector('.sidebar-tab[onclick*="section-dash"]') || document.querySelector('.sidebar-tab[data-section="section-dash"]');
+  if (dashTab) dashTab.classList.add('active');
+  // Switch to DIY plan tab
+  document.querySelectorAll('.plan-section').forEach(function(p){ p.classList.remove('active'); });
+  document.querySelectorAll('.plan-tab').forEach(function(t){ t.classList.remove('active'); });
+  if (planDiy) planDiy.classList.add('active');
+  var diyTab = document.querySelector('.plan-tab[onclick*="plan-diy"]');
+  if (diyTab) diyTab.classList.add('active');
+  // Go to step 1
+  builderGoStep && builderGoStep(1);
+  // Scroll to top of content area
+  var ca = document.querySelector('.content-area');
+  if (ca) ca.scrollTop = 0;
+}
+
+// Render on section activation
+(function() {
+  // Watch for when section-dashboards becomes active
+  var obs = new MutationObserver(function() {
+    var el = document.getElementById('section-dashboards');
+    if (el && (el.classList.contains('active') || el.style.display === 'block')) {
+      myDashRender();
+    }
+  });
+  var target = document.getElementById('section-dashboards');
+  if (target) obs.observe(target, {attributes:true, attributeFilter:['class','style']});
+  // Also render immediately if already active
+  myDashRender();
+})();
+</script>
 
 
 
@@ -2969,6 +3392,683 @@ python fetch_data.py
   </div>
 </div><!-- /section-request -->
 
+<!-- ── DIY BUILDER SECTION ── -->
+<div class="section" id="section-diy" style="display:none">
+<style>
+/* DIY Builder styles */
+#section-diy{background:#030712;padding:0}
+.diy-hero{background:linear-gradient(135deg,#060c14 0%,#0d1f2d 100%);padding:28px 28px;border-bottom:1px solid rgba(255,255,255,.06)}
+.diy-hero h1{font-size:20px;font-weight:700;margin-bottom:6px;color:#fff}
+.diy-hero p{color:rgba(255,255,255,.5);font-size:13px;line-height:1.6;max-width:680px}
+.diy-body{padding:28px}
+/* Wizard steps nav */
+.diy-steps-nav{display:flex;align-items:center;gap:0;margin-bottom:28px}
+.diy-step-pill{display:flex;align-items:center;gap:8px;padding:9px 18px;border-radius:24px;font-size:12px;font-weight:600;color:rgba(255,255,255,.4);background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);cursor:pointer;transition:all .15s;white-space:nowrap}
+.diy-step-pill.active{color:#1DB954;background:rgba(29,185,84,.12);border-color:rgba(29,185,84,.4)}
+.diy-step-pill.done{color:rgba(255,255,255,.6);background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.12)}
+.diy-step-arrow{color:rgba(255,255,255,.2);font-size:14px;margin:0 6px;flex-shrink:0}
+.diy-step-num{width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+.diy-step-pill.active .diy-step-num{background:#1DB954;color:#fff}
+.diy-step-pill.done .diy-step-num{background:rgba(255,255,255,.2);color:#fff}
+/* Wizard panels */
+.diy-wizard-panel{display:none}
+.diy-wizard-panel.active{display:block}
+/* Table cards */
+.diy-tables-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:24px}
+.diy-table-card{background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.08);border-radius:12px;padding:14px;cursor:pointer;transition:all .2s;position:relative}
+.diy-table-card:hover{border-color:rgba(29,185,84,.35);background:rgba(29,185,84,.06)}
+.diy-table-card.selected{border-color:#1DB954;background:rgba(29,185,84,.1);box-shadow:0 0 14px rgba(29,185,84,.18)}
+.diy-table-card .dtc-name{font-size:13px;font-weight:700;color:#fff;margin-bottom:3px}
+.diy-table-card .dtc-desc{font-size:11px;color:rgba(255,255,255,.4);line-height:1.5;margin-bottom:8px}
+.diy-table-card .dtc-src{font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;display:inline-block;margin-bottom:8px}
+.diy-table-card .dtc-src.hs{background:rgba(255,91,0,.15);color:#ff7849;border:1px solid rgba(255,91,0,.25)}
+.diy-table-card .dtc-src.db{background:rgba(29,185,84,.12);color:#1DB954;border:1px solid rgba(29,185,84,.25)}
+.diy-table-card .dtc-src.ns{background:rgba(0,184,212,.1);color:#00cec9;border:1px solid rgba(0,184,212,.25)}
+.diy-table-card .dtc-src.int{background:rgba(108,92,231,.12);color:#a29bfe;border:1px solid rgba(108,92,231,.25)}
+.diy-join-badges{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.diy-join-badge{font-size:9px;font-weight:600;padding:2px 7px;border-radius:8px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.4)}
+.diy-check-mark{position:absolute;top:10px;right:10px;width:18px;height:18px;border-radius:50%;background:#1DB954;display:none;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:700}
+.diy-table-card.selected .diy-check-mark{display:flex}
+/* Section labels */
+.diy-section-label{font-size:11px;font-weight:700;color:rgba(255,255,255,.35);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;margin-top:6px}
+/* Global filters row */
+.diy-filters-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px}
+.diy-filter-chip{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:1.5px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:rgba(255,255,255,.5);transition:all .15s;user-select:none}
+.diy-filter-chip.on{border-color:rgba(29,185,84,.5);background:rgba(29,185,84,.12);color:#1DB954}
+.diy-filter-chip .fc-dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0}
+/* Field picker */
+.diy-field-picker{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.diy-field-left,.diy-field-right{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px}
+.diy-field-search{width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:7px 12px;color:#e2e8f0;font-size:12px;outline:none;margin-bottom:10px;font-family:inherit}
+.diy-field-search::placeholder{color:rgba(255,255,255,.3)}
+.diy-field-list{max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:3px}
+.diy-field-list::-webkit-scrollbar{width:4px}.diy-field-list::-webkit-scrollbar-track{background:transparent}.diy-field-list::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:2px}
+.diy-field-item{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:7px;cursor:pointer;transition:background .12s;font-size:12px;color:rgba(255,255,255,.7)}
+.diy-field-item:hover{background:rgba(255,255,255,.06)}
+.diy-field-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.diy-field-table{font-size:10px;color:rgba(255,255,255,.3);margin-left:auto;flex-shrink:0}
+.diy-field-type{font-size:9px;padding:1px 5px;border-radius:4px;background:rgba(255,255,255,.06);color:rgba(255,255,255,.3);margin-left:4px}
+/* Drop zones */
+.diy-drop-zone{min-height:70px;border:1.5px dashed rgba(255,255,255,.12);border-radius:9px;padding:10px;margin-top:10px;display:flex;flex-direction:column;gap:6px}
+.diy-drop-label{font-size:11px;font-weight:700;color:rgba(255,255,255,.35);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;display:flex;align-items:center;justify-content:space-between}
+.diy-drop-empty{font-size:11px;color:rgba(255,255,255,.2);padding:8px 0;text-align:center}
+.diy-chip{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:14px;font-size:11px;font-weight:600;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:#e2e8f0;margin:2px}
+.diy-chip .chip-x{cursor:pointer;opacity:.5;font-size:12px;line-height:1;margin-left:2px;transition:opacity .12s}
+.diy-chip .chip-x:hover{opacity:1}
+/* Step 2 */
+.diy-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.diy-form-group{display:flex;flex-direction:column;gap:6px}
+.diy-form-group.full{grid-column:1/-1}
+.diy-label{font-size:11px;font-weight:700;color:rgba(255,255,255,.5);letter-spacing:.8px;text-transform:uppercase}
+.diy-input,.diy-select,.diy-textarea{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:9px 12px;color:#e2e8f0;font-size:13px;font-family:inherit;outline:none;transition:border-color .15s;width:100%}
+.diy-input:focus,.diy-select:focus,.diy-textarea:focus{border-color:rgba(29,185,84,.5)}
+.diy-select option{background:#0d1f2d}
+.diy-textarea{resize:vertical;min-height:80px}
+/* Layout picker */
+.diy-layout-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:6px}
+.diy-layout-opt{border:1.5px solid rgba(255,255,255,.1);border-radius:10px;padding:12px 10px;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:8px}
+.diy-layout-opt:hover{border-color:rgba(29,185,84,.35);background:rgba(29,185,84,.06)}
+.diy-layout-opt.selected{border-color:#1DB954;background:rgba(29,185,84,.1)}
+.diy-layout-opt svg{width:60px;height:38px}
+.diy-layout-opt span{font-size:10px;font-weight:600;color:rgba(255,255,255,.5);text-align:center}
+.diy-layout-opt.selected span{color:#1DB954}
+/* Step 3 */
+.diy-summary-table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:20px}
+.diy-summary-table td{padding:9px 12px;border-bottom:1px solid rgba(255,255,255,.07);vertical-align:top}
+.diy-summary-table td:first-child{color:rgba(255,255,255,.4);font-weight:600;width:36%;white-space:nowrap}
+.diy-summary-table td:last-child{color:#e2e8f0}
+/* Stub preview */
+.diy-preview-stub{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:18px;margin-bottom:20px}
+.diy-stub-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.diy-stub-kpi{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:9px;padding:14px;text-align:center}
+.diy-stub-kpi-val{font-size:22px;font-weight:800;color:#1DB954;margin-bottom:4px}
+.diy-stub-kpi-lbl{font-size:10px;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.8px}
+.diy-stub-chart{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:9px;padding:14px;height:90px;display:flex;align-items:flex-end;gap:8px;overflow:hidden}
+.diy-stub-bar{flex:1;border-radius:4px 4px 0 0;background:linear-gradient(180deg,rgba(29,185,84,.6),rgba(29,185,84,.25));min-width:8px;transition:height .3s}
+/* Saved list */
+.diy-saved-list{display:flex;flex-direction:column;gap:8px;margin-top:16px}
+.diy-saved-item{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:12px}
+.diy-saved-name{flex:1;font-size:13px;font-weight:600;color:#e2e8f0}
+.diy-saved-meta{font-size:11px;color:rgba(255,255,255,.35)}
+.diy-saved-actions{display:flex;gap:6px}
+/* Buttons */
+.diy-btn{padding:10px 22px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:all .15s}
+.diy-btn-primary{background:#1DB954;color:#fff}
+.diy-btn-primary:hover{background:#17a349;box-shadow:0 0 14px rgba(29,185,84,.35)}
+.diy-btn-ghost{background:rgba(255,255,255,.07);color:#e2e8f0;border:1px solid rgba(255,255,255,.12)}
+.diy-btn-ghost:hover{background:rgba(255,255,255,.12)}
+.diy-btn-danger{background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.25)}
+.diy-btn-danger:hover{background:rgba(239,68,68,.25)}
+.diy-btn-sm{padding:5px 12px;font-size:11px;border-radius:7px}
+.diy-nav-row{display:flex;justify-content:space-between;align-items:center;margin-top:24px;padding-top:18px;border-top:1px solid rgba(255,255,255,.07)}
+.diy-save-msg{font-size:12px;color:#1DB954;font-weight:600;display:none}
+</style>
+
+<div class="diy-hero">
+  <h1>🧪 DIY Builder <span style="font-size:11px;font-weight:500;color:rgba(255,255,255,.3);margin-left:8px;background:rgba(29,185,84,.12);border:1px solid rgba(29,185,84,.3);padding:2px 9px;border-radius:10px;vertical-align:middle">Beta · Internal Only</span></h1>
+  <p>Build a custom dashboard config in 3 steps — pick your tables and fields, configure layout, then save to your dashboard library.</p>
+</div>
+
+<div class="diy-body">
+
+  <!-- Step nav -->
+  <div class="diy-steps-nav">
+    <div class="diy-step-pill active" id="diy-pill-1" onclick="diyGoStep(1)">
+      <span class="diy-step-num">1</span> Tables &amp; Fields
+    </div>
+    <div class="diy-step-arrow">›</div>
+    <div class="diy-step-pill" id="diy-pill-2" onclick="diyGoStep(2)">
+      <span class="diy-step-num">2</span> Dashboard Config
+    </div>
+    <div class="diy-step-arrow">›</div>
+    <div class="diy-step-pill" id="diy-pill-3" onclick="diyGoStep(3)">
+      <span class="diy-step-num">3</span> Review &amp; Save
+    </div>
+  </div>
+
+  <!-- ── STEP 1 ── -->
+  <div class="diy-wizard-panel active" id="diy-panel-1">
+
+    <div class="diy-section-label">1. Select Tables</div>
+    <div class="diy-tables-grid" id="diy-tables-grid">
+      <!-- Populated by JS -->
+    </div>
+
+    <div class="diy-section-label">2. Global Filters <span style="font-size:10px;font-weight:400;color:rgba(255,255,255,.25);text-transform:none;letter-spacing:0">— click to toggle on/off</span></div>
+    <div class="diy-filters-row" id="diy-global-filters">
+      <div class="diy-filter-chip on" data-filter="daterange" onclick="diyToggleFilter(this)"><span class="fc-dot"></span>📅 Date Range</div>
+      <div class="diy-filter-chip on" data-filter="salesrep" onclick="diyToggleFilter(this)"><span class="fc-dot"></span>👤 Sales Rep</div>
+      <div class="diy-filter-chip on" data-filter="team" onclick="diyToggleFilter(this)"><span class="fc-dot"></span>🏷️ Team</div>
+      <div class="diy-filter-chip on" data-filter="pipeline" onclick="diyToggleFilter(this)"><span class="fc-dot"></span>🔀 Pipeline</div>
+      <div class="diy-filter-chip on" data-filter="segment" onclick="diyToggleFilter(this)"><span class="fc-dot"></span>🏢 Segment</div>
+    </div>
+
+    <div class="diy-section-label">3. Field Picker <span style="font-size:10px;font-weight:400;color:rgba(255,255,255,.25);text-transform:none;letter-spacing:0">— select a table first, then add fields</span></div>
+    <div class="diy-field-picker">
+      <div class="diy-field-left">
+        <div class="diy-label" style="margin-bottom:8px">Available Fields</div>
+        <input class="diy-field-search" id="diy-field-search" placeholder="Search fields…" oninput="diyFilterFields()">
+        <div class="diy-field-list" id="diy-field-list">
+          <div style="font-size:12px;color:rgba(255,255,255,.2);padding:12px 0;text-align:center">Select a table above to see its fields</div>
+        </div>
+      </div>
+      <div class="diy-field-right">
+        <div class="diy-drop-zone" id="diy-metrics-zone">
+          <div class="diy-drop-label">
+            <span>📊 Metrics</span>
+            <span id="diy-metrics-count" style="font-size:10px;color:rgba(255,255,255,.25)">0 selected</span>
+          </div>
+          <div id="diy-metrics-chips"><div class="diy-drop-empty">Click +M on a field to add</div></div>
+        </div>
+        <div class="diy-drop-zone" style="margin-top:12px" id="diy-filters-zone">
+          <div class="diy-drop-label">
+            <span>🔽 Additional Filters</span>
+            <span id="diy-filters-count" style="font-size:10px;color:rgba(255,255,255,.25)">0 selected</span>
+          </div>
+          <div id="diy-filters-chips"><div class="diy-drop-empty">Click +F on a field to add</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="diy-nav-row">
+      <div></div>
+      <button class="diy-btn diy-btn-primary" onclick="diyGoStep(2)">Next: Dashboard Config →</button>
+    </div>
+  </div>
+
+  <!-- ── STEP 2 ── -->
+  <div class="diy-wizard-panel" id="diy-panel-2">
+
+    <div class="diy-form-grid">
+      <div class="diy-form-group">
+        <label class="diy-label">Dashboard Name *</label>
+        <input class="diy-input" id="diy-dash-name" placeholder="e.g. Pipeline Health Q3">
+      </div>
+      <div class="diy-form-group">
+        <label class="diy-label">Team</label>
+        <select class="diy-select" id="diy-dash-team">
+          <option value="">Select team…</option>
+          <option>RevOps</option>
+          <option>Sales</option>
+          <option>Marketing</option>
+          <option>CS</option>
+          <option>Finance</option>
+        </select>
+      </div>
+      <div class="diy-form-group full">
+        <label class="diy-label">Description</label>
+        <textarea class="diy-textarea" id="diy-dash-desc" placeholder="What does this dashboard track?"></textarea>
+      </div>
+      <div class="diy-form-group full">
+        <label class="diy-label">Layout</label>
+        <div class="diy-layout-grid" id="diy-layout-grid">
+          <div class="diy-layout-opt selected" data-layout="3col" onclick="diySelectLayout(this)">
+            <svg viewBox="0 0 60 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="2" y="2" width="17" height="34" rx="3" fill="rgba(255,255,255,.15)" stroke="rgba(255,255,255,.2)" stroke-width="1"/>
+              <rect x="22" y="2" width="17" height="34" rx="3" fill="rgba(255,255,255,.15)" stroke="rgba(255,255,255,.2)" stroke-width="1"/>
+              <rect x="42" y="2" width="16" height="34" rx="3" fill="rgba(255,255,255,.15)" stroke="rgba(255,255,255,.2)" stroke-width="1"/>
+            </svg>
+            <span>3-Column</span>
+          </div>
+          <div class="diy-layout-opt" data-layout="2col" onclick="diySelectLayout(this)">
+            <svg viewBox="0 0 60 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="2" y="2" width="26" height="34" rx="3" fill="rgba(255,255,255,.15)" stroke="rgba(255,255,255,.2)" stroke-width="1"/>
+              <rect x="32" y="2" width="26" height="34" rx="3" fill="rgba(255,255,255,.15)" stroke="rgba(255,255,255,.2)" stroke-width="1"/>
+            </svg>
+            <span>2-Column</span>
+          </div>
+          <div class="diy-layout-opt" data-layout="kpichart" onclick="diySelectLayout(this)">
+            <svg viewBox="0 0 60 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="2" y="2" width="56" height="13" rx="3" fill="rgba(255,255,255,.15)" stroke="rgba(255,255,255,.2)" stroke-width="1"/>
+              <rect x="2" y="19" width="56" height="17" rx="3" fill="rgba(255,255,255,.15)" stroke="rgba(255,255,255,.2)" stroke-width="1"/>
+            </svg>
+            <span>KPIs + Chart</span>
+          </div>
+          <div class="diy-layout-opt" data-layout="fullwidth" onclick="diySelectLayout(this)">
+            <svg viewBox="0 0 60 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="2" y="2" width="56" height="9" rx="3" fill="rgba(255,255,255,.15)" stroke="rgba(255,255,255,.2)" stroke-width="1"/>
+              <rect x="2" y="15" width="56" height="9" rx="3" fill="rgba(255,255,255,.15)" stroke="rgba(255,255,255,.2)" stroke-width="1"/>
+              <rect x="2" y="28" width="56" height="8" rx="3" fill="rgba(255,255,255,.15)" stroke="rgba(255,255,255,.2)" stroke-width="1"/>
+            </svg>
+            <span>Full Width</span>
+          </div>
+        </div>
+      </div>
+      <div class="diy-form-group">
+        <label class="diy-label">Default Date Range</label>
+        <select class="diy-select" id="diy-dash-daterange">
+          <option value="30d">Last 30 days</option>
+          <option value="90d">Last 90 days</option>
+          <option value="6m">Last 6 months</option>
+          <option value="ytd">Year to Date</option>
+          <option value="all">All Time</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="diy-nav-row">
+      <button class="diy-btn diy-btn-ghost" onclick="diyGoStep(1)">← Back</button>
+      <button class="diy-btn diy-btn-primary" onclick="diyGoStep(3)">Next: Review &amp; Save →</button>
+    </div>
+  </div>
+
+  <!-- ── STEP 3 ── -->
+  <div class="diy-wizard-panel" id="diy-panel-3">
+
+    <div class="diy-section-label">Summary</div>
+    <table class="diy-summary-table" id="diy-summary-table">
+      <tbody id="diy-summary-tbody"></tbody>
+    </table>
+
+    <div class="diy-section-label">Preview (stub)</div>
+    <div class="diy-preview-stub">
+      <div class="diy-stub-kpis" id="diy-stub-kpis">
+        <div class="diy-stub-kpi"><div class="diy-stub-kpi-val">—</div><div class="diy-stub-kpi-lbl">Metric 1</div></div>
+        <div class="diy-stub-kpi"><div class="diy-stub-kpi-val">—</div><div class="diy-stub-kpi-lbl">Metric 2</div></div>
+        <div class="diy-stub-kpi"><div class="diy-stub-kpi-val">—</div><div class="diy-stub-kpi-lbl">Metric 3</div></div>
+      </div>
+      <div class="diy-stub-chart" id="diy-stub-chart">
+        <div class="diy-stub-bar" style="height:55%"></div>
+        <div class="diy-stub-bar" style="height:70%"></div>
+        <div class="diy-stub-bar" style="height:45%"></div>
+        <div class="diy-stub-bar" style="height:80%"></div>
+        <div class="diy-stub-bar" style="height:60%"></div>
+        <div class="diy-stub-bar" style="height:90%"></div>
+        <div class="diy-stub-bar" style="height:65%"></div>
+        <div class="diy-stub-bar" style="height:75%"></div>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:12px">
+      <button class="diy-btn diy-btn-primary" onclick="diySaveDashboard()">💾 Save to My Dashboards</button>
+      <span class="diy-save-msg" id="diy-save-msg">✓ Saved!</span>
+    </div>
+
+    <div class="diy-section-label" style="margin-top:24px">Saved Dashboards</div>
+    <div class="diy-saved-list" id="diy-saved-list">
+      <div style="font-size:12px;color:rgba(255,255,255,.25);padding:8px 0">No saved dashboards yet.</div>
+    </div>
+
+    <div class="diy-nav-row">
+      <button class="diy-btn diy-btn-ghost" onclick="diyGoStep(2)">← Back</button>
+      <button class="diy-btn diy-btn-ghost" onclick="diyReset()">Start Over</button>
+    </div>
+  </div>
+
+</div><!-- /diy-body -->
+</div><!-- /section-diy -->
+
+<script>
+// ── DIY BUILDER DATA ──
+var DIY_TABLES = [
+  {id:'silver_deals', name:'silver_deals', desc:'1 row per deal', src:'hs', srcLabel:'HubSpot',
+   joins:['silver_line_items (deal_id)','silver_company (company lookup)'],
+   fields:[
+    {n:'deal_id',t:'str'},{n:'deal_name',t:'str'},{n:'pipeline_name',t:'str'},{n:'deal_type',t:'str'},
+    {n:'stage_label',t:'str'},{n:'client_journey_stage',t:'str'},{n:'create_date',t:'dt'},
+    {n:'close_date',t:'dt'},{n:'projected_close_date',t:'dt'},{n:'sales_rep',t:'str'},
+    {n:'hubspot_team',t:'str'},{n:'department_source_clean',t:'str'},{n:'segment',t:'str'},
+    {n:'mrr',t:'num'},{n:'ef_mrr',t:'num'},{n:'amount',t:'num'},{n:'tcv',t:'num'},
+    {n:'deal_velocity_days',t:'num'},{n:'original_traffic_source',t:'str'},{n:'original_source_of_awareness',t:'str'}
+   ]},
+  {id:'gold_monthly_exec_summary', name:'gold_monthly_exec_summary', desc:'Pre-aggregated KPIs · PRIMARY for dashboards', src:'db', srcLabel:'Databricks',
+   joins:['gold_targets (metric_month + pipeline_name + segment + department_source_clean)'],
+   fields:[
+    {n:'metric_month',t:'dt'},{n:'pipeline_name',t:'str'},{n:'segment',t:'str'},
+    {n:'department_source_clean',t:'str'},{n:'mql_tmrr',t:'num'},{n:'sql_tmrr',t:'num'},
+    {n:'won_mrr',t:'num'},{n:'won_count',t:'num'},{n:'ef_mrr',t:'num'},
+    {n:'ql_count',t:'num'},{n:'avg_deal_value',t:'num'},{n:'deal_velocity_days',t:'num'}
+   ]},
+  {id:'gold_targets', name:'gold_targets', desc:'Monthly targets', src:'db', srcLabel:'Databricks',
+   joins:['gold_monthly_exec_summary (metric_month + pipeline_name + segment + department_source_clean)'],
+   fields:[
+    {n:'metric_month',t:'dt'},{n:'pipeline_name',t:'str'},{n:'segment',t:'str'},
+    {n:'department_source_clean',t:'str'},{n:'target_mrr',t:'num'},{n:'target_ql',t:'num'},
+    {n:'target_won',t:'num'},{n:'target_ef_mrr',t:'num'}
+   ]},
+  {id:'silver_company', name:'silver_company', desc:'Company attributes', src:'hs', srcLabel:'HubSpot',
+   joins:['silver_contacts (hubspot_company_id)','silver_licenses (hubspot_company_id)','netsuite_invoices_summary (hubspot_company_id)','company_active_headcount (hubspot_company_record_id)'],
+   fields:[
+    {n:'hubspot_company_id',t:'str'},{n:'hubspot_company_record_id',t:'str'},{n:'Brands',t:'str'},
+    {n:'Segment',t:'str'},{n:'client_stage',t:'str'},{n:'Client_status',t:'str'},{n:'Client_type',t:'str'}
+   ]},
+  {id:'silver_contacts', name:'silver_contacts', desc:'Contact data', src:'hs', srcLabel:'HubSpot',
+   joins:['silver_company (hubspot_company_id)'],
+   fields:[
+    {n:'lifecycle_stage',t:'str'},{n:'department_source',t:'str'},{n:'buyer_role',t:'str'},
+    {n:'analytics_source',t:'str'},{n:'create_date',t:'dt'},{n:'hubspot_company_id',t:'str'}
+   ]},
+  {id:'silver_leads', name:'silver_leads', desc:'Lead pipeline data', src:'hs', srcLabel:'HubSpot',
+   joins:[],
+   fields:[
+    {n:'pipeline_name',t:'str'},{n:'stage_label',t:'str'},{n:'ldu_qualified',t:'bool'},
+    {n:'disqualification_reason',t:'str'},{n:'create_date',t:'dt'},{n:'sales_rep',t:'str'},{n:'segment',t:'str'}
+   ]},
+  {id:'silver_line_items', name:'silver_line_items', desc:'Product-level MRR', src:'hs', srcLabel:'HubSpot',
+   joins:['silver_deals (deal_id)'],
+   fields:[
+    {n:'deal_id',t:'str'},{n:'product_name',t:'str'},{n:'mrr',t:'num'},
+    {n:'quantity',t:'num'},{n:'billing_frequency',t:'str'},{n:'term_months',t:'num'}
+   ]},
+  {id:'silver_licenses', name:'silver_licenses', desc:'License / product data', src:'hs', srcLabel:'HubSpot',
+   joins:['silver_company (hubspot_company_id)'],
+   fields:[
+    {n:'hubspot_company_id',t:'str'},{n:'product_name',t:'str'},{n:'mrr',t:'num'},
+    {n:'renewal_date',t:'dt'},{n:'product_status',t:'str'}
+   ]},
+  {id:'netsuite_invoices_summary', name:'netsuite_invoices_summary', desc:'Billing & collections', src:'ns', srcLabel:'NetSuite',
+   joins:['silver_company (hubspot_company_id)'],
+   fields:[
+    {n:'invoice_id',t:'str'},{n:'hubspot_company_id',t:'str'},{n:'invoice_date',t:'dt'},
+    {n:'due_date',t:'dt'},{n:'amount_due',t:'num'},{n:'amount_paid',t:'num'},{n:'status',t:'str'}
+   ]},
+  {id:'company_active_headcount', name:'company_active_headcount', desc:'Monthly headcount', src:'int', srcLabel:'Internal',
+   joins:['silver_company (hubspot_company_record_id)'],
+   fields:[
+    {n:'hubspot_company_record_id',t:'str'},{n:'month',t:'dt'},{n:'headcount',t:'num'}
+   ]}
+];
+
+// Dot color per table
+var DIY_TABLE_COLORS = {
+  silver_deals:'#1DB954', gold_monthly_exec_summary:'#00cec9', gold_targets:'#00b894',
+  silver_company:'#fd79a8', silver_contacts:'#fdcb6e', silver_leads:'#e17055',
+  silver_line_items:'#74b9ff', silver_licenses:'#a29bfe', netsuite_invoices_summary:'#55efc4',
+  company_active_headcount:'#fab1a0'
+};
+
+var diyState = { step:1, tables:[], metrics:[], filters:[], globalFilters:[], layout:'3col', editingId:null };
+
+// Init tables grid
+(function diyInitTables(){
+  var grid = document.getElementById('diy-tables-grid');
+  if (!grid) return;
+  grid.innerHTML = DIY_TABLES.map(function(t){
+    var joinHtml = t.joins.length ? t.joins.map(function(j){ return '<span class="diy-join-badge">↔ '+j+'</span>'; }).join('') : '';
+    return '<div class="diy-table-card" id="dtc-'+t.id+'" onclick="diyToggleTable(\''+t.id+'\')">'
+      + '<div class="diy-check-mark">✓</div>'
+      + '<div class="dtc-name">'+t.name+'</div>'
+      + '<div class="dtc-desc">'+t.desc+'</div>'
+      + '<span class="dtc-src '+t.src+'">'+t.srcLabel+'</span>'
+      + (joinHtml ? '<div class="diy-join-badges">'+joinHtml+'</div>' : '')
+      + '</div>';
+  }).join('');
+})();
+
+function diyToggleTable(id) {
+  var idx = diyState.tables.indexOf(id);
+  var card = document.getElementById('dtc-'+id);
+  if (idx >= 0) {
+    diyState.tables.splice(idx, 1);
+    card.classList.remove('selected');
+  } else {
+    diyState.tables.push(id);
+    card.classList.add('selected');
+  }
+  diyRenderFieldList();
+}
+
+function diyRenderFieldList() {
+  var list = document.getElementById('diy-field-list');
+  var search = (document.getElementById('diy-field-search').value || '').toLowerCase();
+  if (!diyState.tables.length) {
+    list.innerHTML = '<div style="font-size:12px;color:rgba(255,255,255,.2);padding:12px 0;text-align:center">Select a table above to see its fields</div>';
+    return;
+  }
+  var rows = [];
+  diyState.tables.forEach(function(tid) {
+    var tbl = DIY_TABLES.find(function(x){return x.id===tid;});
+    if (!tbl) return;
+    var color = DIY_TABLE_COLORS[tid] || '#aaa';
+    tbl.fields.forEach(function(f) {
+      if (search && f.n.toLowerCase().indexOf(search) < 0 && tid.toLowerCase().indexOf(search) < 0) return;
+      rows.push('<div class="diy-field-item">'
+        + '<span class="diy-field-dot" style="background:'+color+'"></span>'
+        + '<span>'+f.n+'</span>'
+        + '<span class="diy-field-type">'+f.t+'</span>'
+        + '<span class="diy-field-table">'+tid.split('_').slice(0,2).join('_')+'</span>'
+        + '<button onclick="diyAddField(\''+tid+'\',\''+f.n+'\',\''+f.t+'\',\'metric\')" style="margin-left:6px;font-size:9px;padding:2px 6px;border-radius:5px;background:rgba(29,185,84,.15);border:1px solid rgba(29,185,84,.3);color:#1DB954;cursor:pointer;font-family:inherit;font-weight:700">+M</button>'
+        + '<button onclick="diyAddField(\''+tid+'\',\''+f.n+'\',\''+f.t+'\',\'filter\')" style="margin-left:3px;font-size:9px;padding:2px 6px;border-radius:5px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.5);cursor:pointer;font-family:inherit;font-weight:700">+F</button>'
+        + '</div>');
+    });
+  });
+  list.innerHTML = rows.length ? rows.join('') : '<div style="font-size:12px;color:rgba(255,255,255,.2);padding:12px 0;text-align:center">No fields match your search</div>';
+}
+
+function diyFilterFields() { diyRenderFieldList(); }
+
+function diyAddField(tableId, fieldName, fieldType, zone) {
+  var arr = zone === 'metric' ? diyState.metrics : diyState.filters;
+  var key = tableId + '.' + fieldName + '.' + zone;
+  if (arr.find(function(x){return x.key===key;})) return; // already added
+  arr.push({key:key, table:tableId, field:fieldName, type:fieldType});
+  diyRenderZones();
+}
+
+function diyRemoveField(key, zone) {
+  if (zone === 'metric') diyState.metrics = diyState.metrics.filter(function(x){return x.key!==key;});
+  else diyState.filters = diyState.filters.filter(function(x){return x.key!==key;});
+  diyRenderZones();
+}
+
+function diyRenderZones() {
+  var mc = document.getElementById('diy-metrics-chips');
+  var fc = document.getElementById('diy-filters-chips');
+  var mcnt = document.getElementById('diy-metrics-count');
+  var fcnt = document.getElementById('diy-filters-count');
+
+  mc.innerHTML = diyState.metrics.length
+    ? diyState.metrics.map(function(f){
+        var color = DIY_TABLE_COLORS[f.table] || '#aaa';
+        return '<span class="diy-chip">'
+          + '<span style="width:7px;height:7px;border-radius:50%;background:'+color+';display:inline-block;flex-shrink:0"></span>'
+          + f.table.replace('silver_','').replace('gold_','').replace('company_','co_') + '.' + f.field
+          + '<span class="chip-x" onclick="diyRemoveField(\''+f.key+'\',\'metric\')">×</span></span>';
+      }).join('')
+    : '<div class="diy-drop-empty">Click +M on a field to add</div>';
+
+  fc.innerHTML = diyState.filters.length
+    ? diyState.filters.map(function(f){
+        var color = DIY_TABLE_COLORS[f.table] || '#aaa';
+        return '<span class="diy-chip">'
+          + '<span style="width:7px;height:7px;border-radius:50%;background:'+color+';display:inline-block;flex-shrink:0"></span>'
+          + f.table.replace('silver_','').replace('gold_','').replace('company_','co_') + '.' + f.field
+          + '<span class="chip-x" onclick="diyRemoveField(\''+f.key+'\',\'filter\')">×</span></span>';
+      }).join('')
+    : '<div class="diy-drop-empty">Click +F on a field to add</div>';
+
+  mcnt.textContent = diyState.metrics.length + ' selected';
+  fcnt.textContent = diyState.filters.length + ' selected';
+}
+
+function diyToggleFilter(el) {
+  el.classList.toggle('on');
+}
+
+function diySelectLayout(el) {
+  document.querySelectorAll('.diy-layout-opt').forEach(function(x){x.classList.remove('selected');});
+  el.classList.add('selected');
+  diyState.layout = el.getAttribute('data-layout');
+}
+
+function diyGoStep(n) {
+  diyState.step = n;
+  document.querySelectorAll('.diy-wizard-panel').forEach(function(p){p.classList.remove('active');});
+  var panel = document.getElementById('diy-panel-'+n);
+  if (panel) panel.classList.add('active');
+  document.querySelectorAll('.diy-step-pill').forEach(function(p,i){
+    p.classList.remove('active','done');
+    if (i+1 === n) p.classList.add('active');
+    else if (i+1 < n) p.classList.add('done');
+  });
+  if (n === 3) diyRenderSummary();
+}
+
+function diyRenderSummary() {
+  var name    = (document.getElementById('diy-dash-name')||{}).value || '(untitled)';
+  var team    = (document.getElementById('diy-dash-team')||{}).value || '—';
+  var desc    = (document.getElementById('diy-dash-desc')||{}).value || '—';
+  var drEl    = document.getElementById('diy-dash-daterange');
+  var dr      = drEl ? drEl.options[drEl.selectedIndex].text : '—';
+  var layoutEl = document.querySelector('.diy-layout-opt.selected');
+  var layout  = layoutEl ? layoutEl.querySelector('span').textContent : diyState.layout;
+  var tables  = diyState.tables.join(', ') || '—';
+  var metrics = diyState.metrics.map(function(f){return f.table+'.'+f.field;}).join(', ') || '—';
+  var gf      = [];
+  document.querySelectorAll('.diy-filter-chip.on').forEach(function(c){gf.push(c.textContent.trim());});
+  var af      = diyState.filters.map(function(f){return f.table+'.'+f.field;}).join(', ') || '—';
+
+  var rows = [
+    ['Dashboard Name', name],
+    ['Team', team],
+    ['Description', desc],
+    ['Sources (Tables)', tables],
+    ['Metrics', metrics],
+    ['Global Filters', gf.join(', ') || '—'],
+    ['Additional Filters', af],
+    ['Layout', layout],
+    ['Default Date Range', dr]
+  ];
+  document.getElementById('diy-summary-tbody').innerHTML = rows.map(function(r){
+    return '<tr><td>'+r[0]+'</td><td>'+r[1]+'</td></tr>';
+  }).join('');
+
+  // Stub preview — show metric names
+  var kpiCards = document.querySelectorAll('.diy-stub-kpi');
+  kpiCards.forEach(function(card, i) {
+    var lbl = card.querySelector('.diy-stub-kpi-lbl');
+    if (diyState.metrics[i]) lbl.textContent = diyState.metrics[i].field;
+    else lbl.textContent = 'Metric ' + (i+1);
+  });
+
+  diyRenderSavedList();
+}
+
+function diySaveDashboard() {
+  var name    = (document.getElementById('diy-dash-name')||{}).value || '(untitled)';
+  var team    = (document.getElementById('diy-dash-team')||{}).value || '';
+  var desc    = (document.getElementById('diy-dash-desc')||{}).value || '';
+  var drEl    = document.getElementById('diy-dash-daterange');
+  var dr      = drEl ? drEl.value : '30d';
+  var gf      = [];
+  document.querySelectorAll('.diy-filter-chip.on').forEach(function(c){gf.push(c.getAttribute('data-filter'));});
+  var id      = diyState.editingId || ('diy_'+Date.now());
+
+  var entry = {
+    id: id,
+    name: name, team: team, desc: desc,
+    tables: diyState.tables.slice(),
+    metrics: diyState.metrics.slice(),
+    filters: diyState.filters.slice(),
+    globalFilters: gf,
+    layout: diyState.layout,
+    dateRange: dr,
+    savedAt: new Date().toISOString()
+  };
+
+  var saved = JSON.parse(localStorage.getItem('radar_diy_dashboards') || '[]');
+  var idx   = saved.findIndex(function(x){return x.id===id;});
+  if (idx >= 0) saved[idx] = entry;
+  else saved.push(entry);
+  localStorage.setItem('radar_diy_dashboards', JSON.stringify(saved));
+  diyState.editingId = null;
+
+  var msg = document.getElementById('diy-save-msg');
+  msg.style.display = 'inline';
+  setTimeout(function(){msg.style.display='none';}, 2500);
+  diyRenderSavedList();
+}
+
+function diyRenderSavedList() {
+  var saved = JSON.parse(localStorage.getItem('radar_diy_dashboards') || '[]');
+  var list  = document.getElementById('diy-saved-list');
+  if (!saved.length) {
+    list.innerHTML = '<div style="font-size:12px;color:rgba(255,255,255,.25);padding:8px 0">No saved dashboards yet.</div>';
+    return;
+  }
+  list.innerHTML = saved.map(function(d) {
+    var date = d.savedAt ? new Date(d.savedAt).toLocaleDateString() : '';
+    return '<div class="diy-saved-item">'
+      + '<div style="flex:1"><div class="diy-saved-name">'+d.name+'</div>'
+      + '<div class="diy-saved-meta">'+(d.team||'No team')+' · '+(d.tables||[]).length+' table(s) · '+date+'</div></div>'
+      + '<div class="diy-saved-actions">'
+      + '<button class="diy-btn diy-btn-ghost diy-btn-sm" onclick="diyEditEntry(\''+d.id+'\')">Edit</button>'
+      + '<button class="diy-btn diy-btn-danger diy-btn-sm" onclick="diyDeleteEntry(\''+d.id+'\')">Delete</button>'
+      + '</div></div>';
+  }).join('');
+}
+
+function diyEditEntry(id) {
+  var saved = JSON.parse(localStorage.getItem('radar_diy_dashboards') || '[]');
+  var entry = saved.find(function(x){return x.id===id;});
+  if (!entry) return;
+
+  // Restore state
+  diyState.tables        = entry.tables || [];
+  diyState.metrics       = entry.metrics || [];
+  diyState.filters       = entry.filters || [];
+  diyState.layout        = entry.layout || '3col';
+  diyState.editingId     = id;
+
+  // Restore table card selections
+  DIY_TABLES.forEach(function(t){
+    var card = document.getElementById('dtc-'+t.id);
+    if (card) card.classList.toggle('selected', diyState.tables.indexOf(t.id) >= 0);
+  });
+  diyRenderFieldList();
+  diyRenderZones();
+
+  // Restore step 2 inputs
+  var nameEl = document.getElementById('diy-dash-name');
+  var teamEl = document.getElementById('diy-dash-team');
+  var descEl = document.getElementById('diy-dash-desc');
+  var drEl   = document.getElementById('diy-dash-daterange');
+  if (nameEl) nameEl.value = entry.name || '';
+  if (teamEl) teamEl.value = entry.team || '';
+  if (descEl) descEl.value = entry.desc || '';
+  if (drEl)   drEl.value   = entry.dateRange || '30d';
+
+  // Restore layout
+  document.querySelectorAll('.diy-layout-opt').forEach(function(el){
+    el.classList.toggle('selected', el.getAttribute('data-layout') === diyState.layout);
+  });
+
+  // Restore global filters
+  document.querySelectorAll('.diy-filter-chip').forEach(function(chip){
+    var f = chip.getAttribute('data-filter');
+    chip.classList.toggle('on', (entry.globalFilters||[]).indexOf(f) >= 0);
+  });
+
+  diyGoStep(1);
+}
+
+function diyDeleteEntry(id) {
+  var saved = JSON.parse(localStorage.getItem('radar_diy_dashboards') || '[]');
+  saved = saved.filter(function(x){return x.id!==id;});
+  localStorage.setItem('radar_diy_dashboards', JSON.stringify(saved));
+  diyRenderSavedList();
+}
+
+function diyReset() {
+  diyState = { step:1, tables:[], metrics:[], filters:[], globalFilters:[], layout:'3col', editingId:null };
+  DIY_TABLES.forEach(function(t){
+    var card = document.getElementById('dtc-'+t.id);
+    if (card) card.classList.remove('selected');
+  });
+  document.querySelectorAll('.diy-filter-chip').forEach(function(c){c.classList.add('on');});
+  document.querySelectorAll('.diy-layout-opt').forEach(function(el){
+    el.classList.toggle('selected', el.getAttribute('data-layout') === '3col');
+  });
+  var nameEl=document.getElementById('diy-dash-name'); if(nameEl) nameEl.value='';
+  var teamEl=document.getElementById('diy-dash-team'); if(teamEl) teamEl.value='';
+  var descEl=document.getElementById('diy-dash-desc'); if(descEl) descEl.value='';
+  var drEl  =document.getElementById('diy-dash-daterange'); if(drEl) drEl.value='30d';
+  diyRenderZones();
+  diyRenderFieldList();
+  diyGoStep(1);
+}
+</script>
+
   </div><!-- /content-area -->
 </div><!-- /app-layout -->
 
@@ -3670,8 +4770,9 @@ updateConnBadge();
 // ── LOGIN ──
 const RADAR_CLIENT_ID = '1083460218316-p1tf3fg79257vp77s8rvmf6e9ver6uts.apps.googleusercontent.com';
 
+var RADAR_ALLOWED_EMAILS = ['lurbina@sprout.ph','jsayseng@sprout.ph'];
 function isSproutEmail(email) {
-  return typeof email === 'string' && email.toLowerCase().endsWith('@sprout.ph');
+  return typeof email === 'string' && RADAR_ALLOWED_EMAILS.indexOf(email.toLowerCase()) >= 0;
 }
 
 function parseJwt(token) {
@@ -3688,7 +4789,7 @@ function handleGoogleSignIn(response) {
   }
   const email = payload.email.toLowerCase();
   if (!isSproutEmail(email)) {
-    document.getElementById('login-error').textContent = '⛔ ' + email + ' is not a Sprout Solutions account. Please sign in with your @sprout.ph email.';
+    document.getElementById('login-error').textContent = '⛔ Access restricted. Contact lurbina@sprout.ph to request access.';
     // Sign out of Google so user can try a different account
     if (window.google) google.accounts.id.disableAutoSelect();
     return;
@@ -3704,6 +4805,10 @@ function handleGoogleSignIn(response) {
   document.getElementById('login-overlay').style.display = 'none';
   document.getElementById('app-root').style.display = 'block';
   document.getElementById('user-email-display').textContent = email;
+  var diyTab = document.getElementById('tab-diy');
+  if (diyTab) {
+    diyTab.style.display = (['lurbina@sprout.ph','jsayseng@sprout.ph'].indexOf(email) >= 0) ? '' : 'none';
+  }
 }
 
 function radarLogout() {
@@ -3770,6 +4875,10 @@ function showFallbackBtn() {
     document.getElementById('login-overlay').style.display = 'none';
     document.getElementById('app-root').style.display = 'block';
     document.getElementById('user-email-display').textContent = stored;
+    var diyTab = document.getElementById('tab-diy');
+    if (diyTab) {
+      diyTab.style.display = (['lurbina@sprout.ph','jsayseng@sprout.ph'].indexOf(stored) >= 0) ? '' : 'none';
+    }
   } else {
     // Wait for GSI to load then render the button
     if (window.google) {
@@ -5388,20 +6497,8 @@ function _builderInitCatFilters() {
 }
 
 function builderGoStep(n) {
-  // Use DOM as source of truth for selected count
-  var _domCount = document.querySelectorAll('#builder-metrics-grid input[type=checkbox]:checked').length;
-  if (n===2 && _domCount===0) return;
+  // v2: "Back" to step 1 is fine — no checkpoint needed
   if (n===2) _builderRenderChips();
-  if (n===1) {
-    _builderSelectedIds = new Set();
-    document.querySelectorAll('#builder-metrics-grid .builder-mrow').forEach(function(r) {
-      r.classList.remove('selected');
-      var cb = r.querySelector('input[type=checkbox]');
-      if (cb) cb.checked = false;
-    });
-    _builderUpdateCount();
-    builderFilterMetrics();
-  }
   _builderCurrentStep = n;
   for (var i=1;i<=3;i++) {
     var p = document.getElementById('builder-step-'+i);
@@ -5419,17 +6516,24 @@ function builderGoStep(n) {
 function _builderRenderChips() {
   var wrap = document.getElementById('builder-chips');
   if (!wrap) return;
+  // v2: use field picker selections
+  var items = (window._bv2MetricsForPrompt||[]).concat(window._bv2FiltersForPrompt||[]);
+  if (items.length) {
+    wrap.innerHTML = items.map(function(x){
+      var label = x.key || (x.tbl+'.'+x.field);
+      return '<span class="builder-chip">'+label+'</span>';
+    }).join('');
+    return;
+  }
+  // legacy fallback
   var names = [];
   document.querySelectorAll('#builder-metrics-grid .builder-mrow').forEach(function(row) {
     var cb = row.querySelector('input[type=checkbox]');
-    if (cb && cb.checked) {
-      var n = row.getAttribute('data-n');
-      if (n) names.push(n);
-    }
+    if (cb && cb.checked) { var n = row.getAttribute('data-n'); if (n) names.push(n); }
   });
   wrap.innerHTML = names.length
     ? names.map(function(n){ return '<span class="builder-chip">'+n+'</span>'; }).join('')
-    : '<span style="color:rgba(255,255,255,.3);font-size:13px">No metrics selected</span>';
+    : '<span style="color:rgba(255,255,255,.3);font-size:13px">No fields selected</span>';
 }
 
 
@@ -6093,6 +7197,22 @@ function _builderRenderPromptInner() {
     + '• Views to include:       ' + _viewListFill + '\n'
     + (subFilters.length ? '• Filter slicers (dropdowns, not tabs): ' + subFilters.join(', ') + '\n' : '')
     + '\n'
+    // ── V2 builder selections ──
+    + (function(){
+        var v2Tables = window._bv2SelectedTablesForPrompt || [];
+        var v2Metrics = window._bv2MetricsForPrompt || [];
+        var v2Filters = window._bv2FiltersForPrompt || [];
+        var v2GF = window._bv2GlobalFilters || [];
+        if (!v2Tables.length && !v2Metrics.length) return '';
+        var out = '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n'
+          + '🗄️  DATA MODEL (from Builder v2)\n'
+          + '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
+        if (v2Tables.length) out += '• Selected tables: ' + v2Tables.join(', ') + '\n';
+        if (v2GF.length) out += '• Global dashboard filters: ' + v2GF.join(', ') + '\n';
+        if (v2Metrics.length) out += '• Metric fields: ' + v2Metrics.map(function(x){return x.key;}).join(', ') + '\n';
+        if (v2Filters.length) out += '• Additional filter fields: ' + v2Filters.map(function(x){return x.key;}).join(', ') + '\n';
+        return out + '\n';
+      })()
     + (notes ? '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n'
     + '📝 ADDITIONAL NOTES / SPECIAL INSTRUCTIONS\n'
     + '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n'
