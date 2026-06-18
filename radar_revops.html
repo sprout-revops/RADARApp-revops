@@ -1375,357 +1375,108 @@ DATABRICKS_TOKEN</div>
   </div>
 
   <!-- Step 1: Pick Metrics -->
-  <!-- ── BUILDER V2 STYLES ── -->
-  <style>
-  /* Hidden metrics grid kept for prompt-generation compat */
-  #builder-metrics-grid{display:none}
-  /* Table selector */
-  .bv2-section-label{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.3);margin:0 24px 10px;padding-top:20px}
-  .bv2-table-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0 24px 4px}
-  .bv2-table-card{background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.09);border-radius:12px;padding:14px 14px 12px;cursor:pointer;transition:all .18s ease;position:relative;overflow:hidden}
-  .bv2-table-card:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18);transform:translateY(-1px)}
-  .bv2-table-card.selected{background:rgba(29,185,84,.13);border-color:rgba(29,185,84,.55);box-shadow:0 0 14px rgba(29,185,84,.15)}
-  .bv2-table-card.selected::after{content:'✓';position:absolute;top:8px;right:10px;font-size:11px;font-weight:700;color:#1DB954}
-  .bv2-tc-icon{font-size:22px;margin-bottom:6px;line-height:1}
-  .bv2-tc-name{font-size:13px;font-weight:700;color:#e2e8f0;margin-bottom:3px}
-  .bv2-tc-meta{font-size:10px;color:rgba(255,255,255,.35);margin-bottom:6px}
-  .bv2-tc-badges{display:flex;flex-wrap:wrap;gap:4px}
-  .bv2-join-badge{font-size:9px;padding:2px 7px;border-radius:20px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.35);font-weight:600;transition:all .2s}
-  .bv2-join-badge.active{background:rgba(29,185,84,.2);border-color:rgba(29,185,84,.5);color:#1DB954}
-  /* Global filters strip */
-  .bv2-filters-strip{margin:0 24px;padding:12px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-  .bv2-filters-label{font-size:10px;color:rgba(255,255,255,.35);font-weight:600;letter-spacing:.5px;white-space:nowrap}
-  .bv2-filter-chip{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;border:1.5px solid rgba(29,185,84,.45);background:rgba(29,185,84,.12);color:#1DB954;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;user-select:none}
-  .bv2-filter-chip .bv2-chip-dot{width:6px;height:6px;border-radius:50%;background:#1DB954;flex-shrink:0;transition:background .15s}
-  .bv2-filter-chip.off{border-color:rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:rgba(255,255,255,.35)}
-  .bv2-filter-chip.off .bv2-chip-dot{background:rgba(255,255,255,.25)}
-  /* Field picker */
-  .bv2-picker-layout{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 24px 20px}
-  .bv2-picker-left{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;overflow:hidden;display:flex;flex-direction:column;min-height:300px}
-  .bv2-picker-right{display:flex;flex-direction:column;gap:10px}
-  .bv2-picker-search{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.07)}
-  .bv2-picker-search input{width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:7px;color:#e2e8f0;font-family:Rubik,sans-serif;font-size:12px;padding:6px 10px;outline:none}
-  .bv2-picker-search input::placeholder{color:rgba(255,255,255,.25)}
-  .bv2-picker-search input:focus{border-color:rgba(29,185,84,.4);background:rgba(29,185,84,.05)}
-  .bv2-field-list{flex:1;overflow-y:auto;padding:4px 0}
-  .bv2-field-group-label{padding:6px 12px 3px;font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,.25)}
-  .bv2-field-row{display:flex;align-items:center;gap:8px;padding:6px 12px;cursor:default;position:relative;transition:background .1s}
-  .bv2-field-row:hover{background:rgba(255,255,255,.06)}
-  .bv2-dtype{font-size:8px;font-weight:700;padding:2px 5px;border-radius:4px;letter-spacing:.5px;flex-shrink:0}
-  .bv2-dtype.num{background:rgba(59,130,246,.2);color:#60a5fa}
-  .bv2-dtype.dt{background:rgba(139,92,246,.2);color:#a78bfa}
-  .bv2-dtype.bool{background:rgba(234,179,8,.2);color:#fbbf24}
-  .bv2-dtype.str{background:rgba(255,255,255,.1);color:rgba(255,255,255,.5)}
-  .bv2-field-name{font-size:12px;color:#e2e8f0;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .bv2-field-actions{display:none;gap:4px;flex-shrink:0}
-  .bv2-field-row:hover .bv2-field-actions{display:flex}
-  .bv2-fadd{font-size:10px;font-weight:700;padding:2px 8px;border-radius:5px;border:none;cursor:pointer;transition:all .12s}
-  .bv2-fadd.metric{background:rgba(29,185,84,.2);color:#1DB954;border:1px solid rgba(29,185,84,.3)}
-  .bv2-fadd.metric:hover{background:rgba(29,185,84,.35)}
-  .bv2-fadd.filter{background:rgba(99,179,237,.15);color:#63b3ed;border:1px solid rgba(99,179,237,.25)}
-  .bv2-fadd.filter:hover{background:rgba(99,179,237,.28)}
-  /* Right zones */
-  .bv2-zone{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:12px;flex:1;min-height:120px}
-  .bv2-zone-title{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:10px;display:flex;align-items:center;gap:6px}
-  .bv2-zone-title span.cnt{background:rgba(29,185,84,.25);color:#1DB954;border-radius:20px;padding:1px 7px;font-size:9px}
-  .bv2-zone-chips{display:flex;flex-wrap:wrap;gap:6px;min-height:32px}
-  .bv2-zone-empty{font-size:11px;color:rgba(255,255,255,.2);font-style:italic}
-  .bv2-mchip{display:inline-flex;align-items:center;gap:5px;background:rgba(29,185,84,.15);border:1px solid rgba(29,185,84,.35);color:#86efac;border-radius:20px;padding:3px 8px 3px 10px;font-size:11px;font-weight:500}
-  .bv2-fchip{display:inline-flex;align-items:center;gap:5px;background:rgba(99,179,237,.12);border:1px solid rgba(99,179,237,.25);color:#93c5fd;border-radius:20px;padding:3px 8px 3px 10px;font-size:11px;font-weight:500}
-  .bv2-chip-x{cursor:pointer;font-size:13px;line-height:1;color:rgba(255,255,255,.4);margin-left:2px}
-  .bv2-chip-x:hover{color:#fff}
-  </style>
-
   <div class="builder-step-panel active" id="builder-step-1">
     <div class="builder-panel-header">
       <div>
-        <div class="builder-panel-title">Step 1 of 3 — Design Your Dashboard <span style="font-size:10px;opacity:.4;font-weight:400">v2</span></div>
-        <div class="builder-panel-sub">Select your data tables, configure global filters, then pick the fields you want as metrics or filters.</div>
+        <div class="builder-panel-title">Step 1 of 3 — Select Metrics <span style="font-size:10px;opacity:.4;font-weight:400">v20260519j</span></div>
+        <div class="builder-panel-sub">Choose the metrics to include in your dashboard. Selected metrics will be included with their exact definitions, formulas, and SQL logic.</div>
       </div>
-      <div class="builder-selected-count" id="builder-selected-count">0 fields selected</div>
+      <div class="builder-selected-count" id="builder-selected-count">0 metrics selected</div>
     </div>
 
-    <!-- 1. TABLE SELECTOR -->
-    <div class="bv2-section-label">1 — Select Tables</div>
-    <div class="bv2-table-grid" id="bv2-table-grid">
-      <div class="bv2-table-card" data-tbl="deals" onclick="bv2ToggleTable(this)">
-        <div class="bv2-tc-icon">📋</div>
-        <div class="bv2-tc-name">deals</div>
-        <div class="bv2-tc-meta">HubSpot · 13 fields</div>
-        <div class="bv2-tc-badges">
-          <span class="bv2-join-badge" data-join="deals-accounts">accounts</span>
-          <span class="bv2-join-badge" data-join="deals-users">users</span>
-          <span class="bv2-join-badge" data-join="deals-activities">activities</span>
-        </div>
+    <div class="builder-controls">
+      <div class="search-box" style="max-width:320px">
+        <span class="sicon">🔍</span>
+        <input type="text" id="builder-search" placeholder="Search metrics..." oninput="builderFilterMetrics()">
       </div>
-      <div class="bv2-table-card" data-tbl="subscriptions" onclick="bv2ToggleTable(this)">
-        <div class="bv2-tc-icon">💳</div>
-        <div class="bv2-tc-name">subscriptions</div>
-        <div class="bv2-tc-meta">Chargebee · 11 fields</div>
-        <div class="bv2-tc-badges">
-          <span class="bv2-join-badge" data-join="subscriptions-accounts">accounts</span>
-        </div>
-      </div>
-      <div class="bv2-table-card" data-tbl="leads" onclick="bv2ToggleTable(this)">
-        <div class="bv2-tc-icon">🎯</div>
-        <div class="bv2-tc-name">leads</div>
-        <div class="bv2-tc-meta">HubSpot · 10 fields</div>
-        <div class="bv2-tc-badges">
-          <span class="bv2-join-badge" data-join="leads-users">users</span>
-          <span class="bv2-join-badge" data-join="leads-accounts">accounts</span>
-        </div>
-      </div>
-      <div class="bv2-table-card" data-tbl="accounts" onclick="bv2ToggleTable(this)">
-        <div class="bv2-tc-icon">🏢</div>
-        <div class="bv2-tc-name">accounts</div>
-        <div class="bv2-tc-meta">HubSpot · 10 fields</div>
-        <div class="bv2-tc-badges">
-          <span class="bv2-join-badge" data-join="deals-accounts">deals</span>
-          <span class="bv2-join-badge" data-join="subscriptions-accounts">subscriptions</span>
-          <span class="bv2-join-badge" data-join="leads-accounts">leads</span>
-          <span class="bv2-join-badge" data-join="activities-accounts">activities</span>
-        </div>
-      </div>
-      <div class="bv2-table-card" data-tbl="activities" onclick="bv2ToggleTable(this)">
-        <div class="bv2-tc-icon">⚡</div>
-        <div class="bv2-tc-name">activities</div>
-        <div class="bv2-tc-meta">HubSpot · 9 fields</div>
-        <div class="bv2-tc-badges">
-          <span class="bv2-join-badge" data-join="deals-activities">deals</span>
-          <span class="bv2-join-badge" data-join="activities-accounts">accounts</span>
-          <span class="bv2-join-badge" data-join="activities-users">users</span>
-        </div>
-      </div>
-      <div class="bv2-table-card" data-tbl="users" onclick="bv2ToggleTable(this)">
-        <div class="bv2-tc-icon">👤</div>
-        <div class="bv2-tc-name">users</div>
-        <div class="bv2-tc-meta">HubSpot + HR · 8 fields</div>
-        <div class="bv2-tc-badges">
-          <span class="bv2-join-badge" data-join="deals-users">deals</span>
-          <span class="bv2-join-badge" data-join="leads-users">leads</span>
-          <span class="bv2-join-badge" data-join="activities-users">activities</span>
-        </div>
-      </div>
+      <div class="builder-cat-filters" id="builder-cat-filters"></div>
     </div>
 
-    <!-- 2. GLOBAL FILTERS STRIP -->
-    <div class="bv2-section-label" style="margin-top:16px">2 — Global Filters</div>
-    <div style="padding:0 24px 4px;font-size:11px;color:rgba(255,255,255,.3);margin-bottom:6px">Always available on this dashboard — toggle off to exclude</div>
-    <div style="padding:0 24px">
-      <div class="bv2-filters-strip">
-        <span class="bv2-filters-label">Global filters</span>
-        <span class="bv2-filter-chip" data-gf="date_range" onclick="bv2ToggleGf(this)"><span class="bv2-chip-dot"></span>Date range</span>
-        <span class="bv2-filter-chip" data-gf="owner" onclick="bv2ToggleGf(this)"><span class="bv2-chip-dot"></span>Owner</span>
-        <span class="bv2-filter-chip" data-gf="team" onclick="bv2ToggleGf(this)"><span class="bv2-chip-dot"></span>Team</span>
-        <span class="bv2-filter-chip" data-gf="region" onclick="bv2ToggleGf(this)"><span class="bv2-chip-dot"></span>Region</span>
-      </div>
-    </div>
-
-    <!-- 3. FIELD PICKER -->
-    <div class="bv2-section-label" style="margin-top:16px">3 — Pick Fields</div>
-    <div class="bv2-picker-layout">
-      <!-- LEFT: field list -->
-      <div class="bv2-picker-left">
-        <div class="bv2-picker-search">
-          <input type="text" id="bv2-field-search" placeholder="Search fields..." oninput="bv2FilterFields()">
-        </div>
-        <div class="bv2-field-list" id="bv2-field-list">
-          <div style="padding:20px;text-align:center;color:rgba(255,255,255,.2);font-size:12px">Select a table above to see its fields</div>
-        </div>
-      </div>
-      <!-- RIGHT: zones -->
-      <div class="bv2-picker-right">
-        <div class="bv2-zone">
-          <div class="bv2-zone-title">Metrics <span class="cnt" id="bv2-metric-cnt">0</span></div>
-          <div class="bv2-zone-chips" id="bv2-metric-zone"><span class="bv2-zone-empty">Add fields with +M</span></div>
-        </div>
-        <div class="bv2-zone">
-          <div class="bv2-zone-title">Additional Filters <span class="cnt" id="bv2-filter-cnt">0</span></div>
-          <div class="bv2-zone-chips" id="bv2-filter-zone"><span class="bv2-zone-empty">Add fields with +F</span></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Hidden metrics grid for backward-compat with prompt generator -->
-    <div id="builder-metrics-grid" style="display:none"></div>
+    <div id="builder-debug" style="font-size:10px;color:#f59e0b;padding:2px 24px 0;min-height:14px"></div>
+    <div class="builder-metrics-grid" id="builder-metrics-grid">
+<div class="builder-mrow" data-cat="Funnel" data-n="DQ Rate" data-name="dq rate" data-def="% of leads marked disqualified"><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">DQ Rate</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Funnel</span><span class="builder-mrow-def">% of leads marked Disqualified</span></div></div></div>
+<div class="builder-mrow" data-cat="Funnel" data-n="Lead to Won Conversion %" data-name="lead to won conversion %" data-def="percentage of total leads that convert into closed-won deals."><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Lead to Won Conversion %</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Funnel</span><span class="builder-mrow-def">Percentage of total leads that convert into Closed-Won deals.</span></div></div></div>
+<div class="builder-mrow" data-cat="Funnel" data-n="Marketing Qualified Leads (MQL)" data-name="marketing qualified leads (mql)" data-def="leads qualified by marketing using bant with probability to buy ≥ 40"><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Marketing Qualified Leads (MQL)</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Funnel</span><span class="builder-mrow-def">Leads qualified by Marketing using BANT with Probability to Buy ≥ 40</span></div></div></div>
+<div class="builder-mrow" data-cat="Funnel" data-n="Outbound Qualified Leads (OQL)" data-name="outbound qualified leads (oql)" data-def="leads qualified by ldu outbound using bant with probability to buy ≥ 40"><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Outbound Qualified Leads (OQL)</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Funnel</span><span class="builder-mrow-def">Leads qualified by LDU Outbound using BANT with Probability to Buy ≥ 40</span></div></div></div>
+<div class="builder-mrow" data-cat="Funnel" data-n="Qualified Leads (QL)" data-name="qualified leads (ql)" data-def="leads qualified by marketing/ ldu/ sales"><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Qualified Leads (QL)</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Funnel</span><span class="builder-mrow-def">Leads qualified by Marketing/ LDU/ Sales</span></div></div></div>
+<div class="builder-mrow" data-cat="Funnel" data-n="SQL Conversion Rate" data-name="sql conversion rate" data-def="% of qualified leads that become sql"><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">SQL Conversion Rate</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Funnel</span><span class="builder-mrow-def">% of Qualified Leads that become SQL</span></div></div></div>
+<div class="builder-mrow" data-cat="Funnel" data-n="Sales Disqualified" data-name="sales disqualified" data-def="deals disqualified by sales during demo stage"><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Sales Disqualified</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Funnel</span><span class="builder-mrow-def">Deals disqualified by Sales during demo stage</span></div></div></div>
+<div class="builder-mrow" data-cat="Funnel" data-n="Sales Qualified Leads (SQL)" data-name="sales qualified leads (sql)" data-def="also known as sql are leads that the sales team will work on to convert them into clients."><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Sales Qualified Leads (SQL)</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Funnel</span><span class="builder-mrow-def">Also known as SQL are leads that the Sales team will work on to convert them into clients.</span></div></div></div>
+<div class="builder-mrow" data-cat="Finance" data-n="Total Billed" data-name="total billed" data-def="sum invoice_amount | date: invoice_date | source: netsuite_invoices_summary"><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Total Billed</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Finance</span><span class="builder-mrow-def">SUM(invoice_amount) by invoice_date</span></div></div></div>
+<div class="builder-mrow" data-cat="Finance" data-n="Total Collected" data-name="total collected" data-def="sum applied_payment_amount | invoice_status = Paid"><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Total Collected</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Finance</span><span class="builder-mrow-def">SUM(applied_payment_amount) — Paid invoices</span></div></div></div>
+<div class="builder-mrow" data-cat="Finance" data-n="Outstanding Balance" data-name="outstanding balance" data-def="sum remaining_balance | invoice_status IN (Open, Overdue)"><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Outstanding Balance</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Finance</span><span class="builder-mrow-def">SUM(remaining_balance) — Open + Overdue</span></div></div></div>
+<div class="builder-mrow" data-cat="Finance" data-n="Overdue Amount" data-name="overdue amount" data-def="sum remaining_balance | invoice_status = Overdue"><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Overdue Amount</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Finance</span><span class="builder-mrow-def">SUM(remaining_balance) — Overdue only</span></div></div></div>
+<div class="builder-mrow" data-cat="Finance" data-n="Collections Rate" data-name="collections rate" data-def="total collected / total billed x 100 | excludes cancelled"><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Collections Rate</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Finance</span><span class="builder-mrow-def">Total Collected / Total Billed × 100</span></div></div></div>
+<div class="builder-mrow" data-cat="Finance" data-n="# Overdue Invoices" data-name="# overdue invoices" data-def="count invoice_id | invoice_status = Overdue"><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name"># Overdue Invoices</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Finance</span><span class="builder-mrow-def">COUNT(invoice_id) — invoice_status = Overdue</span></div></div></div>
+<div class="builder-mrow" data-cat="Finance" data-n="Average Days to Pay" data-name="average days to pay" data-def="avg(days_open) | invoice_status = Paid"><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Average Days to Pay</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Finance</span><span class="builder-mrow-def">AVG(days_open) — Paid invoices</span></div></div></div>
+<div class="builder-mrow" data-cat="Customer_Health" data-n="Active Headcount" data-name="active headcount" data-def="sum GREATEST(hr_headcount, payroll_headcount) | date: month_date | source: company_active_headcount"><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Active Headcount</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">CS</span><span class="builder-mrow-def">SUM(GREATEST(hr, payroll)) — monthly</span></div></div></div>
+<div class="builder-mrow" data-cat="Customer_Health" data-n="MoM Headcount Growth" data-name="mom headcount growth" data-def="current month active headcount minus prior month | source: company_active_headcount"><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">MoM Headcount Growth</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">CS</span><span class="builder-mrow-def">Current vs prior month active headcount</span></div></div></div>
+<div class="builder-mrow" data-cat="Funnel" data-n="Upsell Qualified Leads (UQL)" data-name="upsell qualified leads (uql)" data-def="all deals in PH Upsell Pipeline | no stage filter | no department source filter"><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Upsell Qualified Leads (UQL)</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Funnel</span><span class="builder-mrow-def">All deals in PH Upsell Pipeline — no stage filter</span></div></div></div>
+<div class="builder-mrow" data-cat="Funnel" data-n="WON/ SQL" data-name="won/ sql" data-def="percentage of sales qualified leads (sql/active) that converted into closed-won deals. sql count is based on customers that are currently active within the selected month."><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">WON/ SQL</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Funnel</span><span class="builder-mrow-def">Percentage of Sales Qualified Leads (SQL/ACTIVE) that converted into Closed-Won deals. SQL count is based on customers that are currently active within the selected month.</span></div></div></div>
+<div class="builder-mrow" data-cat="Marketing_Efficiency" data-n="Cost per Lead (CPL)" data-name="cost per lead (cpl)" data-def="average marketing cost per lead generated"><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Cost per Lead (CPL)</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Marketing</span><span class="builder-mrow-def">Average marketing cost per lead generated</span></div></div></div>
+<div class="builder-mrow" data-cat="Product_Performance" data-n="Attach Rate (Industry–Product)" data-name="attach rate (industry–product)" data-def="percentage of companies in an industry that purchased a specific product."><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Attach Rate (Industry–Product)</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Product</span><span class="builder-mrow-def">Percentage of companies in an industry that purchased a specific product.</span></div></div></div>
+<div class="builder-mrow" data-cat="Product_Performance" data-n="Attach Rate (Product → Product)" data-name="attach rate (product → product)" data-def="percentage of companies that purchased product b among companies that purchased product a."><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Attach Rate (Product → Product)</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Product</span><span class="builder-mrow-def">Percentage of companies that purchased Product B among companies that purchased Product A.</span></div></div></div>
+<div class="builder-mrow" data-cat="Product_Performance" data-n="Attach Rate (Segment–Product)" data-name="attach rate (segment–product)" data-def="percentage of companies in a segment that purchased a specific product."><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Attach Rate (Segment–Product)</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Product</span><span class="builder-mrow-def">Percentage of companies in a segment that purchased a specific product.</span></div></div></div>
+<div class="builder-mrow" data-cat="Revenue" data-n="Annual Recurring Revenue (ARR)" data-name="annual recurring revenue (arr)" data-def="expected yearly recurring revenue from signed clients"><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Annual Recurring Revenue (ARR)</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Revenue</span><span class="builder-mrow-def">Expected yearly recurring revenue from signed clients</span></div></div></div>
+<div class="builder-mrow" data-cat="Revenue" data-n="EF Monthly Recurring Revenue (EF MRR)" data-name="ef monthly recurring revenue (ef mrr)" data-def="readycash/ readywage monthly recurring revenue from signed proposal. recognized only if contract term ≥ 12 months."><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">EF Monthly Recurring Revenue (EF MRR)</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Revenue</span><span class="builder-mrow-def">ReadyCash/ ReadyWage monthly recurring revenue from signed proposal. Recognized only if contract term ≥ 12 months.</span></div></div></div>
+<div class="builder-mrow" data-cat="Revenue" data-n="Monthly Recurring Revenue (MRR)" data-name="monthly recurring revenue (mrr)" data-def="monthly recurring revenue from signed proposal. recognized only if contract term ≥ 12 months."><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Monthly Recurring Revenue (MRR)</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Revenue</span><span class="builder-mrow-def">Monthly recurring revenue from signed proposal. Recognized only if contract term ≥ 12 months.</span></div></div></div>
+<div class="builder-mrow" data-cat="Revenue" data-n="OTP Revenue" data-name="otp revenue" data-def="one-time payment revenue. otp_only + mrr_lt_12 (contracts shorter than 12 months). not counted in standard mrr."><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">OTP Revenue</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Revenue</span><span class="builder-mrow-def">One-time payment revenue — otp_only + mrr_lt_12 (contracts &lt; 12 months). Not counted in standard MRR.</span></div></div></div>
+<div class="builder-mrow" data-cat="Revenue" data-n="Implementation Fee" data-name="implementation fee" data-def="one-time implementation fee collected at deal close. separate from mrr — not recurring revenue."><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Implementation Fee</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Revenue</span><span class="builder-mrow-def">One-time implementation fee collected at deal close. Separate from MRR — not recurring revenue.</span></div></div></div>
+<div class="builder-mrow" data-cat="Revenue" data-n="Revenue Share MRR" data-name="revenue share mrr" data-def="mrr from revenue share partners (reseller/referral clan) — contract term ≥ 12 months."><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Revenue Share MRR</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Revenue</span><span class="builder-mrow-def">MRR from Revenue Share partners (Reseller/Referral Clan) — term ≥ 12 months</span></div></div></div>
+<div class="builder-mrow" data-cat="Revenue" data-n="Revenue Share OTP" data-name="revenue share otp" data-def="otp revenue from revenue share partners — term &lt; 12 months or one-time billing."><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Revenue Share OTP</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Revenue</span><span class="builder-mrow-def">OTP from Revenue Share partners (Reseller/Referral Clan) — term &lt; 12 months or one-time billing</span></div></div></div>
+<div class="builder-mrow" data-cat="Sales_Productivity" data-n="Average Deal Size (ADS)" data-name="average deal size (ads)" data-def="average mrr of won deals"><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Average Deal Size (ADS)</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Sales</span><span class="builder-mrow-def">Average MRR of won deals</span></div></div></div>
+<div class="builder-mrow" data-cat="Sales_Productivity" data-n="Average Deal Velocity (ADV)" data-name="average deal velocity (adv)" data-def="the average number of days it takes to close a deal, measured from deal creation to deal close date."><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Average Deal Velocity (ADV)</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Sales</span><span class="builder-mrow-def">The average number of days it takes to close a deal, measured from deal creation to deal close date.</span></div></div></div>
+<div class="builder-mrow" data-cat="Sales_Productivity" data-n="Coverage Ratio" data-name="coverage ratio" data-def="determines the health of the sales pipeline relative to the sales target. the industry standard for the coverage ratio is at 5x the target for the full year and 3x for the quarter."><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Coverage Ratio</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Sales</span><span class="builder-mrow-def">Determines the health of the sales pipeline relative to the sales target. The industry standard for the coverage ratio is at 5X the target for the full year and 3x for the quarter.</span></div></div></div>
+<div class="builder-mrow" data-cat="Sales_Productivity" data-n="Lost Deals" data-name="lost deals" data-def="a deal pursued by sales but did not successfully close to becoming a client."><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Lost Deals</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Sales</span><span class="builder-mrow-def">A deal pursued by sales but did not successfully close to becoming a client.</span></div></div></div>
+<div class="builder-mrow" data-cat="Sales_Productivity" data-n="Pipeline MRR" data-name="pipeline mrr" data-def="total mrr of all active pipeline deals"><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Pipeline MRR</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Sales</span><span class="builder-mrow-def">Total MRR of all active pipeline deals</span></div></div></div>
+<div class="builder-mrow" data-cat="Sales_Productivity" data-n="Quota Attainment %" data-name="quota attainment %" data-def="percentage of assigned quota achieved by a rep or team."><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Quota Attainment %</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Sales</span><span class="builder-mrow-def">Percentage of assigned quota achieved by a rep or team.</span></div></div></div>
+<div class="builder-mrow" data-cat="Sales_Productivity" data-n="Sales Churn Rate" data-name="sales churn rate" data-def="% of contract signed deals that did not proceed to implementation within 60 days."><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Sales Churn Rate</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Sales</span><span class="builder-mrow-def">% of Contract Signed deals that did not proceed to Implementation within 60 days.</span></div></div></div>
+<div class="builder-mrow" data-cat="Sales_Productivity" data-n="Upsell Rate" data-name="upsell rate" data-def="% of existing customers that purchased additional products."><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Upsell Rate</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Sales</span><span class="builder-mrow-def">% of existing customers that purchased additional products.</span></div></div></div>
+<div class="builder-mrow" data-cat="Sales_Productivity" data-n="WON/ CLOSED" data-name="won/ closed" data-def="% of won deals against all closed deals"><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">WON/ CLOSED</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Sales</span><span class="builder-mrow-def">% of won deals against all closed deals</span></div></div></div>
+<div class="builder-mrow" data-cat="Sales_Productivity" data-n="Weighted Pipeline MRR" data-name="weighted pipeline mrr" data-def="expected pipeline revenue based on deal probability"><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Weighted Pipeline MRR</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Sales</span><span class="builder-mrow-def">Expected pipeline revenue based on deal probability</span></div></div></div>
+<div class="builder-mrow" data-cat="Sales_Productivity" data-n="Won Deals" data-name="won deals" data-def="deals completed with a signed proposal"><input type="checkbox"><div class="builder-mrow-info"><div class="builder-mrow-name">Won Deals</div><div class="builder-mrow-meta"><span class="builder-mrow-cat">Sales</span><span class="builder-mrow-def">Deals completed with a signed proposal</span></div></div></div>
+</div>
+<script>
+(function(){
+  var grid = document.getElementById('builder-metrics-grid');
+  var dbg  = document.getElementById('builder-debug');
+  if (!grid) { if (dbg) dbg.textContent = 'ERR: grid not found'; return; }
+  if (dbg) dbg.textContent = 'v5 ready';
+  grid.addEventListener('click', function(e) {
+    // Walk up to find .builder-mrow (no closest() for max compat)
+    var row = e.target;
+    while (row && row !== grid) {
+      if (row.className && row.className.indexOf('builder-mrow') >= 0) break;
+      row = row.parentNode;
+    }
+    if (!row || row === grid) return;
+    var cb = row.querySelector('input[type=checkbox]');
+    if (!cb) return;
+    // Toggle checkbox if user didn't click it directly
+    if (e.target.tagName !== 'INPUT') cb.checked = !cb.checked;
+    // Sync _builderSelectedIds (used by step 2 & 3)
+    var name = row.getAttribute('data-n');
+    if (name && window._builderSelectedIds) {
+      if (cb.checked) window._builderSelectedIds.add(name);
+      else            window._builderSelectedIds.delete(name);
+    }
+    // Update counter and Next button
+    var n = grid.querySelectorAll('input[type=checkbox]:checked').length;
+    var countEl = document.getElementById('builder-selected-count');
+    if (countEl) countEl.textContent = n + ' metric' + (n !== 1 ? 's' : '') + ' selected';
+    var btn = document.getElementById('builder-next-1');
+    if (btn) btn.disabled = n === 0;
+    row.classList.toggle('selected', cb.checked);
+    if (dbg) dbg.textContent = 'v5: ' + n + ' selected';
+  });
+})();
+</script>
 
     <div class="builder-footer">
       <div></div>
-      <button class="builder-btn-next" id="builder-next-1" onclick="builderGoStepV2(2)">Next →</button>
+      <button class="builder-btn-next" id="builder-next-1" onclick="builderGoStep(2)" disabled>Next →</button>
     </div>
   </div>
-
-  <script>
-  // ── BUILDER V2 DATA ──
-  var BV2_SCHEMA = {
-    deals: [
-      {f:'deal_id',t:'str'},{f:'amount',t:'num'},{f:'owner_id',t:'str'},{f:'account_id',t:'str'},
-      {f:'stage',t:'str'},{f:'deal_type',t:'str'},{f:'close_date',t:'dt'},{f:'created_date',t:'dt'},
-      {f:'is_won',t:'bool'},{f:'is_closed',t:'bool'},{f:'days_in_stage',t:'num'},{f:'region',t:'str'},{f:'probability',t:'num'}
-    ],
-    subscriptions: [
-      {f:'account_id',t:'str'},{f:'plan_name',t:'str'},{f:'status',t:'str'},{f:'mrr',t:'num'},{f:'arr',t:'num'},
-      {f:'expansion_mrr',t:'num'},{f:'contraction_mrr',t:'num'},{f:'start_date',t:'dt'},{f:'churn_date',t:'dt'},
-      {f:'region',t:'str'},{f:'month',t:'dt'}
-    ],
-    leads: [
-      {f:'owner_id',t:'str'},{f:'lifecycle_stage',t:'str'},{f:'lead_source',t:'str'},{f:'is_converted',t:'bool'},
-      {f:'created_date',t:'dt'},{f:'converted_date',t:'dt'},{f:'country',t:'str'},{f:'industry',t:'str'}
-    ],
-    accounts: [
-      {f:'account_name',t:'str'},{f:'owner_id',t:'str'},{f:'industry',t:'str'},{f:'employee_count',t:'num'},
-      {f:'region',t:'str'},{f:'lifecycle_stage',t:'str'},{f:'tier',t:'str'},{f:'created_date',t:'dt'}
-    ],
-    activities: [
-      {f:'activity_type',t:'str'},{f:'owner_id',t:'str'},{f:'account_id',t:'str'},{f:'deal_id',t:'str'},
-      {f:'activity_date',t:'dt'},{f:'is_completed',t:'bool'},{f:'duration_seconds',t:'num'}
-    ],
-    users: [
-      {f:'full_name',t:'str'},{f:'email',t:'str'},{f:'team',t:'str'},{f:'role',t:'str'},
-      {f:'region',t:'str'},{f:'is_active',t:'bool'},{f:'start_date',t:'dt'}
-    ]
-  };
-  var BV2_JOINS = [
-    'deals-accounts','deals-users','deals-activities',
-    'subscriptions-accounts',
-    'leads-users','leads-accounts',
-    'activities-deals','activities-accounts','activities-users'
-  ];
-  var _bv2SelectedTables = new Set();
-  var _bv2Metrics = []; // [{tbl, field}]
-  var _bv2Filters = []; // [{tbl, field}]
-  var _bv2FieldSearch = '';
-
-  function bv2ToggleTable(card) {
-    var tbl = card.dataset.tbl;
-    if (_bv2SelectedTables.has(tbl)) {
-      _bv2SelectedTables.delete(tbl);
-      card.classList.remove('selected');
-    } else {
-      _bv2SelectedTables.add(tbl);
-      card.classList.add('selected');
-    }
-    bv2UpdateJoinBadges();
-    bv2RenderFieldList();
-    bv2UpdateCount();
-  }
-
-  function bv2UpdateJoinBadges() {
-    document.querySelectorAll('.bv2-join-badge').forEach(function(b) {
-      var join = b.dataset.join;
-      var parts = join.split('-');
-      // A join lights up if BOTH tables in the pair are selected
-      var active = _bv2SelectedTables.has(parts[0]) && _bv2SelectedTables.has(parts[1]);
-      b.classList.toggle('active', active);
-    });
-  }
-
-  function bv2ToggleGf(chip) {
-    chip.classList.toggle('off');
-  }
-
-  function bv2RenderFieldList() {
-    var list = document.getElementById('bv2-field-list');
-    if (!list) return;
-    var q = (_bv2FieldSearch || '').toLowerCase();
-    if (_bv2SelectedTables.size === 0) {
-      list.innerHTML = '<div style="padding:20px;text-align:center;color:rgba(255,255,255,.2);font-size:12px">Select a table above to see its fields</div>';
-      return;
-    }
-    var html = '';
-    _bv2SelectedTables.forEach(function(tbl) {
-      var fields = BV2_SCHEMA[tbl] || [];
-      var filtered = q ? fields.filter(function(f){ return f.f.indexOf(q) >= 0; }) : fields;
-      if (filtered.length === 0) return;
-      html += '<div class="bv2-field-group-label">' + tbl + '</div>';
-      filtered.forEach(function(fd) {
-        html += '<div class="bv2-field-row">' +
-          '<span class="bv2-dtype ' + fd.t + '">' + fd.t.toUpperCase() + '</span>' +
-          '<span class="bv2-field-name">' + fd.f + '</span>' +
-          '<span class="bv2-field-actions">' +
-            '<button class="bv2-fadd metric" onclick="bv2AddField(\'' + tbl + '\',\'' + fd.f + '\',\'metric\')">+M</button>' +
-            '<button class="bv2-fadd filter" onclick="bv2AddField(\'' + tbl + '\',\'' + fd.f + '\',\'filter\')">+F</button>' +
-          '</span>' +
-        '</div>';
-      });
-    });
-    list.innerHTML = html || '<div style="padding:20px;text-align:center;color:rgba(255,255,255,.2);font-size:12px">No fields match your search</div>';
-  }
-
-  function bv2FilterFields() {
-    _bv2FieldSearch = (document.getElementById('bv2-field-search')||{}).value || '';
-    bv2RenderFieldList();
-  }
-
-  function bv2AddField(tbl, field, zone) {
-    var key = tbl + '.' + field;
-    if (zone === 'metric') {
-      if (_bv2Metrics.find(function(x){return x.key===key;})) return;
-      _bv2Metrics.push({tbl:tbl, field:field, key:key});
-      bv2RenderZone('metric');
-    } else {
-      if (_bv2Filters.find(function(x){return x.key===key;})) return;
-      _bv2Filters.push({tbl:tbl, field:field, key:key});
-      bv2RenderZone('filter');
-    }
-    bv2UpdateCount();
-  }
-
-  function bv2RemoveField(key, zone) {
-    if (zone === 'metric') {
-      _bv2Metrics = _bv2Metrics.filter(function(x){return x.key!==key;});
-      bv2RenderZone('metric');
-    } else {
-      _bv2Filters = _bv2Filters.filter(function(x){return x.key!==key;});
-      bv2RenderZone('filter');
-    }
-    bv2UpdateCount();
-  }
-
-  function bv2RenderZone(zone) {
-    var items = zone === 'metric' ? _bv2Metrics : _bv2Filters;
-    var el = document.getElementById('bv2-' + zone + '-zone');
-    var cntEl = document.getElementById('bv2-' + zone + '-cnt');
-    if (!el) return;
-    if (items.length === 0) {
-      el.innerHTML = '<span class="bv2-zone-empty">Add fields with +' + (zone==='metric'?'M':'F') + '</span>';
-    } else {
-      el.innerHTML = items.map(function(x) {
-        var cls = zone === 'metric' ? 'bv2-mchip' : 'bv2-fchip';
-        return '<span class="' + cls + '">' + x.key + '<span class="bv2-chip-x" onclick="bv2RemoveField(\'' + x.key + '\',\'' + zone + '\')">&times;</span></span>';
-      }).join('');
-    }
-    if (cntEl) cntEl.textContent = items.length;
-  }
-
-  function bv2UpdateCount() {
-    var n = _bv2Metrics.length + _bv2Filters.length;
-    var el = document.getElementById('builder-selected-count');
-    if (el) el.textContent = n + ' field' + (n!==1?'s':'') + ' selected';
-  }
-
-  // Override builderGoStep so step 1 → 2 transition works with v2 state
-  function builderGoStepV2(n) {
-    // Store v2 selections into the prompt-generator state
-    window._bv2SelectedTablesForPrompt = Array.from(_bv2SelectedTables);
-    window._bv2MetricsForPrompt = _bv2Metrics.slice();
-    window._bv2FiltersForPrompt = _bv2Filters.slice();
-    window._bv2GlobalFilters = [];
-    document.querySelectorAll('.bv2-filter-chip:not(.off)').forEach(function(c){ window._bv2GlobalFilters.push(c.dataset.gf); });
-    // Proceed to step 2
-    _builderCurrentStep = n;
-    for (var i=1;i<=3;i++) {
-      var p = document.getElementById('builder-step-'+i);
-      if (p) p.style.display = i===n?'block':'none';
-      var d = document.getElementById('bsi-'+i);
-      if (d) { d.classList.remove('active','done'); if(i<n)d.classList.add('done'); else if(i===n)d.classList.add('active'); }
-      var l = document.getElementById('bsl-'+i);
-      if (l) l.classList.toggle('done',i<n);
-    }
-    var c = document.querySelector('.content-area');
-    if (c) c.scrollTop = 0;
-  }
-  </script>
 
   <!-- Step 2: Configure -->
   <div class="builder-step-panel" id="builder-step-2" style="display:none">
