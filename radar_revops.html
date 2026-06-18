@@ -3287,81 +3287,35 @@ function goToBuilder() {
     </div>
   </div>
 
-  <!-- STEP 2: Filters & Slicers -->
+  <!-- STEP 2: Pick Metrics -->
   <div class="builder-step-panel" id="diy-panel-2">
     <div class="builder-panel-header">
       <div>
-        <div class="builder-panel-title">Step 2 of 4 &mdash; Filters &amp; Slicers</div>
-        <div class="builder-panel-sub">Choose the date filter style and select which slicers will appear in the dashboard.</div>
+        <div class="builder-panel-title">Step 2 of 4 &mdash; Select Metrics</div>
+        <div class="builder-panel-sub">Choose the metrics to include in your dashboard. Definitions and SQL logic come from the Datapedia.</div>
       </div>
+      <div class="builder-selected-count" id="diy-metrics-count">0 metrics selected</div>
     </div>
-    <div class="builder-config-body">
-      <div class="bd-section">
-        <div class="bd-section-title">Date Filter Style</div>
-        <div class="diy-scope-row">
-          <div class="diy-scope-toggle selected" id="dscope-between" onclick="diySelectScope('between')">
-            <div class="diy-scope-toggle-title">&#x1F4C5; Date Between</div>
-            <div class="diy-scope-toggle-desc">Custom start &amp; end date range picker &mdash; best for ad-hoc analysis</div>
-          </div>
-          <div class="diy-scope-toggle" id="dscope-monthly" onclick="diySelectScope('monthly')">
-            <div class="diy-scope-toggle-title">&#x1F4C6; Monthly Dropdown</div>
-            <div class="diy-scope-toggle-desc">Month-by-month selector &mdash; best for recurring monthly reviews</div>
-          </div>
-        </div>
+    <div class="builder-controls">
+      <div class="search-box" style="max-width:320px">
+        <span class="sicon">&#x1F50D;</span>
+        <input type="text" id="diy-metric-search" placeholder="Search metrics..." oninput="diyFilterMetrics()">
       </div>
-      <div class="bd-section">
-        <div class="bd-section-title" style="display:flex;align-items:center;justify-content:space-between">
-          <span>Dashboard Slicers <span style="font-size:10px;font-weight:400;text-transform:none;letter-spacing:0;color:rgba(255,255,255,.35)">&mdash; which filters appear in the dashboard</span></span>
-          <button class="diy-btn diy-btn-ghost diy-btn-sm" onclick="diyToggleAllSlicers()">Toggle All</button>
-        </div>
-        <div class="diy-slicer-grid" id="diy-slicer-grid"><!-- Populated by JS --></div>
-      </div>
+      <div class="builder-cat-filters" id="diy-cat-filters"></div>
     </div>
+    <div class="builder-metrics-grid" id="diy-metrics-grid"><!-- Populated by JS --></div>
     <div class="builder-footer">
       <button class="diy-btn diy-btn-ghost" onclick="diyGoStep(1)">&larr; Back</button>
-      <button class="builder-btn-next" onclick="diyGoStep(3)">Next &rarr;</button>
+      <button class="builder-btn-next" id="diy-next-2" onclick="diyGoStep(3)" disabled>Next &rarr;</button>
     </div>
   </div>
 
-  <!-- STEP 3: Metrics -->
+  <!-- STEP 3: Configure -->
   <div class="builder-step-panel" id="diy-panel-3">
     <div class="builder-panel-header">
       <div>
-        <div class="builder-panel-title">Step 3 of 4 &mdash; Select Metrics</div>
-        <div class="builder-panel-sub">Pick the metrics to include. Definitions and SQL logic come from the Datapedia.</div>
-      </div>
-      <span class="diy-metrics-count-badge" id="diy-metrics-count-badge">0 selected</span>
-    </div>
-    <div style="padding:16px 24px 0">
-      <div class="diy-metrics-header">
-        <input class="diy-metrics-search" id="diy-metric-search" placeholder="Search metrics&hellip;" oninput="diyFilterMetrics()">
-      </div>
-      <div class="diy-cat-tabs" id="diy-cat-tabs">
-        <button class="diy-cat-tab active" data-cat="" onclick="diyCatFilter(this)">All</button>
-        <button class="diy-cat-tab" data-cat="Funnel" onclick="diyCatFilter(this)">Funnel</button>
-        <button class="diy-cat-tab" data-cat="Revenue" onclick="diyCatFilter(this)">Revenue</button>
-        <button class="diy-cat-tab" data-cat="Sales_Productivity" onclick="diyCatFilter(this)">Sales</button>
-        <button class="diy-cat-tab" data-cat="Finance" onclick="diyCatFilter(this)">Finance</button>
-        <button class="diy-cat-tab" data-cat="Customer_Health" onclick="diyCatFilter(this)">CS</button>
-        <button class="diy-cat-tab" data-cat="Marketing_Efficiency" onclick="diyCatFilter(this)">Marketing</button>
-        <button class="diy-cat-tab" data-cat="Product_Performance" onclick="diyCatFilter(this)">Product</button>
-      </div>
-    </div>
-    <div style="padding:0 24px 8px">
-      <div class="diy-metrics-grid" id="diy-metrics-grid"><!-- Populated by JS --></div>
-    </div>
-    <div class="builder-footer">
-      <button class="diy-btn diy-btn-ghost" onclick="diyGoStep(2)">&larr; Back</button>
-      <button class="builder-btn-next" onclick="diyGoStep(4)">Next &rarr;</button>
-    </div>
-  </div>
-
-  <!-- STEP 4: Config & Save -->
-  <div class="builder-step-panel" id="diy-panel-4">
-    <div class="builder-panel-header">
-      <div>
-        <div class="builder-panel-title">Step 4 of 4 &mdash; Configure &amp; Save</div>
-        <div class="builder-panel-sub">Name your dashboard, choose the team and layout, then save to your list.</div>
+        <div class="builder-panel-title">Step 3 of 4 &mdash; Configure Your Dashboard</div>
+        <div class="builder-panel-sub">Set the name, date filter style, and choose which slicers appear in the dashboard.</div>
       </div>
     </div>
     <div class="builder-config-body">
@@ -3384,8 +3338,26 @@ function goToBuilder() {
       </div>
 
       <div class="bd-section">
-        <div class="bd-section-title">Description</div>
-        <textarea class="builder-input" id="diy-dash-desc" placeholder="What does this dashboard track?" style="width:100%;min-height:72px;resize:vertical;box-sizing:border-box"></textarea>
+        <div class="bd-section-title">Date Filter Style</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.35);margin-bottom:8px;letter-spacing:.3px">Dashboard date filter style</div>
+        <div class="bd-date-mode-row">
+          <label class="bd-date-mode-btn">
+            <input type="radio" name="diy-date-style" value="between" checked onchange="diyState.dateScope='between'">
+            <span>Date Between</span>
+          </label>
+          <label class="bd-date-mode-btn">
+            <input type="radio" name="diy-date-style" value="monthly" onchange="diyState.dateScope='monthly'">
+            <span>Monthly Dropdown</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="bd-section">
+        <div class="bd-section-title" style="display:flex;align-items:center;justify-content:space-between">
+          <span>Dashboard Slicers <span style="font-size:10px;font-weight:400;text-transform:none;letter-spacing:0;color:rgba(255,255,255,.35)">&mdash; which filters appear in the dashboard</span></span>
+          <button class="diy-btn diy-btn-ghost diy-btn-sm" onclick="diyToggleAllSlicers()">Toggle All</button>
+        </div>
+        <div class="diy-slicer-grid" id="diy-slicer-grid"><!-- Populated by JS --></div>
       </div>
 
       <div class="bd-section">
@@ -3411,7 +3383,7 @@ function goToBuilder() {
               <rect x="2" y="2" width="56" height="13" rx="3" fill="rgba(255,255,255,.15)" stroke="rgba(255,255,255,.2)" stroke-width="1"/>
               <rect x="2" y="19" width="56" height="17" rx="3" fill="rgba(255,255,255,.15)" stroke="rgba(255,255,255,.2)" stroke-width="1"/>
             </svg>
-            <span>KPIs + Chart</span>
+            <span>KPI + Chart</span>
           </div>
           <div class="diy-layout-opt" data-layout="fullwidth" onclick="diySelectLayout(this)">
             <svg viewBox="0 0 60 38" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -3423,23 +3395,62 @@ function goToBuilder() {
           </div>
         </div>
       </div>
+
+      <div class="bd-section">
+        <div class="bd-section-title">Description</div>
+        <textarea class="builder-input" id="diy-dash-desc" placeholder="What does this dashboard track?" style="width:100%;min-height:72px;resize:vertical;box-sizing:border-box"></textarea>
+      </div>
+
     </div>
-    <hr class="diy-section-divider">
-    <div class="diy-section-label">Summary</div>
-    <table class="diy-summary-table" id="diy-summary-table">
-      <tbody id="diy-summary-tbody"></tbody>
-    </table>
-    <div style="display:flex;align-items:center;gap:12px">
-      <button class="diy-btn diy-btn-primary" onclick="diySaveDashboard()">&#x1F4BE; Save to My Dashboards</button>
-      <span class="diy-save-msg" id="diy-save-msg">&#x2713; Saved!</span>
+    <div class="builder-footer">
+      <button class="diy-btn diy-btn-ghost" onclick="diyGoStep(2)">&larr; Back</button>
+      <button class="builder-btn-next" onclick="diyGoStep(4)">Next &rarr;</button>
     </div>
-    <div class="diy-section-label" style="margin-top:28px">Saved Dashboards</div>
-    <div class="diy-saved-list" id="diy-saved-list">
-      <div style="font-size:12px;color:rgba(255,255,255,.25);padding:8px 0">No saved dashboards yet.</div>
+  </div>
+
+  <!-- STEP 4: Generate -->
+  <div class="builder-step-panel" id="diy-panel-4">
+    <div class="builder-panel-header">
+      <div>
+        <div class="builder-panel-title">Step 4 of 4 &mdash; Generate Dashboard</div>
+        <div class="builder-panel-sub">Review your configuration, then generate your dashboard with Claude AI directly inside RADAR.</div>
+      </div>
+    </div>
+    <div class="builder-config-body">
+
+      <div class="bd-section">
+        <div class="bd-section-title">Summary</div>
+        <table class="diy-summary-table" id="diy-summary-table">
+          <tbody id="diy-summary-tbody"></tbody>
+        </table>
+      </div>
+
+      <div class="bd-section" id="diy-apikey-section">
+        <div class="bd-section-title">Claude API Key <span style="font-size:10px;font-weight:400;text-transform:none;letter-spacing:0;color:rgba(255,255,255,.35)">&mdash; stored in localStorage, never in source code</span></div>
+        <div style="display:flex;gap:8px;align-items:center;max-width:520px">
+          <input class="builder-input" id="diy-apikey-input" type="password" placeholder="sk-ant-..." style="flex:1;box-sizing:border-box" oninput="diyCheckApiKey()">
+          <button class="diy-btn diy-btn-ghost diy-btn-sm" onclick="diySaveApiKey()">Save Key</button>
+        </div>
+        <div id="diy-apikey-status" style="font-size:11px;margin-top:6px;color:rgba(255,255,255,.3)"></div>
+      </div>
+
+      <div class="bd-section">
+        <div id="diy-generate-status" style="font-size:12px;color:rgba(255,255,255,.35);min-height:18px"></div>
+      </div>
+
+    </div>
+    <!-- Generated dashboard iframe preview -->
+    <div id="diy-preview-wrap" style="display:none;padding:0 24px 24px">
+      <div class="bd-section-title" style="margin-bottom:12px">Generated Dashboard Preview</div>
+      <iframe id="diy-preview-iframe" style="width:100%;height:600px;border:1px solid rgba(255,255,255,.1);border-radius:10px;background:#fff"></iframe>
+      <div style="margin-top:12px;display:flex;gap:10px">
+        <button class="builder-btn-next" onclick="diyDownloadDashboard()">&#x2B07; Download HTML</button>
+        <button class="diy-btn diy-btn-ghost" onclick="diyReset()">Start Over</button>
+      </div>
     </div>
     <div class="builder-footer">
       <button class="diy-btn diy-btn-ghost" onclick="diyGoStep(3)">&larr; Back</button>
-      <button class="diy-btn diy-btn-ghost" onclick="diyReset()">Start Over</button>
+      <button class="builder-btn-next" id="diy-generate-btn" onclick="diyGenerate()">&#x26A1; Generate Dashboard</button>
     </div>
   </div>
 
@@ -3518,7 +3529,7 @@ var diyState = {
 })();
 
 // INIT SLICERS
-(function diyInitSlicers(){
+function diyInitSlicers(){
   var grid = document.getElementById('diy-slicer-grid');
   if (!grid) return;
   grid.innerHTML = DIY_SLICERS.map(function(s){
@@ -3528,7 +3539,20 @@ var diyState = {
       + ' <span class="sc-field">'+s.field+'</span>'
       + '</div>';
   }).join('');
-})();
+}
+
+// CAT FILTERS FOR METRICS STEP
+var DIY_CATS = ['All','Funnel','Revenue','Sales_Productivity','Finance','Customer_Health','Marketing_Efficiency','Product_Performance'];
+var DIY_CAT_LABELS = {All:'All',Funnel:'Funnel',Revenue:'Revenue',Sales_Productivity:'Sales',Finance:'Finance',Customer_Health:'CS',Marketing_Efficiency:'Marketing',Product_Performance:'Product'};
+
+function diyInitMetricCatFilters(){
+  var wrap = document.getElementById('diy-cat-filters');
+  if(!wrap) return;
+  wrap.innerHTML = DIY_CATS.map(function(c){
+    var isAll = c==='All';
+    return '<button class="fb'+(isAll?' active':'')+'" data-dcat="'+(isAll?'':c)+'" onclick="diyCatFilter(this)">'+(DIY_CAT_LABELS[c]||c)+'</button>';
+  }).join('');
+}
 
 // INIT METRICS
 (function diyInitMetrics(){
@@ -3539,8 +3563,8 @@ function diyRenderMetrics(){
   var grid = document.getElementById('diy-metrics-grid');
   if (!grid || typeof METRICS === 'undefined') return;
   var search = ((document.getElementById('diy-metric-search')||{}).value || '').toLowerCase();
-  var catEl = document.querySelector('.diy-cat-tab.active');
-  var cat = catEl ? catEl.getAttribute('data-cat') : '';
+  var catEl = document.querySelector('#diy-cat-filters .fb.active');
+  var cat = catEl ? (catEl.getAttribute('data-dcat') || '') : '';
   var CL = {Finance:'Finance',Funnel:'Funnel',Sales_Productivity:'Sales',Revenue:'Revenue',Customer_Health:'CS',Marketing_Efficiency:'Marketing',Revenue_Risk:'Rev Risk',Product_Performance:'Product'};
   // Finance: only show invoice-related metrics (those with empty id = netsuite/invoice sourced)
   var DIY_FINANCE_SAAS_IDS = ['CUST_CHURN_001','REV_MRR_CHURN_001','REV_CONTRACTION_001','REV_EXPANSION_001','CAC_AVG_001','LTV_AVG_001','REV_ARPA_LOST_001','REV_ARPA_NEW_001','REV_ARPA_TOTAL_001','CAC_PAYBACK_001','CUST_LIFETIME_001','LTV_CAC_RATIO_001','REV_NETNEW_MRR_001','REV_NRR_001','REV_QUICK_RATIO_001','REV_MAGIC_001','CAC_TOTAL_001'];
@@ -3559,13 +3583,13 @@ function diyRenderMetrics(){
     var key = m.name;
     var isSelected = diyState.metrics.indexOf(key) >= 0;
     var catLabel = CL[m.category] || m.category;
-    return '<div class="diy-metric-row'+(isSelected?' selected':'')+'" id="dmr-'+encodeURIComponent(key)+'" onclick="diyToggleMetric(\''+key.replace(/'/g,"\\'")+'\')">'
+    return '<div class="builder-mrow'+(isSelected?' selected':'')+'" id="dmr-'+encodeURIComponent(key)+'" onclick="diyToggleMetric(\''+key.replace(/'/g,"\\'")+'\')">'
       + '<input type="checkbox"'+(isSelected?' checked':'')+' onclick="event.stopPropagation();diyToggleMetric(\''+key.replace(/'/g,"\\'")+'\');">'
-      + '<div class="diy-metric-info">'
-      + '<div class="diy-metric-name">'+m.name+'</div>'
-      + '<div class="diy-metric-meta">'
-      + '<span class="diy-metric-cat">'+catLabel+'</span>'
-      + '<span class="diy-metric-def">'+m.definition+'</span>'
+      + '<div class="builder-mrow-info">'
+      + '<div class="builder-mrow-name">'+m.name+'</div>'
+      + '<div class="builder-mrow-meta">'
+      + '<span class="builder-mrow-cat">'+catLabel+'</span>'
+      + '<span class="builder-mrow-def">'+m.definition+'</span>'
       + '</div></div></div>';
   }).join('');
   diyUpdateMetricsCount();
@@ -3573,7 +3597,7 @@ function diyRenderMetrics(){
 
 function diyFilterMetrics(){ diyRenderMetrics(); }
 function diyCatFilter(el){
-  document.querySelectorAll('.diy-cat-tab').forEach(function(t){t.classList.remove('active');});
+  document.querySelectorAll('#diy-cat-filters .fb').forEach(function(t){t.classList.remove('active');});
   el.classList.add('active');
   diyRenderMetrics();
 }
@@ -3586,8 +3610,10 @@ function diyToggleMetric(name){
 }
 
 function diyUpdateMetricsCount(){
-  var el = document.getElementById('diy-metrics-count-badge');
-  if (el) el.textContent = diyState.metrics.length + ' selected';
+  var el = document.getElementById('diy-metrics-count');
+  if (el) el.textContent = diyState.metrics.length + ' metric' + (diyState.metrics.length!==1?'s':'') + ' selected';
+  var nextBtn = document.getElementById('diy-next-2');
+  if (nextBtn) nextBtn.disabled = diyState.metrics.length === 0;
 }
 
 // TABLE TOGGLE
@@ -3644,6 +3670,41 @@ function diyToggleAllSlicers(){
   }
 }
 
+// API KEY
+function diySaveApiKey(){
+  var val = (document.getElementById('diy-apikey-input')||{}).value||'';
+  if(!val.trim()){return;}
+  localStorage.setItem('diy_claude_key', val.trim());
+  var s = document.getElementById('diy-apikey-status');
+  if(s){ s.textContent='✓ Key saved'; s.style.color='#1DB954'; }
+}
+function diyLoadApiKey(){
+  var k = localStorage.getItem('diy_claude_key')||'';
+  var inp = document.getElementById('diy-apikey-input');
+  if(inp && k) inp.value = k;
+  var s = document.getElementById('diy-apikey-status');
+  if(s && k){ s.textContent='✓ Key loaded from localStorage'; s.style.color='rgba(29,185,84,.7)'; }
+}
+function diyCheckApiKey(){
+  var val = (document.getElementById('diy-apikey-input')||{}).value||'';
+  var s = document.getElementById('diy-apikey-status');
+  if(s) s.textContent = val.trim() ? '' : '';
+}
+function diyGenerate(){
+  var s = document.getElementById('diy-generate-status');
+  if(s){ s.textContent = '⚡ Claude API integration coming next...'; s.style.color='#1DB954'; }
+}
+function diyDownloadDashboard(){
+  var iframe = document.getElementById('diy-preview-iframe');
+  if(!iframe || !iframe.srcdoc) return;
+  var blob = new Blob([iframe.srcdoc], {type:'text/html'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (document.getElementById('diy-dash-name')||{}).value || 'dashboard';
+  a.download = a.download.replace(/\s+/g,'-').toLowerCase()+'.html';
+  a.click();
+}
+
 // LAYOUT
 function diySelectLayout(el){
   diyState.layout = el.getAttribute('data-layout');
@@ -3659,7 +3720,9 @@ function diyGoStep(n){
     var panel = document.getElementById('diy-panel-'+i);
     if(panel) panel.classList.toggle('active', i===n);
   }
-  if(n===4) diyBuildSummary();
+  if(n===2){ diyInitMetricCatFilters(); diyRenderMetrics(); }
+  if(n===3){ diyInitSlicers(); }
+  if(n===4){ diyBuildSummary(); diyLoadApiKey(); }
   var content = document.querySelector('.content-area');
   if(content) content.scrollTop = 0;
 }
