@@ -3146,76 +3146,92 @@ function goToBuilder() {
 <!-- ── DIY BUILDER SECTION ── -->
 <div class="section" id="section-diy" style="display:none">
 <style>
-/* DIY Builder styles */
 #section-diy{background:#030712;padding:0}
 .diy-hero{background:linear-gradient(135deg,#060c14 0%,#0d1f2d 100%);padding:28px 28px;border-bottom:1px solid rgba(255,255,255,.06)}
 .diy-hero h1{font-size:20px;font-weight:700;margin-bottom:6px;color:#fff}
 .diy-hero p{color:rgba(255,255,255,.5);font-size:13px;line-height:1.6;max-width:680px}
-.diy-body{padding:28px}
-/* Wizard steps nav */
-.diy-steps-nav{display:flex;align-items:center;gap:0;margin-bottom:28px}
-.diy-step-pill{display:flex;align-items:center;gap:8px;padding:9px 18px;border-radius:24px;font-size:12px;font-weight:600;color:rgba(255,255,255,.4);background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);cursor:pointer;transition:all .15s;white-space:nowrap}
-.diy-step-pill.active{color:#1DB954;background:rgba(29,185,84,.12);border-color:rgba(29,185,84,.4)}
-.diy-step-pill.done{color:rgba(255,255,255,.6);background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.12)}
-.diy-step-arrow{color:rgba(255,255,255,.2);font-size:14px;margin:0 6px;flex-shrink:0}
-.diy-step-num{width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
-.diy-step-pill.active .diy-step-num{background:#1DB954;color:#fff}
-.diy-step-pill.done .diy-step-num{background:rgba(255,255,255,.2);color:#fff}
+.diy-body{padding:24px 28px 40px}
+/* Step nav */
+.diy-steps-nav{display:flex;align-items:center;gap:6px;margin-bottom:28px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:10px 14px}
+.diy-step-pill{display:flex;align-items:center;gap:7px;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;color:rgba(255,255,255,.3);cursor:pointer;transition:all .15s;white-space:nowrap}
+.diy-step-pill.active{background:rgba(29,185,84,.15);color:#1DB954;border:1px solid rgba(29,185,84,.3)}
+.diy-step-pill.done{color:rgba(255,255,255,.5)}
+.diy-step-num{width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0}
+.diy-step-pill.active .diy-step-num{background:#1DB954;color:#000}
+.diy-step-arrow{color:rgba(255,255,255,.15);font-size:16px;flex-shrink:0}
 /* Wizard panels */
 .diy-wizard-panel{display:none}
 .diy-wizard-panel.active{display:block}
-/* Table cards */
-.diy-tables-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:24px}
-.diy-table-card{background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.08);border-radius:12px;padding:14px;cursor:pointer;transition:all .2s;position:relative}
-.diy-table-card:hover{border-color:rgba(29,185,84,.35);background:rgba(29,185,84,.06)}
-.diy-table-card.selected{border-color:#1DB954;background:rgba(29,185,84,.1);box-shadow:0 0 14px rgba(29,185,84,.18)}
-.diy-table-card .dtc-name{font-size:13px;font-weight:700;color:#fff;margin-bottom:3px}
-.diy-table-card .dtc-desc{font-size:11px;color:rgba(255,255,255,.4);line-height:1.5;margin-bottom:8px}
-.diy-table-card .dtc-src{font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;display:inline-block;margin-bottom:8px}
-.diy-table-card .dtc-src.hs{background:rgba(255,91,0,.15);color:#ff7849;border:1px solid rgba(255,91,0,.25)}
-.diy-table-card .dtc-src.db{background:rgba(29,185,84,.12);color:#1DB954;border:1px solid rgba(29,185,84,.25)}
-.diy-table-card .dtc-src.ns{background:rgba(0,184,212,.1);color:#00cec9;border:1px solid rgba(0,184,212,.25)}
-.diy-table-card .dtc-src.int{background:rgba(108,92,231,.12);color:#a29bfe;border:1px solid rgba(108,92,231,.25)}
-.diy-join-badges{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
-.diy-join-badge{font-size:9px;font-weight:600;padding:2px 7px;border-radius:8px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.4)}
-.diy-check-mark{position:absolute;top:10px;right:10px;width:18px;height:18px;border-radius:50%;background:#1DB954;display:none;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:700}
-.diy-table-card.selected .diy-check-mark{display:flex}
-/* Section labels */
-.diy-section-label{font-size:11px;font-weight:700;color:rgba(255,255,255,.35);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;margin-top:6px}
-/* Global filters row */
-.diy-filters-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px}
-.diy-filter-chip{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:1.5px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:rgba(255,255,255,.5);transition:all .15s;user-select:none}
-.diy-filter-chip.on{border-color:rgba(29,185,84,.5);background:rgba(29,185,84,.12);color:#1DB954}
-.diy-filter-chip .fc-dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0}
-/* Field picker */
-.diy-field-picker{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.diy-field-left,.diy-field-right{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px}
-.diy-field-search{width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:7px 12px;color:#e2e8f0;font-size:12px;outline:none;margin-bottom:10px;font-family:inherit}
-.diy-field-search::placeholder{color:rgba(255,255,255,.3)}
-.diy-field-list{max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:3px}
-.diy-field-list::-webkit-scrollbar{width:4px}.diy-field-list::-webkit-scrollbar-track{background:transparent}.diy-field-list::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:2px}
-.diy-field-item{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:7px;cursor:pointer;transition:background .12s;font-size:12px;color:rgba(255,255,255,.7)}
-.diy-field-item:hover{background:rgba(255,255,255,.06)}
-.diy-field-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.diy-field-table{font-size:10px;color:rgba(255,255,255,.3);margin-left:auto;flex-shrink:0}
-.diy-field-type{font-size:9px;padding:1px 5px;border-radius:4px;background:rgba(255,255,255,.06);color:rgba(255,255,255,.3);margin-left:4px}
-/* Drop zones */
-.diy-drop-zone{min-height:70px;border:1.5px dashed rgba(255,255,255,.12);border-radius:9px;padding:10px;margin-top:10px;display:flex;flex-direction:column;gap:6px}
-.diy-drop-label{font-size:11px;font-weight:700;color:rgba(255,255,255,.35);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;display:flex;align-items:center;justify-content:space-between}
-.diy-drop-empty{font-size:11px;color:rgba(255,255,255,.2);padding:8px 0;text-align:center}
-.diy-chip{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:14px;font-size:11px;font-weight:600;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:#e2e8f0;margin:2px}
-.diy-chip .chip-x{cursor:pointer;opacity:.5;font-size:12px;line-height:1;margin-left:2px;transition:opacity .12s}
-.diy-chip .chip-x:hover{opacity:1}
-/* Step 2 */
+/* Section label */
+.diy-section-label{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.3);margin:0 0 10px;padding-top:4px}
+.diy-section-divider{border:none;border-top:1px solid rgba(255,255,255,.06);margin:22px 0}
+/* Tables grid */
+.diy-tables-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:4px}
+.diy-table-card{background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.08);border-radius:12px;padding:14px;cursor:pointer;transition:all .18s;position:relative;overflow:hidden}
+.diy-table-card:hover{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.16);transform:translateY(-1px)}
+.diy-table-card.selected{background:rgba(29,185,84,.1);border-color:rgba(29,185,84,.5);box-shadow:0 0 12px rgba(29,185,84,.12)}
+.diy-check-mark{position:absolute;top:9px;right:10px;font-size:11px;font-weight:800;color:#1DB954;opacity:0;transition:opacity .15s}
+.diy-table-card.selected .diy-check-mark{opacity:1}
+.dtc-name{font-size:12px;font-weight:700;color:#e2e8f0;margin-bottom:3px}
+.dtc-desc{font-size:11px;color:rgba(255,255,255,.35);margin-bottom:7px;line-height:1.4}
+.dtc-src{font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;letter-spacing:.5px}
+.dtc-src.hs{background:rgba(255,126,0,.15);color:#ff7e00}
+.dtc-src.db{background:rgba(29,185,84,.15);color:#1DB954}
+.dtc-src.ns{background:rgba(99,179,237,.15);color:#63b3ed}
+.dtc-src.int{background:rgba(255,255,255,.1);color:rgba(255,255,255,.4)}
+.diy-join-badges{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.diy-join-badge{font-size:9px;padding:2px 7px;border-radius:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);color:rgba(255,255,255,.35);font-weight:600;transition:all .2s}
+.diy-table-card.selected .diy-join-badge.related{background:rgba(29,185,84,.18);border-color:rgba(29,185,84,.4);color:#1DB954}
+/* Data scope */
+.diy-scope-row{display:flex;gap:10px;margin-bottom:14px}
+.diy-scope-toggle{flex:1;padding:10px 14px;border:1.5px solid rgba(255,255,255,.1);border-radius:9px;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;gap:3px}
+.diy-scope-toggle:hover{border-color:rgba(255,255,255,.2);background:rgba(255,255,255,.04)}
+.diy-scope-toggle.selected{border-color:rgba(29,185,84,.5);background:rgba(29,185,84,.1)}
+.diy-scope-toggle-title{font-size:12px;font-weight:700;color:#e2e8f0}
+.diy-scope-toggle.selected .diy-scope-toggle-title{color:#1DB954}
+.diy-scope-toggle-desc{font-size:11px;color:rgba(255,255,255,.35);line-height:1.4}
+.diy-date-basis-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}
+.diy-basis-btn{padding:5px 12px;border-radius:6px;border:1.5px solid rgba(255,255,255,.1);background:transparent;color:rgba(255,255,255,.4);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s}
+.diy-basis-btn:hover{border-color:rgba(255,255,255,.25);color:rgba(255,255,255,.7)}
+.diy-basis-btn.selected{border-color:rgba(29,185,84,.5);background:rgba(29,185,84,.12);color:#1DB954}
+/* Slicer chips */
+.diy-slicer-grid{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:4px}
+.diy-slicer-chip{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border-radius:20px;border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:rgba(255,255,255,.4);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;user-select:none}
+.diy-slicer-chip:hover{border-color:rgba(255,255,255,.22);background:rgba(255,255,255,.07)}
+.diy-slicer-chip.on{border-color:rgba(29,185,84,.5);background:rgba(29,185,84,.12);color:#1DB954}
+.diy-slicer-chip .sc-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.2);flex-shrink:0;transition:background .15s}
+.diy-slicer-chip.on .sc-dot{background:#1DB954}
+.diy-slicer-chip .sc-field{font-size:9px;color:rgba(255,255,255,.25);font-weight:500;margin-left:2px}
+.diy-slicer-chip.on .sc-field{color:rgba(29,185,84,.6)}
+/* Metrics picker */
+.diy-metrics-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.diy-metrics-search{flex:1;min-width:200px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:7px 12px;color:#e2e8f0;font-size:12px;font-family:inherit;outline:none;transition:border-color .15s}
+.diy-metrics-search:focus{border-color:rgba(29,185,84,.4)}
+.diy-metrics-search::placeholder{color:rgba(255,255,255,.25)}
+.diy-cat-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.diy-cat-tab{padding:4px 11px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.4);background:transparent;font-family:inherit;transition:all .15s}
+.diy-cat-tab:hover{border-color:rgba(255,255,255,.25);color:rgba(255,255,255,.7)}
+.diy-cat-tab.active{background:rgba(29,185,84,.15);border-color:rgba(29,185,84,.4);color:#1DB954}
+.diy-metrics-grid{display:flex;flex-direction:column;gap:2px;max-height:380px;overflow-y:auto;padding-right:4px}
+.diy-metric-row{display:flex;align-items:flex-start;gap:12px;padding:10px 12px;border-radius:8px;cursor:pointer;transition:background .12s;border:1px solid transparent}
+.diy-metric-row:hover{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.06)}
+.diy-metric-row.selected{background:rgba(29,185,84,.07);border-color:rgba(29,185,84,.2)}
+.diy-metric-row input[type=checkbox]{width:16px;height:16px;accent-color:#1DB954;cursor:pointer;flex-shrink:0;margin-top:2px}
+.diy-metric-info{flex:1;min-width:0}
+.diy-metric-name{font-size:13px;font-weight:700;color:#e2e8f0;line-height:1.3}
+.diy-metric-meta{display:flex;align-items:center;gap:8px;margin-top:3px}
+.diy-metric-cat{font-size:10px;font-weight:700;padding:1px 7px;border-radius:4px;background:rgba(29,185,84,.15);color:#1DB954;border:1px solid rgba(29,185,84,.3)}
+.diy-metric-def{font-size:11px;color:rgba(255,255,255,.4);line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:500px}
+.diy-metrics-count-badge{font-size:11px;color:#1DB954;font-weight:700;background:rgba(29,185,84,.12);border:1px solid rgba(29,185,84,.3);border-radius:10px;padding:2px 10px}
+/* Config step */
 .diy-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .diy-form-group{display:flex;flex-direction:column;gap:6px}
 .diy-form-group.full{grid-column:1/-1}
 .diy-label{font-size:11px;font-weight:700;color:rgba(255,255,255,.5);letter-spacing:.8px;text-transform:uppercase}
-.diy-input,.diy-select,.diy-textarea{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:9px 12px;color:#e2e8f0;font-size:13px;font-family:inherit;outline:none;transition:border-color .15s;width:100%}
+.diy-input,.diy-select,.diy-textarea{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:9px 12px;color:#e2e8f0;font-size:13px;font-family:inherit;outline:none;transition:border-color .15s;width:100%;box-sizing:border-box}
 .diy-input:focus,.diy-select:focus,.diy-textarea:focus{border-color:rgba(29,185,84,.5)}
 .diy-select option{background:#0d1f2d}
-.diy-textarea{resize:vertical;min-height:80px}
-/* Layout picker */
+.diy-textarea{resize:vertical;min-height:72px}
 .diy-layout-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:6px}
 .diy-layout-opt{border:1.5px solid rgba(255,255,255,.1);border-radius:10px;padding:12px 10px;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:8px}
 .diy-layout-opt:hover{border-color:rgba(29,185,84,.35);background:rgba(29,185,84,.06)}
@@ -3223,19 +3239,11 @@ function goToBuilder() {
 .diy-layout-opt svg{width:60px;height:38px}
 .diy-layout-opt span{font-size:10px;font-weight:600;color:rgba(255,255,255,.5);text-align:center}
 .diy-layout-opt.selected span{color:#1DB954}
-/* Step 3 */
+/* Summary */
 .diy-summary-table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:20px}
 .diy-summary-table td{padding:9px 12px;border-bottom:1px solid rgba(255,255,255,.07);vertical-align:top}
 .diy-summary-table td:first-child{color:rgba(255,255,255,.4);font-weight:600;width:36%;white-space:nowrap}
 .diy-summary-table td:last-child{color:#e2e8f0}
-/* Stub preview */
-.diy-preview-stub{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:18px;margin-bottom:20px}
-.diy-stub-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
-.diy-stub-kpi{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:9px;padding:14px;text-align:center}
-.diy-stub-kpi-val{font-size:22px;font-weight:800;color:#1DB954;margin-bottom:4px}
-.diy-stub-kpi-lbl{font-size:10px;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.8px}
-.diy-stub-chart{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:9px;padding:14px;height:90px;display:flex;align-items:flex-end;gap:8px;overflow:hidden}
-.diy-stub-bar{flex:1;border-radius:4px 4px 0 0;background:linear-gradient(180deg,rgba(29,185,84,.6),rgba(29,185,84,.25));min-width:8px;transition:height .3s}
 /* Saved list */
 .diy-saved-list{display:flex;flex-direction:column;gap:8px;margin-top:16px}
 .diy-saved-item{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:12px}
@@ -3251,13 +3259,13 @@ function goToBuilder() {
 .diy-btn-danger{background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.25)}
 .diy-btn-danger:hover{background:rgba(239,68,68,.25)}
 .diy-btn-sm{padding:5px 12px;font-size:11px;border-radius:7px}
-.diy-nav-row{display:flex;justify-content:space-between;align-items:center;margin-top:24px;padding-top:18px;border-top:1px solid rgba(255,255,255,.07)}
+.diy-nav-row{display:flex;justify-content:space-between;align-items:center;margin-top:28px;padding-top:18px;border-top:1px solid rgba(255,255,255,.07)}
 .diy-save-msg{font-size:12px;color:#1DB954;font-weight:600;display:none}
 </style>
 
 <div class="diy-hero">
-  <h1>🧪 DIY Builder <span style="font-size:11px;font-weight:500;color:rgba(255,255,255,.3);margin-left:8px;background:rgba(29,185,84,.12);border:1px solid rgba(29,185,84,.3);padding:2px 9px;border-radius:10px;vertical-align:middle">Beta · Internal Only</span></h1>
-  <p>Build a custom dashboard config in 3 steps — pick your tables and fields, configure layout, then save to your dashboard library.</p>
+  <h1>&#x1F9EA; DIY Builder <span style="font-size:11px;font-weight:500;color:rgba(255,255,255,.3);margin-left:8px;background:rgba(29,185,84,.12);border:1px solid rgba(29,185,84,.3);padding:2px 9px;border-radius:10px;vertical-align:middle">Beta &middot; Internal Only</span></h1>
+  <p>Build a custom dashboard config in 4 steps &mdash; pick your data sources, set filters and slicers, select metrics, then configure and save.</p>
 </div>
 
 <div class="diy-body">
@@ -3265,71 +3273,90 @@ function goToBuilder() {
   <!-- Step nav -->
   <div class="diy-steps-nav">
     <div class="diy-step-pill active" id="diy-pill-1" onclick="diyGoStep(1)">
-      <span class="diy-step-num">1</span> Tables &amp; Fields
+      <span class="diy-step-num">1</span> Select Tables
     </div>
-    <div class="diy-step-arrow">›</div>
+    <div class="diy-step-arrow">&rsaquo;</div>
     <div class="diy-step-pill" id="diy-pill-2" onclick="diyGoStep(2)">
-      <span class="diy-step-num">2</span> Dashboard Config
+      <span class="diy-step-num">2</span> Filters &amp; Slicers
     </div>
-    <div class="diy-step-arrow">›</div>
+    <div class="diy-step-arrow">&rsaquo;</div>
     <div class="diy-step-pill" id="diy-pill-3" onclick="diyGoStep(3)">
-      <span class="diy-step-num">3</span> Review &amp; Save
+      <span class="diy-step-num">3</span> Metrics
+    </div>
+    <div class="diy-step-arrow">&rsaquo;</div>
+    <div class="diy-step-pill" id="diy-pill-4" onclick="diyGoStep(4)">
+      <span class="diy-step-num">4</span> Config &amp; Save
     </div>
   </div>
 
-  <!-- ── STEP 1 ── -->
+  <!-- STEP 1: Select Tables -->
   <div class="diy-wizard-panel active" id="diy-panel-1">
-
-    <div class="diy-section-label">1. Select Tables</div>
-    <div class="diy-tables-grid" id="diy-tables-grid">
-      <!-- Populated by JS -->
-    </div>
-
-    <div class="diy-section-label">2. Global Filters <span style="font-size:10px;font-weight:400;color:rgba(255,255,255,.25);text-transform:none;letter-spacing:0">— click to toggle on/off</span></div>
-    <div class="diy-filters-row" id="diy-global-filters">
-      <div class="diy-filter-chip on" data-filter="daterange" onclick="diyToggleFilter(this)"><span class="fc-dot"></span>📅 Date Range</div>
-      <div class="diy-filter-chip on" data-filter="salesrep" onclick="diyToggleFilter(this)"><span class="fc-dot"></span>👤 Sales Rep</div>
-      <div class="diy-filter-chip on" data-filter="team" onclick="diyToggleFilter(this)"><span class="fc-dot"></span>🏷️ Team</div>
-      <div class="diy-filter-chip on" data-filter="pipeline" onclick="diyToggleFilter(this)"><span class="fc-dot"></span>🔀 Pipeline</div>
-      <div class="diy-filter-chip on" data-filter="segment" onclick="diyToggleFilter(this)"><span class="fc-dot"></span>🏢 Segment</div>
-    </div>
-
-    <div class="diy-section-label">3. Field Picker <span style="font-size:10px;font-weight:400;color:rgba(255,255,255,.25);text-transform:none;letter-spacing:0">— select a table first, then add fields</span></div>
-    <div class="diy-field-picker">
-      <div class="diy-field-left">
-        <div class="diy-label" style="margin-bottom:8px">Available Fields</div>
-        <input class="diy-field-search" id="diy-field-search" placeholder="Search fields…" oninput="diyFilterFields()">
-        <div class="diy-field-list" id="diy-field-list">
-          <div style="font-size:12px;color:rgba(255,255,255,.2);padding:12px 0;text-align:center">Select a table above to see its fields</div>
-        </div>
-      </div>
-      <div class="diy-field-right">
-        <div class="diy-drop-zone" id="diy-metrics-zone">
-          <div class="diy-drop-label">
-            <span>📊 Metrics</span>
-            <span id="diy-metrics-count" style="font-size:10px;color:rgba(255,255,255,.25)">0 selected</span>
-          </div>
-          <div id="diy-metrics-chips"><div class="diy-drop-empty">Click +M on a field to add</div></div>
-        </div>
-        <div class="diy-drop-zone" style="margin-top:12px" id="diy-filters-zone">
-          <div class="diy-drop-label">
-            <span>🔽 Additional Filters</span>
-            <span id="diy-filters-count" style="font-size:10px;color:rgba(255,255,255,.25)">0 selected</span>
-          </div>
-          <div id="diy-filters-chips"><div class="diy-drop-empty">Click +F on a field to add</div></div>
-        </div>
-      </div>
-    </div>
-
+    <div class="diy-section-label">Select Data Tables</div>
+    <div class="diy-tables-grid" id="diy-tables-grid"><!-- Populated by JS --></div>
     <div class="diy-nav-row">
       <div></div>
-      <button class="diy-btn diy-btn-primary" onclick="diyGoStep(2)">Next: Dashboard Config →</button>
+      <button class="diy-btn diy-btn-primary" onclick="diyGoStep(2)">Next: Filters &amp; Slicers &rarr;</button>
     </div>
   </div>
 
-  <!-- ── STEP 2 ── -->
+  <!-- STEP 2: Filters & Slicers -->
   <div class="diy-wizard-panel" id="diy-panel-2">
+    <div class="diy-section-label">Data Scope &mdash; Date Filter Style</div>
+    <div class="diy-scope-row">
+      <div class="diy-scope-toggle selected" id="dscope-between" onclick="diySelectScope('between')">
+        <div class="diy-scope-toggle-title">&#x1F4C5; Date Between</div>
+        <div class="diy-scope-toggle-desc">Custom start &amp; end date range picker &mdash; best for ad-hoc analysis</div>
+      </div>
+      <div class="diy-scope-toggle" id="dscope-monthly" onclick="diySelectScope('monthly')">
+        <div class="diy-scope-toggle-title">&#x1F4C6; Monthly Dropdown</div>
+        <div class="diy-scope-toggle-desc">Month-by-month selector &mdash; best for recurring monthly reviews</div>
+      </div>
+    </div>
+    <div style="margin-bottom:18px">
+      <div class="diy-section-label" style="margin-bottom:8px">Date Basis</div>
+      <div class="diy-date-basis-row" id="diy-date-basis-row">
+        <button class="diy-basis-btn selected" data-basis="projected_close_date" onclick="diySelectBasis(this)">Projected Close Date <span style="opacity:.5;font-weight:400;font-size:10px">&rarr; Pipeline / TMRR</span></button>
+        <button class="diy-basis-btn" data-basis="close_date" onclick="diySelectBasis(this)">Close Date <span style="opacity:.5;font-weight:400;font-size:10px">&rarr; Won / Revenue</span></button>
+        <button class="diy-basis-btn" data-basis="create_date" onclick="diySelectBasis(this)">Create Date <span style="opacity:.5;font-weight:400;font-size:10px">&rarr; Leads / Velocity</span></button>
+      </div>
+    </div>
+    <hr class="diy-section-divider">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div class="diy-section-label" style="margin:0">Dashboard Slicers <span style="font-size:10px;font-weight:400;color:rgba(255,255,255,.25);text-transform:none;letter-spacing:0">&mdash; select which filters appear in the dashboard</span></div>
+      <button class="diy-btn diy-btn-ghost diy-btn-sm" onclick="diyToggleAllSlicers()">Toggle All</button>
+    </div>
+    <div class="diy-slicer-grid" id="diy-slicer-grid"><!-- Populated by JS --></div>
+    <div class="diy-nav-row">
+      <button class="diy-btn diy-btn-ghost" onclick="diyGoStep(1)">&larr; Back</button>
+      <button class="diy-btn diy-btn-primary" onclick="diyGoStep(3)">Next: Select Metrics &rarr;</button>
+    </div>
+  </div>
 
+  <!-- STEP 3: Metrics -->
+  <div class="diy-wizard-panel" id="diy-panel-3">
+    <div class="diy-metrics-header">
+      <input class="diy-metrics-search" id="diy-metric-search" placeholder="Search metrics&hellip;" oninput="diyFilterMetrics()">
+      <span class="diy-metrics-count-badge" id="diy-metrics-count-badge">0 selected</span>
+    </div>
+    <div class="diy-cat-tabs" id="diy-cat-tabs">
+      <button class="diy-cat-tab active" data-cat="" onclick="diyCatFilter(this)">All</button>
+      <button class="diy-cat-tab" data-cat="Funnel" onclick="diyCatFilter(this)">Funnel</button>
+      <button class="diy-cat-tab" data-cat="Revenue" onclick="diyCatFilter(this)">Revenue</button>
+      <button class="diy-cat-tab" data-cat="Sales_Productivity" onclick="diyCatFilter(this)">Sales</button>
+      <button class="diy-cat-tab" data-cat="Finance" onclick="diyCatFilter(this)">Finance</button>
+      <button class="diy-cat-tab" data-cat="Customer_Health" onclick="diyCatFilter(this)">CS</button>
+      <button class="diy-cat-tab" data-cat="Marketing_Efficiency" onclick="diyCatFilter(this)">Marketing</button>
+      <button class="diy-cat-tab" data-cat="Product_Performance" onclick="diyCatFilter(this)">Product</button>
+    </div>
+    <div class="diy-metrics-grid" id="diy-metrics-grid"><!-- Populated by JS --></div>
+    <div class="diy-nav-row">
+      <button class="diy-btn diy-btn-ghost" onclick="diyGoStep(2)">&larr; Back</button>
+      <button class="diy-btn diy-btn-primary" onclick="diyGoStep(4)">Next: Config &amp; Save &rarr;</button>
+    </div>
+  </div>
+
+  <!-- STEP 4: Config & Save -->
+  <div class="diy-wizard-panel" id="diy-panel-4">
     <div class="diy-form-grid">
       <div class="diy-form-group">
         <label class="diy-label">Dashboard Name *</label>
@@ -3338,7 +3365,7 @@ function goToBuilder() {
       <div class="diy-form-group">
         <label class="diy-label">Team</label>
         <select class="diy-select" id="diy-dash-team">
-          <option value="">Select team…</option>
+          <option value="">Select team&hellip;</option>
           <option>RevOps</option>
           <option>Sales</option>
           <option>Marketing</option>
@@ -3385,63 +3412,22 @@ function goToBuilder() {
           </div>
         </div>
       </div>
-      <div class="diy-form-group">
-        <label class="diy-label">Default Date Range</label>
-        <select class="diy-select" id="diy-dash-daterange">
-          <option value="30d">Last 30 days</option>
-          <option value="90d">Last 90 days</option>
-          <option value="6m">Last 6 months</option>
-          <option value="ytd">Year to Date</option>
-          <option value="all">All Time</option>
-        </select>
-      </div>
     </div>
-
-    <div class="diy-nav-row">
-      <button class="diy-btn diy-btn-ghost" onclick="diyGoStep(1)">← Back</button>
-      <button class="diy-btn diy-btn-primary" onclick="diyGoStep(3)">Next: Review &amp; Save →</button>
-    </div>
-  </div>
-
-  <!-- ── STEP 3 ── -->
-  <div class="diy-wizard-panel" id="diy-panel-3">
-
+    <hr class="diy-section-divider">
     <div class="diy-section-label">Summary</div>
     <table class="diy-summary-table" id="diy-summary-table">
       <tbody id="diy-summary-tbody"></tbody>
     </table>
-
-    <div class="diy-section-label">Preview (stub)</div>
-    <div class="diy-preview-stub">
-      <div class="diy-stub-kpis" id="diy-stub-kpis">
-        <div class="diy-stub-kpi"><div class="diy-stub-kpi-val">—</div><div class="diy-stub-kpi-lbl">Metric 1</div></div>
-        <div class="diy-stub-kpi"><div class="diy-stub-kpi-val">—</div><div class="diy-stub-kpi-lbl">Metric 2</div></div>
-        <div class="diy-stub-kpi"><div class="diy-stub-kpi-val">—</div><div class="diy-stub-kpi-lbl">Metric 3</div></div>
-      </div>
-      <div class="diy-stub-chart" id="diy-stub-chart">
-        <div class="diy-stub-bar" style="height:55%"></div>
-        <div class="diy-stub-bar" style="height:70%"></div>
-        <div class="diy-stub-bar" style="height:45%"></div>
-        <div class="diy-stub-bar" style="height:80%"></div>
-        <div class="diy-stub-bar" style="height:60%"></div>
-        <div class="diy-stub-bar" style="height:90%"></div>
-        <div class="diy-stub-bar" style="height:65%"></div>
-        <div class="diy-stub-bar" style="height:75%"></div>
-      </div>
-    </div>
-
     <div style="display:flex;align-items:center;gap:12px">
-      <button class="diy-btn diy-btn-primary" onclick="diySaveDashboard()">💾 Save to My Dashboards</button>
-      <span class="diy-save-msg" id="diy-save-msg">✓ Saved!</span>
+      <button class="diy-btn diy-btn-primary" onclick="diySaveDashboard()">&#x1F4BE; Save to My Dashboards</button>
+      <span class="diy-save-msg" id="diy-save-msg">&#x2713; Saved!</span>
     </div>
-
-    <div class="diy-section-label" style="margin-top:24px">Saved Dashboards</div>
+    <div class="diy-section-label" style="margin-top:28px">Saved Dashboards</div>
     <div class="diy-saved-list" id="diy-saved-list">
       <div style="font-size:12px;color:rgba(255,255,255,.25);padding:8px 0">No saved dashboards yet.</div>
     </div>
-
     <div class="diy-nav-row">
-      <button class="diy-btn diy-btn-ghost" onclick="diyGoStep(2)">← Back</button>
+      <button class="diy-btn diy-btn-ghost" onclick="diyGoStep(3)">&larr; Back</button>
       <button class="diy-btn diy-btn-ghost" onclick="diyReset()">Start Over</button>
     </div>
   </div>
@@ -3452,93 +3438,67 @@ function goToBuilder() {
 <script>
 // ── DIY BUILDER DATA ──
 var DIY_TABLES = [
-  {id:'silver_deals', name:'silver_deals', desc:'1 row per deal', src:'hs', srcLabel:'HubSpot',
-   joins:['silver_line_items (deal_id)','silver_company (company lookup)'],
-   fields:[
-    {n:'deal_id',t:'str'},{n:'deal_name',t:'str'},{n:'pipeline_name',t:'str'},{n:'deal_type',t:'str'},
-    {n:'stage_label',t:'str'},{n:'client_journey_stage',t:'str'},{n:'create_date',t:'dt'},
-    {n:'close_date',t:'dt'},{n:'projected_close_date',t:'dt'},{n:'sales_rep',t:'str'},
-    {n:'hubspot_team',t:'str'},{n:'department_source_clean',t:'str'},{n:'segment',t:'str'},
-    {n:'mrr',t:'num'},{n:'ef_mrr',t:'num'},{n:'amount',t:'num'},{n:'tcv',t:'num'},
-    {n:'deal_velocity_days',t:'num'},{n:'original_traffic_source',t:'str'},{n:'original_source_of_awareness',t:'str'}
-   ]},
-  {id:'gold_monthly_exec_summary', name:'gold_monthly_exec_summary', desc:'Pre-aggregated KPIs · PRIMARY for dashboards', src:'db', srcLabel:'Databricks',
-   joins:['gold_targets (metric_month + pipeline_name + segment + department_source_clean)'],
-   fields:[
-    {n:'metric_month',t:'dt'},{n:'pipeline_name',t:'str'},{n:'segment',t:'str'},
-    {n:'department_source_clean',t:'str'},{n:'mql_tmrr',t:'num'},{n:'sql_tmrr',t:'num'},
-    {n:'won_mrr',t:'num'},{n:'won_count',t:'num'},{n:'ef_mrr',t:'num'},
-    {n:'ql_count',t:'num'},{n:'avg_deal_value',t:'num'},{n:'deal_velocity_days',t:'num'}
-   ]},
-  {id:'gold_targets', name:'gold_targets', desc:'Monthly targets', src:'db', srcLabel:'Databricks',
-   joins:['gold_monthly_exec_summary (metric_month + pipeline_name + segment + department_source_clean)'],
-   fields:[
-    {n:'metric_month',t:'dt'},{n:'pipeline_name',t:'str'},{n:'segment',t:'str'},
-    {n:'department_source_clean',t:'str'},{n:'target_mrr',t:'num'},{n:'target_ql',t:'num'},
-    {n:'target_won',t:'num'},{n:'target_ef_mrr',t:'num'}
-   ]},
-  {id:'silver_company', name:'silver_company', desc:'Company attributes', src:'hs', srcLabel:'HubSpot',
-   joins:['silver_contacts (hubspot_company_id)','silver_licenses (hubspot_company_id)','netsuite_invoices_summary (hubspot_company_id)','company_active_headcount (hubspot_company_record_id)'],
-   fields:[
-    {n:'hubspot_company_id',t:'str'},{n:'hubspot_company_record_id',t:'str'},{n:'Brands',t:'str'},
-    {n:'Segment',t:'str'},{n:'client_stage',t:'str'},{n:'Client_status',t:'str'},{n:'Client_type',t:'str'}
-   ]},
-  {id:'silver_contacts', name:'silver_contacts', desc:'Contact data', src:'hs', srcLabel:'HubSpot',
-   joins:['silver_company (hubspot_company_id)'],
-   fields:[
-    {n:'lifecycle_stage',t:'str'},{n:'department_source',t:'str'},{n:'buyer_role',t:'str'},
-    {n:'analytics_source',t:'str'},{n:'create_date',t:'dt'},{n:'hubspot_company_id',t:'str'}
-   ]},
-  {id:'silver_leads', name:'silver_leads', desc:'Lead pipeline data', src:'hs', srcLabel:'HubSpot',
-   joins:[],
-   fields:[
-    {n:'pipeline_name',t:'str'},{n:'stage_label',t:'str'},{n:'ldu_qualified',t:'bool'},
-    {n:'disqualification_reason',t:'str'},{n:'create_date',t:'dt'},{n:'sales_rep',t:'str'},{n:'segment',t:'str'}
-   ]},
-  {id:'silver_line_items', name:'silver_line_items', desc:'Product-level MRR', src:'hs', srcLabel:'HubSpot',
-   joins:['silver_deals (deal_id)'],
-   fields:[
-    {n:'deal_id',t:'str'},{n:'product_name',t:'str'},{n:'mrr',t:'num'},
-    {n:'quantity',t:'num'},{n:'billing_frequency',t:'str'},{n:'term_months',t:'num'}
-   ]},
-  {id:'silver_licenses', name:'silver_licenses', desc:'License / product data', src:'hs', srcLabel:'HubSpot',
-   joins:['silver_company (hubspot_company_id)'],
-   fields:[
-    {n:'hubspot_company_id',t:'str'},{n:'product_name',t:'str'},{n:'mrr',t:'num'},
-    {n:'renewal_date',t:'dt'},{n:'product_status',t:'str'}
-   ]},
-  {id:'netsuite_invoices_summary', name:'netsuite_invoices_summary', desc:'Billing & collections', src:'ns', srcLabel:'NetSuite',
-   joins:['silver_company (hubspot_company_id)'],
-   fields:[
-    {n:'invoice_id',t:'str'},{n:'hubspot_company_id',t:'str'},{n:'invoice_date',t:'dt'},
-    {n:'due_date',t:'dt'},{n:'amount_due',t:'num'},{n:'amount_paid',t:'num'},{n:'status',t:'str'}
-   ]},
-  {id:'company_active_headcount', name:'company_active_headcount', desc:'Monthly headcount', src:'int', srcLabel:'Internal',
-   joins:['silver_company (hubspot_company_record_id)'],
-   fields:[
-    {n:'hubspot_company_record_id',t:'str'},{n:'month',t:'dt'},{n:'headcount',t:'num'}
-   ]}
+  {id:'silver_deals', name:'silver_deals', icon:'📋', desc:'1 row per deal · pipeline, stage, MRR, reps', src:'hs', srcLabel:'HubSpot',
+   joins:['silver_line_items','silver_company','gold_monthly_exec_summary']},
+  {id:'gold_monthly_exec_summary', name:'gold_monthly_exec_summary', icon:'⭐', desc:'Pre-aggregated KPIs · PRIMARY for dashboards', src:'db', srcLabel:'Databricks',
+   joins:['gold_targets','gold_targets_per_rep']},
+  {id:'gold_targets', name:'gold_targets', icon:'🎯', desc:'Monthly targets by pipeline, segment, dept', src:'db', srcLabel:'Databricks',
+   joins:['gold_monthly_exec_summary']},
+  {id:'gold_targets_per_rep', name:'gold_targets_per_rep', icon:'👤', desc:'Monthly MRR & EF MRR targets per sales rep', src:'db', srcLabel:'Databricks',
+   joins:['gold_monthly_exec_summary','silver_deals']},
+  {id:'silver_company', name:'silver_company', icon:'🏢', desc:'Company attributes, segment, CSM, lifecycle', src:'hs', srcLabel:'HubSpot',
+   joins:['silver_contacts','silver_licenses','netsuite_invoices_summary','company_active_headcount']},
+  {id:'silver_contacts', name:'silver_contacts', icon:'👥', desc:'Contact data, lifecycle stage, source', src:'hs', srcLabel:'HubSpot',
+   joins:['silver_company']},
+  {id:'silver_leads', name:'silver_leads', icon:'🔍', desc:'Lead pipeline, LDU qualification, disqualification', src:'hs', srcLabel:'HubSpot',
+   joins:['silver_company','silver_contacts']},
+  {id:'silver_line_items', name:'silver_line_items', icon:'📦', desc:'Product-level MRR, billing term, attach rate', src:'hs', srcLabel:'HubSpot',
+   joins:['silver_deals']},
+  {id:'silver_licenses', name:'silver_licenses', icon:'🔑', desc:'License / product data, renewal, churn', src:'hs', srcLabel:'HubSpot',
+   joins:['silver_company']},
+  {id:'netsuite_invoices_summary', name:'netsuite_invoices_summary', icon:'💰', desc:'Billing & collections, invoice status, overdue', src:'ns', srcLabel:'NetSuite',
+   joins:['silver_company','netsuite_invoice_lineitems']},
+  {id:'netsuite_invoice_lineitems', name:'netsuite_invoice_lineitems', icon:'📄', desc:'Invoice line-item detail, product billing', src:'ns', srcLabel:'NetSuite',
+   joins:['netsuite_invoices_summary']},
+  {id:'company_active_headcount', name:'company_active_headcount', icon:'📊', desc:'Monthly headcount per company, HR vs Payroll', src:'int', srcLabel:'Internal',
+   joins:['silver_company']}
 ];
 
-// Dot color per table
-var DIY_TABLE_COLORS = {
-  silver_deals:'#1DB954', gold_monthly_exec_summary:'#00cec9', gold_targets:'#00b894',
-  silver_company:'#fd79a8', silver_contacts:'#fdcb6e', silver_leads:'#e17055',
-  silver_line_items:'#74b9ff', silver_licenses:'#a29bfe', netsuite_invoices_summary:'#55efc4',
-  company_active_headcount:'#fab1a0'
+var DIY_SLICERS = [
+  {id:'date_range',           label:'Date Range',           field:'create/close/projected_close_date'},
+  {id:'pipeline_name',        label:'Pipeline Name',        field:'pipeline_name'},
+  {id:'segment',              label:'Segment',              field:'segment'},
+  {id:'department_source',    label:'Department Source',    field:'department_source_clean'},
+  {id:'channel_source',       label:'Channel Source',       field:'original_traffic_source'},
+  {id:'sales_rep',            label:'Sales Rep',            field:'sales_rep'},
+  {id:'hubspot_team',         label:'HubSpot Team',         field:'hubspot_team'},
+  {id:'deal_type',            label:'Deal Type',            field:'deal_type'},
+  {id:'stage_label',          label:'Stage Label',          field:'stage_label'},
+  {id:'client_journey_stage', label:'Client Journey Stage', field:'client_journey_stage'},
+];
+
+var diyState = {
+  step: 1,
+  tables: [],
+  slicers: DIY_SLICERS.map(function(s){return s.id;}),
+  metrics: [],
+  dateScope: 'between',
+  dateBasis: 'projected_close_date',
+  layout: '3col',
+  editingId: null
 };
 
-var diyState = { step:1, tables:[], metrics:[], filters:[], globalFilters:[], layout:'3col', editingId:null };
-
-// Init tables grid
+// INIT TABLES
 (function diyInitTables(){
   var grid = document.getElementById('diy-tables-grid');
   if (!grid) return;
   grid.innerHTML = DIY_TABLES.map(function(t){
-    var joinHtml = t.joins.length ? t.joins.map(function(j){ return '<span class="diy-join-badge">↔ '+j+'</span>'; }).join('') : '';
+    var joinHtml = t.joins.length
+      ? t.joins.map(function(j){ return '<span class="diy-join-badge" data-rel="'+j+'">&#x21D4; '+j+'</span>'; }).join('')
+      : '';
     return '<div class="diy-table-card" id="dtc-'+t.id+'" onclick="diyToggleTable(\''+t.id+'\')">'
-      + '<div class="diy-check-mark">✓</div>'
-      + '<div class="dtc-name">'+t.name+'</div>'
+      + '<div class="diy-check-mark">&#x2713;</div>'
+      + '<div class="dtc-name">'+t.icon+' '+t.name+'</div>'
       + '<div class="dtc-desc">'+t.desc+'</div>'
       + '<span class="dtc-src '+t.src+'">'+t.srcLabel+'</span>'
       + (joinHtml ? '<div class="diy-join-badges">'+joinHtml+'</div>' : '')
@@ -3546,279 +3506,273 @@ var diyState = { step:1, tables:[], metrics:[], filters:[], globalFilters:[], la
   }).join('');
 })();
 
-function diyToggleTable(id) {
+// INIT SLICERS
+(function diyInitSlicers(){
+  var grid = document.getElementById('diy-slicer-grid');
+  if (!grid) return;
+  grid.innerHTML = DIY_SLICERS.map(function(s){
+    return '<div class="diy-slicer-chip on" id="sc-'+s.id+'" data-slicer="'+s.id+'" onclick="diyToggleSlicer(\''+s.id+'\')">'
+      + '<span class="sc-dot"></span>'
+      + s.label
+      + ' <span class="sc-field">'+s.field+'</span>'
+      + '</div>';
+  }).join('');
+})();
+
+// INIT METRICS
+(function diyInitMetrics(){
+  diyRenderMetrics();
+})();
+
+function diyRenderMetrics(){
+  var grid = document.getElementById('diy-metrics-grid');
+  if (!grid || typeof METRICS === 'undefined') return;
+  var search = ((document.getElementById('diy-metric-search')||{}).value || '').toLowerCase();
+  var catEl = document.querySelector('.diy-cat-tab.active');
+  var cat = catEl ? catEl.getAttribute('data-cat') : '';
+  var CL = {Finance:'Finance',Funnel:'Funnel',Sales_Productivity:'Sales',Revenue:'Revenue',Customer_Health:'CS',Marketing_Efficiency:'Marketing',Revenue_Risk:'Rev Risk',Product_Performance:'Product'};
+  var filtered = METRICS.filter(function(m){
+    if (!m.name) return false;
+    var matchCat = !cat || m.category === cat;
+    var matchSearch = !search || m.name.toLowerCase().indexOf(search) >= 0 || (m.definition||'').toLowerCase().indexOf(search) >= 0;
+    return matchCat && matchSearch;
+  });
+  if (!filtered.length){
+    grid.innerHTML = '<div style="font-size:12px;color:rgba(255,255,255,.2);padding:16px;text-align:center">No metrics match your search</div>';
+    return;
+  }
+  grid.innerHTML = filtered.map(function(m){
+    var key = m.name;
+    var isSelected = diyState.metrics.indexOf(key) >= 0;
+    var catLabel = CL[m.category] || m.category;
+    return '<div class="diy-metric-row'+(isSelected?' selected':'')+'" id="dmr-'+encodeURIComponent(key)+'" onclick="diyToggleMetric(\''+key.replace(/'/g,"\\'")+'\')">'
+      + '<input type="checkbox"'+(isSelected?' checked':'')+' onclick="event.stopPropagation();diyToggleMetric(\''+key.replace(/'/g,"\\'")+'\');">'
+      + '<div class="diy-metric-info">'
+      + '<div class="diy-metric-name">'+m.name+'</div>'
+      + '<div class="diy-metric-meta">'
+      + '<span class="diy-metric-cat">'+catLabel+'</span>'
+      + '<span class="diy-metric-def">'+m.definition+'</span>'
+      + '</div></div></div>';
+  }).join('');
+  diyUpdateMetricsCount();
+}
+
+function diyFilterMetrics(){ diyRenderMetrics(); }
+function diyCatFilter(el){
+  document.querySelectorAll('.diy-cat-tab').forEach(function(t){t.classList.remove('active');});
+  el.classList.add('active');
+  diyRenderMetrics();
+}
+
+function diyToggleMetric(name){
+  var idx = diyState.metrics.indexOf(name);
+  if (idx >= 0) diyState.metrics.splice(idx,1);
+  else diyState.metrics.push(name);
+  diyRenderMetrics();
+}
+
+function diyUpdateMetricsCount(){
+  var el = document.getElementById('diy-metrics-count-badge');
+  if (el) el.textContent = diyState.metrics.length + ' selected';
+}
+
+// TABLE TOGGLE
+function diyToggleTable(id){
   var idx = diyState.tables.indexOf(id);
   var card = document.getElementById('dtc-'+id);
-  if (idx >= 0) {
-    diyState.tables.splice(idx, 1);
-    card.classList.remove('selected');
+  if (idx >= 0){
+    diyState.tables.splice(idx,1);
+    if(card) card.classList.remove('selected');
   } else {
     diyState.tables.push(id);
-    card.classList.add('selected');
+    if(card) card.classList.add('selected');
   }
-  diyRenderFieldList();
-}
-
-function diyRenderFieldList() {
-  var list = document.getElementById('diy-field-list');
-  var search = (document.getElementById('diy-field-search').value || '').toLowerCase();
-  if (!diyState.tables.length) {
-    list.innerHTML = '<div style="font-size:12px;color:rgba(255,255,255,.2);padding:12px 0;text-align:center">Select a table above to see its fields</div>';
-    return;
-  }
-  var rows = [];
-  diyState.tables.forEach(function(tid) {
-    var tbl = DIY_TABLES.find(function(x){return x.id===tid;});
-    if (!tbl) return;
-    var color = DIY_TABLE_COLORS[tid] || '#aaa';
-    tbl.fields.forEach(function(f) {
-      if (search && f.n.toLowerCase().indexOf(search) < 0 && tid.toLowerCase().indexOf(search) < 0) return;
-      rows.push('<div class="diy-field-item">'
-        + '<span class="diy-field-dot" style="background:'+color+'"></span>'
-        + '<span>'+f.n+'</span>'
-        + '<span class="diy-field-type">'+f.t+'</span>'
-        + '<span class="diy-field-table">'+tid.split('_').slice(0,2).join('_')+'</span>'
-        + '<button onclick="diyAddField(\''+tid+'\',\''+f.n+'\',\''+f.t+'\',\'metric\')" style="margin-left:6px;font-size:9px;padding:2px 6px;border-radius:5px;background:rgba(29,185,84,.15);border:1px solid rgba(29,185,84,.3);color:#1DB954;cursor:pointer;font-family:inherit;font-weight:700">+M</button>'
-        + '<button onclick="diyAddField(\''+tid+'\',\''+f.n+'\',\''+f.t+'\',\'filter\')" style="margin-left:3px;font-size:9px;padding:2px 6px;border-radius:5px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.5);cursor:pointer;font-family:inherit;font-weight:700">+F</button>'
-        + '</div>');
-    });
+  document.querySelectorAll('.diy-table-card.selected .diy-join-badge').forEach(function(b){
+    var rel = b.getAttribute('data-rel');
+    b.classList.toggle('related', diyState.tables.indexOf(rel) >= 0);
   });
-  list.innerHTML = rows.length ? rows.join('') : '<div style="font-size:12px;color:rgba(255,255,255,.2);padding:12px 0;text-align:center">No fields match your search</div>';
 }
 
-function diyFilterFields() { diyRenderFieldList(); }
-
-function diyAddField(tableId, fieldName, fieldType, zone) {
-  var arr = zone === 'metric' ? diyState.metrics : diyState.filters;
-  var key = tableId + '.' + fieldName + '.' + zone;
-  if (arr.find(function(x){return x.key===key;})) return; // already added
-  arr.push({key:key, table:tableId, field:fieldName, type:fieldType});
-  diyRenderZones();
+// SCOPE / BASIS
+function diySelectScope(type){
+  diyState.dateScope = type;
+  ['between','monthly'].forEach(function(t){
+    var el = document.getElementById('dscope-'+t);
+    if(el) el.classList.toggle('selected', t===type);
+  });
 }
-
-function diyRemoveField(key, zone) {
-  if (zone === 'metric') diyState.metrics = diyState.metrics.filter(function(x){return x.key!==key;});
-  else diyState.filters = diyState.filters.filter(function(x){return x.key!==key;});
-  diyRenderZones();
-}
-
-function diyRenderZones() {
-  var mc = document.getElementById('diy-metrics-chips');
-  var fc = document.getElementById('diy-filters-chips');
-  var mcnt = document.getElementById('diy-metrics-count');
-  var fcnt = document.getElementById('diy-filters-count');
-
-  mc.innerHTML = diyState.metrics.length
-    ? diyState.metrics.map(function(f){
-        var color = DIY_TABLE_COLORS[f.table] || '#aaa';
-        return '<span class="diy-chip">'
-          + '<span style="width:7px;height:7px;border-radius:50%;background:'+color+';display:inline-block;flex-shrink:0"></span>'
-          + f.table.replace('silver_','').replace('gold_','').replace('company_','co_') + '.' + f.field
-          + '<span class="chip-x" onclick="diyRemoveField(\''+f.key+'\',\'metric\')">×</span></span>';
-      }).join('')
-    : '<div class="diy-drop-empty">Click +M on a field to add</div>';
-
-  fc.innerHTML = diyState.filters.length
-    ? diyState.filters.map(function(f){
-        var color = DIY_TABLE_COLORS[f.table] || '#aaa';
-        return '<span class="diy-chip">'
-          + '<span style="width:7px;height:7px;border-radius:50%;background:'+color+';display:inline-block;flex-shrink:0"></span>'
-          + f.table.replace('silver_','').replace('gold_','').replace('company_','co_') + '.' + f.field
-          + '<span class="chip-x" onclick="diyRemoveField(\''+f.key+'\',\'filter\')">×</span></span>';
-      }).join('')
-    : '<div class="diy-drop-empty">Click +F on a field to add</div>';
-
-  mcnt.textContent = diyState.metrics.length + ' selected';
-  fcnt.textContent = diyState.filters.length + ' selected';
-}
-
-function diyToggleFilter(el) {
-  el.classList.toggle('on');
-}
-
-function diySelectLayout(el) {
-  document.querySelectorAll('.diy-layout-opt').forEach(function(x){x.classList.remove('selected');});
+function diySelectBasis(el){
+  diyState.dateBasis = el.getAttribute('data-basis');
+  document.querySelectorAll('.diy-basis-btn').forEach(function(b){b.classList.remove('selected');});
   el.classList.add('selected');
+}
+
+// SLICERS
+function diyToggleSlicer(id){
+  var chip = document.getElementById('sc-'+id);
+  var isOn = chip && chip.classList.contains('on');
+  if(isOn){
+    diyState.slicers = diyState.slicers.filter(function(x){return x!==id;});
+    if(chip) chip.classList.remove('on');
+  } else {
+    if(diyState.slicers.indexOf(id)<0) diyState.slicers.push(id);
+    if(chip) chip.classList.add('on');
+  }
+}
+function diyToggleAllSlicers(){
+  var allOn = diyState.slicers.length === DIY_SLICERS.length;
+  if(allOn){
+    diyState.slicers = [];
+    document.querySelectorAll('.diy-slicer-chip').forEach(function(c){c.classList.remove('on');});
+  } else {
+    diyState.slicers = DIY_SLICERS.map(function(s){return s.id;});
+    document.querySelectorAll('.diy-slicer-chip').forEach(function(c){c.classList.add('on');});
+  }
+}
+
+// LAYOUT
+function diySelectLayout(el){
   diyState.layout = el.getAttribute('data-layout');
-}
-
-function diyGoStep(n) {
-  diyState.step = n;
-  document.querySelectorAll('.diy-wizard-panel').forEach(function(p){p.classList.remove('active');});
-  var panel = document.getElementById('diy-panel-'+n);
-  if (panel) panel.classList.add('active');
-  document.querySelectorAll('.diy-step-pill').forEach(function(p,i){
-    p.classList.remove('active','done');
-    if (i+1 === n) p.classList.add('active');
-    else if (i+1 < n) p.classList.add('done');
+  document.querySelectorAll('.diy-layout-opt').forEach(function(o){
+    o.classList.toggle('selected', o.getAttribute('data-layout') === diyState.layout);
   });
-  if (n === 3) diyRenderSummary();
 }
 
-function diyRenderSummary() {
-  var name    = (document.getElementById('diy-dash-name')||{}).value || '(untitled)';
-  var team    = (document.getElementById('diy-dash-team')||{}).value || '—';
-  var desc    = (document.getElementById('diy-dash-desc')||{}).value || '—';
-  var drEl    = document.getElementById('diy-dash-daterange');
-  var dr      = drEl ? drEl.options[drEl.selectedIndex].text : '—';
-  var layoutEl = document.querySelector('.diy-layout-opt.selected');
-  var layout  = layoutEl ? layoutEl.querySelector('span').textContent : diyState.layout;
-  var tables  = diyState.tables.join(', ') || '—';
-  var metrics = diyState.metrics.map(function(f){return f.table+'.'+f.field;}).join(', ') || '—';
-  var gf      = [];
-  document.querySelectorAll('.diy-filter-chip.on').forEach(function(c){gf.push(c.textContent.trim());});
-  var af      = diyState.filters.map(function(f){return f.table+'.'+f.field;}).join(', ') || '—';
+// STEP NAV
+function diyGoStep(n){
+  diyState.step = n;
+  for(var i=1;i<=4;i++){
+    var panel = document.getElementById('diy-panel-'+i);
+    var pill  = document.getElementById('diy-pill-'+i);
+    if(panel) panel.classList.toggle('active', i===n);
+    if(pill){
+      pill.classList.toggle('active', i===n);
+      pill.classList.toggle('done', i<n);
+    }
+  }
+  if(n===4) diyBuildSummary();
+  var content = document.querySelector('.content-area');
+  if(content) content.scrollTop = 0;
+}
 
-  var rows = [
-    ['Dashboard Name', name],
-    ['Team', team],
-    ['Description', desc],
-    ['Sources (Tables)', tables],
-    ['Metrics', metrics],
-    ['Global Filters', gf.join(', ') || '—'],
-    ['Additional Filters', af],
-    ['Layout', layout],
-    ['Default Date Range', dr]
-  ];
-  document.getElementById('diy-summary-tbody').innerHTML = rows.map(function(r){
+// SUMMARY
+function diyBuildSummary(){
+  var tbody = document.getElementById('diy-summary-tbody');
+  if(!tbody) return;
+  var slicerLabels = diyState.slicers.map(function(id){
+    var s = DIY_SLICERS.find(function(x){return x.id===id;});
+    return s ? s.label : id;
+  });
+  tbody.innerHTML = [
+    ['Tables', diyState.tables.join(', ') || '—'],
+    ['Date Filter Style', diyState.dateScope === 'between' ? 'Date Between' : 'Monthly Dropdown'],
+    ['Date Basis', diyState.dateBasis.replace(/_/g,' ')],
+    ['Dashboard Slicers', slicerLabels.join(', ') || 'None'],
+    ['Metrics', diyState.metrics.length ? diyState.metrics.length+' selected' : '—'],
+    ['Layout', diyState.layout]
+  ].map(function(r){
     return '<tr><td>'+r[0]+'</td><td>'+r[1]+'</td></tr>';
   }).join('');
-
-  // Stub preview — show metric names
-  var kpiCards = document.querySelectorAll('.diy-stub-kpi');
-  kpiCards.forEach(function(card, i) {
-    var lbl = card.querySelector('.diy-stub-kpi-lbl');
-    if (diyState.metrics[i]) lbl.textContent = diyState.metrics[i].field;
-    else lbl.textContent = 'Metric ' + (i+1);
-  });
-
-  diyRenderSavedList();
 }
 
-function diySaveDashboard() {
-  var name    = (document.getElementById('diy-dash-name')||{}).value || '(untitled)';
-  var team    = (document.getElementById('diy-dash-team')||{}).value || '';
-  var desc    = (document.getElementById('diy-dash-desc')||{}).value || '';
-  var drEl    = document.getElementById('diy-dash-daterange');
-  var dr      = drEl ? drEl.value : '30d';
-  var gf      = [];
-  document.querySelectorAll('.diy-filter-chip.on').forEach(function(c){gf.push(c.getAttribute('data-filter'));});
-  var id      = diyState.editingId || ('diy_'+Date.now());
-
+// SAVE
+function diySaveDashboard(){
+  var name = (document.getElementById('diy-dash-name')||{}).value || '(untitled)';
+  var team = (document.getElementById('diy-dash-team')||{}).value || '';
+  var desc = (document.getElementById('diy-dash-desc')||{}).value || '';
+  var id   = diyState.editingId || ('diy_'+Date.now());
   var entry = {
-    id: id,
-    name: name, team: team, desc: desc,
-    tables: diyState.tables.slice(),
-    metrics: diyState.metrics.slice(),
-    filters: diyState.filters.slice(),
-    globalFilters: gf,
-    layout: diyState.layout,
-    dateRange: dr,
-    savedAt: new Date().toISOString()
+    id:id, name:name, team:team, desc:desc,
+    tables:diyState.tables.slice(),
+    slicers:diyState.slicers.slice(),
+    metrics:diyState.metrics.slice(),
+    dateScope:diyState.dateScope,
+    dateBasis:diyState.dateBasis,
+    layout:diyState.layout,
+    savedAt:new Date().toISOString()
   };
-
-  var saved = JSON.parse(localStorage.getItem('radar_diy_dashboards') || '[]');
-  var idx   = saved.findIndex(function(x){return x.id===id;});
-  if (idx >= 0) saved[idx] = entry;
-  else saved.push(entry);
+  var saved = JSON.parse(localStorage.getItem('radar_diy_dashboards')||'[]');
+  var idx = saved.findIndex(function(x){return x.id===id;});
+  if(idx>=0) saved[idx]=entry; else saved.push(entry);
   localStorage.setItem('radar_diy_dashboards', JSON.stringify(saved));
   diyState.editingId = null;
-
   var msg = document.getElementById('diy-save-msg');
-  msg.style.display = 'inline';
-  setTimeout(function(){msg.style.display='none';}, 2500);
+  if(msg){msg.style.display='inline';setTimeout(function(){msg.style.display='none';},2500);}
   diyRenderSavedList();
 }
 
-function diyRenderSavedList() {
-  var saved = JSON.parse(localStorage.getItem('radar_diy_dashboards') || '[]');
-  var list  = document.getElementById('diy-saved-list');
-  if (!saved.length) {
-    list.innerHTML = '<div style="font-size:12px;color:rgba(255,255,255,.25);padding:8px 0">No saved dashboards yet.</div>';
-    return;
-  }
-  list.innerHTML = saved.map(function(d) {
+function diyRenderSavedList(){
+  var saved = JSON.parse(localStorage.getItem('radar_diy_dashboards')||'[]');
+  var list = document.getElementById('diy-saved-list');
+  if(!list) return;
+  if(!saved.length){list.innerHTML='<div style="font-size:12px;color:rgba(255,255,255,.25);padding:8px 0">No saved dashboards yet.</div>';return;}
+  list.innerHTML = saved.map(function(d){
     var date = d.savedAt ? new Date(d.savedAt).toLocaleDateString() : '';
     return '<div class="diy-saved-item">'
-      + '<div style="flex:1"><div class="diy-saved-name">'+d.name+'</div>'
-      + '<div class="diy-saved-meta">'+(d.team||'No team')+' · '+(d.tables||[]).length+' table(s) · '+date+'</div></div>'
-      + '<div class="diy-saved-actions">'
-      + '<button class="diy-btn diy-btn-ghost diy-btn-sm" onclick="diyEditEntry(\''+d.id+'\')">Edit</button>'
-      + '<button class="diy-btn diy-btn-danger diy-btn-sm" onclick="diyDeleteEntry(\''+d.id+'\')">Delete</button>'
-      + '</div></div>';
+      +'<div style="flex:1"><div class="diy-saved-name">'+d.name+'</div>'
+      +'<div class="diy-saved-meta">'+(d.team||'No team')+' &middot; '+(d.tables||[]).length+' table(s) &middot; '+(d.metrics||[]).length+' metric(s) &middot; '+date+'</div></div>'
+      +'<div class="diy-saved-actions">'
+      +'<button class="diy-btn diy-btn-ghost diy-btn-sm" onclick="diyEditEntry(\''+d.id+'\')">Edit</button>'
+      +'<button class="diy-btn diy-btn-danger diy-btn-sm" onclick="diyDeleteEntry(\''+d.id+'\')">Delete</button>'
+      +'</div></div>';
   }).join('');
 }
 
-function diyEditEntry(id) {
-  var saved = JSON.parse(localStorage.getItem('radar_diy_dashboards') || '[]');
+function diyEditEntry(id){
+  var saved = JSON.parse(localStorage.getItem('radar_diy_dashboards')||'[]');
   var entry = saved.find(function(x){return x.id===id;});
-  if (!entry) return;
-
-  // Restore state
-  diyState.tables        = entry.tables || [];
-  diyState.metrics       = entry.metrics || [];
-  diyState.filters       = entry.filters || [];
-  diyState.layout        = entry.layout || '3col';
-  diyState.editingId     = id;
-
-  // Restore table card selections
+  if(!entry) return;
+  diyState.tables     = entry.tables || [];
+  diyState.slicers    = entry.slicers || DIY_SLICERS.map(function(s){return s.id;});
+  diyState.metrics    = entry.metrics || [];
+  diyState.dateScope  = entry.dateScope || 'between';
+  diyState.dateBasis  = entry.dateBasis || 'projected_close_date';
+  diyState.layout     = entry.layout || '3col';
+  diyState.editingId  = id;
   DIY_TABLES.forEach(function(t){
     var card = document.getElementById('dtc-'+t.id);
-    if (card) card.classList.toggle('selected', diyState.tables.indexOf(t.id) >= 0);
+    if(card) card.classList.toggle('selected', diyState.tables.indexOf(t.id)>=0);
   });
-  diyRenderFieldList();
-  diyRenderZones();
-
-  // Restore step 2 inputs
-  var nameEl = document.getElementById('diy-dash-name');
-  var teamEl = document.getElementById('diy-dash-team');
-  var descEl = document.getElementById('diy-dash-desc');
-  var drEl   = document.getElementById('diy-dash-daterange');
-  if (nameEl) nameEl.value = entry.name || '';
-  if (teamEl) teamEl.value = entry.team || '';
-  if (descEl) descEl.value = entry.desc || '';
-  if (drEl)   drEl.value   = entry.dateRange || '30d';
-
-  // Restore layout
+  diySelectScope(diyState.dateScope);
+  document.querySelectorAll('.diy-basis-btn').forEach(function(b){
+    b.classList.toggle('selected', b.getAttribute('data-basis')===diyState.dateBasis);
+  });
+  document.querySelectorAll('.diy-slicer-chip').forEach(function(c){
+    var sid = c.getAttribute('data-slicer');
+    c.classList.toggle('on', diyState.slicers.indexOf(sid)>=0);
+  });
   document.querySelectorAll('.diy-layout-opt').forEach(function(el){
-    el.classList.toggle('selected', el.getAttribute('data-layout') === diyState.layout);
+    el.classList.toggle('selected', el.getAttribute('data-layout')===diyState.layout);
   });
-
-  // Restore global filters
-  document.querySelectorAll('.diy-filter-chip').forEach(function(chip){
-    var f = chip.getAttribute('data-filter');
-    chip.classList.toggle('on', (entry.globalFilters||[]).indexOf(f) >= 0);
-  });
-
+  var nameEl=document.getElementById('diy-dash-name'); if(nameEl) nameEl.value=entry.name||'';
+  var teamEl=document.getElementById('diy-dash-team'); if(teamEl) teamEl.value=entry.team||'';
+  var descEl=document.getElementById('diy-dash-desc'); if(descEl) descEl.value=entry.desc||'';
+  diyRenderMetrics();
   diyGoStep(1);
 }
 
-function diyDeleteEntry(id) {
-  var saved = JSON.parse(localStorage.getItem('radar_diy_dashboards') || '[]');
+function diyDeleteEntry(id){
+  var saved = JSON.parse(localStorage.getItem('radar_diy_dashboards')||'[]');
   saved = saved.filter(function(x){return x.id!==id;});
   localStorage.setItem('radar_diy_dashboards', JSON.stringify(saved));
   diyRenderSavedList();
 }
 
-function diyReset() {
-  diyState = { step:1, tables:[], metrics:[], filters:[], globalFilters:[], layout:'3col', editingId:null };
-  DIY_TABLES.forEach(function(t){
-    var card = document.getElementById('dtc-'+t.id);
-    if (card) card.classList.remove('selected');
-  });
-  document.querySelectorAll('.diy-filter-chip').forEach(function(c){c.classList.add('on');});
-  document.querySelectorAll('.diy-layout-opt').forEach(function(el){
-    el.classList.toggle('selected', el.getAttribute('data-layout') === '3col');
-  });
+function diyReset(){
+  diyState = {step:1, tables:[], slicers:DIY_SLICERS.map(function(s){return s.id;}), metrics:[], dateScope:'between', dateBasis:'projected_close_date', layout:'3col', editingId:null};
+  DIY_TABLES.forEach(function(t){var c=document.getElementById('dtc-'+t.id);if(c)c.classList.remove('selected');});
+  diySelectScope('between');
+  document.querySelectorAll('.diy-basis-btn').forEach(function(b){b.classList.toggle('selected',b.getAttribute('data-basis')==='projected_close_date');});
+  document.querySelectorAll('.diy-slicer-chip').forEach(function(c){c.classList.add('on');});
+  document.querySelectorAll('.diy-layout-opt').forEach(function(el){el.classList.toggle('selected',el.getAttribute('data-layout')==='3col');});
   var nameEl=document.getElementById('diy-dash-name'); if(nameEl) nameEl.value='';
   var teamEl=document.getElementById('diy-dash-team'); if(teamEl) teamEl.value='';
   var descEl=document.getElementById('diy-dash-desc'); if(descEl) descEl.value='';
-  var drEl  =document.getElementById('diy-dash-daterange'); if(drEl) drEl.value='30d';
-  diyRenderZones();
-  diyRenderFieldList();
+  diyRenderMetrics();
   diyGoStep(1);
 }
 </script>
+
 
   </div><!-- /content-area -->
 </div><!-- /app-layout -->
