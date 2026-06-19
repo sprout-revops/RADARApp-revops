@@ -1973,6 +1973,7 @@ DATABRICKS_TOKEN</div>
           <label class="bd-view-card"><input type="checkbox" value="per_segment" onchange="bdViewToggle(this)"><span class="bd-view-icon">🎯</span><span class="bd-view-label">By Segment <span style="font-weight:400;font-size:10px;color:rgba(255,255,255,.3)">SME / ENT</span></span></label>
           <label class="bd-view-card"><input type="checkbox" value="per_pipeline" onchange="bdViewToggle(this)"><span class="bd-view-icon">🔀</span><span class="bd-view-label">By Pipeline</span></label>
           <label class="bd-view-card"><input type="checkbox" value="per_industry" onchange="bdViewToggle(this)"><span class="bd-view-icon">🏭</span><span class="bd-view-label">By Industry</span></label>
+          <label class="bd-view-card"><input type="checkbox" value="per_product" onchange="bdViewToggle(this)"><span class="bd-view-icon">📦</span><span class="bd-view-label">By Product <span style="font-weight:400;font-size:10px;color:rgba(255,255,255,.3)">parent_product table</span></span></label>
           <label class="bd-view-card"><input type="checkbox" value="leaderboard" onchange="bdViewToggle(this)"><span class="bd-view-icon">🏆</span><span class="bd-view-label">Leaderboard</span></label>
           <label class="bd-view-card"><input type="checkbox" value="distribution" onchange="bdViewToggle(this)"><span class="bd-view-icon">🥧</span><span class="bd-view-label">Distribution <span style="font-weight:400;font-size:10px;color:rgba(255,255,255,.3)">donut/bar</span></span></label>
         </div>
@@ -6721,7 +6722,8 @@ function _builderRenderPromptInner() {
     per_pipeline: '[Page 2] By Pipeline/Stage — suppress stages with zero deals',
     per_industry: '[Page 2] By Industry breakdown',
     leaderboard:  '[Page 2] Leaderboard ranking (rep/team performance)',
-    distribution: '[Page 2] Distribution charts (donut/bar) — suppress zero slices'
+    distribution: '[Page 2] Distribution charts (donut/bar) — suppress zero slices',
+    per_product:  '[Page 2] By Product — stacked bar charts by year (parent_product breakdown) + Product Summary Table'
   };
   var viewList = views.length
     ? views.map(function(v){ return '- ' + (viewLabels[v] || v); }).join('\n')
@@ -7199,7 +7201,41 @@ function _builderRenderPromptInner() {
     + '    - Exclude reps/teams with zero value for the selected metric\n'
     + '  • By Segment → bar or donut; only render "SME" and "ENT" slices — discard any other segment values\n'
     + '  • By Pipeline / By Stage → bar chart; EXCLUDE stages with zero deals or zero MRR\n'
+    + '  • By Product → stacked bar chart by year; stack = parent_product; suppress zero-value products\n'
     + '  • Distribution → donut or horizontal bar; always suppress zero slices\n\n'
+    + (views.includes('per_product')
+      ? '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n'
+        + '📦 PRODUCT SUMMARY TABLE (required when By Product view is selected)\n'
+        + '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n'
+        + 'Add an "Overall Details" summary table on the By Product page.\n'
+        + 'Group by parent_product (from silver_line_items joined to silver_deals).\n'
+        + 'Each row = one parent_product. Must respect ALL active slicer filters.\n\n'
+        + 'Required columns (in this order):\n'
+        + '  Parent Product | MRR (₱) | RevShare MRR (₱) | RevShare % | OTP (₱) | RevShare OTP (₱)\n'
+        + '  | Won Deals | Lost Deals | Avg. Deal Size (₱) | Deal Velocity (days)\n\n'
+        + 'Column definitions:\n'
+        + '  • MRR — SUM of line_items.mrr where billing conditions for MRR are met (term ≥ 12, not OTP)\n'
+        + '  • RevShare MRR — SUM of line_items.mrr where clan IN (\'Partner - Referral\',\'Partner - Reseller\') AND term ≥ 12\n'
+        + '  • RevShare % — RevShare MRR / MRR (format as 0.0%)\n'
+        + '  • OTP — SUM of line_items.amount where recurring_billing_frequency = \'One Time Payment\' OR recurring_billing_frequency IS NULL\n'
+        + '  • RevShare OTP — OTP filtered to clan IN (\'Partner - Referral\',\'Partner - Reseller\')\n'
+        + '  • Won Deals — COUNT(DISTINCT deal_id) where client_journey_stage = \'Customer\'\n'
+        + '  • Lost Deals — COUNT(DISTINCT deal_id) where stage_label = \'Closed Lost\'\n'
+        + '  • Avg. Deal Size — Won MRR / Won Deals (format as ₱#,##0)\n'
+        + '  • Deal Velocity — AVG(deal_velocity_days) for won deals (format as "X.X d")\n\n'
+        + 'Table UX rules:\n'
+        + '  • Click any column header to sort ascending/descending (toggle)\n'
+        + '  • Sort by MRR descending by default\n'
+        + '  • Expandable rows (▶ toggle) — clicking a product row expands to show child product_name rows\n'
+        + '  • Show "—" for zero or null values in RevShare columns\n'
+        + '  • Currency: ₱#,##0 (literal ₱ — NOT &#8369;)\n'
+        + '  • Sticky header, dark theme, compact font (12–13px)\n\n'
+        + 'Stacked bar charts on the By Product page (use silver_line_items joined to silver_deals):\n'
+        + '  • MRR by Year — stacked bar, X = year, stack = parent_product, show top 8 products + "Other"\n'
+        + '  • Revenue Share MRR by Year — same structure, filtered to partner clan\n'
+        + '  • OTP by Year — same structure\n'
+        + '  • Revenue Share OTP by Year — same structure, filtered to partner clan\n\n'
+      : '')
     + '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n'
     + '📄 DEAL DETAILS TABLE (always include — not optional)\n'
     + '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n'
