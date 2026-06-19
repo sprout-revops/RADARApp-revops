@@ -1097,9 +1097,19 @@ function renderMRR() {
     const openPeriod = open(inPeriod(deals, 'projected_close_date', pipePeriod));
     const wtdPipe    = weightedPipeline(openPeriod);
     const periodLabel = pipePeriod === 'CQ' ? (() => { const {start,end}=currentQtr(); return `Q${Math.ceil(CUR_MON/3)} (${MONTHS[start-1]}–${MONTHS[end-1]})`; })() : 'FY';
-    // Coverage Ratio: Remaining Target ÷ Weighted Pipeline
-    const remaining = Math.max(0, target - actual);
-    const covRatio  = wtdPipe > 0 ? (remaining / wtdPipe) : null;
+    // Coverage Ratio: pipeline / remaining. For CQ rows use quarterly remaining, not YTD.
+    let covRemaining;
+    if (pipePeriod === 'CQ') {
+      const { start } = currentQtr();
+      const cqMons = [start, start + 1, start + 2].filter(m => m <= CUR_MON);
+      const qTarget = (targetPipe ? cqMons.reduce((s, m) => s + getTargetForRowMon(targetPipe, targetSeg, CUR_YEAR, m, 'mrr_target'), 0) : 0)
+                    + chanFrac * cqMons.reduce((s, m) => s + getTargetForRowMon('Unified Channel Pipeline', 'Channels', CUR_YEAR, m, 'mrr_target'), 0);
+      const qActual = sum(won(inPeriod(deals, 'close_date', 'CQ')), mrr);
+      covRemaining = Math.max(0, qTarget - qActual);
+    } else {
+      covRemaining = Math.max(0, target - actual);
+    }
+    const covRatio = covRemaining > 0 ? (wtdPipe / covRemaining) : null;
 
     const p    = pct(actual, target);
     const barW = Math.min(p, 100);
@@ -1127,7 +1137,7 @@ function renderMRR() {
           <span class="money">${fmt(wtdPipe)}</span>
           <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:700;color:#ffffff25;letter-spacing:0.06em;">${periodLabel}</span>
           ${covRatio !== null
-            ? `<span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:${covRatio >= 1 ? '#4ade80' : covRatio >= 0.7 ? '#fbbf24' : '#f87171'};">${covRatio.toFixed(2)}x coverage</span>`
+            ? `<span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:${covRatio >= 1.5 ? '#4ade80' : covRatio >= 1 ? '#fbbf24' : '#f87171'};">${covRatio.toFixed(2)}x coverage</span>`
             : `<span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#ffffff20;">—</span>`}
         </div>
       </td>
@@ -1142,7 +1152,7 @@ function renderMRR() {
   const totYoyStr = totYoyVal !== null ? (totYoyVal >= 0 ? '+' : '') + totYoyVal + '%' : '—';
   const totYoyC   = totYoyVal === null ? '#ffffff40' : totYoyVal >= 0 ? '#6fd4a0' : '#f87171';
   const totRemain = Math.max(0, totalTarget - totalActual);
-  const totCovR   = totalWtdPipe > 0 ? (totRemain / totalWtdPipe) : null;
+  const totCovR   = totRemain > 0 ? (totalWtdPipe / totRemain) : null;
 
   html += `<tr style="border-top:2px solid #ffffff15;background:#ffffff04;">
     <td><span class="seg-label" style="font-size:13px;letter-spacing:0.04em;color:#e8b86d;">Total Sales</span></td>
@@ -1159,7 +1169,7 @@ function renderMRR() {
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
         <span class="money">${fmt(totalWtdPipe)}</span>
         ${totCovR !== null
-          ? `<span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:${totCovR >= 1 ? '#4ade80' : totCovR >= 0.7 ? '#fbbf24' : '#f87171'};">${totCovR.toFixed(2)}x coverage</span>`
+          ? `<span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:${totCovR >= 1.5 ? '#4ade80' : totCovR >= 1 ? '#fbbf24' : '#f87171'};">${totCovR.toFixed(2)}x coverage</span>`
           : `<span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#ffffff20;">—</span>`}
       </div>
     </td>
@@ -2089,13 +2099,30 @@ function renderTeams() {
 
   let html = '';
   TEAM_ORDER.forEach(teamName => {
-    // Channels: show team-level YTD only, no individual rep rows
+    // Channels: YTD with ENT/SME segment breakdown (target 50/50)
     if (teamName === 'Channels') {
       const chanColor = '#2dd4bf';
       const chanTgt = getTargetForRow('Unified Channel Pipeline', 'Channels', CUR_YEAR, CUR_MON, 'mrr_target') || 0;
-      const chanAct = sum(won(inYTD(allDeals.filter(d => d.pipeline_name === 'Unified Channel Pipeline'), 'close_date', CUR_YEAR, CUR_MON)), mrr);
+      const chanDeals = won(inYTD(allDeals.filter(d => d.pipeline_name === 'Unified Channel Pipeline'), 'close_date', CUR_YEAR, CUR_MON));
+      const chanAct = sum(chanDeals, mrr);
+      const chanActENT = sum(chanDeals.filter(d => d.segment === 'ENT'), mrr);
+      const chanActSME = sum(chanDeals.filter(d => d.segment === 'SME'), mrr);
+      const chanTgtENT = chanTgt * 0.50;
+      const chanTgtSME = chanTgt * 0.50;
       const chanAtt = pct(chanAct, chanTgt);
       const chanAttC = chanAtt >= 100 ? '#4ade80' : chanAtt >= 80 ? '#38bdf8' : chanAtt >= 60 ? '#fbbf24' : '#f87171';
+      const chanSegRows = [
+        { label: 'ENT', act: chanActENT, tgt: chanTgtENT },
+        { label: 'SME', act: chanActSME, tgt: chanTgtSME },
+      ].map(({ label, act, tgt }) => {
+        const att = tgt > 0 ? pct(act, tgt) : 0;
+        const bc = att >= 100 ? '#4ade80' : att >= 80 ? '#38bdf8' : att >= 60 ? '#fbbf24' : '#f87171';
+        return `<div class="team-rep-row">
+          <span class="team-rep-name">${label} <span style="font-size:10px;opacity:0.55;">${fmt(act)}</span></span>
+          <div class="team-rep-bar-wrap"><div class="team-rep-bar-fill" style="width:${Math.min(att,100)}%;background:${bc};"></div></div>
+          <span class="team-rep-pct" style="color:${bc};">${att}%</span>
+        </div>`;
+      }).join('');
       html += `<div class="team-card">
         <div class="team-card-header">
           <div class="team-card-dot" style="background:${chanColor};"></div>
@@ -2107,23 +2134,35 @@ function renderTeams() {
           <div class="team-kpi"><div class="team-kpi-label">YTD Actual</div><div class="team-kpi-val" style="color:#fff;">${fmt(chanAct)}</div></div>
           <div class="team-kpi"><div class="team-kpi-label">Attainment</div><div class="team-kpi-val" style="color:${chanAttC};font-weight:700;">${chanAtt}%</div></div>
         </div>
+        <div class="team-reps">${chanSegRows}</div>
       </div>`;
       return;
     }
 
-    // Alliance: actuals from Third Party + Recruit+ line items
+    // Alliance: actuals from Third Party + Recruit+ line items, ENT/SME breakdown (target ENT 30% / SME 70%)
     if (teamName === 'Alliance') {
       const alliColor = '#f472b6';
-      const alliAct = allianceData.reduce((total, row) => {
-        if (!row.month) return total;
-        const dt = new Date(row.month);
-        if (dt.getFullYear() === CUR_YEAR && dt.getMonth() + 1 <= CUR_MON)
-          total += parseFloat(row.mrr || 0);
-        return total;
-      }, 0);
-      const alliTgt  = allianceYTDTarget(CUR_MON);
+      const alliYTD = r => r.month && new Date(r.month).getFullYear() === CUR_YEAR && new Date(r.month).getMonth() + 1 <= CUR_MON;
+      const alliAct = allianceData.reduce((t, r) => alliYTD(r) ? t + parseFloat(r.mrr || 0) : t, 0);
+      const alliActENT = allianceData.reduce((t, r) => alliYTD(r) && r.segment === 'ENT' ? t + parseFloat(r.mrr || 0) : t, 0);
+      const alliActSME = allianceData.reduce((t, r) => alliYTD(r) && r.segment === 'SME' ? t + parseFloat(r.mrr || 0) : t, 0);
+      const alliTgt = allianceYTDTarget(CUR_MON);
+      const alliTgtENT = alliTgt * 0.30;
+      const alliTgtSME = alliTgt * 0.70;
       const alliAtt  = alliTgt > 0 ? pct(alliAct, alliTgt) : 0;
       const alliAttC = alliAtt >= 100 ? '#4ade80' : alliAtt >= 60 ? '#fbbf24' : '#f87171';
+      const alliSegRows = [
+        { label: 'ENT', act: alliActENT, tgt: alliTgtENT },
+        { label: 'SME', act: alliActSME, tgt: alliTgtSME },
+      ].map(({ label, act, tgt }) => {
+        const att = tgt > 0 ? pct(act, tgt) : 0;
+        const bc = att >= 100 ? '#4ade80' : att >= 80 ? '#38bdf8' : att >= 60 ? '#fbbf24' : '#f87171';
+        return `<div class="team-rep-row">
+          <span class="team-rep-name">${label} <span style="font-size:10px;opacity:0.55;">${fmt(act)}</span></span>
+          <div class="team-rep-bar-wrap"><div class="team-rep-bar-fill" style="width:${Math.min(att,100)}%;background:${bc};"></div></div>
+          <span class="team-rep-pct" style="color:${bc};">${att}%</span>
+        </div>`;
+      }).join('');
       html += `<div class="team-card">
         <div class="team-card-header">
           <div class="team-card-dot" style="background:${alliColor};"></div>
@@ -2135,6 +2174,7 @@ function renderTeams() {
           <div class="team-kpi"><div class="team-kpi-label">YTD Actual</div><div class="team-kpi-val" style="color:#fff;">${fmt(alliAct)}</div></div>
           <div class="team-kpi"><div class="team-kpi-label">Attainment</div><div class="team-kpi-val" style="color:${alliAttC};font-weight:700;">${alliTgt > 0 ? alliAtt+'%' : '—'}</div></div>
         </div>
+        <div class="team-reps">${alliSegRows}</div>
       </div>`;
       return;
     }

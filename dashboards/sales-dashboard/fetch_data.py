@@ -128,6 +128,7 @@ ALLIANCE_SQL = """
 SELECT
   DATE_TRUNC('month', d.close_date) AS month,
   CASE WHEN d.pipeline_name = 'PH Upsell Pipeline' THEN 'upsell' ELSE 'nb' END AS deal_type,
+  CASE WHEN UPPER(d.segment) = 'MICRO' THEN 'SME' ELSE d.segment END AS segment,
   SUM(li.mrr) AS mrr
 FROM shared.revops.silver_line_items li
 JOIN shared.revops.silver_deals d ON li.deal_id = d.deal_id
@@ -136,7 +137,8 @@ WHERE (li.product_group = 'Third Party' OR li.parent_product = 'Recruit+')
   AND d.close_date IS NOT NULL
   AND d.close_date >= ADD_MONTHS(CURRENT_DATE, -36)
 GROUP BY DATE_TRUNC('month', d.close_date),
-         CASE WHEN d.pipeline_name = 'PH Upsell Pipeline' THEN 'upsell' ELSE 'nb' END
+         CASE WHEN d.pipeline_name = 'PH Upsell Pipeline' THEN 'upsell' ELSE 'nb' END,
+         CASE WHEN UPPER(d.segment) = 'MICRO' THEN 'SME' ELSE d.segment END
 ORDER BY month DESC
 """
 
