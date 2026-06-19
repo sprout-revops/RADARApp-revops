@@ -3301,16 +3301,19 @@ function goToBuilder() {
     <div class="builder-panel-header">
       <div>
         <div class="builder-panel-title">Step 3 of 4 &mdash; Configure Your Dashboard</div>
-        <div class="builder-panel-sub">Set the name, date filter style, and choose which slicers appear in the dashboard.</div>
+        <div class="builder-panel-sub">Set the name, date filter, apply data filters, and choose your layout.</div>
       </div>
     </div>
+
     <div class="builder-config-body">
 
+      <!-- Dashboard Name -->
       <div class="bd-section">
         <div class="bd-section-title">Dashboard Name</div>
-        <input class="builder-input" id="diy-dash-name" type="text" placeholder="e.g. Pipeline Health Q3" style="width:100%;max-width:480px;box-sizing:border-box">
+        <input class="builder-input" id="diy-dash-name" type="text" placeholder="e.g. Pipeline Health Q3" style="max-width:480px;width:100%;box-sizing:border-box">
       </div>
 
+      <!-- Team -->
       <div class="bd-section">
         <div class="bd-section-title">Team</div>
         <select class="builder-input" id="diy-dash-team" style="width:auto;min-width:200px">
@@ -3323,29 +3326,310 @@ function goToBuilder() {
         </select>
       </div>
 
+      <!-- Date Filter -->
       <div class="bd-section">
-        <div class="bd-section-title">Date Filter Style</div>
-        <div style="font-size:11px;color:rgba(255,255,255,.35);margin-bottom:8px;letter-spacing:.3px">Dashboard date filter style</div>
+        <div class="bd-section-title">Date Filter <span class="bd-col-tag">create_date / close_date</span></div>
+
+        <div style="font-size:11px;color:rgba(255,255,255,.35);margin-bottom:8px;letter-spacing:.3px">Data scope</div>
         <div class="bd-date-mode-row">
           <label class="bd-date-mode-btn">
-            <input type="radio" name="diy-date-style" value="between" checked onchange="diyState.dateScope='between'">
+            <input type="radio" name="diy-date-scope" value="all" checked onchange="diyState.dateScope='all';document.getElementById('diy-date-inputs').style.display='none'">
+            <span>All Data</span>
+          </label>
+          <label class="bd-date-mode-btn">
+            <input type="radio" name="diy-date-scope" value="specific" onchange="diyState.dateScope='specific';document.getElementById('diy-date-inputs').style.display='flex'">
+            <span>Specific Date Range</span>
+          </label>
+        </div>
+
+        <div id="diy-date-inputs" style="display:none" class="bd-date-row">
+          <div class="builder-field">
+            <label class="builder-label">Start Date</label>
+            <input class="builder-input" id="diy-from" type="date">
+          </div>
+          <div class="builder-field">
+            <label class="builder-label">End Date</label>
+            <input class="builder-input" id="diy-to" type="date">
+          </div>
+        </div>
+
+        <div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:16px;margin-bottom:8px;letter-spacing:.3px">Dashboard date filter style</div>
+        <div class="bd-date-mode-row">
+          <label class="bd-date-mode-btn">
+            <input type="radio" name="diy-dash-date-style" value="between" checked onchange="diyState.dateStyle='between'">
             <span>Date Between</span>
           </label>
           <label class="bd-date-mode-btn">
-            <input type="radio" name="diy-date-style" value="monthly" onchange="diyState.dateScope='monthly'">
+            <input type="radio" name="diy-dash-date-style" value="monthly" onchange="diyState.dateStyle='monthly'">
             <span>Monthly Dropdown</span>
           </label>
         </div>
       </div>
 
+      <!-- Main Filters -->
       <div class="bd-section">
-        <div class="bd-section-title" style="display:flex;align-items:center;justify-content:space-between">
-          <span>Dashboard Slicers <span style="font-size:10px;font-weight:400;text-transform:none;letter-spacing:0;color:rgba(255,255,255,.35)">&mdash; which filters appear in the dashboard</span></span>
-          <button class="diy-btn diy-btn-ghost diy-btn-sm" onclick="diyToggleAllSlicers()">Toggle All</button>
+        <div class="bd-section-title">Main Filters <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:10px;color:rgba(255,255,255,.3)">Applied globally to all queries</span></div>
+
+        <div class="cf-table-tabs bd-filter-tabs">
+          <div class="cf-table-tab active" onclick="diyFilterTable('deals',this)">&#x1F4CB; Deals</div>
+          <div class="cf-table-tab" onclick="diyFilterTable('companies',this)">&#x1F3E2; Companies</div>
+          <div class="cf-table-tab" onclick="diyFilterTable('lineitems',this)">&#x1F4E6; Line Items</div>
+          <div class="cf-table-tab" onclick="diyFilterTable('contacts',this)">&#x1F464; Contacts</div>
+          <div class="cf-table-tab" onclick="diyFilterTable('leads',this)">&#x1F3AF; Leads</div>
+          <div class="cf-table-tab" onclick="diyFilterTable('licenses',this)">&#x1F4C4; Licenses</div>
         </div>
-        <div class="diy-slicer-grid" id="diy-slicer-grid"><!-- Populated by JS --></div>
+
+        <!-- DEALS -->
+        <div class="cf-table-panel bd-cf-panel" id="diy-cf-panel-deals">
+          <div class="cf-field-row">
+            <div class="cf-field-name">Pipeline</div>
+            <div class="cf-multiselect" data-field="pipeline_name">
+              <button type="button" class="cf-ms-trigger" onclick="toggleMultiselect(this.parentElement)"><span class="cf-ms-display">&#8212; All &#8212;</span><span class="cf-ms-arrow">&#9660;</span></button>
+              <div class="cf-ms-menu">
+                <label class="cf-ms-opt"><input type="checkbox" value="Sales Pipeline" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Sales Pipeline</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="TH Sales Pipeline" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> TH Sales Pipeline</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="PH Upsell Pipeline" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> PH Upsell Pipeline</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="Unified Channel Pipeline" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Unified Channel Pipeline</label>
+              </div>
+            </div>
+          </div>
+          <div class="cf-field-row">
+            <div class="cf-field-name">Deal Stage</div>
+            <div class="cf-multiselect" data-field="stage_label">
+              <button type="button" class="cf-ms-trigger" onclick="toggleMultiselect(this.parentElement)"><span class="cf-ms-display">&#8212; All &#8212;</span><span class="cf-ms-arrow">&#9660;</span></button>
+              <div class="cf-ms-menu">
+                <label class="cf-ms-opt"><input type="checkbox" value="Appointment Scheduled" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Appointment Scheduled</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="Initial Demo Done" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Initial Demo Done</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="Solutioning" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Solutioning</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="Commercial Negotiation" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Commercial Negotiation</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="Committed Accounts" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Committed Accounts</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="Contract Signed" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Contract Signed</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="Project Handover" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Project Handover</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="Sales Churn" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Sales Churn</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="Closed Lost" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Closed Lost</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="Disqualified" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Disqualified</label>
+              </div>
+            </div>
+          </div>
+          <div class="cf-field-row">
+            <div class="cf-field-name">Dept Source</div>
+            <div class="cf-multiselect" data-field="department_source_clean">
+              <button type="button" class="cf-ms-trigger" onclick="toggleMultiselect(this.parentElement)"><span class="cf-ms-display">&#8212; All &#8212;</span><span class="cf-ms-arrow">&#9660;</span></button>
+              <div class="cf-ms-menu">
+                <label class="cf-ms-opt"><input type="checkbox" value="MKT Inbound" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> MKT Inbound</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="LDU Outbound" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> LDU Outbound</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="Sales Outbound" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Sales Outbound</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="Channels" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Channels</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="CSM Inbound" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> CSM Inbound</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="CSM Outbound" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> CSM Outbound</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="Upsell Outbound" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Upsell Outbound</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="In-house Account" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> In-house Account</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="LDU Upsell" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> LDU Upsell</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="Fintech" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Fintech</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="Product Led Growth (PLG)" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> PLG</label>
+              </div>
+            </div>
+          </div>
+          <div class="cf-field-row">
+            <div class="cf-field-name">Segment</div>
+            <div class="cf-multiselect" data-field="segment">
+              <button type="button" class="cf-ms-trigger" onclick="toggleMultiselect(this.parentElement)"><span class="cf-ms-display">&#8212; All &#8212;</span><span class="cf-ms-arrow">&#9660;</span></button>
+              <div class="cf-ms-menu">
+                <label class="cf-ms-opt"><input type="checkbox" value="MICRO" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> MICRO</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="SME" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> SME</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="ENT" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> ENT</label>
+              </div>
+            </div>
+          </div>
+          <div class="cf-field-row">
+            <div class="cf-field-name">Sales Rep</div>
+            <div class="cf-multiselect" data-field="sales_rep">
+              <button type="button" class="cf-ms-trigger" onclick="toggleMultiselect(this.parentElement)"><span class="cf-ms-display">&#8212; All &#8212;</span><span class="cf-ms-arrow">&#9660;</span></button>
+              <div class="cf-ms-menu">
+                <label class="cf-ms-opt"><input type="checkbox" value="__dynamic__" disabled style="opacity:.4"> Loaded from Databricks</label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- COMPANIES -->
+        <div class="cf-table-panel bd-cf-panel" id="diy-cf-panel-companies" style="display:none">
+          <div class="cf-field-row">
+            <div class="cf-field-name">Brand</div>
+            <div class="cf-multiselect" data-field="Brands">
+              <button type="button" class="cf-ms-trigger" onclick="toggleMultiselect(this.parentElement)"><span class="cf-ms-display">&#8212; All &#8212;</span><span class="cf-ms-arrow">&#9660;</span></button>
+              <div class="cf-ms-menu">
+                <label class="cf-ms-opt"><input type="checkbox" value="PH Sprout" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> PH Sprout</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="TH Sprout" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> TH Sprout</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="PH Sprout, TH Sprout" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Both</label>
+              </div>
+            </div>
+          </div>
+          <div class="cf-field-row">
+            <div class="cf-field-name">Segment</div>
+            <div class="cf-multiselect" data-field="Segment">
+              <button type="button" class="cf-ms-trigger" onclick="toggleMultiselect(this.parentElement)"><span class="cf-ms-display">&#8212; All &#8212;</span><span class="cf-ms-arrow">&#9660;</span></button>
+              <div class="cf-ms-menu">
+                <label class="cf-ms-opt"><input type="checkbox" value="MICRO" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> MICRO</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="SME" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> SME</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="ENT" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> ENT</label>
+              </div>
+            </div>
+          </div>
+          <div class="cf-field-row">
+            <div class="cf-field-name">Client Stage</div>
+            <div class="cf-multiselect" data-field="client_stage">
+              <button type="button" class="cf-ms-trigger" onclick="toggleMultiselect(this.parentElement)"><span class="cf-ms-display">&#8212; All &#8212;</span><span class="cf-ms-arrow">&#9660;</span></button>
+              <div class="cf-ms-menu">
+                <label class="cf-ms-opt"><input type="checkbox" value="Prospect Lead" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Prospect Lead</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="Qualified Lead" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Qualified Lead</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="Pre-Handover" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Pre-Handover</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="Sales Handover" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Sales Handover</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="Customer Onboarding" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Customer Onboarding</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="Customer Success" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Customer Success</label>
+              </div>
+            </div>
+          </div>
+          <div class="cf-field-row">
+            <div class="cf-field-name">Industry</div>
+            <div class="cf-multiselect" data-field="Industry">
+              <button type="button" class="cf-ms-trigger" onclick="toggleMultiselect(this.parentElement)"><span class="cf-ms-display">&#8212; All &#8212;</span><span class="cf-ms-arrow">&#9660;</span></button>
+              <div class="cf-ms-menu">
+                <label class="cf-ms-opt"><input type="checkbox" value="Accommodation and Food Service Activities" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Accommodation &amp; Food Services</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="Administrative and Support Service activities" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Admin &amp; Support Services</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="Arts, Entertainment, and Recreation" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Arts, Entertainment &amp; Recreation</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="Construction" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Construction</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="Education" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Education</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="Financial and Insurance Activities" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Financial &amp; Insurance</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="Human Health and Social Work Activities" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Human Health &amp; Social Work</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="Information and Communication" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Information &amp; Communication</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="Manufacturing" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Manufacturing</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="Professional, Scientific and Technical Activities" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Professional &amp; Scientific</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="Real Estate Activities" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Real Estate</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="Retail Trade" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Retail Trade</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="Transportation and Storage" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Transportation &amp; Storage</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="Wholesale Trade" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Wholesale Trade</label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- LINE ITEMS -->
+        <div class="cf-table-panel bd-cf-panel" id="diy-cf-panel-lineitems" style="display:none">
+          <div class="cf-field-row">
+            <div class="cf-field-name">Parent Product</div>
+            <div class="cf-multiselect" data-field="parent_product">
+              <button type="button" class="cf-ms-trigger" onclick="toggleMultiselect(this.parentElement)"><span class="cf-ms-display">&#8212; All &#8212;</span><span class="cf-ms-arrow">&#9660;</span></button>
+              <div class="cf-ms-menu">
+                <label class="cf-ms-opt"><input type="checkbox" value="Sprout HR" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Sprout HR</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="Sprout Payroll" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Sprout Payroll</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="Sprout Recruitment" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Sprout Recruitment</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="ReadyCash" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> ReadyCash</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="ReadyWage" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> ReadyWage</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="Sprout Engage" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Sprout Engage</label>
+              </div>
+            </div>
+          </div>
+          <div class="cf-field-row">
+            <div class="cf-field-name">Product Status</div>
+            <div class="cf-multiselect" data-field="product_status">
+              <button type="button" class="cf-ms-trigger" onclick="toggleMultiselect(this.parentElement)"><span class="cf-ms-display">&#8212; All &#8212;</span><span class="cf-ms-arrow">&#9660;</span></button>
+              <div class="cf-ms-menu">
+                <label class="cf-ms-opt"><input type="checkbox" value="Availed" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Availed</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="Add-on" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Add-on</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="Churned" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Churned</label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CONTACTS -->
+        <div class="cf-table-panel bd-cf-panel" id="diy-cf-panel-contacts" style="display:none">
+          <div class="cf-field-row">
+            <div class="cf-field-name">Lifecycle Stage</div>
+            <div class="cf-multiselect" data-field="lifecyclestage">
+              <button type="button" class="cf-ms-trigger" onclick="toggleMultiselect(this.parentElement)"><span class="cf-ms-display">&#8212; All &#8212;</span><span class="cf-ms-arrow">&#9660;</span></button>
+              <div class="cf-ms-menu">
+                <label class="cf-ms-opt"><input type="checkbox" value="subscriber" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Subscriber</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="lead" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Lead</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="marketingqualifiedlead" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> MQL</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="salesqualifiedlead" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> SQL</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="opportunity" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Opportunity</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="customer" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Customer</label>
+              </div>
+            </div>
+          </div>
+          <div class="cf-field-row">
+            <div class="cf-field-name">Dept Source</div>
+            <div class="cf-multiselect" data-field="department_source_clean">
+              <button type="button" class="cf-ms-trigger" onclick="toggleMultiselect(this.parentElement)"><span class="cf-ms-display">&#8212; All &#8212;</span><span class="cf-ms-arrow">&#9660;</span></button>
+              <div class="cf-ms-menu">
+                <label class="cf-ms-opt"><input type="checkbox" value="MKT Inbound" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> MKT Inbound</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="LDU Outbound" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> LDU Outbound</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="Sales Outbound" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Sales Outbound</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="Channels" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Channels</label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- LEADS -->
+        <div class="cf-table-panel bd-cf-panel" id="diy-cf-panel-leads" style="display:none">
+          <div class="cf-field-row">
+            <div class="cf-field-name">Pipeline Stage</div>
+            <div class="cf-multiselect" data-field="pipeline_stage">
+              <button type="button" class="cf-ms-trigger" onclick="toggleMultiselect(this.parentElement)"><span class="cf-ms-display">&#8212; All &#8212;</span><span class="cf-ms-arrow">&#9660;</span></button>
+              <div class="cf-ms-menu">
+                <label class="cf-ms-opt"><input type="checkbox" value="New" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> New</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="Attempting to Connect" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Attempting to Connect</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="Connected" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Connected</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="Qualified" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Qualified</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="Disqualified" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Disqualified</label>
+              </div>
+            </div>
+          </div>
+          <div class="cf-field-row">
+            <div class="cf-field-name">LDU Qualified</div>
+            <div class="cf-multiselect" data-field="ldu_qualified">
+              <button type="button" class="cf-ms-trigger" onclick="toggleMultiselect(this.parentElement)"><span class="cf-ms-display">&#8212; All &#8212;</span><span class="cf-ms-arrow">&#9660;</span></button>
+              <div class="cf-ms-menu">
+                <label class="cf-ms-opt"><input type="checkbox" value="Yes" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Yes</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="No" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> No</label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- LICENSES -->
+        <div class="cf-table-panel bd-cf-panel" id="diy-cf-panel-licenses" style="display:none">
+          <div class="cf-field-row">
+            <div class="cf-field-name">Product</div>
+            <div class="cf-multiselect" data-field="product_name">
+              <button type="button" class="cf-ms-trigger" onclick="toggleMultiselect(this.parentElement)"><span class="cf-ms-display">&#8212; All &#8212;</span><span class="cf-ms-arrow">&#9660;</span></button>
+              <div class="cf-ms-menu">
+                <label class="cf-ms-opt"><input type="checkbox" value="Sprout HR" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Sprout HR</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="Sprout Payroll" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Sprout Payroll</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="Sprout Recruitment" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Sprout Recruitment</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="ReadyCash" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> ReadyCash</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="ReadyWage" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> ReadyWage</label>
+              </div>
+            </div>
+          </div>
+          <div class="cf-field-row">
+            <div class="cf-field-name">License Status</div>
+            <div class="cf-multiselect" data-field="license_status">
+              <button type="button" class="cf-ms-trigger" onclick="toggleMultiselect(this.parentElement)"><span class="cf-ms-display">&#8212; All &#8212;</span><span class="cf-ms-arrow">&#9660;</span></button>
+              <div class="cf-ms-menu">
+                <label class="cf-ms-opt"><input type="checkbox" value="Active" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Active</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="Churned" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Churned</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="For Renewal" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> For Renewal</label>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
+      <!-- Layout -->
       <div class="bd-section">
         <div class="bd-section-title">Layout</div>
         <div class="diy-layout-grid" id="diy-layout-grid">
@@ -3382,6 +3666,7 @@ function goToBuilder() {
         </div>
       </div>
 
+      <!-- Description -->
       <div class="bd-section">
         <div class="bd-section-title">Description</div>
         <textarea class="builder-input" id="diy-dash-desc" placeholder="What does this dashboard track?" style="width:100%;min-height:72px;resize:vertical;box-sizing:border-box"></textarea>
@@ -3689,6 +3974,15 @@ function diyDownloadDashboard(){
   a.download = (document.getElementById('diy-dash-name')||{}).value || 'dashboard';
   a.download = a.download.replace(/\s+/g,'-').toLowerCase()+'.html';
   a.click();
+}
+
+// DIY FILTER TABLE TABS
+function diyFilterTable(key, el) {
+  document.querySelectorAll('#diy-panel-3 .cf-table-tab').forEach(function(t){t.classList.remove('active');});
+  if(el) el.classList.add('active');
+  document.querySelectorAll('#diy-panel-3 .bd-cf-panel').forEach(function(p){p.style.display='none';});
+  var panel = document.getElementById('diy-cf-panel-'+key);
+  if(panel) panel.style.display='';
 }
 
 // LAYOUT
