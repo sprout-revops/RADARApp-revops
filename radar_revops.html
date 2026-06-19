@@ -6672,6 +6672,7 @@ function _builderRenderPromptInner() {
       });
     }
   });
+  var hasLineItemFilters = addlFilterLines.some(function(l){ return l.indexOf('silver_line_items') === 0; });
   var subFilters = getChecked('bd-subfilter-group');
   var views      = getChecked('bd-views-group');
   var notes      = ((document.getElementById('bd-notes')||{}).value || '').trim();
@@ -7330,6 +7331,25 @@ function _builderRenderPromptInner() {
     + '📝 ADDITIONAL NOTES / SPECIAL INSTRUCTIONS\n'
     + '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n'
     + notes + '\n\n' : '')
+    + (hasLineItemFilters
+      ? '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n'
+      + '⚠️  LINE-ITEM FILTER — JAVASCRIPT BEHAVIOR RULES\n'
+      + '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n'
+      + 'Because this dashboard has an additional silver_line_items filter (e.g. clan),\n'
+      + 'the line_items in dashboard.json are already pre-filtered to matching records only.\n'
+      + 'Apply these two rules in dashboard.html:\n\n'
+      + '1. RESTRICT ALL_DEALS AT LOAD TIME\n'
+      + '   After loading dashboard.json, filter ALL_DEALS to only deals that appear in ALL_LINEITEMS:\n'
+      + '   const partnerDealIds = new Set(ALL_LINEITEMS.map(li => li.deal_id));\n'
+      + '   ALL_DEALS = (d.deals || []).filter(deal => partnerDealIds.has(deal.deal_id));\n'
+      + '   This ensures Won Deals, Lost Deals, and all KPI counts only reflect deals\n'
+      + '   that have at least one matching line item — not all deals in the pipeline.\n\n'
+      + '2. MRR (MAIN) KPI — COMPUTE FROM LINE ITEMS, NOT deal.mrr\n'
+      + '   deal.mrr includes MRR from ALL products on that deal, including non-partner products.\n'
+      + '   For this dashboard, compute MRR KPI from line items only:\n'
+      + '   MRR = SUM(li_mrr WHERE isMRRfreq(li) AND contract_term_months >= 12 AND not excluded)\n'
+      + '   This keeps MRR consistent with the product table and RS MRR calculations.\n\n'
+      : '')
     + '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n'
     + '🔒 GLOBAL SQL FILTERS (apply to ALL queries in fetch_data.py)\n'
     + '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n'
