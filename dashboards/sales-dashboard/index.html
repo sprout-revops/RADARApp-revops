@@ -2118,7 +2118,7 @@ function renderTeams() {
         const att = tgt > 0 ? pct(act, tgt) : 0;
         const bc = att >= 100 ? '#4ade80' : att >= 80 ? '#38bdf8' : att >= 60 ? '#fbbf24' : '#f87171';
         return `<div class="team-rep-row">
-          <span class="team-rep-name">${label} <span style="font-size:10px;opacity:0.55;">${fmt(act)}</span></span>
+          <span class="team-rep-name">${label}</span>
           <div class="team-rep-bar-wrap"><div class="team-rep-bar-fill" style="width:${Math.min(att,100)}%;background:${bc};"></div></div>
           <span class="team-rep-pct" style="color:${bc};">${att}%</span>
         </div>`;
@@ -2158,7 +2158,7 @@ function renderTeams() {
         const att = tgt > 0 ? pct(act, tgt) : 0;
         const bc = att >= 100 ? '#4ade80' : att >= 80 ? '#38bdf8' : att >= 60 ? '#fbbf24' : '#f87171';
         return `<div class="team-rep-row">
-          <span class="team-rep-name">${label} <span style="font-size:10px;opacity:0.55;">${fmt(act)}</span></span>
+          <span class="team-rep-name">${label}</span>
           <div class="team-rep-bar-wrap"><div class="team-rep-bar-fill" style="width:${Math.min(att,100)}%;background:${bc};"></div></div>
           <span class="team-rep-pct" style="color:${bc};">${att}%</span>
         </div>`;
