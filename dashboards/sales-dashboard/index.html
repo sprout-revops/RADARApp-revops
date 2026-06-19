@@ -2139,21 +2139,21 @@ function renderTeams() {
       return;
     }
 
-    // Alliance: actuals from Third Party + Recruit+ line items, ENT/SME breakdown (target ENT 30% / SME 70%)
+    // Alliance: actuals from Third Party + Recruit+ line items, NB/Upsell breakdown (target NB 30% / Upsell 70%)
     if (teamName === 'Alliance') {
       const alliColor = '#f472b6';
       const alliYTD = r => r.month && new Date(r.month).getFullYear() === CUR_YEAR && new Date(r.month).getMonth() + 1 <= CUR_MON;
       const alliAct = allianceData.reduce((t, r) => alliYTD(r) ? t + parseFloat(r.mrr || 0) : t, 0);
-      const alliActENT = allianceData.reduce((t, r) => alliYTD(r) && r.segment === 'ENT' ? t + parseFloat(r.mrr || 0) : t, 0);
-      const alliActSME = allianceData.reduce((t, r) => alliYTD(r) && r.segment === 'SME' ? t + parseFloat(r.mrr || 0) : t, 0);
+      const alliActNB     = allianceData.reduce((t, r) => alliYTD(r) && r.deal_type === 'nb'     ? t + parseFloat(r.mrr || 0) : t, 0);
+      const alliActUpsell = allianceData.reduce((t, r) => alliYTD(r) && r.deal_type === 'upsell' ? t + parseFloat(r.mrr || 0) : t, 0);
       const alliTgt = allianceYTDTarget(CUR_MON);
-      const alliTgtENT = alliTgt * 0.30;
-      const alliTgtSME = alliTgt * 0.70;
+      const alliTgtNB     = alliTgt * 0.30;
+      const alliTgtUpsell = alliTgt * 0.70;
       const alliAtt  = alliTgt > 0 ? pct(alliAct, alliTgt) : 0;
       const alliAttC = alliAtt >= 100 ? '#4ade80' : alliAtt >= 60 ? '#fbbf24' : '#f87171';
       const alliSegRows = [
-        { label: 'ENT', act: alliActENT, tgt: alliTgtENT },
-        { label: 'SME', act: alliActSME, tgt: alliTgtSME },
+        { label: 'NB',     act: alliActNB,     tgt: alliTgtNB },
+        { label: 'Upsell', act: alliActUpsell, tgt: alliTgtUpsell },
       ].map(({ label, act, tgt }) => {
         const att = tgt > 0 ? pct(act, tgt) : 0;
         const bc = att >= 100 ? '#4ade80' : att >= 80 ? '#38bdf8' : att >= 60 ? '#fbbf24' : '#f87171';
