@@ -5705,11 +5705,13 @@ WITH dca_dedup AS (
 ),
 line_item_mrr AS (
   SELECT sli.deal_id,
-    SUM(CASE WHEN LOWER(TRIM(COALESCE(sli.recurring_billing_frequency,''))) <> 'one time payment'
+    SUM(CASE WHEN sli.recurring_billing_frequency IS NOT NULL
+              AND LOWER(TRIM(sli.recurring_billing_frequency)) <> 'one time payment'
               AND COALESCE(sli.contract_term_months,0) >= 12
               AND sli.product_name <> 'Instacash' AND sli.product_name NOT LIKE '%Ready%'
          THEN COALESCE(sli.mrr,0) ELSE 0 END) AS line_item_mrr,
-    SUM(CASE WHEN LOWER(TRIM(COALESCE(sli.recurring_billing_frequency,''))) <> 'one time payment'
+    SUM(CASE WHEN sli.recurring_billing_frequency IS NOT NULL
+              AND LOWER(TRIM(sli.recurring_billing_frequency)) <> 'one time payment'
               AND COALESCE(sli.contract_term_months,0) >= 12
               AND sli.product_name IN ('ReadyCash','ReadyWage')
          THEN COALESCE(sli.mrr,0) ELSE 0 END) AS ef_mrr
@@ -5717,11 +5719,12 @@ line_item_mrr AS (
 ),
 line_item_otp AS (
   SELECT sli.deal_id,
-    SUM(CASE WHEN LOWER(TRIM(COALESCE(sli.recurring_billing_frequency,'')))=''
+    SUM(CASE WHEN (sli.recurring_billing_frequency IS NULL OR LOWER(TRIM(sli.recurring_billing_frequency)) = 'one time payment')
               AND sli.product_name <> 'Instacash'
               AND sli.product_name NOT LIKE '%Ready%' AND sli.product_name NOT LIKE '%Implementation%'
          THEN COALESCE(sli.amount,0) ELSE 0 END) AS otp_only,
-    SUM(CASE WHEN LOWER(TRIM(COALESCE(sli.recurring_billing_frequency,'')))<>''
+    SUM(CASE WHEN sli.recurring_billing_frequency IS NOT NULL
+              AND LOWER(TRIM(sli.recurring_billing_frequency)) <> 'one time payment'
               AND COALESCE(sli.contract_term_months,0)>=1 AND COALESCE(sli.contract_term_months,0)<12
               AND sli.product_name <> 'Instacash'
               AND sli.product_name NOT LIKE '%Ready%' AND sli.product_name NOT LIKE '%Implementation%'
