@@ -3217,6 +3217,16 @@ function goToBuilder() {
 .diy-basis-btn{padding:5px 12px;border-radius:6px;border:1.5px solid rgba(255,255,255,.1);background:transparent;color:rgba(255,255,255,.4);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s}
 .diy-basis-btn:hover{border-color:rgba(255,255,255,.25);color:rgba(255,255,255,.7)}
 .diy-basis-btn.selected{border-color:rgba(29,185,84,.5);background:rgba(29,185,84,.12);color:#1DB954}
+/* Field sub-label */
+.diy-field-sub-label{font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,.35);margin:0 0 8px;display:flex;align-items:center;gap:4px}
+/* Field row in table browser */
+.diy-field-row{display:flex;align-items:flex-start;gap:10px;padding:7px 10px;border-radius:7px;cursor:pointer;transition:background .12s;border:1px solid transparent}
+.diy-field-row:hover{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.06)}
+.diy-field-row.selected{background:rgba(29,185,84,.07);border-color:rgba(29,185,84,.2)}
+.diy-field-row input[type=checkbox]{width:14px;height:14px;accent-color:#1DB954;cursor:pointer;flex-shrink:0;margin-top:3px}
+.diy-field-name{font-size:12px;font-weight:600;color:#e2e8f0;line-height:1.3}
+.diy-field-desc{font-size:10px;color:rgba(255,255,255,.3);line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:480px}
+.diy-field-type{font-size:9px;font-weight:700;padding:2px 7px;border-radius:4px;background:rgba(255,255,255,.07);color:rgba(255,255,255,.4);flex-shrink:0;margin-top:2px}
 /* Slicer chips */
 .diy-slicer-grid{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:4px}
 .diy-slicer-chip{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border-radius:20px;border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:rgba(255,255,255,.4);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;user-select:none}
@@ -3669,11 +3679,27 @@ function goToBuilder() {
       <!-- Dashboard Slicers -->
       <div class="bd-section">
         <div class="bd-section-title">Dashboard Slicers <span style="font-size:10px;font-weight:400;text-transform:none;letter-spacing:0;color:rgba(255,255,255,.3)">Interactive filters shown inside the generated dashboard</span></div>
-        <div style="margin-bottom:10px;display:flex;align-items:center;gap:10px">
-          <button class="diy-btn diy-btn-ghost diy-btn-sm" onclick="diyToggleAllSlicers()">Toggle All</button>
-          <span id="diy-slicer-count" style="font-size:11px;color:rgba(255,255,255,.35)"></span>
+
+        <!-- Suggested slicers -->
+        <div class="diy-field-sub-label">⭐ Suggested  <button class="diy-btn diy-btn-ghost diy-btn-sm" style="margin-left:6px" onclick="diyToggleAllSlicers()">Toggle All</button></div>
+        <div class="diy-slicer-grid" id="diy-slicer-grid" style="margin-bottom:16px"></div>
+
+        <!-- Field browser from selected tables -->
+        <div class="diy-field-sub-label">📋 From your selected tables</div>
+        <div id="diy-no-tables-msg" style="font-size:12px;color:rgba(255,255,255,.25);padding:6px 0 10px">← Go back to Step 1 and select tables to browse their fields here.</div>
+        <div id="diy-field-browser-inner" style="display:none">
+          <div style="margin-bottom:10px">
+            <input class="builder-input" id="diy-field-search" type="text" placeholder="Search fields by name or description..." oninput="diyFilterFields()" style="max-width:360px;box-sizing:border-box">
+          </div>
+          <div class="cf-table-tabs bd-filter-tabs" id="diy-field-table-tabs" style="flex-wrap:wrap;margin-bottom:8px"></div>
+          <div id="diy-field-list" style="max-height:260px;overflow-y:auto;border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:2px 4px"></div>
         </div>
-        <div class="diy-slicer-grid" id="diy-slicer-grid"></div>
+
+        <!-- Selected field chips -->
+        <div id="diy-selected-fields-wrap" style="display:none;margin-top:14px">
+          <div class="diy-field-sub-label">✓ Added slicers from tables <span id="diy-slicer-count" style="font-size:11px;font-weight:400;color:rgba(255,255,255,.3);margin-left:6px;text-transform:none;letter-spacing:0"></span></div>
+          <div class="diy-slicer-grid" id="diy-selected-chips"></div>
+        </div>
       </div>
 
       <!-- Chart Views -->
@@ -3842,6 +3868,7 @@ var diyState = {
   step: 1,
   tables: [],
   slicers: DIY_SLICERS.map(function(s){return s.id;}),
+  fieldSlicers: [],
   views: DIY_VIEWS.map(function(v){return v.id;}),
   metrics: [],
   dateScope: 'between',
@@ -3868,25 +3895,140 @@ var diyState = {
   }).join('');
 })();
 
-// INIT SLICERS
+// INIT SLICERS — suggested chips + table field browser
 function diyInitSlicers(){
+  // Suggested chips
   var grid = document.getElementById('diy-slicer-grid');
-  if (!grid) return;
-  grid.innerHTML = DIY_SLICERS.map(function(s){
-    var on = diyState.slicers.indexOf(s.id) >= 0;
-    return '<div class="diy-slicer-chip'+(on?' on':'')+'" id="sc-'+s.id+'" data-slicer="'+s.id+'" onclick="diyToggleSlicer(\''+s.id+'\')">'
-      + '<span class="sc-dot"></span>'
-      + s.label
-      + ' <span class="sc-field">'+s.field+'</span>'
-      + '</div>';
-  }).join('');
-  diyUpdateSlicerCount();
+  if (grid) {
+    grid.innerHTML = DIY_SLICERS.map(function(s){
+      var on = diyState.slicers.indexOf(s.id) >= 0;
+      return '<div class="diy-slicer-chip'+(on?' on':'')+'" id="sc-'+s.id+'" data-slicer="'+s.id+'" onclick="diyToggleSlicer(\''+s.id+'\')">'
+        +'<span class="sc-dot"></span>'+s.label+' <span class="sc-field">'+s.field+'</span></div>';
+    }).join('');
+  }
+  // Table field browser
+  diyRefreshFieldBrowser();
+  // Selected field chips
+  diyRenderSelectedChips();
 }
 
-function diyUpdateSlicerCount(){
-  var el = document.getElementById('diy-slicer-count');
-  if (el) el.textContent = diyState.slicers.length + ' of ' + DIY_SLICERS.length + ' selected';
+var _diyActiveFieldTable = null;
+
+function diyRefreshFieldBrowser(){
+  var tables = diyState.tables || [];
+  var noMsg   = document.getElementById('diy-no-tables-msg');
+  var inner   = document.getElementById('diy-field-browser-inner');
+  if (!tables.length){
+    if (noMsg)  noMsg.style.display  = '';
+    if (inner)  inner.style.display  = 'none';
+    return;
+  }
+  if (noMsg)  noMsg.style.display  = 'none';
+  if (inner)  inner.style.display  = '';
+
+  // Build table tabs
+  var tabsEl = document.getElementById('diy-field-table-tabs');
+  if (tabsEl){
+    tabsEl.innerHTML = tables.map(function(tid, i){
+      var shortName = tid.replace('silver_','').replace('gold_','').replace('netsuite_','').replace('company_','co_');
+      return '<div class="cf-table-tab'+(i===0?' active':'')+'" data-tid="'+tid+'" onclick="diySelectFieldTable(this,\''+tid+'\')">'+shortName+'</div>';
+    }).join('');
+  }
+
+  // Show first table
+  _diyActiveFieldTable = tables[0];
+  diyShowFieldTable(tables[0]);
 }
+
+function diySelectFieldTable(tabEl, tableId){
+  document.querySelectorAll('#diy-field-table-tabs .cf-table-tab').forEach(function(t){t.classList.remove('active');});
+  tabEl.classList.add('active');
+  _diyActiveFieldTable = tableId;
+  diyShowFieldTable(tableId);
+}
+
+function diyShowFieldTable(tableId){
+  var search = ((document.getElementById('diy-field-search')||{}).value||'').toLowerCase();
+  var tableData = (typeof TABLES!=='undefined') ? TABLES.find(function(t){return t.name===tableId;}) : null;
+  var fields = tableData ? (tableData.fields||[]) : [];
+
+  if (search){
+    fields = fields.filter(function(f){
+      return f.name.toLowerCase().indexOf(search)>=0 || (f.desc||'').toLowerCase().indexOf(search)>=0;
+    });
+  }
+
+  var listEl = document.getElementById('diy-field-list');
+  if (!listEl) return;
+
+  if (!fields.length){
+    listEl.innerHTML = '<div style="font-size:12px;color:rgba(255,255,255,.2);padding:14px;text-align:center">No fields match</div>';
+    return;
+  }
+
+  listEl.innerHTML = fields.map(function(f){
+    var sel = diyState.fieldSlicers.some(function(x){return x.tableId===tableId && x.fieldName===f.name;});
+    var safeName = f.name.replace(/'/g,"\\'");
+    var safeDesc = (f.desc||'').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+    return '<div class="diy-field-row'+(sel?' selected':'')+'" onclick="diyToggleField(\''+tableId+'\',\''+safeName+'\',\''+f.type+'\',\''+safeDesc+'\')">'
+      +'<input type="checkbox"'+(sel?' checked':'')+' onclick="event.stopPropagation();diyToggleField(\''+tableId+'\',\''+safeName+'\',\''+f.type+'\',\''+safeDesc+'\')">'
+      +'<div style="flex:1;min-width:0">'
+        +'<div class="diy-field-name">'+f.name+'</div>'
+        +'<div class="diy-field-desc">'+(f.desc||'')+'</div>'
+      +'</div>'
+      +'<span class="diy-field-type">'+f.type+'</span>'
+      +'</div>';
+  }).join('');
+}
+
+function diyFilterFields(){
+  if (_diyActiveFieldTable) diyShowFieldTable(_diyActiveFieldTable);
+}
+
+function diyToggleField(tableId, fieldName, fieldType, fieldDesc){
+  var idx = -1;
+  diyState.fieldSlicers.forEach(function(x,i){ if(x.tableId===tableId && x.fieldName===fieldName) idx=i; });
+  if (idx>=0){
+    diyState.fieldSlicers.splice(idx,1);
+  } else {
+    diyState.fieldSlicers.push({tableId:tableId, fieldName:fieldName, fieldType:fieldType||'string', fieldDesc:fieldDesc||''});
+  }
+  diyShowFieldTable(tableId);
+  diyRenderSelectedChips();
+}
+
+function diyRenderSelectedChips(){
+  var wrap  = document.getElementById('diy-selected-fields-wrap');
+  var grid  = document.getElementById('diy-selected-chips');
+  var count = document.getElementById('diy-slicer-count');
+  if (!grid) return;
+  var items = diyState.fieldSlicers||[];
+  if (!items.length){
+    if (wrap) wrap.style.display='none';
+    if (count) count.textContent='';
+    return;
+  }
+  if (wrap) wrap.style.display='';
+  if (count) count.textContent = items.length+' field'+(items.length===1?'':'s')+' added';
+  grid.innerHTML = items.map(function(fs){
+    var prefix = fs.tableId.replace('silver_','').replace('gold_','').replace('netsuite_','ns_').replace('company_','co_');
+    var safe = fs.fieldName.replace(/'/g,"\\'");
+    return '<div class="diy-slicer-chip on">'
+      +'<span class="sc-dot"></span>'
+      +'<span style="font-size:9px;opacity:.5;margin-right:1px">'+prefix+'.</span>'+fs.fieldName
+      +' <span class="sc-field">'+fs.fieldType+'</span>'
+      +'<span onclick="diyRemoveFieldSlicer(\''+fs.tableId+'\',\''+safe+'\')" style="cursor:pointer;margin-left:3px;opacity:.55;font-size:11px">✕</span>'
+      +'</div>';
+  }).join('');
+}
+
+function diyRemoveFieldSlicer(tableId, fieldName){
+  diyState.fieldSlicers = diyState.fieldSlicers.filter(function(x){return !(x.tableId===tableId && x.fieldName===fieldName);});
+  diyRenderSelectedChips();
+  if (_diyActiveFieldTable) diyShowFieldTable(_diyActiveFieldTable);
+}
+
+function diyUpdateSlicerCount(){ /* count now shown inline in diyRenderSelectedChips */ }
 
 // INIT VIEWS
 function diyInitViews(){
@@ -4141,11 +4283,16 @@ function diyBuildSummary(){
     var v = DIY_VIEWS.find(function(x){return x.id===id;});
     return v ? v.label : id;
   });
+  var fieldSlicerLabels = (diyState.fieldSlicers||[]).map(function(fs){
+    var prefix = fs.tableId.replace('silver_','').replace('gold_','').replace('netsuite_','ns_').replace('company_','co_');
+    return prefix+'.'+fs.fieldName;
+  });
   tbody.innerHTML = [
     ['Tables', diyState.tables.join(', ') || '—'],
     ['Date Filter Style', diyState.dateScope === 'between' ? 'Date Between' : 'Monthly Dropdown'],
     ['Date Basis', diyState.dateBasis.replace(/_/g,' ')],
-    ['Dashboard Slicers', slicerLabels.join(', ') || 'None'],
+    ['Suggested Slicers', slicerLabels.join(', ') || 'None'],
+    ['Table Field Slicers', fieldSlicerLabels.join(', ') || 'None'],
     ['Chart Views', viewLabels.join(', ') || 'None'],
     ['Metrics', diyState.metrics.length ? diyState.metrics.length+' selected' : '—'],
     ['Layout', diyState.layout]
@@ -4202,8 +4349,9 @@ function diyEditEntry(id){
   var entry = saved.find(function(x){return x.id===id;});
   if(!entry) return;
   diyState.tables     = entry.tables || [];
-  diyState.slicers    = entry.slicers || DIY_SLICERS.map(function(s){return s.id;});
-  diyState.views      = entry.views   || DIY_VIEWS.map(function(v){return v.id;});
+  diyState.slicers      = entry.slicers      || DIY_SLICERS.map(function(s){return s.id;});
+  diyState.fieldSlicers = entry.fieldSlicers || [];
+  diyState.views        = entry.views        || DIY_VIEWS.map(function(v){return v.id;});
   diyState.metrics    = entry.metrics || [];
   diyState.dateScope  = entry.dateScope || 'between';
   diyState.dateBasis  = entry.dateBasis || 'projected_close_date';
@@ -4239,7 +4387,7 @@ function diyDeleteEntry(id){
 }
 
 function diyReset(){
-  diyState = {step:1, tables:[], slicers:DIY_SLICERS.map(function(s){return s.id;}), views:DIY_VIEWS.map(function(v){return v.id;}), metrics:[], dateScope:'between', dateBasis:'projected_close_date', layout:'3col', editingId:null};
+  diyState = {step:1, tables:[], slicers:DIY_SLICERS.map(function(s){return s.id;}), fieldSlicers:[], views:DIY_VIEWS.map(function(v){return v.id;}), metrics:[], dateScope:'between', dateBasis:'projected_close_date', layout:'3col', editingId:null};
   DIY_TABLES.forEach(function(t){var c=document.getElementById('dtc-'+t.id);if(c)c.classList.remove('selected');});
   diySelectScope('between');
   document.querySelectorAll('.diy-basis-btn').forEach(function(b){b.classList.toggle('selected',b.getAttribute('data-basis')==='projected_close_date');});
