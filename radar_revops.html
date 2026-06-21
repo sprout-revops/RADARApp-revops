@@ -4377,7 +4377,7 @@ function switchTab(t) {
   document.querySelectorAll('.section').forEach(s => { s.classList.remove('active'); s.style.display='none'; });
   document.querySelectorAll('.sidebar-tab').forEach(x => x.classList.remove('active'));
   const sec = document.getElementById('section-' + t);
-  if (sec) { sec.classList.add('active'); sec.style.display = 'block'; }
+  if (sec) { sec.classList.add('active'); sec.style.display = (t === 'home') ? 'flex' : 'block'; }
   const tab = document.getElementById('tab-' + t);
   if (tab) tab.classList.add('active');
   // Hide sidebar on Home, show on all other sections
