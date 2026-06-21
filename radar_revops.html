@@ -3788,6 +3788,16 @@ function goToBuilder() {
         <div id="diy-apikey-status" style="font-size:11px;margin-top:6px;color:rgba(255,255,255,.3)"></div>
       </div>
 
+      <div class="bd-section" id="diy-prompt-section" style="display:none">
+        <div class="bd-section-title" style="display:flex;align-items:center;gap:10px">
+          Claude Prompt
+          <button class="diy-btn diy-btn-ghost diy-btn-sm" onclick="diyCopyPrompt()" id="diy-copy-btn">📋 Copy</button>
+          <span id="diy-copy-msg" style="font-size:11px;color:#1DB954;display:none">Copied!</span>
+        </div>
+        <div style="font-size:11px;color:rgba(255,255,255,.3);margin-bottom:10px">Paste this into Claude to generate your dashboard. The full table schemas from the tables you selected are included.</div>
+        <textarea id="diy-prompt-output" readonly style="width:100%;box-sizing:border-box;height:420px;background:#060c14;border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#e2e8f0;font-family:'Fira Code',monospace;font-size:11px;line-height:1.6;padding:14px;resize:vertical;outline:none"></textarea>
+      </div>
+
       <div class="bd-section">
         <div id="diy-generate-status" style="font-size:12px;color:rgba(255,255,255,.35);min-height:18px"></div>
       </div>
@@ -4226,8 +4236,165 @@ function diyCheckApiKey(){
   if(s) s.textContent = val.trim() ? '' : '';
 }
 function diyGenerate(){
+  var prompt = diyBuildPrompt();
+  var ta = document.getElementById('diy-prompt-output');
+  var sec = document.getElementById('diy-prompt-section');
+  if(ta){ ta.value = prompt; }
+  if(sec){ sec.style.display = ''; }
   var s = document.getElementById('diy-generate-status');
-  if(s){ s.textContent = '⚡ Claude API integration coming next...'; s.style.color='#1DB954'; }
+  if(s){ s.textContent = ''; }
+  // scroll to prompt
+  if(sec) sec.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function diyCopyPrompt(){
+  var ta = document.getElementById('diy-prompt-output');
+  if(!ta) return;
+  navigator.clipboard.writeText(ta.value).then(function(){
+    var msg = document.getElementById('diy-copy-msg');
+    if(msg){ msg.style.display='inline'; setTimeout(function(){ msg.style.display='none'; }, 2000); }
+  });
+}
+
+function diyBuildPrompt(){
+  var lines = [];
+  var dashName = (document.getElementById('diy-dash-name')||{}).value || 'RevOps Dashboard';
+  var dashTeam = (document.getElementById('diy-dash-team')||{}).value || '';
+  var dashDesc = (document.getElementById('diy-dash-desc')||{}).value || '';
+
+  // ── Header ──────────────────────────────────────────────────────────────────
+  lines.push('Build me a live Databricks-powered HTML + JavaScript dashboard.');
+  lines.push('');
+  lines.push('Dashboard name: ' + dashName);
+  if(dashTeam) lines.push('Team: ' + dashTeam);
+  if(dashDesc) lines.push('Description: ' + dashDesc);
+  lines.push('');
+
+  // ── Connection ───────────────────────────────────────────────────────────────
+  lines.push('## Databricks Connection');
+  lines.push('Query via the Databricks SQL REST API (POST /api/2.0/sql/statements).');
+  lines.push('Credentials: store in a CONFIG block in the HTML with placeholder values.');
+  lines.push('  host:     YOUR_DATABRICKS_HOST');
+  lines.push('  httpPath: YOUR_HTTP_PATH');
+  lines.push('  token:    YOUR_PAT_TOKEN');
+  lines.push('Schema: shared.revops');
+  lines.push('');
+
+  // ── Table Schemas ────────────────────────────────────────────────────────────
+  lines.push('## Table Schemas');
+  lines.push('Only use the columns listed below. Do not invent column names.');
+  lines.push('');
+
+  var selectedTables = diyState.tables || [];
+  selectedTables.forEach(function(tableId){
+    var tableData = (typeof TABLES !== 'undefined') ? TABLES.find(function(t){ return t.name === tableId; }) : null;
+    if(!tableData) return;
+
+    lines.push('### shared.revops.' + tableData.name);
+    lines.push('Layer: ' + tableData.layer);
+    lines.push('Grain: ' + tableData.grain);
+    lines.push('Description: ' + tableData.description);
+    if(tableData.best_for) lines.push('Best for: ' + tableData.best_for);
+    lines.push('Refresh: ' + tableData.refresh);
+    lines.push('');
+    lines.push('Columns:');
+    (tableData.fields || []).forEach(function(f){
+      lines.push('  ' + f.name + ' (' + f.type + ') — ' + f.desc);
+    });
+    lines.push('');
+  });
+
+  // ── Date Filter ───────────────────────────────────────────────────────────────
+  lines.push('## Date Filtering');
+  var basisLabel = {
+    'create_date':           'Create Date',
+    'close_date':            'Close Date',
+    'projected_close_date':  'Projected Close Date'
+  }[diyState.dateBasis] || diyState.dateBasis;
+  lines.push('Date basis: ' + basisLabel);
+  lines.push('Filter style: ' + (diyState.dateScope === 'between' ? 'Date range picker (from / to)' : 'Monthly dropdown selector'));
+  lines.push('');
+
+  // ── Metrics ───────────────────────────────────────────────────────────────────
+  var selMetrics = diyState.metrics || [];
+  if(selMetrics.length){
+    lines.push('## Metrics to Display');
+    selMetrics.forEach(function(mName){
+      var m = (typeof METRICS !== 'undefined') ? METRICS.find(function(x){ return x.name === mName; }) : null;
+      if(m){
+        lines.push('- **' + m.name + '**');
+        if(m.definition)          lines.push('  Definition: ' + m.definition);
+        if(m.formula)             lines.push('  Formula: ' + m.formula);
+        if(m.filters)             lines.push('  Filters: ' + m.filters);
+        if(m.exclusions)          lines.push('  Exclusions: ' + m.exclusions);
+        if(m.sql)                 lines.push('  Reference SQL: ' + m.sql);
+        if(m.sources)             lines.push('  Sources: ' + m.sources);
+      } else {
+        lines.push('- ' + mName);
+      }
+    });
+    lines.push('');
+  }
+
+  // ── Slicers ───────────────────────────────────────────────────────────────────
+  lines.push('## Dashboard Slicers / Filters');
+  var suggestedOn = (diyState.slicers || []).filter(function(id){
+    return (diyState.slicers||[]).indexOf(id) >= 0;
+  });
+  if(suggestedOn.length){
+    lines.push('Suggested slicers (show as filter controls):');
+    suggestedOn.forEach(function(id){
+      var s = (typeof DIY_SLICERS !== 'undefined') ? DIY_SLICERS.find(function(x){ return x.id===id; }) : null;
+      if(s) lines.push('  - ' + s.label + ' (field: ' + s.field + ')');
+      else  lines.push('  - ' + id);
+    });
+  }
+  var fieldSlicers = diyState.fieldSlicers || [];
+  if(fieldSlicers.length){
+    lines.push('Additional field slicers from selected tables:');
+    fieldSlicers.forEach(function(fs){
+      lines.push('  - ' + fs.tableId + '.' + fs.fieldName + ' (' + fs.fieldType + ') — ' + (fs.fieldDesc||''));
+    });
+  }
+  lines.push('');
+
+  // ── Chart Views ───────────────────────────────────────────────────────────────
+  var selViews = diyState.views || [];
+  if(selViews.length){
+    lines.push('## Chart Views to Include');
+    selViews.forEach(function(id){
+      var v = (typeof DIY_VIEWS !== 'undefined') ? DIY_VIEWS.find(function(x){ return x.id===id; }) : null;
+      lines.push('  - ' + (v ? v.label : id));
+    });
+    lines.push('');
+  }
+
+  // ── Layout & Requirements ─────────────────────────────────────────────────────
+  lines.push('## Layout & Technical Requirements');
+  var layoutMap = {'3col':'3-column grid','2col':'2-column grid','1col':'Single column','auto':'Auto (responsive)'};
+  lines.push('Layout: ' + (layoutMap[diyState.layout] || diyState.layout));
+  lines.push('');
+  lines.push('Technical requirements:');
+  lines.push('  - Single self-contained HTML file with inline CSS and JS');
+  lines.push('  - Dark theme matching Sprout RevOps branding (#0a0a0a background, #1DB954 accent)');
+  lines.push('  - Use Chart.js (CDN) for all visualizations');
+  lines.push('  - Query Databricks SQL REST API on page load');
+  lines.push('  - Show loading spinner while queries run');
+  lines.push('  - Include a Refresh button');
+  lines.push('  - Format numbers as Philippine Peso (₱) with commas');
+  lines.push('  - Responsive layout — works on desktop and tablet');
+  lines.push('  - Handle empty/null data gracefully (show 0 or — instead of errors)');
+  lines.push('');
+  lines.push('## Important Rules');
+  lines.push('  - Only use column names from the schemas listed above — do NOT invent columns');
+  lines.push('  - Always include the full table path: shared.revops.<table_name>');
+  lines.push('  - Use deal_type NOT IN (\'Renewal\',\'Upsell - Renewal\') to exclude renewals');
+  lines.push('  - Use LOWER(COALESCE(deal_name,\'\')) NOT LIKE \'%renewal%\' as a safety filter');
+  lines.push('  - MICRO segment should be remapped to SME in all queries and labels');
+  lines.push('  - Won deals = client_journey_stage = \'Customer\'');
+  lines.push('  - Won stages = \'contract signed\', \'project handover\', \'sales handover\', \'sales churn\'');
+
+  return lines.join('\n');
 }
 function diyDownloadDashboard(){
   var iframe = document.getElementById('diy-preview-iframe');
