@@ -37,17 +37,8 @@ body{font-family:'Rubik','Bahnschrift Light SemiCondensed','Bahnschrift',Arial,s
 .home-glow-orb.g1{width:600px;height:600px;background:radial-gradient(circle,rgba(29,185,84,.13) 0%,transparent 70%);top:-160px;left:30%;transform:translateX(-50%)}
 .home-glow-orb.g2{width:360px;height:360px;background:radial-gradient(circle,rgba(108,92,231,.1) 0%,transparent 70%);bottom:80px;left:5%}
 .home-glow-orb.g3{width:300px;height:300px;background:radial-gradient(circle,rgba(0,184,212,.08) 0%,transparent 70%);top:40%;right:5%}
-/* nav strip */
-.home-nav{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;padding:18px 48px;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,.05)}
-.home-nav-brand{font-size:12px;font-weight:800;letter-spacing:4px;color:rgba(255,255,255,.25);text-transform:uppercase}
-.home-nav-right{display:flex;align-items:center;gap:10px}
-.home-live-dot{width:6px;height:6px;background:#1DB954;border-radius:50%;animation:live-pulse 2s ease-in-out infinite;display:inline-block;margin-right:5px}
-@keyframes live-pulse{0%,100%{box-shadow:0 0 0 0 rgba(29,185,84,.6)}60%{box-shadow:0 0 0 5px rgba(29,185,84,0)}}
-.home-live-badge{font-size:10px;color:#1DB954;font-weight:700;letter-spacing:.5px;display:flex;align-items:center}
-.home-nav-sep{color:rgba(255,255,255,.12);font-size:12px}
-.home-nav-meta{font-size:10px;color:rgba(255,255,255,.2);letter-spacing:.3px}
-/* main two-column layout */
-.home-main{flex:1;position:relative;z-index:1;display:flex;flex-direction:row;align-items:center;gap:52px;padding:0 48px;max-width:1080px;width:100%;align-self:center;min-height:0}
+/* main two-column layout — fills full height, centers content vertically */
+.home-main{flex:1;position:relative;z-index:1;display:flex;flex-direction:row;align-items:center;gap:52px;padding:40px 56px;max-width:1100px;width:100%;align-self:center;min-height:0}
 /* hero: left column */
 .home-hero{flex:0 0 340px}
 .home-logo{font-size:52px;font-weight:800;letter-spacing:8px;line-height:1;background:linear-gradient(135deg,#1DB954 0%,#00e5a0 40%,#00cec9 80%,#6c5ce7 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:logo-pulse 4s ease-in-out infinite;filter:drop-shadow(0 0 20px rgba(29,185,84,.5))}
@@ -80,7 +71,7 @@ body{font-family:'Rubik','Bahnschrift Light SemiCondensed','Bahnschrift',Arial,s
 .home-card.card-dash:hover{background:rgba(253,121,168,.05);border-color:rgba(253,121,168,.3);box-shadow:0 10px 0 rgba(0,0,0,.5),0 18px 40px rgba(253,121,168,.12),inset 0 1px 0 rgba(255,255,255,.08)}
 .home-card.card-dash .home-card-arrow{color:#fd79a8}
 /* bottom strip */
-.home-bottom{position:relative;z-index:1;display:flex;flex-direction:column;gap:8px;padding:0 48px 32px;max-width:1080px;width:100%;align-self:center}
+.home-bottom{position:relative;z-index:1;display:flex;flex-direction:column;gap:8px;padding:0 56px 40px;max-width:1100px;width:100%;align-self:center}
 .home-wide-cards{display:flex;flex-direction:column;gap:8px}
 .home-version{margin-top:18px;font-size:10px;color:rgba(255,255,255,.12);letter-spacing:1.5px;text-transform:uppercase;text-align:center}
 
@@ -645,16 +636,6 @@ body{font-family:'Rubik','Bahnschrift Light SemiCondensed','Bahnschrift',Arial,s
   <div class="home-glow-orb g1"></div>
   <div class="home-glow-orb g2"></div>
   <div class="home-glow-orb g3"></div>
-
-  <!-- nav strip -->
-  <div class="home-nav">
-    <div class="home-nav-brand">RADAR</div>
-    <div class="home-nav-right">
-      <span class="home-live-badge"><span class="home-live-dot"></span>LIVE</span>
-      <span class="home-nav-sep">·</span>
-      <span class="home-nav-meta">shared.revops · Databricks</span>
-    </div>
-  </div>
 
   <!-- main: hero left | cards right -->
   <div class="home-main">
@@ -6402,8 +6383,9 @@ renderDashboards();
 
   function resize() {
     const sec = document.getElementById('section-home');
-    W = canvas.width  = (sec && sec.offsetWidth)  || window.innerWidth;
-    H = canvas.height = (sec && sec.offsetHeight) || window.innerHeight;
+    const rect = sec ? sec.getBoundingClientRect() : null;
+    W = canvas.width  = rect && rect.width  > 0 ? Math.round(rect.width)  : window.innerWidth;
+    H = canvas.height = rect && rect.height > 0 ? Math.round(rect.height) : window.innerHeight;
   }
 
   function rand(min,max){ return Math.random()*(max-min)+min; }
@@ -6441,19 +6423,18 @@ renderDashboards();
 
     // draw nodes
     particles.forEach(p => {
+      // glow halo
       ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
-      ctx.fillStyle = p.color;
-      ctx.globalAlpha = p.alpha;
+      ctx.arc(p.x, p.y, p.r * 3, 0, Math.PI * 2);
+      ctx.fillStyle = p.color + '18';
+      ctx.globalAlpha = 1;
       ctx.fill();
 
-      // glow
+      // core dot
       ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r*2.5, 0, Math.PI*2);
-      const g = ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r*2.5);
-      g.addColorStop(0, p.color.replace(')',',0.3)').replace('rgb','rgba').replace('#',''));
-      g.addColorStop(1, 'transparent');
-      ctx.fillStyle = p.color + '18';
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = p.color;
+      ctx.globalAlpha = p.alpha;
       ctx.fill();
       ctx.globalAlpha = 1;
     });
@@ -6491,9 +6472,9 @@ renderDashboards();
   const sec = document.getElementById('section-home');
   if (sec) {
     homeObs.observe(sec, {attributes:true, attributeFilter:['class','style']});
-    // defer start so layout is fully computed before reading offsetWidth/Height
-    requestAnimationFrame(() => requestAnimationFrame(start));
   }
+  // start after full page load so layout dimensions are computed
+  window.addEventListener('load', start);
 })();
 
 // ── DASHBOARD BUILDER ──
