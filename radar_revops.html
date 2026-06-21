@@ -3666,6 +3666,26 @@ function goToBuilder() {
         </div>
       </div>
 
+      <!-- Dashboard Slicers -->
+      <div class="bd-section">
+        <div class="bd-section-title">Dashboard Slicers <span style="font-size:10px;font-weight:400;text-transform:none;letter-spacing:0;color:rgba(255,255,255,.3)">Interactive filters shown inside the generated dashboard</span></div>
+        <div style="margin-bottom:10px;display:flex;align-items:center;gap:10px">
+          <button class="diy-btn diy-btn-ghost diy-btn-sm" onclick="diyToggleAllSlicers()">Toggle All</button>
+          <span id="diy-slicer-count" style="font-size:11px;color:rgba(255,255,255,.35)"></span>
+        </div>
+        <div class="diy-slicer-grid" id="diy-slicer-grid"></div>
+      </div>
+
+      <!-- Chart Views -->
+      <div class="bd-section">
+        <div class="bd-section-title">Chart Views <span style="font-size:10px;font-weight:400;text-transform:none;letter-spacing:0;color:rgba(255,255,255,.3)">Visualization types to include in the dashboard</span></div>
+        <div style="margin-bottom:10px;display:flex;align-items:center;gap:10px">
+          <button class="diy-btn diy-btn-ghost diy-btn-sm" onclick="diyToggleAllViews()">Toggle All</button>
+          <span id="diy-views-count" style="font-size:11px;color:rgba(255,255,255,.35)"></span>
+        </div>
+        <div class="diy-slicer-grid" id="diy-views-grid"></div>
+      </div>
+
       <!-- Layout -->
       <div class="bd-section">
         <div class="bd-section-title">Layout</div>
@@ -3807,10 +3827,22 @@ var DIY_SLICERS = [
   {id:'client_journey_stage', label:'Client Journey Stage', field:'client_journey_stage'},
 ];
 
+var DIY_VIEWS = [
+  {id:'kpi_cards',    label:'KPI Cards',      icon:'📊'},
+  {id:'bar_chart',    label:'Bar Chart',      icon:'📊'},
+  {id:'line_chart',   label:'Line / Trend',   icon:'📈'},
+  {id:'data_table',   label:'Data Table',     icon:'🗃️'},
+  {id:'pie_donut',    label:'Pie / Donut',    icon:'🥧'},
+  {id:'combo_chart',  label:'Combo Chart',    icon:'📉'},
+  {id:'stacked_bar',  label:'Stacked Bar',    icon:'📊'},
+  {id:'scorecard',    label:'Scorecard',      icon:'🃏'},
+];
+
 var diyState = {
   step: 1,
   tables: [],
   slicers: DIY_SLICERS.map(function(s){return s.id;}),
+  views: DIY_VIEWS.map(function(v){return v.id;}),
   metrics: [],
   dateScope: 'between',
   dateBasis: 'projected_close_date',
@@ -3841,12 +3873,38 @@ function diyInitSlicers(){
   var grid = document.getElementById('diy-slicer-grid');
   if (!grid) return;
   grid.innerHTML = DIY_SLICERS.map(function(s){
-    return '<div class="diy-slicer-chip on" id="sc-'+s.id+'" data-slicer="'+s.id+'" onclick="diyToggleSlicer(\''+s.id+'\')">'
+    var on = diyState.slicers.indexOf(s.id) >= 0;
+    return '<div class="diy-slicer-chip'+(on?' on':'')+'" id="sc-'+s.id+'" data-slicer="'+s.id+'" onclick="diyToggleSlicer(\''+s.id+'\')">'
       + '<span class="sc-dot"></span>'
       + s.label
       + ' <span class="sc-field">'+s.field+'</span>'
       + '</div>';
   }).join('');
+  diyUpdateSlicerCount();
+}
+
+function diyUpdateSlicerCount(){
+  var el = document.getElementById('diy-slicer-count');
+  if (el) el.textContent = diyState.slicers.length + ' of ' + DIY_SLICERS.length + ' selected';
+}
+
+// INIT VIEWS
+function diyInitViews(){
+  var grid = document.getElementById('diy-views-grid');
+  if (!grid) return;
+  grid.innerHTML = DIY_VIEWS.map(function(v){
+    var on = diyState.views.indexOf(v.id) >= 0;
+    return '<div class="diy-slicer-chip'+(on?' on':'')+'" id="vw-'+v.id+'" data-view="'+v.id+'" onclick="diyToggleView(\''+v.id+'\')">'
+      + '<span class="sc-dot"></span>'
+      + v.icon + ' ' + v.label
+      + '</div>';
+  }).join('');
+  diyUpdateViewsCount();
+}
+
+function diyUpdateViewsCount(){
+  var el = document.getElementById('diy-views-count');
+  if (el) el.textContent = diyState.views.length + ' of ' + DIY_VIEWS.length + ' selected';
 }
 
 // CAT FILTERS FOR METRICS STEP
@@ -3966,16 +4024,43 @@ function diyToggleSlicer(id){
     if(diyState.slicers.indexOf(id)<0) diyState.slicers.push(id);
     if(chip) chip.classList.add('on');
   }
+  diyUpdateSlicerCount();
 }
 function diyToggleAllSlicers(){
   var allOn = diyState.slicers.length === DIY_SLICERS.length;
   if(allOn){
     diyState.slicers = [];
-    document.querySelectorAll('.diy-slicer-chip').forEach(function(c){c.classList.remove('on');});
+    document.querySelectorAll('#diy-slicer-grid .diy-slicer-chip').forEach(function(c){c.classList.remove('on');});
   } else {
     diyState.slicers = DIY_SLICERS.map(function(s){return s.id;});
-    document.querySelectorAll('.diy-slicer-chip').forEach(function(c){c.classList.add('on');});
+    document.querySelectorAll('#diy-slicer-grid .diy-slicer-chip').forEach(function(c){c.classList.add('on');});
   }
+  diyUpdateSlicerCount();
+}
+
+// VIEWS
+function diyToggleView(id){
+  var chip = document.getElementById('vw-'+id);
+  var isOn = chip && chip.classList.contains('on');
+  if(isOn){
+    diyState.views = diyState.views.filter(function(x){return x!==id;});
+    if(chip) chip.classList.remove('on');
+  } else {
+    if(diyState.views.indexOf(id)<0) diyState.views.push(id);
+    if(chip) chip.classList.add('on');
+  }
+  diyUpdateViewsCount();
+}
+function diyToggleAllViews(){
+  var allOn = diyState.views.length === DIY_VIEWS.length;
+  if(allOn){
+    diyState.views = [];
+    document.querySelectorAll('#diy-views-grid .diy-slicer-chip').forEach(function(c){c.classList.remove('on');});
+  } else {
+    diyState.views = DIY_VIEWS.map(function(v){return v.id;});
+    document.querySelectorAll('#diy-views-grid .diy-slicer-chip').forEach(function(c){c.classList.add('on');});
+  }
+  diyUpdateViewsCount();
 }
 
 // API KEY
@@ -4038,7 +4123,7 @@ function diyGoStep(n){
     if(panel) panel.classList.toggle('active', i===n);
   }
   if(n===2){ diyInitMetricCatFilters(); diyRenderMetrics(); }
-  if(n===3){ diyInitSlicers(); }
+  if(n===3){ diyInitSlicers(); diyInitViews(); }
   if(n===4){ diyBuildSummary(); diyLoadApiKey(); }
   var content = document.querySelector('.content-area');
   if(content) content.scrollTop = 0;
@@ -4052,11 +4137,16 @@ function diyBuildSummary(){
     var s = DIY_SLICERS.find(function(x){return x.id===id;});
     return s ? s.label : id;
   });
+  var viewLabels = diyState.views.map(function(id){
+    var v = DIY_VIEWS.find(function(x){return x.id===id;});
+    return v ? v.label : id;
+  });
   tbody.innerHTML = [
     ['Tables', diyState.tables.join(', ') || '—'],
     ['Date Filter Style', diyState.dateScope === 'between' ? 'Date Between' : 'Monthly Dropdown'],
     ['Date Basis', diyState.dateBasis.replace(/_/g,' ')],
     ['Dashboard Slicers', slicerLabels.join(', ') || 'None'],
+    ['Chart Views', viewLabels.join(', ') || 'None'],
     ['Metrics', diyState.metrics.length ? diyState.metrics.length+' selected' : '—'],
     ['Layout', diyState.layout]
   ].map(function(r){
@@ -4113,6 +4203,7 @@ function diyEditEntry(id){
   if(!entry) return;
   diyState.tables     = entry.tables || [];
   diyState.slicers    = entry.slicers || DIY_SLICERS.map(function(s){return s.id;});
+  diyState.views      = entry.views   || DIY_VIEWS.map(function(v){return v.id;});
   diyState.metrics    = entry.metrics || [];
   diyState.dateScope  = entry.dateScope || 'between';
   diyState.dateBasis  = entry.dateBasis || 'projected_close_date';
@@ -4148,7 +4239,7 @@ function diyDeleteEntry(id){
 }
 
 function diyReset(){
-  diyState = {step:1, tables:[], slicers:DIY_SLICERS.map(function(s){return s.id;}), metrics:[], dateScope:'between', dateBasis:'projected_close_date', layout:'3col', editingId:null};
+  diyState = {step:1, tables:[], slicers:DIY_SLICERS.map(function(s){return s.id;}), views:DIY_VIEWS.map(function(v){return v.id;}), metrics:[], dateScope:'between', dateBasis:'projected_close_date', layout:'3col', editingId:null};
   DIY_TABLES.forEach(function(t){var c=document.getElementById('dtc-'+t.id);if(c)c.classList.remove('selected');});
   diySelectScope('between');
   document.querySelectorAll('.diy-basis-btn').forEach(function(b){b.classList.toggle('selected',b.getAttribute('data-basis')==='projected_close_date');});
