@@ -3597,6 +3597,28 @@ function goToBuilder() {
               </div>
             </div>
           </div>
+          <div class="cf-field-row">
+            <div class="cf-field-name">Clan</div>
+            <div class="cf-multiselect" data-field="clan">
+              <button type="button" class="cf-ms-trigger" onclick="toggleMultiselect(this.parentElement)"><span class="cf-ms-display">&#8212; All &#8212;</span><span class="cf-ms-arrow">&#9660;</span></button>
+              <div class="cf-ms-menu">
+                <label class="cf-ms-opt"><input type="checkbox" value="Partner - Referral" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Partner - Referral</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="Partner - Reseller" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Partner - Reseller</label>
+              </div>
+            </div>
+          </div>
+          <div class="cf-field-row">
+            <div class="cf-field-name">Tribe</div>
+            <div class="cf-multiselect" data-field="tribe_new">
+              <button type="button" class="cf-ms-trigger" onclick="toggleMultiselect(this.parentElement)"><span class="cf-ms-display">&#8212; All &#8212;</span><span class="cf-ms-arrow">&#9660;</span></button>
+              <div class="cf-ms-menu">
+                <label class="cf-ms-opt"><input type="checkbox" value="Embedded Finance" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Embedded Finance</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="Core HR" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Core HR</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="Payroll" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Payroll</label>
+                <label class="cf-ms-opt"><input type="checkbox" value="Recruitment" onchange="updateMSDisplay(this.closest('.cf-multiselect'))"> Recruitment</label>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- CONTACTS -->
