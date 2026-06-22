@@ -4267,15 +4267,110 @@ function diyCheckApiKey(){
   if(s) s.textContent = val.trim() ? '' : '';
 }
 function diyGenerate(){
+  var apiKey = localStorage.getItem('diy_claude_key') || '';
+  if(!apiKey){
+    var s = document.getElementById('diy-generate-status');
+    if(s){ s.textContent = '⚠️ Please enter and save your Claude API key first.'; s.style.color='#f87171'; }
+    return;
+  }
+
   var prompt = diyBuildPrompt();
-  var ta = document.getElementById('diy-prompt-output');
-  var sec = document.getElementById('diy-prompt-section');
-  if(ta){ ta.value = prompt; }
-  if(sec){ sec.style.display = ''; }
-  var s = document.getElementById('diy-generate-status');
-  if(s){ s.textContent = ''; }
-  // scroll to prompt
-  if(sec) sec.scrollIntoView({behavior:'smooth', block:'start'});
+  // Append instruction to return only HTML
+  prompt += '\n\nIMPORTANT: Return ONLY the complete HTML file — no explanation, no markdown, no commentary. Start with <!DOCTYPE html> and end with </html>.';
+
+  var btn = document.getElementById('diy-generate-btn');
+  var statusEl = document.getElementById('diy-generate-status');
+  var previewWrap = document.getElementById('diy-preview-wrap');
+  var iframe = document.getElementById('diy-preview-iframe');
+
+  if(btn){ btn.disabled = true; btn.textContent = '⏳ Generating…'; }
+  if(statusEl){ statusEl.style.color = 'rgba(255,255,255,.4)'; statusEl.textContent = 'Connecting to Claude…'; }
+  if(previewWrap){ previewWrap.style.display = 'none'; }
+
+  var fullText = '';
+
+  fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-allow-browser': 'true',
+      'content-type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 8000,
+      stream: true,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  }).then(function(resp){
+    if(!resp.ok){
+      return resp.json().then(function(err){
+        throw new Error((err.error && err.error.message) || 'API error ' + resp.status);
+      });
+    }
+    if(statusEl){ statusEl.textContent = 'Streaming response from Claude…'; }
+    var reader = resp.body.getReader();
+    var decoder = new TextDecoder();
+    var buffer = '';
+
+    function pump(){
+      return reader.read().then(function(result){
+        if(result.done){
+          diyFinalizeGenerated(fullText, previewWrap, iframe, btn, statusEl);
+          return;
+        }
+        buffer += decoder.decode(result.value, {stream: true});
+        var lines = buffer.split('\n');
+        buffer = lines.pop();
+        lines.forEach(function(line){
+          if(line.startsWith('data: ')){
+            var data = line.slice(6).trim();
+            if(data === '[DONE]') return;
+            try{
+              var parsed = JSON.parse(data);
+              if(parsed.type === 'content_block_delta' && parsed.delta && parsed.delta.text){
+                fullText += parsed.delta.text;
+                var tokenCount = Math.round(fullText.length / 4);
+                if(statusEl){ statusEl.textContent = 'Streaming… (~' + tokenCount + ' tokens received)'; }
+              }
+            } catch(e){}
+          }
+        });
+        return pump();
+      });
+    }
+    return pump();
+  }).catch(function(err){
+    if(btn){ btn.disabled = false; btn.textContent = '⚡ Generate Dashboard'; }
+    if(statusEl){ statusEl.style.color = '#f87171'; statusEl.textContent = '✗ Error: ' + err.message; }
+  });
+}
+
+function diyFinalizeGenerated(rawText, previewWrap, iframe, btn, statusEl){
+  // Extract HTML — strip markdown code fences if present
+  var html = rawText.trim();
+  var fenceMatch = html.match(/```(?:html)?\s*([\s\S]*?)```/i);
+  if(fenceMatch){ html = fenceMatch[1].trim(); }
+  if(!html.toLowerCase().includes('<!doctype') && !html.toLowerCase().includes('<html')){
+    // Didn't get HTML back — store raw and show error
+    if(btn){ btn.disabled = false; btn.textContent = '⚡ Generate Dashboard'; }
+    if(statusEl){ statusEl.style.color = '#f87171'; statusEl.textContent = '✗ Claude returned unexpected output. Try again.'; }
+    return;
+  }
+
+  // Store for download
+  window._diyGeneratedHTML = html;
+
+  // Render in iframe
+  if(iframe){ iframe.srcdoc = html; }
+  if(previewWrap){ previewWrap.style.display = ''; }
+
+  if(btn){ btn.disabled = false; btn.textContent = '⚡ Regenerate'; }
+  if(statusEl){ statusEl.style.color = '#1DB954'; statusEl.textContent = '✓ Dashboard generated successfully!'; }
+
+  // Scroll to preview
+  if(previewWrap){ previewWrap.scrollIntoView({behavior:'smooth', block:'start'}); }
 }
 
 function diyCopyPrompt(){
@@ -4449,13 +4544,14 @@ function diyBuildPrompt(){
   return lines.join('\n');
 }
 function diyDownloadDashboard(){
-  var iframe = document.getElementById('diy-preview-iframe');
-  if(!iframe || !iframe.srcdoc) return;
-  var blob = new Blob([iframe.srcdoc], {type:'text/html'});
+  var html = window._diyGeneratedHTML;
+  if(!html){ var iframe = document.getElementById('diy-preview-iframe'); html = iframe && iframe.srcdoc; }
+  if(!html) return;
+  var blob = new Blob([html], {type:'text/html'});
   var a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = (document.getElementById('diy-dash-name')||{}).value || 'dashboard';
-  a.download = a.download.replace(/\s+/g,'-').toLowerCase()+'.html';
+  var name = ((document.getElementById('diy-dash-name')||{}).value || 'dashboard').replace(/\s+/g,'-').toLowerCase();
+  a.download = name + '.html';
   a.click();
 }
 
