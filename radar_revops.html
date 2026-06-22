@@ -4334,6 +4334,17 @@ function diyBuildPrompt(){
   lines.push('Filter style: ' + (diyState.dateScope === 'between' ? 'Date range picker (from / to)' : 'Monthly dropdown selector'));
   lines.push('');
 
+  // ── Main Filters ──────────────────────────────────────────────────────────────
+  var mainFilters = diyReadMainFilters();
+  var filterKeys = Object.keys(mainFilters);
+  if(filterKeys.length){
+    lines.push('## Main Filters (applied globally to all queries)');
+    filterKeys.forEach(function(f){
+      lines.push('  ' + f + ' IN (' + mainFilters[f].map(function(v){return "'"+v+"'";}).join(', ') + ')');
+    });
+    lines.push('');
+  }
+
   // ── Metrics ───────────────────────────────────────────────────────────────────
   var selMetrics = diyState.metrics || [];
   if(selMetrics.length){
@@ -4457,6 +4468,19 @@ function diyGoStep(n){
   if(content) content.scrollTop = 0;
 }
 
+// READ MAIN FILTERS FROM DOM
+function diyReadMainFilters(){
+  var result = {};
+  document.querySelectorAll('#diy-panel-3 .cf-multiselect').forEach(function(ms){
+    var field = ms.getAttribute('data-field');
+    if(!field) return;
+    var checked = [];
+    ms.querySelectorAll('input[type=checkbox]:checked').forEach(function(cb){ checked.push(cb.value); });
+    if(checked.length) result[field] = checked;
+  });
+  return result;
+}
+
 // SUMMARY
 function diyBuildSummary(){
   var tbody = document.getElementById('diy-summary-tbody');
@@ -4473,10 +4497,15 @@ function diyBuildSummary(){
     var prefix = fs.tableId.replace('silver_','').replace('gold_','').replace('netsuite_','ns_').replace('company_','co_');
     return prefix+'.'+fs.fieldName;
   });
+  var mainFilters = diyReadMainFilters();
+  var filterSummary = Object.keys(mainFilters).map(function(f){
+    return f.replace(/_/g,' ')+': '+mainFilters[f].join(', ');
+  }).join(' | ') || 'None';
   tbody.innerHTML = [
     ['Tables', diyState.tables.join(', ') || '—'],
     ['Date Filter Style', diyState.dateScope === 'between' ? 'Date Between' : 'Monthly Dropdown'],
     ['Date Basis', diyState.dateBasis === 'dynamic' ? 'Dynamic (per metric)' : diyState.dateBasis.replace(/_/g,' ')],
+    ['Main Filters', filterSummary],
     ['Suggested Slicers', slicerLabels.join(', ') || 'None'],
     ['Table Field Slicers', fieldSlicerLabels.join(', ') || 'None'],
     ['Chart Views', viewLabels.join(', ') || 'None'],
