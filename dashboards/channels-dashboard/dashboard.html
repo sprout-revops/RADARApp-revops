@@ -397,8 +397,11 @@ select.filter-control option{background:var(--surface2)}
 .data-table tbody td.mono{font-family:monospace;font-size:.72rem}
 
 /* ─── Pipeline Funnel ─── */
-.pipe-funnel-wrap{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;padding-top:4px}
+.pipe-funnel-wrap{display:grid;grid-template-columns:420px 1fr;gap:16px;align-items:start;padding-top:4px}
 .pipe-funnel-chart-wrap{position:relative;min-height:180px}
+#tbl-pipe-funnel td:first-child{max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#tbl-pipe-funnel th,#tbl-pipe-funnel td{white-space:nowrap}
+#pipe-funnel-tbl-wrap{overflow-x:auto}
 .funnel-clear-chip{
   display:none;align-items:center;gap:4px;
   font-size:.68rem;font-weight:700;padding:2px 9px;
@@ -773,7 +776,7 @@ select.filter-control option{background:var(--surface2)}
           <canvas id="chart-pipe-funnel"></canvas>
         </div>
         <div>
-          <div class="tbl-wrap" style="max-height:280px">
+          <div id="pipe-funnel-tbl-wrap" class="tbl-wrap" style="max-height:280px;overflow-x:auto">
             <table class="data-table" id="tbl-pipe-funnel">
               <thead>
                 <tr>
