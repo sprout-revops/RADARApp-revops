@@ -885,12 +885,13 @@ Use the RADAR proxy — NEVER call Databricks directly (CORS will block it):
   Submit query:
     POST https://radar-revops.vercel.app/api/databricks
     Headers: { 'x-db-host': CONFIG.host, 'x-db-token': CONFIG.token, 'Content-Type': 'application/json' }
-    Body: { "warehouse_id": CONFIG.warehouseId, "statement": sql, "wait_timeout": "30s", "on_wait_timeout": "CONTINUE", "format": "JSON_ARRAY" }
+    Body: { "warehouse_id": CONFIG.warehouseId, "statement": sql, "wait_timeout": "0s", "on_wait_timeout": "CONTINUE", "format": "JSON_ARRAY" }
+    NOTE: use "0s" — proxy enforces it. Databricks returns a statement_id instantly, then you poll.
 
-  Poll for result (while state is PENDING or RUNNING):
+  ALWAYS poll (first response will be PENDING or RUNNING):
     GET https://radar-revops.vercel.app/api/databricks-poll?id={statement_id}
     Headers: { 'x-db-host': CONFIG.host, 'x-db-token': CONFIG.token }
-    Poll every 2 seconds, max 60 polls.
+    Poll every 3 seconds until state === "SUCCEEDED" or "FAILED". No poll limit — warehouse may be cold-starting.
 
 CONFIG block — credentials are pre-filled, do NOT show a credentials form:
   const CONFIG = { host: '__DB_HOST__', token: '__DB_TOKEN__', warehouseId: '__DB_WAREHOUSE__' };
@@ -4394,12 +4395,13 @@ function diyBuildPrompt(){
   lines.push('Submit query:');
   lines.push('  POST https://radar-revops.vercel.app/api/databricks');
   lines.push('  Headers: { "x-db-host": CONFIG.host, "x-db-token": CONFIG.token, "Content-Type": "application/json" }');
-  lines.push('  Body: { "warehouse_id": CONFIG.warehouseId, "statement": sql, "wait_timeout": "30s", "on_wait_timeout": "CONTINUE", "format": "JSON_ARRAY" }');
+  lines.push('  Body: { "warehouse_id": CONFIG.warehouseId, "statement": sql, "wait_timeout": "0s", "on_wait_timeout": "CONTINUE", "format": "JSON_ARRAY" }');
+  lines.push('  NOTE: use "0s" — proxy enforces it. Databricks returns a statement_id instantly, then you poll.');
   lines.push('');
-  lines.push('Poll while state is PENDING or RUNNING:');
+  lines.push('ALWAYS poll (first response will be PENDING or RUNNING):');
   lines.push('  GET https://radar-revops.vercel.app/api/databricks-poll?id={statement_id}');
   lines.push('  Headers: { "x-db-host": CONFIG.host, "x-db-token": CONFIG.token }');
-  lines.push('  Poll every 2 seconds, max 60 polls.');
+  lines.push('  Poll every 3 seconds until state === "SUCCEEDED" or "FAILED". No poll limit — warehouse may be cold-starting.');
   lines.push('');
   lines.push('Parse rows: data.manifest.schema.columns → names; data.result.data_array → rows (array of arrays).');
   lines.push('');

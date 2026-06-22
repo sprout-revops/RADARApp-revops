@@ -19,7 +19,13 @@ module.exports = async function handler(req, res) {
     }
   }
 
-  const payload = JSON.stringify(body);
+  // Force immediate return — Vercel Hobby times out at 10s so we never wait for results.
+  // Databricks returns a statement_id instantly; the client polls via /api/databricks-poll.
+  const payload = JSON.stringify(Object.assign({}, body, {
+    wait_timeout: '0s',
+    on_wait_timeout: 'CONTINUE',
+    format: body.format || 'JSON_ARRAY'
+  }));
 
   return new Promise(function(resolve) {
     const options = {
