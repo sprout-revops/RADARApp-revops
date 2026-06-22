@@ -1,38 +1,21 @@
-export const config = { runtime: 'edge' };
+module.exports = async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'content-type, x-api-key');
 
-export default async function handler(req) {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, {
-      status: 204,
-      headers: {
-        'access-control-allow-origin': '*',
-        'access-control-allow-methods': 'POST, OPTIONS',
-        'access-control-allow-headers': 'content-type, x-api-key'
-      }
-    });
+  if (req.method === 'OPTIONS') return res.status(204).end();
+  if (req.method !== 'POST') return res.status(405).json({ error: { message: 'Method not allowed' } });
+
+  const apiKey = req.headers['x-api-key'];
+  if (!apiKey) return res.status(400).json({ error: { message: 'Missing Claude API key.' } });
+
+  let body = req.body;
+  if (!body || typeof body === 'string') {
+    try { body = JSON.parse(body); } catch(e) { return res.status(400).json({ error: { message: 'Invalid JSON body.' } }); }
   }
 
-  if (req.method !== 'POST') {
-    return new Response('Method not allowed', { status: 405 });
-  }
-
-  const apiKey = req.headers.get('x-api-key');
-  if (!apiKey) {
-    return new Response(JSON.stringify({ error: { message: 'Missing Claude API key.' } }), {
-      status: 400,
-      headers: { 'content-type': 'application/json' }
-    });
-  }
-
-  let body;
-  try {
-    body = await req.json();
-  } catch (e) {
-    return new Response(JSON.stringify({ error: { message: 'Invalid JSON body.' } }), {
-      status: 400,
-      headers: { 'content-type': 'application/json' }
-    });
-  }
+  // Remove stream flag — Node.js runtime returns full response
+  body = Object.assign({}, body, { stream: false });
 
   const anthropicResp = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -44,21 +27,6 @@ export default async function handler(req) {
     body: JSON.stringify(body)
   });
 
-  if (!anthropicResp.ok) {
-    const err = await anthropicResp.json().catch(() => ({ error: { message: 'Anthropic API error ' + anthropicResp.status } }));
-    return new Response(JSON.stringify(err), {
-      status: anthropicResp.status,
-      headers: { 'content-type': 'application/json', 'access-control-allow-origin': '*' }
-    });
-  }
-
-  // Pipe the SSE stream straight through
-  return new Response(anthropicResp.body, {
-    status: 200,
-    headers: {
-      'content-type': 'text/event-stream',
-      'cache-control': 'no-cache',
-      'access-control-allow-origin': '*'
-    }
-  });
-}
+  const data = await anthropicResp.json();
+  return res.status(anthropicResp.status).json(data);
+};

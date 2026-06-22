@@ -4289,6 +4289,13 @@ function diyGenerate(){
 
   var fullText = '';
 
+  // Animate status while waiting
+  var dots = 0;
+  var spinner = setInterval(function(){
+    dots = (dots + 1) % 4;
+    if(statusEl){ statusEl.textContent = 'Claude is building your dashboard' + '.'.repeat(dots); }
+  }, 600);
+
   fetch('/api/claude', {
     method: 'POST',
     headers: {
@@ -4298,48 +4305,21 @@ function diyGenerate(){
     body: JSON.stringify({
       model: 'claude-sonnet-4-6',
       max_tokens: 8000,
-      stream: true,
       messages: [{ role: 'user', content: prompt }]
     })
   }).then(function(resp){
-    if(!resp.ok){
-      return resp.json().then(function(err){
-        throw new Error((err.error && err.error.message) || 'API error ' + resp.status);
-      });
-    }
-    if(statusEl){ statusEl.textContent = 'Streaming response from Claude…'; }
-    var reader = resp.body.getReader();
-    var decoder = new TextDecoder();
-    var buffer = '';
-
-    function pump(){
-      return reader.read().then(function(result){
-        if(result.done){
-          diyFinalizeGenerated(fullText, previewWrap, iframe, btn, statusEl);
-          return;
-        }
-        buffer += decoder.decode(result.value, {stream: true});
-        var lines = buffer.split('\n');
-        buffer = lines.pop();
-        lines.forEach(function(line){
-          if(line.startsWith('data: ')){
-            var data = line.slice(6).trim();
-            if(data === '[DONE]') return;
-            try{
-              var parsed = JSON.parse(data);
-              if(parsed.type === 'content_block_delta' && parsed.delta && parsed.delta.text){
-                fullText += parsed.delta.text;
-                var tokenCount = Math.round(fullText.length / 4);
-                if(statusEl){ statusEl.textContent = 'Streaming… (~' + tokenCount + ' tokens received)'; }
-              }
-            } catch(e){}
-          }
-        });
-        return pump();
-      });
-    }
-    return pump();
+    return resp.json().then(function(data){
+      if(!resp.ok){
+        throw new Error((data.error && data.error.message) || 'API error ' + resp.status);
+      }
+      return data;
+    });
+  }).then(function(data){
+    clearInterval(spinner);
+    var text = (data.content && data.content[0] && data.content[0].text) || '';
+    diyFinalizeGenerated(text, previewWrap, iframe, btn, statusEl);
   }).catch(function(err){
+    clearInterval(spinner);
     if(btn){ btn.disabled = false; btn.textContent = '⚡ Generate Dashboard'; }
     if(statusEl){ statusEl.style.color = '#f87171'; statusEl.textContent = '✗ Error: ' + err.message; }
   });
