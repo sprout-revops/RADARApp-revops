@@ -5155,7 +5155,6 @@ async function dbQuery(sql, timeout) {
   const warehouseId = LC.warehouseId();
   if (!warehouseId) throw new Error('Could not parse warehouse ID from HTTP Path.');
 
-  const url = 'https://' + LC.host + '/api/2.0/sql/statements';
   const body = {
     statement: sql,
     warehouse_id: warehouseId,
@@ -5164,10 +5163,12 @@ async function dbQuery(sql, timeout) {
     format: 'JSON_ARRAY'
   };
 
-  const res = await fetch(url, {
+  // Route through /api/databricks proxy to avoid CORS
+  const res = await fetch('/api/databricks', {
     method: 'POST',
     headers: {
-      'Authorization': 'Bearer ' + LC.token,
+      'x-db-host': LC.host,
+      'x-db-token': LC.token,
       'Content-Type': 'application/json'
     },
     body: JSON.stringify(body)
@@ -5175,17 +5176,18 @@ async function dbQuery(sql, timeout) {
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(err.message || ('HTTP ' + res.status));
+    throw new Error(err.message || err.error || ('HTTP ' + res.status));
   }
 
   let data = await res.json();
 
-  // Poll if still running
+  // Poll if still running — also proxied to avoid CORS
   let polls = 0;
   while (['PENDING','RUNNING'].includes(data.status && data.status.state) && polls < 60) {
     await new Promise(function(r) { setTimeout(r, 1500); });
-    const pollRes = await fetch('https://' + LC.host + '/api/2.0/sql/statements/' + data.statement_id, {
-      headers: { 'Authorization': 'Bearer ' + LC.token }
+    const pollRes = await fetch('/api/databricks-poll?id=' + data.statement_id, {
+      method: 'GET',
+      headers: { 'x-db-host': LC.host, 'x-db-token': LC.token }
     });
     data = await pollRes.json();
     polls++;
