@@ -396,6 +396,18 @@ select.filter-control option{background:var(--surface2)}
 .data-table tbody td.num{text-align:right;font-variant-numeric:tabular-nums}
 .data-table tbody td.mono{font-family:monospace;font-size:.72rem}
 
+/* ─── Pipeline Funnel ─── */
+.pipe-funnel-wrap{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;padding-top:4px}
+.pipe-funnel-chart-wrap{position:relative;min-height:180px}
+.funnel-clear-chip{
+  display:none;align-items:center;gap:4px;
+  font-size:.68rem;font-weight:700;padding:2px 9px;
+  border-radius:10px;background:var(--accent-dim);
+  color:var(--accent2);border:1px solid var(--accent-bd);
+  cursor:pointer;margin-left:8px;
+}
+.funnel-clear-chip.on{display:inline-flex}
+
 /* Stage badge */
 .stage-badge{
   display:inline-block;padding:2px 8px;border-radius:10px;
@@ -744,6 +756,39 @@ select.filter-control option{background:var(--surface2)}
           </thead>
           <tbody id="tbody-por"></tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- ─── PIPELINE FUNNEL BY STAGE ─── -->
+    <div class="chart-card" style="margin-top:12px">
+      <div class="chart-header">
+        <div class="chart-title">
+          📊 Pipeline MRR by Deal Stage
+          <span class="badge" id="count-pipe-funnel"></span>
+          <span class="funnel-clear-chip" id="funnel-clear-chip" onclick="clearFunnelFilter()">✕ Clear</span>
+        </div>
+      </div>
+      <div class="pipe-funnel-wrap">
+        <div class="pipe-funnel-chart-wrap">
+          <canvas id="chart-pipe-funnel"></canvas>
+        </div>
+        <div>
+          <div class="tbl-wrap" style="max-height:280px">
+            <table class="data-table" id="tbl-pipe-funnel">
+              <thead>
+                <tr>
+                  <th>Deal Name</th>
+                  <th>Sales Rep</th>
+                  <th>Partner</th>
+                  <th>Segment</th>
+                  <th class="num">Proj. Close</th>
+                  <th class="num">MRR</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-pipe-funnel"></tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -2550,7 +2595,7 @@ function computeFromDeals(deals, filters) {
     pipeline_mrr: porRow.pipeline_mrr,
   })).sort((porA, porB) => porB.qls - porA.qls);
 
-  return { kpi, trend, funnel, partners, reps, won: wonTable, lost: lostTable, leads: leadsTable, sql: sqlTable, por: porTable };
+  return { kpi, trend, funnel, partners, reps, won: wonTable, lost: lostTable, leads: leadsTable, sql: sqlTable, por: porTable, pipeDeals: pipeRows };
 }
 
 /* ─────────────────────────────────────────────
@@ -2560,18 +2605,189 @@ function applyComputed(computed) {
   renderKPIs(computed.kpi);
   updateFunnelTrendChart(computed.funnel);
   updateMrrTrendChart(computed.trend);
-  S.tables.won      = computed.won;
-  S.tables.lost     = computed.lost;
-  S.tables.partners = computed.partners;
-  S.tables.reps     = computed.reps;
-  S.tables.leads    = computed.leads;
-  S.tables.sql      = computed.sql;
-  S.tables.por      = computed.por;
+  S.tables.won       = computed.won;
+  S.tables.lost      = computed.lost;
+  S.tables.partners  = computed.partners;
+  S.tables.reps      = computed.reps;
+  S.tables.leads     = computed.leads;
+  S.tables.sql       = computed.sql;
+  S.tables.por       = computed.por;
+  S.tables.pipeDeals = computed.pipeDeals;
   S.raw.won   = computed.won;
   S.raw.leads = computed.leads;
   S.raw.sql   = computed.sql;
   renderAllTables();
   renderPartnerOR();
+  renderPipeFunnel(S.tables.pipeDeals);
+}
+
+/* ─────────────────────────────────────────────
+   PIPELINE FUNNEL BY DEAL STAGE
+───────────────────────────────────────────── */
+const PIPE_STAGE_ORDER = [
+  'Initial Demo Done',
+  'Solutioning',
+  'Commercial Negotiation',
+  'Committed Accounts',
+];
+const FUNNEL_BAR_BG = [
+  'rgba(14,165,233,.75)',
+  'rgba(34,197,94,.75)',
+  'rgba(245,158,11,.75)',
+  'rgba(168,85,247,.75)',
+];
+const FUNNEL_BAR_BD = [
+  'rgba(14,165,233,1)',
+  'rgba(34,197,94,1)',
+  'rgba(245,158,11,1)',
+  'rgba(168,85,247,1)',
+];
+
+let _funnelSelectedStage = null;
+let _pipeFunnelChart     = null;
+let _pipeFunnelDeals     = [];
+
+function renderPipeFunnel(pipeDeals) {
+  _pipeFunnelDeals = pipeDeals || [];
+
+  // Build stage buckets — predefined order first, then any extras
+  const stageMap = {};
+  PIPE_STAGE_ORDER.forEach(s => { stageMap[s] = { mrr: 0, deals: [] }; });
+  _pipeFunnelDeals.forEach(d => {
+    const sl = d.stage_label || 'Unknown';
+    if (!stageMap[sl]) stageMap[sl] = { mrr: 0, deals: [] };
+    stageMap[sl].mrr += +d.mrr || 0;
+    stageMap[sl].deals.push(d);
+  });
+
+  const ordered = [...PIPE_STAGE_ORDER];
+  Object.keys(stageMap).forEach(s => { if (!ordered.includes(s)) ordered.push(s); });
+
+  const mrrValues  = ordered.map(s => stageMap[s]?.mrr || 0);
+  const totalMrr   = mrrValues.reduce((a, b) => a + b, 0);
+  const totalDeals = _pipeFunnelDeals.length;
+
+  // Badge
+  const badge = document.getElementById('count-pipe-funnel');
+  if (badge) badge.textContent = `${totalDeals} deals · ₱${Number(totalMrr).toLocaleString('en-PH', {maximumFractionDigits:0})} MRR`;
+
+  // Colors — dim non-selected bars when a stage is active
+  const bgColors = ordered.map((s, i) =>
+    _funnelSelectedStage && s !== _funnelSelectedStage ? 'rgba(255,255,255,.06)' : FUNNEL_BAR_BG[i % FUNNEL_BAR_BG.length]);
+  const bdColors = ordered.map((s, i) =>
+    _funnelSelectedStage && s !== _funnelSelectedStage ? 'rgba(255,255,255,.1)'  : FUNNEL_BAR_BD[i % FUNNEL_BAR_BD.length]);
+
+  const ctx = document.getElementById('chart-pipe-funnel');
+  if (!ctx) return;
+  if (_pipeFunnelChart) { _pipeFunnelChart.destroy(); _pipeFunnelChart = null; }
+
+  _pipeFunnelChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ordered,
+      datasets: [{
+        data: mrrValues,
+        backgroundColor: bgColors,
+        borderColor: bdColors,
+        borderWidth: 1.5,
+        borderRadius: 4,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      cursor: 'pointer',
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const stage = ctx.label;
+              const mrr   = ctx.raw;
+              const cnt   = stageMap[stage]?.deals.length || 0;
+              return [`₱${Number(mrr).toLocaleString('en-PH',{maximumFractionDigits:0})} MRR`, `${cnt} deal${cnt !== 1 ? 's' : ''}`];
+            }
+          }
+        },
+        datalabels: {
+          anchor: 'end',
+          align: 'end',
+          color: 'rgba(255,255,255,.55)',
+          font: { size: 10, weight: '600' },
+          formatter: (val, ctx) => {
+            const stage = ctx.chart.data.labels[ctx.dataIndex];
+            const cnt   = stageMap[stage]?.deals.length || 0;
+            return val > 0
+              ? `₱${Number(val).toLocaleString('en-PH',{maximumFractionDigits:0})}  (${cnt})`
+              : `—  (${cnt})`;
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(255,255,255,.05)' },
+          ticks: {
+            color: 'rgba(255,255,255,.35)',
+            font: { size: 10 },
+            callback: v => v >= 1000000 ? '₱'+(v/1000000).toFixed(1)+'M' : v >= 1000 ? '₱'+(v/1000).toFixed(0)+'k' : '₱'+v
+          },
+          border: { color: 'rgba(255,255,255,.08)' }
+        },
+        y: {
+          grid: { display: false },
+          ticks: { color: 'rgba(255,255,255,.65)', font: { size: 11 } },
+          border: { color: 'rgba(255,255,255,.08)' }
+        }
+      },
+      layout: { padding: { right: 100 } },
+      onClick: (evt, elements) => {
+        if (!elements.length) return;
+        const stage = ordered[elements[0].index];
+        if (_funnelSelectedStage === stage) {
+          clearFunnelFilter();
+        } else {
+          _funnelSelectedStage = stage;
+          const chip = document.getElementById('funnel-clear-chip');
+          if (chip) { chip.textContent = `✕ ${stage}`; chip.classList.add('on'); }
+          renderFunnelTable(stageMap[stage]?.deals || []);
+          renderPipeFunnel(_pipeFunnelDeals); // redraw with highlight
+        }
+      }
+    },
+    plugins: [ChartDataLabels]
+  });
+
+  // Table — all deals or filtered stage
+  const tableDeals = _funnelSelectedStage ? (stageMap[_funnelSelectedStage]?.deals || []) : _pipeFunnelDeals;
+  renderFunnelTable(tableDeals);
+}
+
+function clearFunnelFilter() {
+  _funnelSelectedStage = null;
+  const chip = document.getElementById('funnel-clear-chip');
+  if (chip) { chip.textContent = '✕ Clear'; chip.classList.remove('on'); }
+  renderPipeFunnel(_pipeFunnelDeals);
+}
+
+function renderFunnelTable(deals) {
+  const tb = document.getElementById('tbody-pipe-funnel');
+  if (!tb) return;
+  if (!deals.length) {
+    tb.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:20px">No pipeline deals</td></tr>';
+    return;
+  }
+  const sorted = [...deals].sort((a, b) => (+b.mrr || 0) - (+a.mrr || 0));
+  tb.innerHTML = sorted.map(d => `
+    <tr>
+      <td><a href="https://app.hubspot.com/contacts/${HUBSPOT_PORTAL}/record/0-3/${d.deal_id}" target="_blank" rel="noopener" style="color:var(--accent2);text-decoration:none" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">${d.deal_name || '—'}</a></td>
+      <td>${d.sales_rep || '—'}</td>
+      <td>${d.partner_on_record || 'Direct'}</td>
+      <td>${d.segment || '—'}</td>
+      <td class="num mono">${d.projected_close_date ? String(d.projected_close_date).split('T')[0] : '—'}</td>
+      <td class="num">₱${Number(d.mrr || 0).toLocaleString('en-PH', {maximumFractionDigits:0})}</td>
+    </tr>`).join('');
 }
 
 /* ─────────────────────────────────────────────
