@@ -3411,6 +3411,15 @@ function goToBuilder() {
             <span>Monthly Dropdown</span>
           </label>
         </div>
+
+        <div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:16px;margin-bottom:8px;letter-spacing:.3px">Date basis</div>
+        <div class="diy-date-basis-row">
+          <button class="diy-basis-btn selected" data-basis="dynamic" onclick="diySelectBasis(this)">Dynamic</button>
+          <button class="diy-basis-btn" data-basis="create_date" onclick="diySelectBasis(this)">Create Date</button>
+          <button class="diy-basis-btn" data-basis="close_date" onclick="diySelectBasis(this)">Close Date</button>
+          <button class="diy-basis-btn" data-basis="projected_close_date" onclick="diySelectBasis(this)">Projected Close Date</button>
+        </div>
+        <div style="font-size:10px;color:rgba(255,255,255,.25);margin-top:6px;line-height:1.5">Dynamic: Claude uses the correct date column per metric (close_date for won deals, projected_close_date for pipeline, create_date for leads).</div>
       </div>
 
       <!-- Main Filters -->
@@ -3882,7 +3891,7 @@ var diyState = {
   views: DIY_VIEWS.map(function(v){return v.id;}),
   metrics: [],
   dateScope: 'between',
-  dateBasis: 'projected_close_date',
+  dateBasis: 'dynamic',
   layout: '3col',
   editingId: null
 };
@@ -4307,11 +4316,21 @@ function diyBuildPrompt(){
   // ── Date Filter ───────────────────────────────────────────────────────────────
   lines.push('## Date Filtering');
   var basisLabel = {
+    'dynamic':               'Dynamic',
     'create_date':           'Create Date',
     'close_date':            'Close Date',
     'projected_close_date':  'Projected Close Date'
   }[diyState.dateBasis] || diyState.dateBasis;
-  lines.push('Date basis: ' + basisLabel);
+  if(diyState.dateBasis === 'dynamic'){
+    lines.push('Date basis: Dynamic — use the correct date column per metric:');
+    lines.push('  • Funnel / Lead metrics (SQL, MQL, QL, UQL, Won Leads) → create_date');
+    lines.push('  • Won / Bookings metrics (New MRR, OTP, Won Deals, TCV, ARR, ADS, ADV, Win Rate) → close_date');
+    lines.push('  • Pipeline / TMRR metrics (Pipeline MRR, Coverage Ratio, Weighted Pipeline) → projected_close_date');
+    lines.push('  • Finance / CS metrics (NRR, Churn, Active Clients, Invoices) → their own primary date field per table');
+    lines.push('  Do NOT mix date bases within a single chart. Each chart section should use one date column consistently.');
+  } else {
+    lines.push('Date basis: ' + basisLabel + ' (applied to all queries)');
+  }
   lines.push('Filter style: ' + (diyState.dateScope === 'between' ? 'Date range picker (from / to)' : 'Monthly dropdown selector'));
   lines.push('');
 
@@ -4457,7 +4476,7 @@ function diyBuildSummary(){
   tbody.innerHTML = [
     ['Tables', diyState.tables.join(', ') || '—'],
     ['Date Filter Style', diyState.dateScope === 'between' ? 'Date Between' : 'Monthly Dropdown'],
-    ['Date Basis', diyState.dateBasis.replace(/_/g,' ')],
+    ['Date Basis', diyState.dateBasis === 'dynamic' ? 'Dynamic (per metric)' : diyState.dateBasis.replace(/_/g,' ')],
     ['Suggested Slicers', slicerLabels.join(', ') || 'None'],
     ['Table Field Slicers', fieldSlicerLabels.join(', ') || 'None'],
     ['Chart Views', viewLabels.join(', ') || 'None'],
@@ -4521,7 +4540,7 @@ function diyEditEntry(id){
   diyState.views        = entry.views        || DIY_VIEWS.map(function(v){return v.id;});
   diyState.metrics    = entry.metrics || [];
   diyState.dateScope  = entry.dateScope || 'between';
-  diyState.dateBasis  = entry.dateBasis || 'projected_close_date';
+  diyState.dateBasis  = entry.dateBasis || 'dynamic';
   diyState.layout     = entry.layout || '3col';
   diyState.editingId  = id;
   DIY_TABLES.forEach(function(t){
@@ -4554,10 +4573,10 @@ function diyDeleteEntry(id){
 }
 
 function diyReset(){
-  diyState = {step:1, tables:[], slicers:DIY_SLICERS.map(function(s){return s.id;}), fieldSlicers:[], views:DIY_VIEWS.map(function(v){return v.id;}), metrics:[], dateScope:'between', dateBasis:'projected_close_date', layout:'3col', editingId:null};
+  diyState = {step:1, tables:[], slicers:DIY_SLICERS.map(function(s){return s.id;}), fieldSlicers:[], views:DIY_VIEWS.map(function(v){return v.id;}), metrics:[], dateScope:'between', dateBasis:'dynamic', layout:'3col', editingId:null};
   DIY_TABLES.forEach(function(t){var c=document.getElementById('dtc-'+t.id);if(c)c.classList.remove('selected');});
   diySelectScope('between');
-  document.querySelectorAll('.diy-basis-btn').forEach(function(b){b.classList.toggle('selected',b.getAttribute('data-basis')==='projected_close_date');});
+  document.querySelectorAll('.diy-basis-btn').forEach(function(b){b.classList.toggle('selected',b.getAttribute('data-basis')==='dynamic');});
   document.querySelectorAll('.diy-slicer-chip').forEach(function(c){c.classList.add('on');});
   document.querySelectorAll('.diy-layout-opt').forEach(function(el){el.classList.toggle('selected',el.getAttribute('data-layout')==='3col');});
   var nameEl=document.getElementById('diy-dash-name'); if(nameEl) nameEl.value='';
