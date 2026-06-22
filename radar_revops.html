@@ -880,25 +880,30 @@ Your goal is to create a production-ready HTML dashboard using standardized RevO
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🔌 DATABRICKS LIVE CONNECTION (REQUIRED)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-The dashboard MUST include a live Databricks connection using the REST API:
+Use the RADAR proxy — NEVER call Databricks directly (CORS will block it):
 
-Endpoint: POST https://{hostname}/api/2.0/sql/statements
-Auth: Bearer {personal_access_token}
-Body: { "warehouse_id": "{warehouse_id}", "statement": "{sql}", "wait_timeout": "30s" }
+  Submit query:
+    POST https://radar-revops.vercel.app/api/databricks
+    Headers: { 'x-db-host': CONFIG.host, 'x-db-token': CONFIG.token, 'Content-Type': 'application/json' }
+    Body: { "warehouse_id": CONFIG.warehouseId, "statement": sql, "wait_timeout": "30s", "on_wait_timeout": "CONTINUE", "format": "JSON_ARRAY" }
 
-Connection setup:
-• On first load, show a small settings panel asking for: Databricks Hostname, HTTP Path, and Personal Access Token
-• Save these to localStorage so the user only enters them once
-• Show a connection status badge (🟢 Live / 🔴 Not Connected)
+  Poll for result (while state is PENDING or RUNNING):
+    GET https://radar-revops.vercel.app/api/databricks-poll?id={statement_id}
+    Headers: { 'x-db-host': CONFIG.host, 'x-db-token': CONFIG.token }
+    Poll every 2 seconds, max 60 polls.
+
+CONFIG block — credentials are pre-filled, do NOT show a credentials form:
+  const CONFIG = { host: '__DB_HOST__', token: '__DB_TOKEN__', warehouseId: '__DB_WAREHOUSE__' };
+
+Parse result rows: data.manifest.schema.columns → column names; data.result.data_array → rows (array of arrays).
 
 Data loading:
-• On page load, automatically fetch live data from Databricks using the SQL queries
+• On page load, automatically fetch live data using the queries
 • Show a loading spinner while fetching
-• If connection is not configured, fall back to hardcoded sample data and show a "⚠️ Using sample data" notice
+• If fetch fails, fall back to hardcoded sample data and show a "⚠️ Using sample data" notice
 
 Refresh:
 • Include a "🔄 Refresh Data" button in the header that re-runs all queries and updates all charts
-• Include an auto-refresh toggle (every 30 minutes) the user can enable/disable
 • Show a "Last updated: {timestamp}" label next to the refresh button
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -4337,6 +4342,14 @@ function diyFinalizeGenerated(rawText, previewWrap, iframe, btn, statusEl){
     return;
   }
 
+  // Inject live Databricks credentials (replaces placeholders Claude was told to use)
+  if(typeof LC !== 'undefined' && LC.connected){
+    var wid = LC.warehouseId ? LC.warehouseId() : LC.path.split('/').pop();
+    html = html.replace(/__DB_HOST__/g, LC.host || '')
+               .replace(/__DB_TOKEN__/g, LC.token || '')
+               .replace(/__DB_WAREHOUSE__/g, wid || '');
+  }
+
   // Store for download
   window._diyGeneratedHTML = html;
 
@@ -4376,11 +4389,22 @@ function diyBuildPrompt(){
 
   // ── Connection ───────────────────────────────────────────────────────────────
   lines.push('## Databricks Connection');
-  lines.push('Query via the Databricks SQL REST API (POST /api/2.0/sql/statements).');
-  lines.push('Credentials: store in a CONFIG block in the HTML with placeholder values.');
-  lines.push('  host:     YOUR_DATABRICKS_HOST');
-  lines.push('  httpPath: YOUR_HTTP_PATH');
-  lines.push('  token:    YOUR_PAT_TOKEN');
+  lines.push('Use the RADAR proxy — NEVER call Databricks directly (CORS blocks it from iframes):');
+  lines.push('');
+  lines.push('Submit query:');
+  lines.push('  POST https://radar-revops.vercel.app/api/databricks');
+  lines.push('  Headers: { "x-db-host": CONFIG.host, "x-db-token": CONFIG.token, "Content-Type": "application/json" }');
+  lines.push('  Body: { "warehouse_id": CONFIG.warehouseId, "statement": sql, "wait_timeout": "30s", "on_wait_timeout": "CONTINUE", "format": "JSON_ARRAY" }');
+  lines.push('');
+  lines.push('Poll while state is PENDING or RUNNING:');
+  lines.push('  GET https://radar-revops.vercel.app/api/databricks-poll?id={statement_id}');
+  lines.push('  Headers: { "x-db-host": CONFIG.host, "x-db-token": CONFIG.token }');
+  lines.push('  Poll every 2 seconds, max 60 polls.');
+  lines.push('');
+  lines.push('Parse rows: data.manifest.schema.columns → names; data.result.data_array → rows (array of arrays).');
+  lines.push('');
+  lines.push('CONFIG block — credentials are pre-filled, do NOT add a credentials form:');
+  lines.push('  const CONFIG = { host: "__DB_HOST__", token: "__DB_TOKEN__", warehouseId: "__DB_WAREHOUSE__" };');
   lines.push('Schema: shared.revops');
   lines.push('');
 
