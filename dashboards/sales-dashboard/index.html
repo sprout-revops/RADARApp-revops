@@ -765,8 +765,9 @@ fetch('./accel_snapshot.json?_=' + Date.now())
 /* ── Forecast Snapshot (shared, fetched from repo) ── */
 let FCST_BAKED = {};
 let _fcstSaving = false;
+let _fcstDirty  = false;
 function _fcstRefresh(rerender) {
-  if (_fcstSaving) return Promise.resolve();
+  if (_fcstSaving || _fcstDirty) return Promise.resolve();
   return fetch('https://raw.githubusercontent.com/sprout-revops/sales-dashboard/master/forecast_snapshot.json?_=' + Date.now())
     .then(r => r.ok ? r.json() : {})
     .then(data => {
@@ -1804,7 +1805,7 @@ async function fcstSaveSnapshot() {
     });
     if (!resp.ok) throw new Error(await resp.text());
     FCST_BAKED = snapshot;
-    Object.keys(REP_TEAMS).forEach(rep => localStorage.removeItem(_fcstLsKey(rep, CUR_MON)));
+    _fcstDirty = false;
     renderRepSummary();
     _fcstToast('✅ Forecast published — all users will see updated values', '#c4b5fd');
   } catch(e) {
@@ -2461,15 +2462,12 @@ function accelSaveSnapshot() {
 /* ── Rep Forecast Overrides ────────────────────────── */
 const FCST_ADMINS = ['apanares@sprout.ph', 'lurbina@sprout.ph'];
 
-function _fcstKey(rep, mon)    { return `${CUR_YEAR}_${rep}_${mon}`; }
-function _fcstLsKey(rep, mon)  { return `fcst_${CUR_YEAR}_${mon}_${rep}`; }
+function _fcstKey(rep, mon) { return `${CUR_YEAR}_${rep}_${mon}`; }
 function _fcstGet(rep, mon) {
-  const local = localStorage.getItem(_fcstLsKey(rep, mon));
-  if (local !== null) return parseFloat(local);
-  const baked = FCST_BAKED[_fcstKey(rep, mon)];
-  return baked !== undefined ? baked : null;
+  const v = FCST_BAKED[_fcstKey(rep, mon)];
+  return v !== undefined ? v : null;
 }
-function _fcstSet(rep, mon, val) { localStorage.setItem(_fcstLsKey(rep, mon), String(val)); }
+function _fcstSet(rep, mon, val) { FCST_BAKED[_fcstKey(rep, mon)] = val; }
 
 async function fcstEditCell(td, repEnc, mon) {
   const rep   = decodeURIComponent(repEnc);
@@ -2488,6 +2486,7 @@ async function fcstEditCell(td, repEnc, mon) {
     committed = true;
     const v = parseFloat(input.value);
     _fcstSet(rep, mon, isNaN(v) ? 0 : v);
+    _fcstDirty = true;
     renderRepSummary();
   }
   input.addEventListener('blur', commit);
