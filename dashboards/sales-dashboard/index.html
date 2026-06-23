@@ -764,15 +764,22 @@ fetch('./accel_snapshot.json?_=' + Date.now())
 
 /* ── Forecast Snapshot (shared, fetched from repo) ── */
 let FCST_BAKED = {};
-fetch('https://raw.githubusercontent.com/sprout-revops/sales-dashboard/master/forecast_snapshot.json?_=' + Date.now())
-  .then(r => r.ok ? r.json() : {})
-  .then(data => {
-    FCST_BAKED = data || {};
-    const rp = document.getElementById('sp-rep-panel');
-    if (rp && rp.classList.contains('active')) renderRepSummary();
-  })
-  .catch(() => {});
-// forecast_snapshot.json is saved by admins via the 💾 Save Forecast button
+function _fcstRefresh(rerender) {
+  return fetch('https://raw.githubusercontent.com/sprout-revops/sales-dashboard/master/forecast_snapshot.json?_=' + Date.now())
+    .then(r => r.ok ? r.json() : {})
+    .then(data => {
+      const incoming = data || {};
+      const changed = JSON.stringify(incoming) !== JSON.stringify(FCST_BAKED);
+      FCST_BAKED = incoming;
+      if (changed || rerender) {
+        const rp = document.getElementById('sp-rep-panel');
+        if (rp && rp.classList.contains('active')) renderRepSummary();
+      }
+    })
+    .catch(() => {});
+}
+_fcstRefresh(true);
+setInterval(() => _fcstRefresh(false), 30000);
 
 /* ══════════════════════════════════════════════════
    STATIC FORECAST — UPDATE MANUALLY EACH MONTH
