@@ -4273,6 +4273,12 @@ function diyCheckApiKey(){
   if(s) s.textContent = val.trim() ? '' : '';
 }
 function diyGenerate(){
+  if(typeof LC !== 'undefined' && !LC.connected){
+    var s = document.getElementById('diy-generate-status');
+    if(s){ s.textContent = '⚠️ Connect your Databricks credentials first — click the "Not Connected" badge at the top.'; s.style.color='#f87171'; }
+    openConnModal();
+    return;
+  }
   var apiKey = localStorage.getItem('diy_claude_key') || '';
   if(!apiKey){
     var s = document.getElementById('diy-generate-status');
