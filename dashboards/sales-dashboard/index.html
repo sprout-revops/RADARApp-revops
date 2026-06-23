@@ -1808,7 +1808,6 @@ async function fcstSaveSnapshot() {
     if (!resp.ok) throw new Error(await resp.text());
     snapshot._saved_at = Date.now();
     FCST_BAKED = snapshot;
-    _fcstDirty = false;
     renderRepSummary();
     _fcstToast('✅ Forecast published — all users will see updated values', '#c4b5fd');
   } catch(e) {
