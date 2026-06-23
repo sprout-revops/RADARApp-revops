@@ -568,6 +568,7 @@ select.filter-control option{background:var(--surface2)}
             <option value="">All Segments</option>
             <option value="SME">SME</option>
             <option value="ENT">ENT</option>
+            <option value="NONE">No Segment</option>
           </select>
         </div>
       </div>
@@ -2346,6 +2347,7 @@ function computeFromDeals(deals, filters) {
 
   const segMatch = d => {
     if (!segment) return true;
+    if (segment === 'NONE') return !d.segment || d.segment === '';
     const s = (d.segment || '').toUpperCase();
     if (segment === 'SME') return s === 'SME' || s === 'MICRO';
     if (segment === 'ENT') return s === 'ENT';
