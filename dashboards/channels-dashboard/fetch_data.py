@@ -83,8 +83,8 @@ SELECT
   reasons_for_lost_deal AS reasons_for_lost,
   partner_on_record,
   client_type,
-  CASE WHEN department_source_clean = 'MICRO' THEN 'SME'
-       ELSE department_source_clean END  AS segment,
+  CASE WHEN UPPER(segment) = 'MICRO' THEN 'SME'
+       ELSE segment END                  AS segment,
   original_channel_source,
   headcount
 FROM shared.revops.silver_deals
