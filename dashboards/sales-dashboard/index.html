@@ -1777,10 +1777,47 @@ function setRepMonFilter(m) {
   renderRepSummary();
 }
 
+function _fcstInjectSaveBtn() {
+  if (!FCST_ADMINS.includes((localStorage.getItem('radar_user_email') || '').toLowerCase())) return;
+  if (document.getElementById('fcst-save-btn-wrap')) return;
+  const wrap = document.createElement('div');
+  wrap.id = 'fcst-save-btn-wrap';
+  wrap.style.cssText = 'display:inline-flex;align-items:center;margin-left:10px;';
+  wrap.innerHTML = `<button onclick="fcstSaveSnapshot()" style="font-size:10px;padding:4px 12px;background:#16102e;border:1px solid #c4b5fd;border-radius:4px;color:#c4b5fd;cursor:pointer;font-weight:600;" title="Publish forecast to all users">💾 Save Forecast</button>`;
+  const filter = document.getElementById('rep-month-filter');
+  if (filter && filter.parentNode) filter.parentNode.appendChild(wrap);
+}
+
+async function fcstSaveSnapshot() {
+  const snapshot = Object.assign({}, FCST_BAKED);
+  Object.keys(REP_TEAMS).forEach(rep => {
+    const v = _fcstGet(rep, CUR_MON);
+    if (v !== null) snapshot[_fcstKey(rep, CUR_MON)] = v;
+  });
+  _fcstSaving = true;
+  _fcstToast('Saving...');
+  try {
+    const resp = await fetch('https://radar-revops.vercel.app/api/forecast-save', {
+      method:  'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify(snapshot)
+    });
+    if (!resp.ok) throw new Error(await resp.text());
+    FCST_BAKED = snapshot;
+    Object.keys(REP_TEAMS).forEach(rep => localStorage.removeItem(_fcstLsKey(rep, CUR_MON)));
+    renderRepSummary();
+    _fcstToast('✅ Forecast published — all users will see updated values', '#c4b5fd');
+  } catch(e) {
+    _fcstToast('❌ Save failed: ' + e.message, '#f87171');
+  } finally {
+    _fcstSaving = false;
+  }
+}
+
 /* ── Rep Summary ────────────────────────────────── */
 function renderRepSummary() {
   buildRepMonthFilter();
-
+  _fcstInjectSaveBtn();
 
   // Determine the period: YTD = Jan–CUR_MON; specific month = just that month
   const isYTD  = repFilterMon === 0;
@@ -2446,30 +2483,12 @@ async function fcstEditCell(td, repEnc, mon) {
   input.focus();
   input.select();
   let committed = false;
-  async function commit() {
+  function commit() {
     if (committed) return;
     committed = true;
     const v = parseFloat(input.value);
-    const val = isNaN(v) ? 0 : v;
-    _fcstSet(rep, mon, val);
-    FCST_BAKED[_fcstKey(rep, mon)] = val;
+    _fcstSet(rep, mon, isNaN(v) ? 0 : v);
     renderRepSummary();
-    _fcstSaving = true;
-    _fcstToast('Saving...');
-    try {
-      const resp = await fetch('https://radar-revops.vercel.app/api/forecast-save', {
-        method:  'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify(FCST_BAKED)
-      });
-      if (!resp.ok) throw new Error(await resp.text());
-      localStorage.removeItem(_fcstLsKey(rep, mon));
-      _fcstToast('✅ Forecast saved', '#c4b5fd');
-    } catch(e) {
-      _fcstToast('❌ Save failed: ' + e.message, '#f87171');
-    } finally {
-      _fcstSaving = false;
-    }
   }
   input.addEventListener('blur', commit);
   input.addEventListener('keydown', e => {
