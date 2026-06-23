@@ -771,8 +771,10 @@ function _fcstRefresh(rerender) {
   return fetch('https://raw.githubusercontent.com/sprout-revops/sales-dashboard/master/forecast_snapshot.json?_=' + Date.now())
     .then(r => r.ok ? r.json() : {})
     .then(data => {
-      if (_fcstSaving) return;
+      if (_fcstSaving || _fcstDirty) return;
       const incoming = data || {};
+      // Skip if incoming is older than what we already have
+      if (incoming._saved_at && FCST_BAKED._saved_at && incoming._saved_at <= FCST_BAKED._saved_at) return;
       const changed = JSON.stringify(incoming) !== JSON.stringify(FCST_BAKED);
       FCST_BAKED = incoming;
       if (changed || rerender) {
@@ -1804,6 +1806,7 @@ async function fcstSaveSnapshot() {
       body:    JSON.stringify(snapshot)
     });
     if (!resp.ok) throw new Error(await resp.text());
+    snapshot._saved_at = Date.now();
     FCST_BAKED = snapshot;
     _fcstDirty = false;
     renderRepSummary();
