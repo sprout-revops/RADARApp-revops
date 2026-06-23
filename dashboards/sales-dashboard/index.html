@@ -764,10 +764,13 @@ fetch('./accel_snapshot.json?_=' + Date.now())
 
 /* ── Forecast Snapshot (shared, fetched from repo) ── */
 let FCST_BAKED = {};
+let _fcstSaving = false;
 function _fcstRefresh(rerender) {
+  if (_fcstSaving) return Promise.resolve();
   return fetch('https://raw.githubusercontent.com/sprout-revops/sales-dashboard/master/forecast_snapshot.json?_=' + Date.now())
     .then(r => r.ok ? r.json() : {})
     .then(data => {
+      if (_fcstSaving) return;
       const incoming = data || {};
       const changed = JSON.stringify(incoming) !== JSON.stringify(FCST_BAKED);
       FCST_BAKED = incoming;
@@ -2448,8 +2451,10 @@ async function fcstEditCell(td, repEnc, mon) {
     committed = true;
     const v = parseFloat(input.value);
     const val = isNaN(v) ? 0 : v;
+    _fcstSet(rep, mon, val);
     FCST_BAKED[_fcstKey(rep, mon)] = val;
     renderRepSummary();
+    _fcstSaving = true;
     _fcstToast('Saving...');
     try {
       const resp = await fetch('https://radar-revops.vercel.app/api/forecast-save', {
@@ -2458,9 +2463,12 @@ async function fcstEditCell(td, repEnc, mon) {
         body:    JSON.stringify(FCST_BAKED)
       });
       if (!resp.ok) throw new Error(await resp.text());
+      localStorage.removeItem(_fcstLsKey(rep, mon));
       _fcstToast('✅ Forecast saved', '#c4b5fd');
     } catch(e) {
       _fcstToast('❌ Save failed: ' + e.message, '#f87171');
+    } finally {
+      _fcstSaving = false;
     }
   }
   input.addEventListener('blur', commit);
