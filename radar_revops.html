@@ -907,8 +907,14 @@ Parse result rows: data.manifest.schema.columns → column names; data.result.da
 
 Data loading:
 • On page load, automatically fetch live data using the queries
+• The <script> MUST call the main load function on startup — e.g. window.addEventListener('DOMContentLoaded', init) or call init() on the last line. A dashboard that defines functions but never invokes them will spin forever. This is mandatory.
 • Show a loading spinner while fetching
 • If fetch fails, fall back to hardcoded sample data and show a "⚠️ Using sample data" notice
+
+OUTPUT COMPLETENESS (mandatory):
+• Return the ENTIRE file, ending with </script></body></html>. Never stop mid-file.
+• Keep code compact — minimal comments, no decorative whitespace — so the whole dashboard fits in one response.
+• If the design is large, reduce the NUMBER of charts before you ever leave the file incomplete. A small working dashboard beats a big truncated one.
 
 Refresh:
 • Include a "🔄 Refresh Data" button in the header that re-runs all queries and updates all charts
@@ -4323,7 +4329,7 @@ function diyGenerate(){
     },
     body: JSON.stringify({
       model: 'claude-sonnet-4-6',
-      max_tokens: 16000,
+      max_tokens: 24000,
       messages: [{ role: 'user', content: prompt }]
     })
   }).then(function(resp){
@@ -4353,6 +4359,14 @@ function diyFinalizeGenerated(rawText, previewWrap, iframe, btn, statusEl){
     // Didn't get HTML back — store raw and show error
     if(btn){ btn.disabled = false; btn.textContent = '⚡ Generate Dashboard'; }
     if(statusEl){ statusEl.style.color = '#f87171'; statusEl.textContent = '✗ Claude returned unexpected output. Try again.'; }
+    return;
+  }
+
+  // Guard against truncated output — if the closing </html> is missing the file was cut
+  // off mid-generation and would spin forever. Tell the user to regenerate instead.
+  if(!html.toLowerCase().includes('</html>')){
+    if(btn){ btn.disabled = false; btn.textContent = '⚡ Regenerate'; }
+    if(statusEl){ statusEl.style.color = '#f87171'; statusEl.textContent = '✗ Dashboard was cut off (too large). Click Regenerate — it will rebuild a complete version.'; }
     return;
   }
 
