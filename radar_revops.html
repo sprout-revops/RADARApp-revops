@@ -907,12 +907,12 @@ Parse result rows: data.manifest.schema.columns → column names; data.result.da
 
 Data loading:
 • On page load, automatically fetch live data using the queries
-• The <script> MUST call the main load function on startup — e.g. window.addEventListener('DOMContentLoaded', init) or call init() on the last line. A dashboard that defines functions but never invokes them will spin forever. This is mandatory.
+• The script block MUST call the main load function on startup — e.g. window.addEventListener("DOMContentLoaded", init) or call init() on the last line. A dashboard that defines functions but never invokes them will spin forever. This is mandatory.
 • Show a loading spinner while fetching
 • If fetch fails, fall back to hardcoded sample data and show a "⚠️ Using sample data" notice
 
 OUTPUT COMPLETENESS (mandatory):
-• Return the ENTIRE file, ending with </script></body></html>. Never stop mid-file.
+• Return the ENTIRE file, ending with the closing body and html tags. Never stop mid-file.
 • Keep code compact — minimal comments, no decorative whitespace — so the whole dashboard fits in one response.
 • If the design is large, reduce the NUMBER of charts before you ever leave the file incomplete. A small working dashboard beats a big truncated one.
 
