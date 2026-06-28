@@ -19,10 +19,12 @@ module.exports = async function handler(req, res) {
     }
   }
 
-  // Force immediate return — Vercel Hobby times out at 10s so we never wait for results.
-  // Databricks returns a statement_id instantly; the client polls via /api/databricks-poll.
+  // Wait up to 8s inline (within Vercel's 10s function limit). Warm-warehouse queries
+  // usually finish inside this window and return SUCCEEDED with results — no polling needed.
+  // Slow/cold queries hit the timeout, return a statement_id, and the client polls via
+  // /api/databricks-poll. wait_timeout must be 0s or 5s–50s (Databricks rule).
   const payload = JSON.stringify(Object.assign({}, body, {
-    wait_timeout: '0s',
+    wait_timeout: '8s',
     on_wait_timeout: 'CONTINUE',
     format: body.format || 'JSON_ARRAY'
   }));

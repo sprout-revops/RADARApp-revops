@@ -885,13 +885,20 @@ Use the RADAR proxy — NEVER call Databricks directly (CORS will block it):
   Submit query:
     POST https://radar-revops.vercel.app/api/databricks
     Headers: { 'x-db-host': CONFIG.host, 'x-db-token': CONFIG.token, 'Content-Type': 'application/json' }
-    Body: { "warehouse_id": CONFIG.warehouseId, "statement": sql, "wait_timeout": "0s", "on_wait_timeout": "CONTINUE", "format": "JSON_ARRAY" }
-    NOTE: use "0s" — proxy enforces it. Databricks returns a statement_id instantly, then you poll.
+    Body: { "warehouse_id": CONFIG.warehouseId, "statement": sql, "on_wait_timeout": "CONTINUE", "format": "JSON_ARRAY" }
+    The proxy waits up to 8s inline. When the warehouse is warm, the SUBMIT response itself
+    comes back with status.state === "SUCCEEDED" and the result rows already attached — use
+    them immediately and do NOT poll. Only poll if the submit response is still PENDING/RUNNING.
 
-  ALWAYS poll (first response will be PENDING or RUNNING):
+  Poll ONLY if not already SUCCEEDED (cold-start / slow query):
     GET https://radar-revops.vercel.app/api/databricks-poll?id={statement_id}
     Headers: { 'x-db-host': CONFIG.host, 'x-db-token': CONFIG.token }
-    Poll every 3 seconds until state === "SUCCEEDED" or "FAILED". No poll limit — warehouse may be cold-starting.
+    Poll the FIRST time immediately (no pre-sleep), then every 1 second until SUCCEEDED or FAILED.
+
+PERFORMANCE (critical — keep load time low):
+  • Write dbQuery so it returns inline results from the SUBMIT response when state is already SUCCEEDED.
+  • Never sleep before the first poll. Use a 1s poll interval, not 3s.
+  • Run all independent queries concurrently with Promise.all — never await them one at a time in a chain.
 
 CONFIG block — credentials are pre-filled, do NOT show a credentials form:
   const CONFIG = { host: '__DB_HOST__', token: '__DB_TOKEN__', warehouseId: '__DB_WAREHOUSE__' };
