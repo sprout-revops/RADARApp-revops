@@ -3867,6 +3867,17 @@ function goToBuilder() {
         <button class="diy-btn diy-btn-ghost" onclick="diyReset()">Start Over</button>
       </div>
       <div id="dash-save-status" style="font-size:12px;margin-top:8px;min-height:16px"></div>
+      <div style="margin-top:14px;padding:12px 14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px">
+        <div style="font-size:12px;color:rgba(255,255,255,.6);line-height:1.6">
+          ✏️ <strong>Want to edit the visuals?</strong> Download the HTML, open it in your <strong>Claude Desktop</strong> app, and ask Claude to make the changes
+          (e.g. <em>"change the MRR chart to a bar"</em>, <em>"remove the lost-deals table"</em>). Save the edited file, then upload it below to publish it back to RADAR.
+        </div>
+        <div style="margin-top:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <input type="file" id="dash-upload-input" accept=".html,text/html" style="display:none" onchange="dashUploadEdited(this)">
+          <button class="diy-btn diy-btn-ghost diy-btn-sm" onclick="document.getElementById('dash-upload-input').click()">📤 Upload edited HTML</button>
+          <span id="dash-upload-status" style="font-size:11px;color:rgba(255,255,255,.5)"></span>
+        </div>
+      </div>
     </div>
     <div class="builder-footer">
       <button class="diy-btn diy-btn-ghost" onclick="diyGoStep(3)">&larr; Back</button>
@@ -4958,6 +4969,50 @@ async function dashReject(id){
     await dashApi({ action: 'reject', id: id, adminEmail: dashUserEmail() });
     dashOpenAdminRequests();
   } catch(e){ alert('Reject failed: ' + e.message); }
+}
+
+// Strip any real Databricks credentials out of an HTML file so the saved copy carries no
+// secrets — values become runtime localStorage lookups (saved dashboards are same-origin).
+function dashSanitizeForSave(html){
+  var out = html;
+  function repl(val, expr){
+    if(!val) return;
+    out = out.split("'" + val + "'").join(expr).split('"' + val + '"').join(expr);
+  }
+  if(typeof LC !== 'undefined' && LC.connected){
+    var wid = LC.warehouseId ? LC.warehouseId() : '';
+    repl(LC.token, "(localStorage.getItem('radar_db_token')||'')");
+    repl(LC.host,  "(localStorage.getItem('radar_db_host')||'')");
+    repl(wid,      "((localStorage.getItem('radar_db_path')||'').split('/').pop())");
+  }
+  return out
+    .replace(/(['"])__DB_HOST__\1/g,      "(localStorage.getItem('radar_db_host')||'')")
+    .replace(/(['"])__DB_TOKEN__\1/g,     "(localStorage.getItem('radar_db_token')||'')")
+    .replace(/(['"])__DB_WAREHOUSE__\1/g, "((localStorage.getItem('radar_db_path')||'').split('/').pop())");
+}
+
+// User uploads a dashboard they edited in Claude Desktop → load it back for Save to RADAR.
+function dashUploadEdited(input){
+  var file = input.files && input.files[0];
+  if(!file){ return; }
+  var statusEl = document.getElementById('dash-upload-status');
+  var reader = new FileReader();
+  reader.onload = function(e){
+    var html = String((e.target && e.target.result) || '');
+    if(html.toLowerCase().indexOf('</html>') === -1){
+      if(statusEl){ statusEl.textContent = '✗ That file looks incomplete (missing </html>).'; statusEl.style.color = '#f87171'; }
+      return;
+    }
+    window._diyGeneratedHTML = html;                       // for preview + download
+    window._diyGeneratedSave = dashSanitizeForSave(html);  // secret-free copy for saving
+    var iframe = document.getElementById('diy-preview-iframe');
+    if(iframe) iframe.srcdoc = html;
+    var wrap = document.getElementById('diy-preview-wrap');
+    if(wrap) wrap.style.display = '';
+    if(statusEl){ statusEl.textContent = '✓ Loaded "' + file.name + '". Now click 💾 Save to RADAR to publish it.'; statusEl.style.color = '#1DB954'; }
+  };
+  reader.readAsText(file);
+  input.value = '';
 }
 </script>
 
