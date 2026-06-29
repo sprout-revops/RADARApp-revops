@@ -880,19 +880,21 @@ Your goal is to create a production-ready HTML dashboard using standardized RevO
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🔌 DATABRICKS LIVE CONNECTION (REQUIRED)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Use the RADAR proxy — NEVER call Databricks directly (CORS will block it):
+Call the RADAR proxy — NEVER call Databricks directly (CORS will block it). RADAR supplies the
+Databricks credentials server-side for the signed-in @sprout.ph user, so your dashboard must NOT
+include any host, token, warehouse id, CONFIG block, or credentials form.
 
   Submit query:
     POST https://radar-revops.vercel.app/api/databricks
-    Headers: { 'x-db-host': CONFIG.host, 'x-db-token': CONFIG.token, 'Content-Type': 'application/json' }
-    Body: { "warehouse_id": CONFIG.warehouseId, "statement": sql, "on_wait_timeout": "CONTINUE", "format": "JSON_ARRAY" }
-    The proxy waits up to 8s inline. When the warehouse is warm, the SUBMIT response itself
-    comes back with status.state === "SUCCEEDED" and the result rows already attached — use
-    them immediately and do NOT poll. Only poll if the submit response is still PENDING/RUNNING.
+    Headers: { 'x-radar-token': localStorage.getItem('radar_id_token') || '', 'Content-Type': 'application/json' }
+    Body: { "statement": sql, "format": "JSON_ARRAY" }
+    (Do NOT send warehouse_id or credentials — the proxy adds them automatically.)
+    The proxy waits up to 8s inline. If the SUBMIT response has status.state === "SUCCEEDED",
+    the result rows are already attached — use them immediately and do NOT poll.
 
   Poll ONLY if not already SUCCEEDED (cold-start / slow query):
     GET https://radar-revops.vercel.app/api/databricks-poll?id={statement_id}
-    Headers: { 'x-db-host': CONFIG.host, 'x-db-token': CONFIG.token }
+    Headers: { 'x-radar-token': localStorage.getItem('radar_id_token') || '' }
     Poll the FIRST time immediately (no pre-sleep), then every 1 second until SUCCEEDED or FAILED.
 
 PERFORMANCE (critical — keep load time low):
@@ -900,8 +902,7 @@ PERFORMANCE (critical — keep load time low):
   • Never sleep before the first poll. Use a 1s poll interval, not 3s.
   • Run all independent queries concurrently with Promise.all — never await them one at a time in a chain.
 
-CONFIG block — credentials are pre-filled, do NOT show a credentials form:
-  const CONFIG = { host: '__DB_HOST__', token: '__DB_TOKEN__', warehouseId: '__DB_WAREHOUSE__' };
+Do NOT define a CONFIG object with credentials and do NOT show a credentials/settings form — RADAR handles all auth.
 
 Parse result rows: data.manifest.schema.columns → column names; data.result.data_array → rows (array of arrays).
 
@@ -4303,13 +4304,8 @@ function diyCheckApiKey(){
   if(s) s.textContent = val.trim() ? '' : '';
 }
 function diyGenerate(){
-  if(typeof LC !== 'undefined' && !LC.connected){
-    var s = document.getElementById('diy-generate-status');
-    if(s){ s.textContent = '⚠️ Connect your Databricks credentials first — click the "Not Connected" badge at the top.'; s.style.color='#f87171'; }
-    openConnModal();
-    return;
-  }
-  // Generation uses RADAR's shared Anthropic key (server-side) — no per-user key needed.
+  // Databricks + Anthropic are both shared server-side (RADAR supplies them for signed-in
+  // @sprout.ph users) — no per-user Databricks connection or Claude key needed.
   var apiKey = localStorage.getItem('diy_claude_key') || '';
   if(false){
     var s = document.getElementById('diy-generate-status');
