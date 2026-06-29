@@ -156,6 +156,19 @@ module.exports = async function handler(req, res) {
         entry.status = 'requested'; entry.requestedAt = now;
       } else if (action === 'delete') {
         if (!isOwner && !isAdmin) return res.status(403).json({ error: 'Not allowed.' });
+        // Remove the HTML file too, not just the registry entry
+        if (entry.file) {
+          const fsha = await getFileSha(entry.file);
+          if (fsha) {
+            const delBody = JSON.stringify({ message: `Delete dashboard ${body.id}`, sha: fsha, branch: BRANCH });
+            await ghRequest({
+              hostname: 'api.github.com',
+              path: `/repos/${REPO}/contents/${entry.file}`,
+              method: 'DELETE',
+              headers: { ...authHeaders, 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(delBody) }
+            }, delBody);
+          }
+        }
         data.dashboards = data.dashboards.filter(d => d.id !== body.id);
       } else if (action === 'approve' || action === 'reject') {
         if (!isAdmin) return res.status(403).json({ error: 'Admin only.' });
