@@ -25,6 +25,12 @@ function httpsRequest(method, urlStr, headers, bodyStr) {
   });
 }
 
+function internalHeaders(body) {
+  const h = { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) };
+  if (process.env.INTERNAL_SECRET) h['x-internal-secret'] = process.env.INTERNAL_SECRET;
+  return h;
+}
+
 function callSave(args) {
   const body = JSON.stringify({
     action: 'save', name: args.name, html: args.html,
@@ -32,14 +38,12 @@ function callSave(args) {
     ownerEmail: args.ownerEmail, ownerName: args.ownerName || (args.ownerEmail || '').split('@')[0],
     id: args.id || undefined
   });
-  return httpsRequest('POST', BASE + '/api/dashboards',
-    { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) }, body);
+  return httpsRequest('POST', BASE + '/api/dashboards', internalHeaders(body), body);
 }
 
 function callRequest(args) {
   const body = JSON.stringify({ action: 'request', id: args.id, ownerEmail: args.ownerEmail });
-  return httpsRequest('POST', BASE + '/api/dashboards',
-    { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) }, body);
+  return httpsRequest('POST', BASE + '/api/dashboards', internalHeaders(body), body);
 }
 
 const TOOLS = [

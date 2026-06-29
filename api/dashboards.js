@@ -1,4 +1,5 @@
 const https = require('https');
+const { verifyGoogleToken } = require('./_verify.js');
 
 // User-dashboard storage + Team Dashboards request/approval flow.
 // Stores generated HTML under user-dashboards/<id>.html and a registry.json
@@ -47,7 +48,7 @@ function stripSecrets(html) {
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'content-type');
+  res.setHeader('Access-Control-Allow-Headers', 'content-type, x-radar-token, x-internal-secret');
 
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
@@ -61,7 +62,22 @@ module.exports = async function handler(req, res) {
   }
   body = body || {};
   const action = body.action;
-  const email  = (body.ownerEmail || body.adminEmail || '').toLowerCase();
+
+  // Identity gate. Web callers present a verified @sprout.ph Google token; the verified
+  // email is authoritative (clients can't spoof owner/admin). The MCP server may instead
+  // present the shared INTERNAL_SECRET (only enabled if that env var is set).
+  let email = '';
+  const internalSecret = process.env.INTERNAL_SECRET;
+  if (internalSecret && req.headers['x-internal-secret'] === internalSecret) {
+    email = (body.ownerEmail || body.adminEmail || '').toLowerCase();
+  } else {
+    try {
+      const v = await verifyGoogleToken(req.headers['x-radar-token']);
+      email = v.email;
+    } catch (e) {
+      return res.status(401).json({ error: 'Sign in with your @sprout.ph account. (' + e.message + ')' });
+    }
+  }
 
   const authHeaders = {
     'Authorization': 'token ' + token,

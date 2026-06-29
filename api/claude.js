@@ -1,19 +1,19 @@
 const https = require('https');
+const { verifyGoogleToken } = require('./_verify.js');
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'content-type, x-api-key');
+  res.setHeader('Access-Control-Allow-Headers', 'content-type, x-api-key, x-radar-token');
 
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'POST') return res.status(405).json({ error: { message: 'Method not allowed' } });
 
-  // Only allow calls coming from the RADAR app itself — this endpoint spends the shared
-  // Anthropic key, so it must not become an open Claude proxy for outside sites.
-  const ALLOWED_HOSTS = ['radar-revops.vercel.app', 'sprout-revops.github.io'];
-  const origin = (req.headers['origin'] || '') + ' ' + (req.headers['referer'] || '');
-  if (!ALLOWED_HOSTS.some(h => origin.indexOf(h) !== -1)) {
-    return res.status(403).json({ error: { message: 'Forbidden: requests must originate from RADAR.' } });
+  // Gate: only verified @sprout.ph Google accounts may spend the shared Anthropic key.
+  try {
+    await verifyGoogleToken(req.headers['x-radar-token']);
+  } catch (e) {
+    return res.status(401).json({ error: { message: 'Sign in with your @sprout.ph account to use the builder. (' + e.message + ')' } });
   }
 
   // Shared server-side key (set ANTHROPIC_API_KEY in Vercel env vars). Falls back to a

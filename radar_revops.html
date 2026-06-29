@@ -4343,6 +4343,7 @@ function diyGenerate(){
     method: 'POST',
     headers: {
       'x-api-key': apiKey,
+      'x-radar-token': localStorage.getItem('radar_id_token') || '',
       'content-type': 'application/json'
     },
     body: JSON.stringify({
@@ -4837,7 +4838,8 @@ function dashSetStatus(msg, color){
 
 async function dashApi(payload){
   var resp = await fetch('/api/dashboards', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-radar-token': localStorage.getItem('radar_id_token') || '' },
     body: JSON.stringify(payload)
   });
   var data = await resp.json().catch(function(){ return {}; });
@@ -5777,6 +5779,8 @@ function handleGoogleSignIn(response) {
   if (!payload || !payload.email) return;
   const email = payload.email.toLowerCase();
   localStorage.setItem('radar_user_email', email);
+  // Keep the signed Google token — sent to protected APIs which verify it server-side.
+  localStorage.setItem('radar_id_token', response.credential);
   radarShowUser(email);
 }
 
@@ -5795,6 +5799,7 @@ function radarShowUser(email) {
 function radarLogout() {
   const email = localStorage.getItem('radar_user_email');
   localStorage.removeItem('radar_user_email');
+  localStorage.removeItem('radar_id_token');
   if (window.google) {
     google.accounts.id.disableAutoSelect();
     if (email) google.accounts.id.revoke(email, () => {});
