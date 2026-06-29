@@ -2270,7 +2270,10 @@ python fetch_data.py
       <h1>📱 Team Dashboards</h1>
       <p>Dashboards built by the team using <strong>shared.revops</strong> data — browse, explore, and share yours.</p>
     </div>
-    <button class="submit-dash-btn" onclick="openSubmitModal()">➕ Submit Your Dashboard</button>
+    <div style="display:flex;gap:10px;align-items:center">
+      <button class="submit-dash-btn" id="admin-requests-btn" onclick="dashOpenAdminRequests()" style="display:none;background:#16102e;border:1px solid #c4b5fd;color:#c4b5fd">🛡️ Pending Requests</button>
+      <button class="submit-dash-btn" onclick="openSubmitModal()">➕ Submit Your Dashboard</button>
+    </div>
   </div>
   <div class="dg-controls">
     <div class="search-box">
@@ -3857,10 +3860,13 @@ function goToBuilder() {
     <div id="diy-preview-wrap" style="display:none;padding:0 24px 24px">
       <div class="bd-section-title" style="margin-bottom:12px">Generated Dashboard Preview</div>
       <iframe id="diy-preview-iframe" style="width:100%;height:600px;border:1px solid rgba(255,255,255,.1);border-radius:10px;background:#fff"></iframe>
-      <div style="margin-top:12px;display:flex;gap:10px">
+      <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
+        <button class="builder-btn-next" onclick="dashSaveToRadar()" id="dash-save-btn">&#x1F4BE; Save to RADAR</button>
         <button class="builder-btn-next" onclick="diyDownloadDashboard()">&#x2B07; Download HTML</button>
+        <button class="diy-btn diy-btn-ghost" onclick="dashOpenMyDashboards()">&#x1F4C2; My Dashboards</button>
         <button class="diy-btn diy-btn-ghost" onclick="diyReset()">Start Over</button>
       </div>
+      <div id="dash-save-status" style="font-size:12px;margin-top:8px;min-height:16px"></div>
     </div>
     <div class="builder-footer">
       <button class="diy-btn diy-btn-ghost" onclick="diyGoStep(3)">&larr; Back</button>
@@ -4370,6 +4376,15 @@ function diyFinalizeGenerated(rawText, previewWrap, iframe, btn, statusEl){
     return;
   }
 
+  // Keep a secret-free copy for "Save to RADAR": placeholders become runtime localStorage
+  // lookups, so the committed file carries NO Databricks token. Saved dashboards are served
+  // from the same origin as RADAR, so they read whatever credentials the viewer connected with.
+  window._diySavedId = null;
+  window._diyGeneratedSave = html
+    .replace(/(['"])__DB_HOST__\1/g,      "(localStorage.getItem('radar_db_host')||'')")
+    .replace(/(['"])__DB_TOKEN__\1/g,     "(localStorage.getItem('radar_db_token')||'')")
+    .replace(/(['"])__DB_WAREHOUSE__\1/g, "((localStorage.getItem('radar_db_path')||'').split('/').pop())");
+
   // Inject live Databricks credentials (replaces placeholders Claude was told to use)
   if(typeof LC !== 'undefined' && LC.connected){
     var wid = LC.warehouseId ? LC.warehouseId() : LC.path.split('/').pop();
@@ -4793,11 +4808,190 @@ function diyReset(){
   diyRenderMetrics();
   diyGoStep(1);
 }
+
+/* ════════════════════════════════════════════════
+   SAVE TO RADAR + TEAM DASHBOARD REQUEST FLOW
+   ════════════════════════════════════════════════ */
+var DASH_ADMINS = ['lurbina@sprout.ph', 'apanares@sprout.ph'];
+var DASH_REGISTRY_URL = 'https://raw.githubusercontent.com/sprout-revops/RADARApp-revops/master/user-dashboards/registry.json';
+
+function dashUserEmail(){ return (localStorage.getItem('radar_user_email') || '').toLowerCase(); }
+function dashUserName(){ return localStorage.getItem('radar_user_name') || (dashUserEmail().split('@')[0] || 'user'); }
+function dashIsAdmin(){ return DASH_ADMINS.indexOf(dashUserEmail()) !== -1; }
+function dashSetStatus(msg, color){
+  var el = document.getElementById('dash-save-status');
+  if(el){ el.textContent = msg; el.style.color = color || 'rgba(255,255,255,.5)'; }
+}
+
+async function dashApi(payload){
+  var resp = await fetch('/api/dashboards', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  var data = await resp.json().catch(function(){ return {}; });
+  if(!resp.ok) throw new Error(data.error ? (typeof data.error==='string'?data.error:JSON.stringify(data.error)) : ('HTTP '+resp.status));
+  return data;
+}
+
+async function dashFetchRegistry(){
+  try {
+    var r = await fetch(DASH_REGISTRY_URL + '?_=' + Date.now());
+    if(!r.ok) return [];
+    var j = await r.json();
+    return (j && j.dashboards) ? j.dashboards : [];
+  } catch(e){ return []; }
+}
+
+async function dashSaveToRadar(){
+  if(!dashUserEmail()){ dashSetStatus('⚠️ Sign in first to save to RADAR.', '#f87171'); return; }
+  if(!window._diyGeneratedSave){ dashSetStatus('⚠️ Generate a dashboard first.', '#f87171'); return; }
+  var name = ((document.getElementById('diy-dash-name')||{}).value || '').trim() || 'My Dashboard';
+  var desc = ((document.getElementById('diy-dash-desc')||{}).value || '').trim();
+  var team = ((document.getElementById('diy-dash-team')||{}).value || '').trim();
+  var btn = document.getElementById('dash-save-btn');
+  if(btn) btn.disabled = true;
+  dashSetStatus('💾 Saving to RADAR…');
+  try {
+    var res = await dashApi({
+      action: 'save', name: name, desc: desc, tags: team ? [team] : [],
+      html: window._diyGeneratedSave,
+      ownerEmail: dashUserEmail(), ownerName: dashUserName(),
+      id: window._diySavedId || undefined
+    });
+    window._diySavedId = res.id;
+    dashSetStatus('✅ Saved! It will be live in ~1–2 min. Open "My Dashboards" to submit it to the team.', '#1DB954');
+  } catch(e){
+    dashSetStatus('❌ Save failed: ' + e.message, '#f87171');
+  } finally {
+    if(btn) btn.disabled = false;
+  }
+}
+
+function dashCloseModal(which){
+  var ov = document.getElementById(which + '-modal-overlay');
+  if(ov) ov.classList.remove('open');
+}
+
+async function dashOpenMyDashboards(){
+  var ov = document.getElementById('mydash-modal-overlay');
+  if(ov) ov.classList.add('open');
+  var list = document.getElementById('mydash-list');
+  list.innerHTML = '<div style="color:#B2BEC3;font-size:13px">Loading…</div>';
+  var all = await dashFetchRegistry();
+  var mine = all.filter(function(d){ return d.ownerEmail && d.ownerEmail.toLowerCase() === dashUserEmail(); });
+  if(!mine.length){ list.innerHTML = '<div style="color:#B2BEC3;font-size:13px">You haven\'t saved any dashboards yet. Generate one, then click 💾 Save to RADAR.</div>'; return; }
+  list.innerHTML = mine.map(function(d){ return dashCardHtml(d, false); }).join('');
+}
+
+async function dashOpenAdminRequests(){
+  var ov = document.getElementById('adminreq-modal-overlay');
+  if(ov) ov.classList.add('open');
+  var list = document.getElementById('adminreq-list');
+  list.innerHTML = '<div style="color:#B2BEC3;font-size:13px">Loading…</div>';
+  var all = await dashFetchRegistry();
+  var pending = all.filter(function(d){ return d.status === 'requested'; });
+  if(!pending.length){ list.innerHTML = '<div style="color:#B2BEC3;font-size:13px">No pending requests. 🎉</div>'; return; }
+  list.innerHTML = pending.map(function(d){ return dashCardHtml(d, true); }).join('');
+}
+
+function dashStatusBadge(s){
+  var map = {
+    'private':   ['Private', '#636E72'],
+    'requested': ['Pending review', '#F39C12'],
+    'published': ['Published', '#1DB954'],
+    'rejected':  ['Rejected', '#e74c3c']
+  };
+  var m = map[s] || ['—', '#636E72'];
+  return '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:' + m[1] + '22;color:' + m[1] + '">' + m[0] + '</span>';
+}
+
+function dashCardHtml(d, adminView){
+  var safeId = (d.id||'').replace(/'/g,"\\'");
+  var actions = '';
+  if(adminView){
+    actions =
+      '<button class="diy-btn diy-btn-sm" style="background:#1DB954;color:#000" onclick="dashApprove(\'' + safeId + '\')">✓ Approve</button>' +
+      '<button class="diy-btn diy-btn-ghost diy-btn-sm" onclick="dashReject(\'' + safeId + '\')">✗ Reject</button>';
+  } else {
+    if(d.status === 'private' || d.status === 'rejected'){
+      actions += '<button class="diy-btn diy-btn-sm" style="background:#1DB954;color:#000" onclick="dashSubmitToTeam(\'' + safeId + '\')">📤 Submit to Team</button>';
+    }
+    actions += '<button class="diy-btn diy-btn-ghost diy-btn-sm" onclick="dashDelete(\'' + safeId + '\')">🗑 Delete</button>';
+  }
+  var openBtn = d.url ? '<button class="diy-btn diy-btn-ghost diy-btn-sm" onclick="openDashboardEmbed(\'' + d.url + '\',\'' + (d.name||'').replace(/'/g,"\\'") + '\')">🔗 Open</button>' : '';
+  return '' +
+    '<div style="border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:14px 16px;background:rgba(255,255,255,.03)">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px">' +
+        '<div style="font-size:14px;font-weight:700;color:#e2e8f0">' + (d.name||'Untitled') + '</div>' +
+        dashStatusBadge(d.status) +
+      '</div>' +
+      (d.desc ? '<div style="font-size:12px;color:rgba(255,255,255,.45);margin-top:4px">' + d.desc + '</div>' : '') +
+      (adminView ? '<div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:4px">👤 ' + (d.ownerName||d.ownerEmail) + '</div>' : '') +
+      '<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">' + openBtn + actions + '</div>' +
+    '</div>';
+}
+
+async function dashSubmitToTeam(id){
+  try {
+    await dashApi({ action: 'request', id: id, ownerEmail: dashUserEmail() });
+    dashOpenMyDashboards();
+  } catch(e){ alert('Submit failed: ' + e.message); }
+}
+
+async function dashDelete(id){
+  if(!confirm('Delete this dashboard?')) return;
+  try {
+    await dashApi({ action: 'delete', id: id, ownerEmail: dashUserEmail() });
+    dashOpenMyDashboards();
+  } catch(e){ alert('Delete failed: ' + e.message); }
+}
+
+async function dashApprove(id){
+  try {
+    await dashApi({ action: 'approve', id: id, adminEmail: dashUserEmail() });
+    dashOpenAdminRequests();
+  } catch(e){ alert('Approve failed: ' + e.message); }
+}
+
+async function dashReject(id){
+  try {
+    await dashApi({ action: 'reject', id: id, adminEmail: dashUserEmail() });
+    dashOpenAdminRequests();
+  } catch(e){ alert('Reject failed: ' + e.message); }
+}
 </script>
 
 
   </div><!-- /content-area -->
 </div><!-- /app-layout -->
+
+<!-- My Dashboards Modal -->
+<div class="submit-modal-overlay" id="mydash-modal-overlay" onclick="if(event.target===this)dashCloseModal('mydash')">
+  <div class="submit-modal" style="max-width:760px">
+    <h2>📂 My Dashboards</h2>
+    <p class="sm-sub">Dashboards you've saved to RADAR. Submit one to request it be added to the Team Dashboards tab.</p>
+    <div id="mydash-list" style="margin-top:14px;display:flex;flex-direction:column;gap:10px;max-height:60vh;overflow-y:auto">
+      <div style="color:#B2BEC3;font-size:13px">Loading…</div>
+    </div>
+    <div style="margin-top:16px;text-align:right">
+      <button class="diy-btn diy-btn-ghost" onclick="dashCloseModal('mydash')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Admin Pending Requests Modal -->
+<div class="submit-modal-overlay" id="adminreq-modal-overlay" onclick="if(event.target===this)dashCloseModal('adminreq')">
+  <div class="submit-modal" style="max-width:760px">
+    <h2>🛡️ Pending Dashboard Requests</h2>
+    <p class="sm-sub">Dashboards submitted by users for the Team Dashboards tab. Approve to publish, or reject.</p>
+    <div id="adminreq-list" style="margin-top:14px;display:flex;flex-direction:column;gap:10px;max-height:60vh;overflow-y:auto">
+      <div style="color:#B2BEC3;font-size:13px">Loading…</div>
+    </div>
+    <div style="margin-top:16px;text-align:right">
+      <button class="diy-btn diy-btn-ghost" onclick="dashCloseModal('adminreq')">Close</button>
+    </div>
+  </div>
+</div>
 
 <!-- Submit Dashboard Modal -->
 <div class="submit-modal-overlay" id="submit-modal-overlay" onclick="if(event.target===this)closeSubmitModal()">
@@ -7015,9 +7209,33 @@ function setDgCat(el) {
 function openSubmitModal() { document.getElementById('submit-modal-overlay').classList.add('open'); }
 function closeSubmitModal() { document.getElementById('submit-modal-overlay').classList.remove('open'); }
 
+// Merge published user dashboards into the Team Dashboards grid + reveal admin tools
+async function dashLoadPublished(){
+  if(typeof dashIsAdmin === 'function' && dashIsAdmin()){
+    var ab = document.getElementById('admin-requests-btn');
+    if(ab) ab.style.display = '';
+  }
+  if(typeof dashFetchRegistry !== 'function') return;
+  var all = await dashFetchRegistry();
+  var published = all.filter(function(d){ return d.status === 'published' && d.url; });
+  published.forEach(function(d){
+    if(DASHBOARDS.some(function(x){ return x._uid === d.id; })) return;
+    DASHBOARDS.push({
+      title: d.name || 'Untitled', desc: d.desc || 'User-built dashboard.',
+      creator: d.ownerName || (d.ownerEmail||'').split('@')[0] || 'Team',
+      date: (d.publishedAt || d.createdAt || '').slice(0,10) || '—',
+      tags: (d.tags && d.tags.length) ? d.tags : ['Custom'],
+      url: d.url, status: 'live', _uid: d.id
+    });
+  });
+  buildDgFilters();
+  renderDashboards();
+}
+
 // Init dashboards on load
 buildDgFilters();
 renderDashboards();
+dashLoadPublished();
 
 // ── NEURAL NETWORK PARTICLE BACKGROUND ──
 (function(){
