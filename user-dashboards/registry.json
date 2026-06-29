@@ -1,3 +1,21 @@
 {
-  "dashboards": []
+  "dashboards": [
+    {
+      "id": "revops-test-dashboard-mqz0jkcc",
+      "name": "REVOPS TEST DASHBOARD",
+      "desc": "To monitor leads and revenue per pipeline",
+      "tags": [
+        "RevOps"
+      ],
+      "ownerEmail": "lurbina@sprout.ph",
+      "ownerName": "lurbina",
+      "file": "user-dashboards/revops-test-dashboard-mqz0jkcc.html",
+      "url": "https://radar-revops.vercel.app/user-dashboards/revops-test-dashboard-mqz0jkcc.html",
+      "status": "private",
+      "createdAt": "2026-06-29T09:26:20.807Z",
+      "updatedAt": "2026-06-29T09:26:20.807Z",
+      "requestedAt": null,
+      "publishedAt": null
+    }
+  ]
 }
