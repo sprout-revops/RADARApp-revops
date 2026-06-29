@@ -29,6 +29,21 @@ function slugify(s) {
     .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 48) || 'dashboard';
 }
 
+// Safety net: never let a Databricks token (or host/warehouse) land in the repo. Convert any
+// literal credentials into runtime localStorage lookups — saved dashboards are same-origin
+// with RADAR, so each viewer's own connection is used. Idempotent (already-converted code
+// won't re-match). Applies regardless of whether the caller is the web UI or an MCP client.
+function stripSecrets(html) {
+  if (!html) return html;
+  return String(html)
+    .replace(/(['"])dapi[a-z0-9]{16,}\1/gi,                              "(localStorage.getItem('radar_db_token')||'')")
+    .replace(/(['"])adb-[0-9]+\.[0-9]+\.azuredatabricks\.net\1/gi,       "(localStorage.getItem('radar_db_host')||'')")
+    .replace(/(warehouse_?[Ii]d\s*:\s*)(['"])[a-z0-9]{8,}\2/g,          "$1((localStorage.getItem('radar_db_path')||'').split('/').pop())")
+    .replace(/(['"])__DB_HOST__\1/g,                                     "(localStorage.getItem('radar_db_host')||'')")
+    .replace(/(['"])__DB_TOKEN__\1/g,                                    "(localStorage.getItem('radar_db_token')||'')")
+    .replace(/(['"])__DB_WAREHOUSE__\1/g,                                "((localStorage.getItem('radar_db_path')||'').split('/').pop())");
+}
+
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -97,7 +112,8 @@ module.exports = async function handler(req, res) {
       const id   = body.id || (slugify(body.name) + '-' + Date.now().toString(36));
       const path = `user-dashboards/${id}.html`;
       const fileSha = body.id ? await getFileSha(path) : undefined;
-      const putResp = await putFile(path, body.html, `Save dashboard ${id} (${email})`, fileSha);
+      const safeHtml = stripSecrets(body.html);
+      const putResp = await putFile(path, safeHtml, `Save dashboard ${id} (${email})`, fileSha);
       if (putResp.status !== 200 && putResp.status !== 201) {
         return res.status(putResp.status).json({ error: putResp.body });
       }
