@@ -8,8 +8,18 @@ module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'POST') return res.status(405).json({ error: { message: 'Method not allowed' } });
 
-  const apiKey = req.headers['x-api-key'];
-  if (!apiKey) return res.status(400).json({ error: { message: 'Missing Claude API key.' } });
+  // Only allow calls coming from the RADAR app itself — this endpoint spends the shared
+  // Anthropic key, so it must not become an open Claude proxy for outside sites.
+  const ALLOWED_HOSTS = ['radar-revops.vercel.app', 'sprout-revops.github.io'];
+  const origin = (req.headers['origin'] || '') + ' ' + (req.headers['referer'] || '');
+  if (!ALLOWED_HOSTS.some(h => origin.indexOf(h) !== -1)) {
+    return res.status(403).json({ error: { message: 'Forbidden: requests must originate from RADAR.' } });
+  }
+
+  // Shared server-side key (set ANTHROPIC_API_KEY in Vercel env vars). Falls back to a
+  // per-user key header only if no shared key is configured yet.
+  const apiKey = process.env.ANTHROPIC_API_KEY || req.headers['x-api-key'];
+  if (!apiKey) return res.status(500).json({ error: { message: 'ANTHROPIC_API_KEY not configured in Vercel env vars.' } });
 
   let body = req.body;
   if (typeof body === 'string') {

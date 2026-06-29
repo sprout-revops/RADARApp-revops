@@ -3832,7 +3832,7 @@ function goToBuilder() {
         </table>
       </div>
 
-      <div class="bd-section" id="diy-apikey-section">
+      <div class="bd-section" id="diy-apikey-section" style="display:none">
         <div class="bd-section-title">Claude API Key <span style="font-size:10px;font-weight:400;text-transform:none;letter-spacing:0;color:rgba(255,255,255,.35)">&mdash; stored in localStorage, never in source code</span></div>
         <div style="display:flex;gap:8px;align-items:center;max-width:520px">
           <input class="builder-input" id="diy-apikey-input" type="password" placeholder="sk-ant-..." style="flex:1;box-sizing:border-box" oninput="diyCheckApiKey()">
@@ -4309,8 +4309,9 @@ function diyGenerate(){
     openConnModal();
     return;
   }
+  // Generation uses RADAR's shared Anthropic key (server-side) — no per-user key needed.
   var apiKey = localStorage.getItem('diy_claude_key') || '';
-  if(!apiKey){
+  if(false){
     var s = document.getElementById('diy-generate-status');
     if(s){ s.textContent = '⚠️ Please enter and save your Claude API key first.'; s.style.color='#f87171'; }
     return;
