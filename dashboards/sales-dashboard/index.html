@@ -1802,6 +1802,9 @@ function setRepMonFilter(m) {
 }
 
 function _fcstInjectSaveBtn() {
+  // Forecasts are now sourced from the Google Sheet (synced 3x daily). Manual save disabled —
+  // edits here would be overwritten by the next sheet sync. Edit forecasts in the sheet instead.
+  return;
   if (!FCST_ADMINS.includes((localStorage.getItem('radar_user_email') || '').toLowerCase())) return;
   if (document.getElementById('fcst-save-btn-wrap')) return;
   const wrap = document.createElement('div');
@@ -1924,7 +1927,7 @@ function renderRepSummary() {
     const repNameHtml = resigned
       ? `<span style="color:#6b7280;" title="Resigned">${rep}</span>`
       : rep;
-    const canEditFcst = FCST_ADMINS.includes((localStorage.getItem('radar_user_email') || '').toLowerCase());
+    const canEditFcst = false;  // forecasts are sourced from the Google Sheet — cells are read-only
     const fcstCell = moMon === CUR_MON
       ? (canEditFcst
           ? `<td style="color:#c4b5fd;cursor:pointer;" onclick="fcstEditCell(this,'${encodeURIComponent(rep)}',${moMon})" title="Click to edit forecast">${fmt(moFcst)}</td>`
