@@ -7249,7 +7249,10 @@ function filterDashboards() { renderDashboards(); }
 
 function openDashboardEmbed(url, title) {
   document.getElementById('dash-fp-title').textContent = title;
-  document.getElementById('dash-fp-frame').src = url;
+  // Cache-bust so the embedded dashboard always loads the latest deployed version
+  // (browsers cache iframe resources aggressively).
+  var bust = (url.indexOf('?') === -1 ? '?' : '&') + '_cb=' + Date.now();
+  document.getElementById('dash-fp-frame').src = url + bust;
   document.getElementById('dash-fullpage').classList.add('open');
 }
 
