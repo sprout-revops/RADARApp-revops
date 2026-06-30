@@ -1851,7 +1851,7 @@ function renderRepSummary() {
     setTh('rep-th-quota',  'YTD Quota');
     setTh('rep-th-won',    'YTD Won');
     setTh('rep-th-att',    'YTD Att%');
-    setTh('rep-th-fcst',   'Mo. Forecast');
+    setTh('rep-th-fcst',   'YTD Forecast');
     setTh('rep-th-actual', 'Mo. Actual');
   } else {
     setTh('rep-th-quota',  `${MON_NAMES[repFilterMon-1]} Quota`);
@@ -1897,14 +1897,23 @@ function renderRepSummary() {
     const ytdAtt = pct(ytdWon, ytdTarget);
     const toGo   = Math.max(0, ytdTarget - ytdWon);
 
-    // Mo. columns: always refer to moMon
+    // Forecast: a specific month shows that month's sheet forecast; YTD sums Jan→CUR_MON.
     const openMo       = open(inMonth(repDs, 'projected_close_date', CUR_YEAR, moMon));
     const computedFcst = moMon === CUR_MON ? sum([...byFC(openMo,'commit'), ...byFC(openMo,'pipeline')], mrr) : 0;
-    const fcstOverride = _fcstGet(rep, moMon);   // sheet forecast for the selected month (any month)
-    const moFcst       = fcstOverride !== null ? fcstOverride : computedFcst;
-    const hasFcst      = fcstOverride !== null || moMon === CUR_MON;
-    const moWon        = sum(won(inMonth(repDs, 'close_date', CUR_YEAR, moMon)), mrr);
-    const fcstAcc      = moFcst > 0 ? pct(moWon, moFcst) : null;
+    let moFcst, hasFcst;
+    if (isYTD) {
+      let s = 0, any = false;
+      for (let m = 1; m <= CUR_MON; m++) { const v = _fcstGet(rep, m); if (v !== null) { s += v; any = true; } }
+      moFcst  = any ? s : computedFcst;
+      hasFcst = any || computedFcst > 0;
+    } else {
+      const v = _fcstGet(rep, moMon);
+      moFcst  = v !== null ? v : computedFcst;
+      hasFcst = v !== null || moMon === CUR_MON;
+    }
+    const moWon   = sum(won(inMonth(repDs, 'close_date', CUR_YEAR, moMon)), mrr);
+    // Accuracy pairs forecast with the matching actual: YTD won for YTD, the month's won otherwise.
+    const fcstAcc = moFcst > 0 ? pct(isYTD ? ytdWon : moWon, moFcst) : null;
 
     const attCls = spAttClass(ytdAtt);
     const bg = color+'18', bd = color+'30';
