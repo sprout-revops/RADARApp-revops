@@ -1630,6 +1630,14 @@ const REP_TEAMS = {
   'Javier Lopez':     { team:'Upsell',          color:'#e8b86d' },
 };
 
+// Reps who transferred from ENT (Sales Hunters) into an SME team mid-year. Teams tab only:
+// their ENT-period targets + ENT-segment actuals show (grayed) under their origin ENT team;
+// only their SME-period targets + SME-segment actuals count for their current SME team.
+const REP_TRANSFERS = {
+  'Lana Pineda':   { fromTeam:'ENT Hunters', smeStart:6 },  // SME Jetzsetters from Jun
+  'Brian Azarcon': { fromTeam:'ENT Hunters', smeStart:3 },  // SME Strikers from Mar
+};
+
 // Per-rep monthly MRR quota — sourced from "Targets Per Rep" sheet in Upsell Overall Targets.xlsx
 // Format: { rep: { month_number: target } }
 // Rep targets loaded dynamically from gold_targets_per_rep via dashboard.json
@@ -1651,6 +1659,11 @@ function repMonthTarget(rep, mon) {
 function repYTDTarget(rep, upToMon) {
   let total = 0;
   for (let m = 1; m <= upToMon; m++) total += repMonthTarget(rep, m);
+  return total;
+}
+function repTargetRange(rep, fromMon, toMon) {
+  let total = 0;
+  for (let m = fromMon; m <= toMon; m++) total += repMonthTarget(rep, m);
   return total;
 }
 function repEFYTDTarget(rep, upToMon) {
@@ -2256,19 +2269,51 @@ function renderTeams() {
     const team = teamMap[teamName];
     if (!team) return;
 
+    // Segment helpers for transferred-rep actuals (SME includes MICRO)
+    const isENT = d => (d.segment||'').toUpperCase() === 'ENT';
+    const isSME = d => ['SME','MICRO'].includes((d.segment||'').toUpperCase());
+
     let teamTgt = 0, teamAct = 0;
     // Calculate attainment per rep first, then sort descending (resigned reps go last)
     const repData = team.reps.map(rep => {
-      const ytdTgt = repYTDTarget(rep, CUR_MON);
-      const ytdWon = sum(won(inYTD(spRepDeals(rep),'close_date',CUR_YEAR,CUR_MON)), mrr);
+      const tr = REP_TRANSFERS[rep];
+      const wonYTD = won(inYTD(spRepDeals(rep),'close_date',CUR_YEAR,CUR_MON));
+      let ytdTgt, ytdWon;
+      if (tr) {
+        // Current SME team: only SME-period target + SME-segment actuals
+        ytdTgt = repTargetRange(rep, tr.smeStart, CUR_MON);
+        ytdWon = sum(wonYTD.filter(isSME), mrr);
+      } else {
+        ytdTgt = repYTDTarget(rep, CUR_MON);
+        ytdWon = sum(wonYTD, mrr);
+      }
       teamTgt += ytdTgt; teamAct += ytdWon;
       return { rep, ytdTgt, ytdWon, att: pct(ytdWon, ytdTgt), isResigned: !!(REP_TEAMS[rep] && REP_TEAMS[rep].resigned) };
     });
-    repData.sort((a,b) => a.isResigned !== b.isResigned ? (a.isResigned ? 1 : -1) : b.att - a.att);
-    const repRows = repData.map(({ rep, att, isResigned }) => {
+
+    // Append reps who transferred FROM this (ENT) team — grayed, with ENT-period target + ENT-segment actuals
+    Object.keys(REP_TRANSFERS).forEach(rep => {
+      const tr = REP_TRANSFERS[rep];
+      if (tr.fromTeam !== teamName) return;
+      const wonYTD = won(inYTD(spRepDeals(rep),'close_date',CUR_YEAR,CUR_MON));
+      const entTgt = repTargetRange(rep, 1, tr.smeStart - 1);
+      const entWon = sum(wonYTD.filter(isENT), mrr);
+      teamTgt += entTgt; teamAct += entWon;
+      repData.push({ rep, ytdTgt: entTgt, ytdWon: entWon, att: pct(entWon, entTgt), isResigned: false, transferred: true });
+    });
+
+    repData.sort((a,b) => {
+      const aLast = a.isResigned || a.transferred, bLast = b.isResigned || b.transferred;
+      if (aLast !== bLast) return aLast ? 1 : -1;
+      return b.att - a.att;
+    });
+    const repRows = repData.map(({ rep, att, isResigned, transferred }) => {
+      const gray = isResigned || transferred;
       const bc = att >= 100 ? '#4ade80' : att >= 80 ? '#38bdf8' : att >= 60 ? '#fbbf24' : '#f87171';
-      return `<div class="team-rep-row" style="${isResigned?'opacity:0.45;':''}">
-        <span class="team-rep-name" style="${isResigned?'color:#6b7280;':''}">${rep.split(' ')[0]} ${rep.split(' ')[1]||''}${isResigned?' <span style="font-size:9px;">(resigned)</span>':''}</span>
+      const tag = isResigned ? ' <span style="font-size:9px;">(resigned)</span>'
+                : transferred ? ' <span style="font-size:9px;">(moved to SME)</span>' : '';
+      return `<div class="team-rep-row" style="${gray?'opacity:0.45;':''}">
+        <span class="team-rep-name" style="${gray?'color:#6b7280;':''}">${rep.split(' ')[0]} ${rep.split(' ')[1]||''}${tag}</span>
         <div class="team-rep-bar-wrap">
           <div class="team-rep-bar-fill" style="width:${Math.min(att,100)}%;background:${bc};"></div>
         </div>
