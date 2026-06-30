@@ -767,23 +767,14 @@ let FCST_BAKED = {};
 let _fcstSaving = false;
 let _fcstDirty  = false;
 function _fcstRefresh(rerender) {
-  if (_fcstSaving || _fcstDirty) return Promise.resolve();
-  return fetch('https://raw.githubusercontent.com/sprout-revops/sales-dashboard/master/forecast_snapshot.json?_=' + Date.now())
+  // Forecasts come live from the Google Sheet via the RADAR proxy (works regardless of repo
+  // visibility). The proxy reads the published sheet and returns { year_rep_month: value }.
+  return fetch('https://radar-revops.vercel.app/api/forecast?_=' + Date.now())
     .then(r => r.ok ? r.json() : {})
     .then(data => {
-      if (_fcstSaving || _fcstDirty) return;
       const incoming = data || {};
-      // Prefer localStorage if it has a newer _saved_at (editor's save fresher than CDN)
-      let effective = incoming;
-      try {
-        const local = JSON.parse(localStorage.getItem('fcst_local_snapshot') || 'null');
-        if (local && local._saved_at && (!incoming._saved_at || local._saved_at > incoming._saved_at)) {
-          effective = local;
-        }
-      } catch(e) {}
-      if (effective._saved_at && FCST_BAKED._saved_at && effective._saved_at <= FCST_BAKED._saved_at) return;
-      const changed = JSON.stringify(effective) !== JSON.stringify(FCST_BAKED);
-      FCST_BAKED = effective;
+      const changed = JSON.stringify(incoming) !== JSON.stringify(FCST_BAKED);
+      FCST_BAKED = incoming;
       if (changed || rerender) {
         const rp = document.getElementById('sp-rep-panel');
         if (rp && rp.classList.contains('active')) renderRepSummary();
