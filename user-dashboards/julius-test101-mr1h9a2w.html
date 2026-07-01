@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Julius Test101 — RevOps Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --bg2: #111111;
+    --bg3: #1a1a1a;
+    --bg4: #222222;
+    --accent: #1DB954;
+    --accent2: #17a047;
+    --accent3: #15e060;
+    --text: #f0f0f0;
+    --text2: #aaaaaa;
+    --text3: #666666;
+    --border: #2a2a2a;
+    --red: #e74c3c;
+    --orange: #f39c12;
+    --blue: #3498db;
+    --purple: #9b59b6;
+    --teal: #1abc9c;
+    --yellow: #f1c40f;
+    --card-radius: 12px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.5);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    font-size: 14px;
+    min-height: 100vh;
+  }
+  /* HEADER */
+  .header {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.6);
+  }
+  .header-left { display: flex; align-items: center; gap: 16px; }
+  .logo {
+    width: 36px; height: 36px; border-radius: 8px;
+    background: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 16px; color: #000;
+  }
+  .header-title { font-size: 18px; font-weight: 700; color: var(--text); }
+  .header-sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .last-updated { font-size: 11px; color: var(--text3); }
+  .btn-refresh {
+    background: var(--accent);
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 18px;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 6px;
+    transition: background 0.2s;
+  }
+  .btn-refresh:hover { background: var(--accent3); }
+  .btn-refresh:disabled { opacity: 0.5; cursor: not-allowed; }
+  /* LOADING OVERLAY */
+  #loading-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+    z-index: 9999; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 20px;
+  }
+  #loading-overlay.hidden { display: none; }
+  .spinner {
+    width: 56px; height: 56px;
+    border: 4px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { color: var(--text2); font-size: 15px; }
+  /* ERROR BANNER */
+  #error-banner {
+    background: rgba(231,76,60,0.15);
+    border: 1px solid var(--red);
+    color: #ff6b6b;
+    padding: 12px 20px;
+    margin: 16px 24px;
+    border-radius: 8px;
+    font-size: 13px;
+    display: none;
+  }
+  /* FILTERS */
+  .filters-bar {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 24px;
+    display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end;
+  }
+  .filter-group { display: flex; flex-direction: column; gap: 4px; min-width: 140px; }
+  .filter-group label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; }
+  .filter-group select, .filter-group input {
+    background: var(--bg4);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    padding: 6px 10px;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+    height: 34px;
+  }
+  .filter-group select:focus, .filter-group input:focus { border-color: var(--accent); }
+  .filter-group select option { background: var(--bg4); }
+  .btn-apply {
+    background: var(--accent);
+    color: #000;
+    border: none;
+    border-radius: 6px;
+    padding: 0 18px;
+    height: 34px;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    align-self: flex-end;
+    transition: background 0.2s;
+  }
+  .btn-apply:hover { background: var(--accent3); }
+  .btn-clear {
+    background: transparent;
+    color: var(--text2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0 14px;
+    height: 34px;
+    font-size: 13px;
+    cursor: pointer;
+    align-self: flex-end;
+    transition: all 0.2s;
+  }
+  .btn-clear:hover { border-color: var(--text2); color: var(--text); }
+  /* MAIN CONTENT */
+  .main { padding: 24px; }
+  /* SECTION TITLES */
+  .section-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 14px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-title::after {
+    content: '';
+    flex: 1; height: 1px; background: var(--border);
+  }
+  /* KPI CARDS */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+  .kpi-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--card-radius);
+    padding: 18px 20px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .kpi-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 3px;
+    background: var(--accent-color, var(--accent));
+  }
+  .kpi-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .kpi-value { font-size: 26px; font-weight: 800; color: var(--text); line-height: 1; }
+  .kpi-sub { font-size: 11px; color: var(--text3); margin-top: 6px; }
+  .kpi-delta { font-size: 12px; margin-top: 6px; font-weight: 600; }
+  .kpi-delta.up { color: var(--accent); }
+  .kpi-delta.down { color: var(--red); }
+  /* CHART GRID */
+  .chart-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+    margin-bottom: 28px;
+  }
+  .chart-grid.two-col { grid-template-columns: repeat(2, 1fr); }
+  .chart-grid.one-col { grid-template-columns: 1fr; }
+  @media (max-width: 1100px) {
+    .chart-grid { grid-template-columns: repeat(2, 1fr); }
+    .chart-grid.one-col { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 700px) {
+    .chart-grid, .chart-grid.two-col, .chart-grid.one-col { grid-template-columns: 1fr; }
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  .chart-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--card-radius);
+    padding: 20px;
+    box-shadow: var(--shadow);
+    transition: border-color 0.2s;
+  }
+  .chart-card:hover { border-color: #333; }
+  .chart-card.span2 { grid-column: span 2; }
+  .chart-card.span3 { grid-column: span 3; }
+  .chart-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .chart-subtitle { font-size: 11px; color: var(--text3); margin-bottom: 16px; }
+  .chart-wrap { position: relative; }
+  /* DATA TABLE */
+  .table-wrap { overflow-x: auto; max-height: 380px; overflow-y: auto; }
+  .data-table {
+    width: 100%; border-collapse: collapse; font-size: 12px;
+  }
+  .data-table th {
+    background: var(--bg3);
+    color: var(--text2);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 1;
+    white-space: nowrap;
+  }
+  .data-table td {
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    white-space: nowrap;
+  }
+  .data-table tr:hover td { background: var(--bg3); }
+  .data-table .num { text-align: right; }
+  .data-table .badge {
+    display: inline-block; padding: 2px 8px; border-radius: 20px;
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+  }
+  .badge-green { background: rgba(29,185,84,0.15); color: var(--accent); }
+  .badge-red { background: rgba(231,76,60,0.15); color: var(--red); }
+  .badge-blue { background: rgba(52,152,219,0.15); color: var(--blue); }
+  .badge-orange { background: rgba(243,156,18,0.15); color: var(--orange); }
+  /* SCORECARD */
+  .scorecard-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 28px;
+  }
+  @media (max-width: 900px) { .scorecard-grid { grid-template-columns: repeat(2,1fr); } }
+  @media (max-width: 600px) { .scorecard-grid { grid-template-columns: 1fr; } }
+  .scorecard {
+    background: var(--bg2); border: 1px solid var(--border); border-radius: var(--card-radius);
+    padding: 20px; display: flex; flex-direction: column; gap: 12px;
+  }
+  .sc-header { display: flex; justify-content: space-between; align-items: flex-start; }
+  .sc-label { font-size: 12px; color: var(--text2); font-weight: 600; }
+  .sc-icon { font-size: 22px; }
+  .sc-value { font-size: 32px; font-weight: 900; color: var(--text); }
+  .sc-bar-bg { background: var(--bg4); border-radius: 4px; height: 6px; overflow: hidden; }
+  .sc-bar-fill { height: 100%; border-radius: 4px; background: var(--accent); transition: width 0.8s ease; }
+  .sc-footer { display: flex; justify-content: space-between; font-size: 11px; color: var(--text3); }
+  /* NO DATA */
+  .no-data {
+    display: flex; align-items: center; justify-content: center;
+    height: 160px; color: var(--text3); font-size: 13px; flex-direction: column; gap: 8px;
+  }
+  .no-data-icon { font-size: 28px; }
+  /* DIVIDER */
+  .section-divider { height: 1px; background: var(--border); margin: 8px 0 24px; }
+</style>
+</head>
+<body>
+
+<!-- LOADING OVERLAY -->
+<div id="loading-overlay">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loading-text">Loading dashboard data…</div>
+</div>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-left">
+    <div class="logo">J</div>
+    <div>
+      <div class="header-title">Julius Test101</div>
+      <div class="header-sub">RevOps · Sales Performance Dashboard</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="last-updated" id="last-updated">—</div>
+    <button class="btn-refresh" id="btn-refresh" onclick="refreshDashboard()">
+      <span>↻</span> Refresh
+    </button>
+  </div>
+</header>
+
+<!-- ERROR BANNER -->
+<div id="error-banner"></div>
+
+<!-- FILTERS -->
+<div class="filters-bar" id="filters-bar">
+  <div class="filter-group">
+    <label>Date From</label>
+    <input type="date" id="f-date-from"/>
+  </div>
+  <div class="filter-group">
+    <label>Date To</label>
+    <input type="date" id="f-date-to"/>
+  </div>
+  <div class="filter-group">
+    <label>Pipeline</label>
+    <select id="f-pipeline">
+      <option value="">All Pipelines</option>
+      <option>Sales Pipeline</option>
+      <option>Unified Channel Pipeline</option>
+      <option>PH Upsell Pipeline</option>
+      <option>TH Sales Pipeline</option>
+    </select>
+  </div>
+  <div class="filter-group">
+    <label>Segment</label>
+    <select id="f-segment">
+      <option value="">All Segments</option>
+      <option>SME</option>
+      <option>ENT</option>
+      <option>Channels</option>
+    </select>
+  </div>
+  <div class="filter-group">
+    <label>Dept Source</label>
+    <select id="f-dept">
+      <option value="">All Sources</option>
+      <option>MKT Inbound</option>
+      <option>LDU Outbound</option>
+      <option>Sales Outbound</option>
+      <option>Channels</option>
+      <option>CSM Inbound</option>
+      <option>Upsell Outbound</option>
+    </select>
+  </div>
+  <button class="btn-apply" onclick="applyFilters()">Apply</button>
+  <button class="btn-clear" onclick="clearFilters()">Clear</button>
+</div>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- KPI SCORECARDS -->
+  <div class="section-title">Key Performance Indicators</div>
+  <div class="kpi-grid" id="kpi-grid">
+    <div class="kpi-card" style="--accent-color:#1DB954"><div class="kpi-label">Total QLs</div><div class="kpi-value" id="k-ql">—</div><div class="kpi-sub">Qualified Leads</div></div>
+    <div class="kpi-card" style="--accent-color:#3498db"><div class="kpi-label">SQL</div><div class="kpi-value" id="k-sql">—</div><div class="kpi-sub">Sales Qualified Leads</div></div>
+    <div class="kpi-card" style="--accent-color:#9b59b6"><div class="kpi-label">MQL</div><div class="kpi-value" id="k-mql">—</div><div class="kpi-sub">MKT Inbound QLs</div></div>
+    <div class="kpi-card" style="--accent-color:#1abc9c"><div class="kpi-label">OQL</div><div class="kpi-value" id="k-oql">—</div><div class="kpi-sub">LDU Outbound QLs</div></div>
+    <div class="kpi-card" style="--accent-color:#f39c12"><div class="kpi-label">Won Deals</div><div class="kpi-value" id="k-won">—</div><div class="kpi-sub">Closed-Won</div></div>
+    <div class="kpi-card" style="--accent-color:#e74c3c"><div class="kpi-label">Lost Deals</div><div class="kpi-value" id="k-lost">—</div><div class="kpi-sub">Closed-Lost</div></div>
+    <div class="kpi-card" style="--accent-color:#e74c3c"><div class="kpi-label">DQ Rate</div><div class="kpi-value" id="k-dqrate">—</div><div class="kpi-sub">Disqualified %</div></div>
+    <div class="kpi-card" style="--accent-color:#1DB954"><div class="kpi-label">SQL Conv Rate</div><div class="kpi-value" id="k-sqlrate">—</div><div class="kpi-sub">SQL ÷ QL</div></div>
+    <div class="kpi-card" style="--accent-color:#1DB954"><div class="kpi-label">Lead→Won %</div><div class="kpi-value" id="k-l2w">—</div><div class="kpi-sub">Won ÷ Total Leads</div></div>
+    <div class="kpi-card" style="--accent-color:#f1c40f"><div class="kpi-label">Win Rate</div><div class="kpi-value" id="k-winrate">—</div><div class="kpi-sub">Won ÷ (Won+Lost)</div></div>
+    <div class="kpi-card" style="--accent-color:#3498db"><div class="kpi-label">Won MRR</div><div class="kpi-value" id="k-wonmrr">—</div><div class="kpi-sub">Monthly Recurring Rev</div></div>
+    <div class="kpi-card" style="--accent-color:#9b59b6"><div class="kpi-label">Avg Deal Size</div><div class="kpi-value" id="k-ads">—</div><div class="kpi-sub">Won MRR ÷ Won Deals</div></div>
+  </div>
+
+  <!-- SCORECARD SECTION -->
+  <div class="section-title">Scorecard Overview</div>
+  <div class="scorecard-grid" id="scorecard-section">
+    <div class="scorecard">
+      <div class="sc-header"><div class="sc-label">DQ Rate</div><div class="sc-icon">🚫</div></div>
+      <div class="sc-value" id="sc-dqrate">—</div>
+      <div class="sc-bar-bg"><div class="sc-bar-fill" id="sc-dqrate-bar" style="width:0%;background:var(--red)"></div></div>
+      <div class="sc-footer"><span>DQ Leads ÷ Total QL</span><span id="sc-dqrate-n">—</span></div>
+    </div>
+    <div class="scorecard">
+      <div class="sc-header"><div class="sc-label">SQL Conversion</div><div class="sc-icon">📈</div></div>
+      <div class="sc-value" id="sc-sqlconv">—</div>
+      <div class="sc-bar-bg"><div class="sc-bar-fill" id="sc-sqlconv-bar" style="width:0%"></div></div>
+      <div class="sc-footer"><span>SQL ÷ QL</span><span id="sc-sqlconv-n">—</span></div>
+    </div>
+    <div class="scorecard">
+      <div class="sc-header"><div class="sc-label">Win Rate</div><div class="sc-icon">🏆</div></div>
+      <div class="sc-value" id="sc-winrate">—</div>
+      <div class="sc-bar-bg"><div class="sc-bar-fill" id="sc-winrate-bar" style="width:0%"></div></div>
+      <div class="sc-footer"><span>Won ÷ (Won+Lost)</span><span id="sc-winrate-n">—</span></div>
+    </div>
+    <div class="scorecard">
+      <div class="sc-header"><div class="sc-label">Lead→Won Conv</div><div class="sc-icon">🎯</div></div>
+      <div class="sc-value" id="sc-l2w">—</div>
+      <div class="sc-bar-bg"><div class="sc-bar-fill" id="sc-l2w-bar" style="width:0%"></div></div>
+      <div class="sc-footer"><span>Won ÷ Total Leads</span><span id="sc-l2w-n">—</span></div>
+    </div>
+    <div class="scorecard">
+      <div class="sc-header"><div class="sc-label">Won/SQL Rate</div><div class="sc-icon">⚡</div></div>
+      <div class="sc-value" id="sc-wonsql">—</div>
+      <div class="sc-bar-bg"><div class="sc-bar-fill" id="sc-wonsql-bar" style="width:0%"></div></div>
+      <div class="sc-footer"><span>Won Deals ÷ SQL</span><span id="sc-wonsql-n">—</span></div>
+    </div>
+    <div class="scorecard">
+      <div class="sc-header"><div class="sc-label">Pipeline MRR</div><div class="sc-icon">💰</div></div>
+      <div class="sc-value" id="sc-pipemrr">—</div>
+      <div class="sc-bar-bg"><div class="sc-bar-fill" id="sc-pipemrr-bar" style="width:0%;background:var(--blue)"></div></div>
+      <div class="sc-footer"><span>MRR in Pipeline</span><span id="sc-pipemrr-n">—</span></div>
+    </div>
+  </div>
+
+  <!-- ROW 1: TREND CHARTS -->
+  <div class="section-title">Monthly Trends</div>
+  <div class="chart-grid">
+    <div class="chart-card span2">
+      <div class="chart-title">QL / SQL / Won — Monthly Trend</div>
+      <div class="chart-subtitle">Lead funnel performance by month (create_date basis)</div>
+      <div class="chart-wrap"><canvas id="chart-trend-funnel" height="90"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">DQ Rate vs SQL Conv Rate</div>
+      <div class="chart-subtitle">Monthly conversion rates (%)</div>
+      <div class="chart-wrap"><canvas id="chart-rates-trend" height="180"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ROW 2: PIPELINE / SEGMENT -->
+  <div class="section-title">Pipeline & Segment Breakdown</div>
+  <div class="chart-grid">
+    <div class="chart-card">
+      <div class="chart-title">QL by Pipeline Name</div>
+      <div class="chart-subtitle">Qualified leads per pipeline</div>
+      <div class="chart-wrap"><canvas id="chart-ql-pipeline" height="200"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Won Deals by Segment</div>
+      <div class="chart-subtitle">SME vs ENT vs Channels</div>
+      <div class="chart-wrap"><canvas id="chart-won-segment" height="200"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">MQL vs OQL Split</div>
+      <div class="chart-subtitle">Marketing vs LDU Outbound leads</div>
+      <div class="chart-wrap"><canvas id="chart-mql-oql" height="200"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ROW 3: MRR / REVENUE -->
+  <div class="section-title">Revenue & MRR</div>
+  <div class="chart-grid">
+    <div class="chart-card span2">
+      <div class="chart-title">Won MRR — Monthly Trend (₱)</div>
+      <div class="chart-subtitle">Monthly Recurring Revenue from Closed-Won deals (close_date basis)</div>
+      <div class="chart-wrap"><canvas id="chart-mrr-trend" height="90"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Won MRR by Segment</div>
+      <div class="chart-subtitle">MRR distribution across segments</div>
+      <div class="chart-wrap"><canvas id="chart-mrr-segment" height="200"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ROW 4: COMBO + STACKED -->
+  <div class="section-title">Win Rate & Deal Velocity</div>
+  <div class="chart-grid">
+    <div class="chart-card span2">
+      <div class="chart-title">Won Deals + Win Rate — Combo Chart</div>
+      <div class="chart-subtitle">Bars = Won Deals count, Line = Win Rate % (close_date)</div>
+      <div class="chart-wrap"><canvas id="chart-combo-won" height="90"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Avg Deal Size by Segment</div>
+      <div class="chart-subtitle">Won MRR ÷ Won Deals</div>
+      <div class="chart-wrap"><canvas id="chart-ads-segment" height="200"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ROW 5: STACKED BAR + DONUT -->
+  <div class="section-title">Department Source Analysis</div>
+  <div class="chart-grid">
+    <div class="chart-card span2">
+      <div class="chart-title">QL by Department Source — Stacked Bar (Monthly)</div>
+      <div class="chart-subtitle">Lead volume breakdown by source over time</div>
+      <div class="chart-wrap"><canvas id="chart-stacked-dept" height="90"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Won MRR by Department Source</div>
+      <div class="chart-subtitle">Revenue contribution by source</div>
+      <div class="chart-wrap"><canvas id="chart-pie-dept" height="200"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ROW 6: DATA TABLE -->
+  <div class="section-title">Monthly Executive Summary Table</div>
+  <div class="chart-card" style="margin-bottom:28px">
+    <div class="chart-title">Executive Summary — Monthly Detail</div>
+    <div class="chart-subtitle">Aggregated KPIs per month, pipeline & segment</div>
+    <div class="table-wrap">
+      <table class="data-table" id="exec-table">
+        <thead>
+          <tr>
+            <th>Month</th>
+            <th>Pipeline</th>
+            <th>Segment</th>
+            <th>Dept Source</th>
+            <th class="num">QL</th>
+            <th class="num">SQL</th>
+            <th class="num">Won</th>
+            <th class="num">Lost</th>
+            <th class="num">DQ</th>
+            <th class="num">DQ Rate</th>
+            <th class="num">SQL Conv%</th>
+            <th class="num">Win Rate</th>
+            <th class="num">Won MRR</th>
+            <th class="num">Avg Deal Size</th>
+            <th class="num">Pipeline MRR</th>
+          </tr>
+        </thead>
+        <tbody id="exec-table-body">
+          <tr><td colspan="15"><div class="no-data"><div class="no-data-icon">⏳</div><div>Loading data…</div></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ROW 7: SALES DQ + PIPELINE MRR TREND -->
+  <div class="section-title">Sales Disqualified & Pipeline MRR</div>
+  <div class="chart-grid two-col">
+    <div class="chart-card">
+      <div class="chart-title">Sales Disqualified — Monthly</div>
+      <div class="chart-subtitle">Deals disqualified by Sales (create_date)</div>
+      <div class="chart-wrap"><canvas id="chart-dq-monthly" height="180"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Pipeline MRR Trend</div>
+      <div class="chart-subtitle">Projected MRR in pipeline (future months only)</div>
+      <div class="chart-wrap"><canvas id="chart-pipeline-mrr" height="180"></canvas></div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+// ─── CONFIG & QUERY HELPER ────────────────────────────────────────────────────
+const CONFIG = { host: (localStorage.getItem('radar_db_host')||''), token: (localStorage.getItem('radar_db_token')||''), warehouseId: ((localStorage.getItem('radar_db_path')||'').split('/').pop()) };
+
+async function dbQuery(sql) {
+  const sub = await fetch("https://radar-revops.vercel.app/api/databricks", {
+    method: "POST",
+    headers: { "x-db-host": CONFIG.host, "x-db-token": CONFIG.token, "Content-Type": "application/json" },
+    body: JSON.stringify({ warehouse_id: CONFIG.warehouseId, statement: sql, wait_timeout: "0s", on_wait_timeout: "CONTINUE", format: "JSON_ARRAY" })
+  });
+  const subJson = await sub.json();
+  if (!subJson.statement_id) throw new Error("No statement_id returned: " + JSON.stringify(subJson));
+  for (let i = 0; i < 120; i++) {
+    await new Promise(r => setTimeout(r, 3000));
+    const poll = await fetch("https://radar-revops.vercel.app/api/databricks-poll?id=" + subJson.statement_id, {
+      headers: { "x-db-host": CONFIG.host, "x-db-token": CONFIG.token }
+    });
+    const p = await poll.json();
+    const state = p && p.status && p.status.state;
+    if (state === "SUCCEEDED") {
+      const cols = (p.manifest && p.manifest.schema && p.manifest.schema.columns || []).map(c => c.name);
+      return (p.result && p.result.data_array || []).map(row => Object.fromEntries(cols.map((c, i) => [c, row[i]])));
+    }
+    if (state === "FAILED") throw new Error("Query failed: " + JSON.stringify(p.status));
+  }
+  throw new Error("Timed out after 6 minutes");
+}
+
+// ─── UTILITIES ────────────────────────────────────────────────────────────────
+function showLoading(msg) {
+  document.getElementById('loading-text').textContent = msg || 'Loading…';
+  document.getElementById('loading-overlay').classList.remove('hidden');
+  document.getElementById('btn-refresh').disabled = true;
+}
+function hideLoading() {
+  document.getElementById('loading-overlay').classList.add('hidden');
+  document.getElementById('btn-refresh').disabled = false;
+  document.getElementById('last-updated').textContent = 'Updated: ' + new Date().toLocaleString('en-PH', { timeZone: 'Asia/Manila', dateStyle: 'medium', timeStyle: 'short' });
+}
+function showError(msg) {
+  const b = document.getElementById('error-banner');
+  b.textContent = '⚠ ' + msg;
+  b.style.display = 'block';
+}
+function hideError() {
+  document.getElementById('error-banner').style.display = 'none';
+}
+
+const safe = v => (v === null || v === undefined || v === '' || isNaN(v)) ? 0 : Number(v);
+const pct = v => (isNaN(v) || !isFinite(v)) ? '—' : safe(v).toFixed(1) + '%';
+const peso = v => '₱' + safe(v).toLocaleString('en-PH', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+const num = v => safe(v).toLocaleString('en-PH');
+const fmtMonth = d => { if (!d) return '—'; const dt = new Date(d); return dt.toLocaleString('en-PH', { month: 'short', year: '2-digit' }); };
+
+const PALETTE = ['#1DB954','#3498db','#9b59b6','#f39c12','#e74c3c','#1abc9c','#f1c40f','#e67e22','#2ecc71','#e91e63','#00bcd4','#ff5722'];
+
+// Chart registry for destroy/recreate
+const chartReg = {};
+function mkChart(id, config) {
+  if (chartReg[id]) { chartReg[id].destroy(); }
+  const ctx = document.getElementById(id);
+  if (!ctx) return;
+  chartReg[id] = new Chart(ctx, config);
+  return chartReg[id];
+}
+
+// ─── FILTER STATE ─────────────────────────────────────────────────────────────
+function getFilters() {
+  return {
+    dateFrom: document.getElementById('f-date-from').value || null,
+    dateTo: document.getElementById('f-date-to').value || null,
+    pipeline: document.getElementById('f-pipeline').value || null,
+    segment: document.getElementById('f-segment').value || null,
+    dept: document.getElementById('f-dept').value || null,
+  };
+}
+function clearFilters() {
+  document.getElementById('f-date-from').value = '';
+  document.getElementById('f-date-to').value = '';
+  document.getElementById('f-pipeline').value = '';
+  document.getElementById('f-segment').value = '';
+  document.getElementById('f-dept').value = '';
+  init();
+}
+function applyFilters() { init(); }
+
+function buildWhere(f, dateCol = 'metric_month') {
+  const clauses = [];
+  if (f.dateFrom) clauses.push(`${dateCol} >= '${f.dateFrom}'`);
+  if (f.dateTo)   clauses.push(`${dateCol} <= '${f.dateTo}'`);
+  if (f.pipeline) clauses.push(`pipeline_name = '${f.pipeline.replace(/'/g,"''")}'`);
+  if (f.segment)  clauses.push(`segment_official = '${f.segment.replace(/'/g,"''")}'`);
+  if (f.dept)     clauses.push(`department_source_clean = '${f.dept.replace(/'/g,"''")}'`);
+  return clauses.length ? 'WHERE ' + clauses.join(' AND ') : '';
+}
+
+// ─── DEFAULT DATE RANGE (last 12 months) ────────────────────────────────────
+function setDefaultDates() {
+  const to = new Date();
+  const from = new Date(to);
+  from.setMonth(from.getMonth() - 11);
+  from.setDate(1);
+  const fmt = d => d.toISOString().slice(0, 10);
+  if (!document.getElementById('f-date-from').value)
+    document.getElementById('f-date-from').value = fmt(from);
+  if (!document.getElementById('f-date-to').value)
+    document.getElementById('f-date-to').value = fmt(to);
+}
+
+// ─── MAIN INIT ────────────────────────────────────────────────────────────────
+async function init() {
+  hideError();
+  showLoading('Fetching dashboard data from Databricks…');
+  setDefaultDates();
+  const f = getFilters();
+  try {
+    await Promise.all([
+      loadExecSummary(f),
+      loadTrendFunnel(f),
+      loadRatesTrend(f),
+      loadQLPipeline(f),
+      loadWonSegment(f),
+      loadMQLOQL(f),
+      loadMRRTrend(f),
+      loadMRRSegment(f),
+      loadComboWon(f),
+      loadADSSegment(f),
+      loadStackedDept(f),
+      loadPieDept(f),
+      loadDQMonthly(f),
+      loadPipelineMRR(f),
+    ]);
+    hideLoading();
+  } catch(e) {
+    hideLoading();
+    showError('Failed to load dashboard: ' + e.message);
+    console.error(e);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', init);
+function refreshDashboard() { init(); }
+
+// ─── 1. EXEC SUMMARY + KPIs ──────────────────────────────────────────────────
+async function loadExecSummary(f) {
+  const where = buildWhere(f);
+  const sql = `
+    SELECT
+      metric_month,
+      pipeline_name,
+      CASE WHEN segment_official = 'MICRO' THEN 'SME' ELSE COALESCE(segment_official,'—') END AS segment_official,
+      department_source_clean,
+      SUM(qualified_leads)      AS qualified_leads,
+      SUM(sales_qualified_leads)AS sales_qualified_leads,
+      SUM(won_deals)            AS won_deals,
+      SUM(lost_deals)           AS lost_deals,
+      SUM(dq_leads)             AS dq_leads,
+      SUM(won_mrr)              AS won_mrr,
+      SUM(mrr_in_pipeline)      AS mrr_in_pipeline,
+      CASE WHEN SUM(qualified_leads)>0
+           THEN ROUND(SUM(dq_leads)*100.0/SUM(qualified_leads),1) ELSE 0 END AS dq_rate_calc,
+      CASE WHEN SUM(qualified_leads)>0
+           THEN ROUND(SUM(sales_qualified_leads)*100.0/SUM(qualified_leads),1) ELSE 0 END AS sql_conv_calc,
+      CASE WHEN SUM(won_deals)+SUM(lost_deals)>0
+           THEN ROUND(SUM(won_deals)*100.0/(SUM(won_deals)+SUM(lost_deals)),1) ELSE 0 END AS win_rate_calc,
+      CASE WHEN SUM(won_deals)>0
+           THEN ROUND(SUM(won_mrr)/SUM(won_deals),0) ELSE 0 END AS avg_deal_size_calc
+    FROM shared.revops.gold_monthly_exec_summary
+    ${where}
+    GROUP BY 1,2,3,4
+    ORDER BY 1 DESC, 2, 3, 4
+    LIMIT 500
+  `;
+  const rows = await dbQuery(sql);
+  renderKPIs(rows);
+  renderExecTable(rows);
+  renderScorecards(rows);
+}
+
+function renderKPIs(rows) {
+  const totQL    = rows.reduce((a,r) => a + safe(r.qualified_leads), 0);
+  const totSQL   = rows.reduce((a,r) => a + safe(r.sales_qualified_leads), 0);
+  const totWon   = rows.reduce((a,r) => a + safe(r.won_deals), 0);
+  const totLost  = rows.reduce((a,r) => a + safe(r.lost_deals), 0);
+  const totDQ    = rows.reduce((a,r) => a + safe(r.dq_leads), 0);
+  const totMRR   = rows.reduce((a,r) => a + safe(r.won_mrr), 0);
+  const mqlRows  = rows.filter(r => r.department_source_clean === 'MKT Inbound');
+  const oqlRows  = rows.filter(r => r.department_source_clean === 'LDU Outbound');
+  const totMQL   = mqlRows.reduce((a,r) => a + safe(r.qualified_leads), 0);
+  const totOQL   = oqlRows.reduce((a,r) => a + safe(r.qualified_leads), 0);
+  const dqRate   = totQL > 0 ? (totDQ / totQL * 100) : 0;
+  const sqlRate  = totQL > 0 ? (totSQL / totQL * 100) : 0;
+  const winRate  = (totWon + totLost) > 0 ? (totWon / (totWon + totLost) * 100) : 0;
+  const l2wRate  = totQL > 0 ? (totWon / totQL * 100) : 0;
+  const ads      = totWon > 0 ? totMRR / totWon : 0;
+
+  document.getElementById('k-ql').textContent     = num(totQL);
+  document.getElementById('k-sql').textContent    = num(totSQL);
+  document.getElementById('k-mql').textContent    = num(totMQL);
+  document.getElementById('k-oql').textContent    = num(totOQL);
+  document.getElementById('k-won').textContent    = num(totWon);
+  document.getElementById('k-lost').textContent   = num(totLost);
+  document.getElementById('k-dqrate').textContent = pct(dqRate);
+  document.getElementById('k-sqlrate').textContent= pct(sqlRate);
+  document.getElementById('k-l2w').textContent    = pct(l2wRate);
+  document.getElementById('k-winrate').textContent= pct(winRate);
+  document.getElementById('k-wonmrr').textContent = peso(totMRR);
+  document.getElementById('k-ads').textContent    = peso(ads);
+}
+
+function renderScorecards(rows) {
+  const totQL   = rows.reduce((a,r) => a + safe(r.qualified_leads), 0);
+  const totSQL  = rows.reduce((a,r) => a + safe(r.sales_qualified_leads), 0);
+  const totWon  = rows.reduce((a,r) => a + safe(r.won_deals), 0);
+  const totLost = rows.reduce((a,r) => a + safe(r.lost_deals), 0);
+  const totDQ   = rows.reduce((a,r) => a + safe(r.dq_leads), 0);
+  const totMRR  = rows.reduce((a,r) => a + safe(r.won_mrr), 0);
+  const totPipe = rows.reduce((a,r) => a + safe(r.mrr_in_pipeline), 0);
+  const dqRate  = totQL > 0 ? totDQ / totQL * 100 : 0;
+  const sqlConv = totQL > 0 ? totSQL / totQL * 100 : 0;
+  const winRate = (totWon+totLost) > 0 ? totWon/(totWon+totLost)*100 : 0;
+  const l2w     = totQL > 0 ? totWon/totQL*100 : 0;
+  const wonSql  = totSQL > 0 ? totWon/totSQL*100 : 0;
+
+  const setScore = (valId, barId, nId, val, max, fmt, nVal) => {
+    document.getElementById(valId).textContent = fmt(val);
+    document.getElementById(barId).style.width = Math.min(val/max*100, 100) + '%';
+    document.getElementById(nId).textContent = nVal;
+  };
+  setScore('sc-dqrate','sc-dqrate-bar','sc-dqrate-n', dqRate, 50, v=>pct(v), `${num(totDQ)} DQ / ${num(totQL)} QL`);
+  setScore('sc-sqlconv','sc-sqlconv-bar','sc-sqlconv-n', sqlConv, 100, v=>pct(v), `${num(totSQL)} SQL / ${num(totQL)} QL`);
+  setScore('sc-winrate','sc-winrate-bar','sc-winrate-n', winRate, 100, v=>pct(v), `${num(totWon)} W / ${num(totLost)} L`);
+  setScore('sc-l2w','sc-l2w-bar','sc-l2w-n', l2w, 30, v=>pct(v), `${num(totWon)} Won / ${num(totQL)} QL`);
+  setScore('sc-wonsql','sc-wonsql-bar','sc-wonsql-n', wonSql, 100, v=>pct(v), `${num(totWon)} W / ${num(totSQL)} SQL`);
+  document.getElementById('sc-pipemrr').textContent = peso(totPipe);
+  document.getElementById('sc-pipemrr-bar').style.width = Math.min(safe(totPipe)/Math.max(safe(totMRR),1)*100, 100) + '%';
+  document.getElementById('sc-pipemrr-n').textContent = `vs Won MRR ${peso(totMRR)}`;
+}
+
+function renderExecTable(rows) {
+  const tbody = document.getElementById('exec-table-body');
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="15"><div class="no-data"><div class="no-data-icon">📭</div><div>No data for selected filters</div></div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.slice(0, 200).map(r => {
+    const winR = safe(r.won_deals)+safe(r.lost_deals) > 0
+      ? (safe(r.won_deals)/(safe(r.won_deals)+safe(r.lost_deals))*100).toFixed(1)
+      : '0.0';
+    const dqBadge = safe(r.dq_rate_calc) > 30 ? 'badge-red' : safe(r.dq_rate_calc) > 15 ? 'badge-orange' : 'badge-green';
+    const winBadge = safe(winR) >= 50 ? 'badge-green' : safe(winR) >= 25 ? 'badge-orange' : 'badge-red';
+    return `<tr>
+      <td>${fmtMonth(r.metric_month)}</td>
+      <td>${r.pipeline_name||'—'}</td>
+      <td><span class="badge ${r.segment_official==='ENT'?'badge-blue':'badge-green'}">${r.segment_official||'—'}</span></td>
+      <td>${r.department_source_clean||'—'}</td>
+      <td class="num">${num(r.qualified_leads)}</td>
+      <td class="num">${num(r.sales_qualified_leads)}</td>
+      <td class="num">${num(r.won_deals)}</td>
+      <td class="num">${num(r.lost_deals)}</td>
+      <td class="num">${num(r.dq_leads)}</td>
+      <td class="num"><span class="badge ${dqBadge}">${safe(r.dq_rate_calc).toFixed(1)}%</span></td>
+      <td class="num">${safe(r.sql_conv_calc).toFixed(1)}%</td>
+      <td class="num"><span class="badge ${winBadge}">${winR}%</span></td>
+      <td class="num">${peso(r.won_mrr)}</td>
+      <td class="num">${peso(r.avg_deal_size_calc)}</td>
+      <td class="num">${peso(r.mrr_in_pipeline)}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ─── 2. TREND FUNNEL ─────────────────────────────────────────────────────────
+async function loadTrendFunnel(f) {
+  const where = buildWhere(f);
+  const sql = `
+    SELECT
+      metric_month,
+      SUM(qualified_leads)       AS ql,
+      SUM(sales_qualified_leads) AS sql_count,
+      SUM(won_deals)             AS won
+    FROM shared.revops.gold_monthly_exec_summary
+    ${where}
+    GROUP BY 1 ORDER BY 1
+  `;
+  const rows = await dbQuery(sql);
+  const labels = rows.map(r => fmtMonth(r.metric_month));
+  mkChart('chart-trend-funnel', {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Qualified Leads', data: rows.map(r=>safe(r.ql)), borderColor: '#1DB954', backgroundColor: 'rgba(29,185,84,0.08)', tension: 0.4, fill: true, pointRadius: 4 },
+        { label: 'SQL', data: rows.map(r=>safe(r.sql_count)), borderColor: '#3498db', backgroundColor: 'rgba(52,152,219,0.08)', tension: 0.4, fill: true, pointRadius: 4 },
+        { label: 'Won Deals', data: rows.map(r=>safe(r.won)), borderColor: '#f39c12', backgroundColor: 'rgba(243,156,18,0.08)', tension: 0.4, fill: true, pointRadius: 4 },
+      ]
+    },
+    options: chartOptions('Lead Funnel Trend')
+  });
+}
+
+// ─── 3. RATES TREND ──────────────────────────────────────────────────────────
+async function loadRatesTrend(f) {
+  const where = buildWhere(f);
+  const sql = `
+    SELECT
+      metric_month,
+      CASE WHEN SUM(qualified_leads)>0 THEN ROUND(SUM(dq_leads)*100.0/SUM(qualified_leads),1) ELSE 0 END AS dq_rate,
+      CASE WHEN SUM(qualified_leads)>0 THEN ROUND(SUM(sales_qualified_leads)*100.0/SUM(qualified_leads),1) ELSE 0 END AS sql_rate,
+      CASE WHEN SUM(won_deals)+SUM(lost_deals)>0 THEN ROUND(SUM(won_deals)*100.0/(SUM(won_deals)+SUM(lost_deals)),1) ELSE 0 END AS win_rate
+    FROM shared.revops.gold_monthly_exec_summary
+    ${where}
+    GROUP BY 1 ORDER BY 1
+  `;
+  const rows = await dbQuery(sql);
+  const labels = rows.map(r => fmtMonth(r.metric_month));
+  mkChart('chart-rates-trend', {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'DQ Rate %', data: rows.map(r=>safe(r.dq_rate)), borderColor: '#e74c3c', tension: 0.4, pointRadius: 3 },
+        { label: 'SQL Conv %', data: rows.map(r=>safe(r.sql_rate)), borderColor: '#1DB954', tension: 0.4, pointRadius: 3 },
+        { label: 'Win Rate %', data: rows.map(r=>safe(r.win_rate)), borderColor: '#f1c40f', tension: 0.4, pointRadius: 3 },
+      ]
+    },
+    options: { ...chartOptions('Rates Trend'), plugins: { ...chartOptions('').plugins, legend: { labels: { color: '#aaa', font: { size: 11 } } } } }
+  });
+}
+
+// ─── 4. QL BY PIPELINE ───────────────────────────────────────────────────────
+async function loadQLPipeline(f) {
+  const where = buildWhere(f);
+  const sql = `
+    SELECT pipeline_name, SUM(qualified_leads) AS ql
+    FROM shared.revops.gold_monthly_exec_summary
+    ${where}
+    GROUP BY 1 ORDER BY 2 DESC
+  `;
+  const rows = await dbQuery(sql);
+  mkChart('chart-ql-pipeline', {
+    type: 'bar',
+    data: {
+      labels: rows.map(r => r.pipeline_name || '—'),
+      datasets: [{ label: 'QLs', data: rows.map(r=>safe(r.ql)), backgroundColor: PALETTE, borderRadius: 6 }]
+    },
+    options: barOptions('QL by Pipeline', false)
+  });
+}
+
+// ─── 5. WON BY SEGMENT ───────────────────────────────────────────────────────
+async function loadWonSegment(f) {
+  const where = buildWhere(f);
+  const sql = `
+    SELECT
+      CASE WHEN segment_official='MICRO' THEN 'SME' ELSE COALESCE(segment_official,'Unknown') END AS seg,
+      SUM(won_deals) AS won
+    FROM shared.revops.gold_monthly_exec_summary
+    ${where}
+    GROUP BY 1 ORDER BY 2 DESC
+  `;
+  const rows = await dbQuery(sql);
+  mkChart('chart-won-segment', {
+    type: 'doughnut',
+    data: {
+      labels: rows.map(r => r.seg),
+      datasets: [{ data: rows.map(r=>safe(r.won)), backgroundColor: PALETTE, borderWidth: 2, borderColor: '#1a1a1a' }]
+    },
+    options: donutOptions('Won Deals by Segment')
+  });
+}
+
+// ─── 6. MQL vs OQL ────────────────────────────────────────────────────────���──
+async function loadMQLOQL(f) {
+  const where = buildWhere(f);
+  const sql = `
+    SELECT
+      metric_month,
+      SUM(CASE WHEN department_source_clean='MKT Inbound' THEN qualified_leads ELSE 0 END) AS mql,
+      SUM(CASE WHEN department_source_clean='LDU Outbound' THEN qualified_leads ELSE 0 END) AS oql
+    FROM shared.revops.gold_monthly_exec_summary
+    ${where}
+    GROUP BY 1 ORDER BY 1
+  `;
+  const rows = await dbQuery(sql);
+  const labels = rows.map(r => fmtMonth(r.metric_month));
+  mkChart('chart-mql-oql', {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: 'MQL (MKT Inbound)', data: rows.map(r=>safe(r.mql)), backgroundColor: '#1DB954', borderRadius: 4 },
+        { label: 'OQL (LDU Outbound)', data: rows.map(r=>safe(r.oql)), backgroundColor: '#9b59b6', borderRadius: 4 },
+      ]
+    },
+    options: barOptions('MQL vs OQL', true)
+  });
+}
+
+// ─── 7. MRR TREND ────────────────────────────────────────────────────────────
+async function loadMRRTrend(f) {
+  const where = buildWhere(f);
+  const sql = `
+    SELECT metric_month, SUM(won_mrr) AS won_mrr, SUM(mrr_in_pipeline) AS pipe_mrr
+    FROM shared.revops.gold_monthly_exec_summary
+    ${where}
+    GROUP BY 1 ORDER BY 1
+  `;
+  const rows = await dbQuery(sql);
+  const labels = rows.map(r => fmtMonth(r.metric_month));
+  mkChart('chart-mrr-trend', {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Won MRR (₱)', data: rows.map(r=>safe(r.won_mrr)), borderColor: '#1DB954', backgroundColor: 'rgba(29,185,84,0.1)', tension: 0.4, fill: true, pointRadius: 4 },
+        { label: 'Pipeline MRR (₱)', data: rows.map(r=>safe(r.pipe_mrr)), borderColor: '#3498db', backgroundColor: 'rgba(52,152,219,0.07)', tension: 0.4, fill: true, pointRadius: 4 },
+      ]
+    },
+    options: {
+      ...chartOptions('MRR Trend'),
+      scales: {
+        x: { ticks: { color: '#666', font: { size: 11 } }, grid: { color: '#1e1e1e' } },
+        y: { ticks: { color: '#666', font: { size: 11 }, callback: v => '₱' + (v>=1000000 ? (v/1000000).toFixed(1)+'M' : v>=1000 ? (v/1000).toFixed(0)+'K' : v) }, grid: { color: '#1e1e1e' } }
+      }
+    }
+  });
+}
+
+// ─── 8. MRR BY SEGMENT ───────────────────────────────────────────────────────
+async function loadMRRSegment(f) {
+  const where = buildWhere(f);
+  const sql = `
+    SELECT
+      CASE WHEN segment_official='MICRO' THEN 'SME' ELSE COALESCE(segment_official,'Unknown') END AS seg,
+      SUM(won_mrr) AS mrr
+    FROM shared.revops.gold_monthly_exec_summary
+    ${where}
+    GROUP BY 1 ORDER BY 2 DESC
+  `;
+  const rows = await dbQuery(sql);
+  mkChart('chart-mrr-segment', {
+    type: 'doughnut',
+    data: {
+      labels: rows.map(r => r.seg),
+      datasets: [{ data: rows.map(r=>safe(r.mrr)), backgroundColor: PALETTE, borderWidth: 2, borderColor: '#1a1a1a' }]
+    },
+    options: donutOptions('Won MRR by Segment', true)
+  });
+}
+
+// ─── 9. COMBO: WON + WIN RATE ─────────────────────────────────────────────────
+async function loadComboWon(f) {
+  const where = buildWhere(f);
+  const sql = `
+    SELECT
+      metric_month,
+      SUM(won_deals) AS won,
+      CASE WHEN SUM(won_deals)+SUM(lost_deals)>0
+           THEN ROUND(SUM(won_deals)*100.0/(SUM(won_deals)+SUM(lost_deals)),1) ELSE 0 END AS win_rate
+    FROM shared.revops.gold_monthly_exec_summary
+    ${where}
+    GROUP BY 1 ORDER BY 1
+  `;
+  const rows = await dbQuery(sql);
+  const labels = rows.map(r => fmtMonth(r.metric_month));
+  mkChart('chart-combo-won', {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { type: 'bar',  label: 'Won Deals', data: rows.map(r=>safe(r.won)), backgroundColor: 'rgba(29,185,84,0.7)', borderRadius: 6, yAxisID: 'y' },
+        { type: 'line', label: 'Win Rate %', data: rows.map(r=>safe(r.win_rate)), borderColor: '#f1c40f', borderWidth: 2, tension: 0.4, pointRadius: 4, yAxisID: 'y2' },
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { labels: { color: '#aaa', font: { size: 11 } } } },
+      scales: {
+        x: { ticks: { color: '#666', font: { size: 11 } }, grid: { color: '#1e1e1e' } },
+        y: { ticks: { color: '#666', font: { size: 11 } }, grid: { color: '#1e1e1e' }, title: { display: true, text: 'Won Deals', color: '#666', font: { size: 11 } } },
+        y2: { position: 'right', ticks: { color: '#f1c40f', font: { size: 11 }, callback: v => v + '%' }, grid: { drawOnChartArea: false }, title: { display: true, text: 'Win Rate %', color: '#f1c40f', font: { size: 11 } } }
+      }
+    }
+  });
+}
+
+// ─── 10. ADS BY SEGMENT ──────────────────────────────────────────────────────
+async function loadADSSegment(f) {
+  const where = buildWhere(f);
+  const sql = `
+    SELECT
+      CASE WHEN segment_official='MICRO' THEN 'SME' ELSE COALESCE(segment_official,'Unknown') END AS seg,
+      CASE WHEN SUM(won_deals)>0 THEN ROUND(SUM(won_mrr)/SUM(won_deals),0) ELSE 0 END AS ads
+    FROM shared.revops.gold_monthly_exec_summary
+    ${where}
+    GROUP BY 1 ORDER BY 2 DESC
+  `;
+  const rows = await dbQuery(sql);
+  mkChart('chart-ads-segment', {
+    type: 'bar',
+    data: {
+      labels: rows.map(r => r.seg),
+      datasets: [{ label: 'Avg Deal Size (₱)', data: rows.map(r=>safe(r.ads)), backgroundColor: PALETTE.slice(0, rows.length), borderRadius: 8 }]
+    },
+    options: {
+      ...barOptions('ADS by Segment', false),
+      scales: {
+        x: { ticks: { color: '#666', font: { size: 11 } }, grid: { color: '#1e1e1e' } },
+        y: { ticks: { color: '#666', font: { size: 11 }, callback: v => '₱' + (v>=1000 ? (v/1000).toFixed(0)+'K' : v) }, grid: { color: '#1e1e1e' } }
+      }
+    }
+  });
+}
+
+// ─── 11. STACKED DEPT ────────────────────────────────────────────────────────
+async function loadStackedDept(f) {
+  const where = buildWhere(f);
+  const sql = `
+    SELECT metric_month, department_source_clean, SUM(qualified_leads) AS ql
+    FROM shared.revops.gold_monthly_exec_summary
+    ${where}
+    GROUP BY 1,2 ORDER BY 1, 3 DESC
+  `;
+  const rows = await dbQuery(sql);
+  const months = [...new Set(rows.map(r => r.metric_month))].sort();
+  const depts  = [...new Set(rows.map(r => r.department_source_clean).filter(Boolean))];
+  const labels = months.map(m => fmtMonth(m));
+  const datasets = depts.map((d, i) => ({
+    label: d,
+    data: months.map(m => {
+      const found = rows.find(r => r.metric_month === m && r.department_source_clean === d);
+      return found ? safe(found.ql) : 0;
+    }),
+    backgroundColor: PALETTE[i % PALETTE.length],
+    borderRadius: 3,
+    stack: 'stack0'
+  }));
+  mkChart('chart-stacked-dept', {
+    type: 'bar',
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      plugins: { legend: { labels: { color: '#aaa', font: { size: 11 } } } },
+      scales: {
+        x: { stacked: true, ticks: { color: '#666', font: { size: 10 } }, grid: { color: '#1e1e1e' } },
+        y: { stacked: true, ticks: { color: '#666', font: { size: 11 } }, grid: { color: '#1e1e1e' } }
+      }
+    }
+  });
+}
+
+// ─── 12. PIE: WON MRR BY DEPT ────────────────────────────────────────────────
+async function loadPieDept(f) {
+  const where = buildWhere(f);
+  const sql = `
+    SELECT department_source_clean, SUM(won_mrr) AS mrr
+    FROM shared.revops.gold_monthly_exec_summary
+    ${where}
+    GROUP BY 1 ORDER BY 2 DESC
+  `;
+  const rows = await dbQuery(sql);
+  mkChart('chart-pie-dept', {
+    type: 'pie',
+    data: {
+      labels: rows.map(r => r.department_source_clean || '—'),
+      datasets: [{ data: rows.map(r=>safe(r.mrr)), backgroundColor: PALETTE, borderWidth: 2, borderColor: '#1a1a1a' }]
+    },
+    options: donutOptions('Won MRR by Dept', true)
+  });
+}
+
+// ─── 13. DQ MONTHLY ──────────────────────────────────────────────────────────
+async function loadDQMonthly(f) {
+  const where = buildWhere(f);
+  const sql = `
+    SELECT metric_month, SUM(dq_leads) AS dq,
+      CASE WHEN SUM(qualified_leads)>0 THEN ROUND(SUM(dq_leads)*100.0/SUM(qualified_leads),1) ELSE 0 END AS dq_rate
+    FROM shared.revops.gold_monthly_exec_summary
+    ${where}
+    GROUP BY 1 ORDER BY 1
+  `;
+  const rows = await dbQuery(sql);
+  const labels = rows.map(r => fmtMonth(r.metric_month));
+  mkChart('chart-dq-monthly', {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { type: 'bar',  label: 'DQ Leads', data: rows.map(r=>safe(r.dq)), backgroundColor: 'rgba(231,76,60,0.6)', borderRadius: 5, yAxisID: 'y' },
+        { type: 'line', label: 'DQ Rate %', data: rows.map(r=>safe(r.dq_rate)), borderColor: '#f39c12', borderWidth: 2, tension: 0.4, pointRadius: 3, yAxisID: 'y2' }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { labels: { color: '#aaa', font: { size: 11 } } } },
+      scales: {
+        x: { ticks: { color: '#666', font: { size: 11 } }, grid: { color: '#1e1e1e' } },
+        y: { ticks: { color: '#666', font: { size: 11 } }, grid: { color: '#1e1e1e' } },
+        y2: { position: 'right', ticks: { color: '#f39c12', font: { size: 11 }, callback: v => v+'%' }, grid: { drawOnChartArea: false } }
+      }
+    }
+  });
+}
+
+// ─── 14. PIPELINE MRR TREND ──────────────────────────────────────────────────
+async function loadPipelineMRR(f) {
+  const where = buildWhere(f);
+  const sql = `
+    SELECT metric_month, pipeline_name, SUM(mrr_in_pipeline) AS pipe_mrr
+    FROM shared.revops.gold_monthly_exec_summary
+    ${where}
+    GROUP BY 1, 2 ORDER BY 1, 3 DESC
+  `;
+  const rows = await dbQuery(sql);
+  const months = [...new Set(rows.map(r => r.metric_month))].sort();
+  const pipelines = [...new Set(rows.map(r => r.pipeline_name).filter(Boolean))];
+  const labels = months.map(m => fmtMonth(m));
+  const datasets = pipelines.map((p, i) => ({
+    label: p,
+    data: months.map(m => {
+      const found = rows.find(r => r.metric_month === m && r.pipeline_name === p);
+      return found ? safe(found.pipe_mrr) : 0;
+    }),
+    borderColor: PALETTE[i % PALETTE.length],
+    backgroundColor: PALETTE[i % PALETTE.length] + '22',
+    tension: 0.4,
+    fill: false,
+    pointRadius: 3
+  }));
+  mkChart('chart-pipeline-mrr', {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      plugins: { legend: { labels: { color: '#aaa', font: { size: 11 } } } },
+      scales: {
+        x: { ticks: { color: '#666', font: { size: 11 } }, grid: { color: '#1e1e1e' } },
+        y: { ticks: { color: '#666', font: { size: 11 }, callback: v => '₱' + (v>=1000000?(v/1000000).toFixed(1)+'M':v>=1000?(v/1000).toFixed(0)+'K':v) }, grid: { color: '#1e1e1e' } }
+      }
+    }
+  });
+}
+
+// ─── CHART OPTION HELPERS ─────────────────────────────────────────────────────
+function chartOptions(title) {
+  return {
+    responsive: true,
+    plugins: {
+      legend: { labels: { color: '#aaa', font: { size: 11 } } },
+      title: title ? { display: false } : undefined,
+      tooltip: {
+        backgroundColor: '#1a1a1a',
+        borderColor: '#333',
+        borderWidth: 1,
+        titleColor: '#f0f0f0',
+        bodyColor: '#aaa',
+        callbacks: {}
+      }
+    },
+    scales: {
+      x: { ticks: { color: '#666', font: { size: 11 } }, grid: { color: '#1e1e1e' } },
+      y: { ticks: { color: '#666', font: { size: 11 } }, grid: { color: '#1e1e1e' } }
+    }
+  };
+}
+function barOptions(title, stacked) {
+  const opts = chartOptions(title);
+  if (stacked) {
+    opts.scales.x.stacked = true;
+    opts.scales.y.stacked = true;
+  }
+  return opts;
+}
+function donutOptions(title, isPeso) {
+  return {
+    responsive: true,
+    plugins: {
+      legend: { position: 'bottom', labels: { color: '#aaa', font: { size: 11 }, padding: 12 } },
+      tooltip: {
+        backgroundColor: '#1a1a1a', borderColor: '#333', borderWidth: 1,
+        titleColor: '#f0f0f0', bodyColor: '#aaa',
+        callbacks: {
+          label: ctx => {
+            const val = ctx.parsed;
+            return isPeso
+              ? ` ${ctx.label}: ₱${val.toLocaleString('en-PH')}`
+              : ` ${ctx.label}: ${val.toLocaleString('en-PH')}`;
+          }
+        }
+      }
+    }
+  };
+}
+</script>
+</body>
+</html>
