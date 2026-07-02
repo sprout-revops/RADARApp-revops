@@ -141,11 +141,13 @@ module.exports = async function handler(req, res) {
         entry.name = body.name || entry.name;
         entry.desc = body.desc || entry.desc;
         entry.tags = body.tags || entry.tags;
+        if (body.config) entry.config = body.config;
         entry.updatedAt = now;
       } else {
         entry = {
           id, name: body.name || 'Untitled Dashboard',
           desc: body.desc || '', tags: body.tags || [],
+          config: body.config || null,
           ownerEmail: email, ownerName: body.ownerName || email.split('@')[0],
           file: path, url, status: 'private',
           createdAt: now, updatedAt: now, requestedAt: null, publishedAt: null

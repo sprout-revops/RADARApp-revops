@@ -4858,13 +4858,24 @@ async function dashSaveToRadar(){
   var name = ((document.getElementById('diy-dash-name')||{}).value || '').trim() || 'My Dashboard';
   var desc = ((document.getElementById('diy-dash-desc')||{}).value || '').trim();
   var team = ((document.getElementById('diy-dash-team')||{}).value || '').trim();
+  // Ensure the saved file's browser <title> matches the dashboard name (fixes "untitled" tab).
+  var html = window._diyGeneratedSave;
+  var titleTag = '<title>' + name.replace(/</g,'&lt;') + '</title>';
+  if (/<title>[\s\S]*?<\/title>/i.test(html)) html = html.replace(/<title>[\s\S]*?<\/title>/i, titleTag);
+  else if (/<head[^>]*>/i.test(html)) html = html.replace(/<head[^>]*>/i, function(m){ return m + titleTag; });
+  // Snapshot the builder selections so the dashboard can be re-opened for editing later.
+  var config = (typeof diyState !== 'undefined') ? {
+    tables: diyState.tables, slicers: diyState.slicers, fieldSlicers: diyState.fieldSlicers,
+    views: diyState.views, metrics: diyState.metrics, dateScope: diyState.dateScope,
+    dateBasis: diyState.dateBasis, layout: diyState.layout
+  } : null;
   var btn = document.getElementById('dash-save-btn');
   if(btn) btn.disabled = true;
   dashSetStatus('💾 Saving to RADAR…');
   try {
     var res = await dashApi({
-      action: 'save', name: name, desc: desc, tags: team ? [team] : [],
-      html: window._diyGeneratedSave,
+      action: 'save', name: name, desc: desc, tags: team ? [team] : [], config: config,
+      html: html,
       ownerEmail: dashUserEmail(), ownerName: dashUserName(),
       id: window._diySavedId || undefined
     });
@@ -4923,6 +4934,9 @@ function dashCardHtml(d, adminView){
       '<button class="diy-btn diy-btn-sm" style="background:#1DB954;color:#000" onclick="dashApprove(\'' + safeId + '\')">✓ Approve</button>' +
       '<button class="diy-btn diy-btn-ghost diy-btn-sm" onclick="dashReject(\'' + safeId + '\')">✗ Reject</button>';
   } else {
+    if(d.config){
+      actions += '<button class="diy-btn diy-btn-ghost diy-btn-sm" onclick="dashEditEntry(\'' + safeId + '\')">✏️ Edit</button>';
+    }
     if(d.status === 'private' || d.status === 'rejected'){
       actions += '<button class="diy-btn diy-btn-sm" style="background:#1DB954;color:#000" onclick="dashSubmitToTeam(\'' + safeId + '\')">📤 Submit to Team</button>';
     }
@@ -4939,6 +4953,37 @@ function dashCardHtml(d, adminView){
       (adminView ? '<div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:4px">👤 ' + (d.ownerName||d.ownerEmail) + '</div>' : '') +
       '<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">' + openBtn + actions + '</div>' +
     '</div>';
+}
+
+// Edit a RADAR-saved dashboard: restore its builder selections in place (stays in the DIY
+// Builder — does NOT use goToBuilder, so it can't bounce to the homepage).
+async function dashEditEntry(id){
+  var all = await dashFetchRegistry();
+  var e = all.find(function(x){ return x.id === id; });
+  if(!e || !e.config){ alert('This dashboard was saved without editable builder settings. Open it, or start a new one.'); return; }
+  if(typeof diyState === 'undefined'){ return; }
+  var c = e.config;
+  diyState.tables       = c.tables || [];
+  diyState.slicers      = c.slicers || (typeof DIY_SLICERS!=='undefined'?DIY_SLICERS.map(function(s){return s.id;}):[]);
+  diyState.fieldSlicers = c.fieldSlicers || [];
+  diyState.views        = c.views || (typeof DIY_VIEWS!=='undefined'?DIY_VIEWS.map(function(v){return v.id;}):[]);
+  diyState.metrics      = c.metrics || [];
+  diyState.dateScope    = c.dateScope || 'between';
+  diyState.dateBasis    = c.dateBasis || 'dynamic';
+  diyState.layout       = c.layout || '3col';
+  diyState.editingId    = null;
+  window._diySavedId    = id;   // so re-saving updates this same dashboard
+  if(typeof DIY_TABLES!=='undefined') DIY_TABLES.forEach(function(t){ var card=document.getElementById('dtc-'+t.id); if(card) card.classList.toggle('selected', diyState.tables.indexOf(t.id)>=0); });
+  if(typeof diySelectScope==='function') diySelectScope(diyState.dateScope);
+  document.querySelectorAll('.diy-basis-btn').forEach(function(b){ b.classList.toggle('selected', b.getAttribute('data-basis')===diyState.dateBasis); });
+  document.querySelectorAll('.diy-slicer-chip').forEach(function(ch){ var sid=ch.getAttribute('data-slicer'); ch.classList.toggle('on', diyState.slicers.indexOf(sid)>=0); });
+  document.querySelectorAll('.diy-layout-opt').forEach(function(el){ el.classList.toggle('selected', el.getAttribute('data-layout')===diyState.layout); });
+  var nameEl=document.getElementById('diy-dash-name'); if(nameEl) nameEl.value=e.name||'';
+  var teamEl=document.getElementById('diy-dash-team'); if(teamEl) teamEl.value=(e.tags&&e.tags[0])||'';
+  var descEl=document.getElementById('diy-dash-desc'); if(descEl) descEl.value=e.desc||'';
+  if(typeof diyRenderMetrics==='function') diyRenderMetrics();
+  dashCloseModal('mydash');
+  if(typeof diyGoStep==='function') diyGoStep(1);
 }
 
 async function dashSubmitToTeam(id){
