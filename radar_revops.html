@@ -4942,7 +4942,7 @@ function dashCardHtml(d, adminView){
     }
     actions += '<button class="diy-btn diy-btn-ghost diy-btn-sm" onclick="dashDelete(\'' + safeId + '\')">🗑 Delete</button>';
   }
-  var openBtn = d.url ? '<button class="diy-btn diy-btn-ghost diy-btn-sm" onclick="openDashboardEmbed(\'' + d.url + '\',\'' + (d.name||'').replace(/'/g,"\\'") + '\')">🔗 Open</button>' : '';
+  var openBtn = d.url ? '<button class="diy-btn diy-btn-ghost diy-btn-sm" onclick="dashCloseModal(\'mydash\');dashCloseModal(\'adminreq\');openDashboardEmbed(\'' + d.url + '\',\'' + (d.name||'').replace(/'/g,"\\'") + '\')">🔗 Open</button>' : '';
   return '' +
     '<div style="border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:14px 16px;background:rgba(255,255,255,.03)">' +
       '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px">' +
