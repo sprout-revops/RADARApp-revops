@@ -19,9 +19,9 @@ function fetchJwks() {
   });
 }
 
-async function getKeys() {
+async function getKeys(force) {
   const now = Date.now();
-  if (_jwks && (now - _jwksAt) < 3600000) return _jwks;   // cache 1h
+  if (!force && _jwks && (now - _jwksAt) < 3600000) return _jwks;   // cache 1h
   _jwks = await fetchJwks();
   _jwksAt = now;
   return _jwks;
@@ -38,9 +38,10 @@ async function verifyGoogleToken(token) {
   if (parts.length !== 3) throw new Error('Malformed token.');
 
   const header = b64urlJson(parts[0]);
-  const keys = await getKeys();
-  const jwk = keys.find(k => k.kid === header.kid);
-  if (!jwk) throw new Error('Unknown signing key.');
+  let keys = await getKeys();
+  let jwk = keys.find(k => k.kid === header.kid);
+  if (!jwk) { keys = await getKeys(true); jwk = keys.find(k => k.kid === header.kid); }  // re-fetch on rotation
+  if (!jwk) throw new Error('Sign-in expired — please sign out and sign in again.');
 
   const pub = crypto.createPublicKey({ key: jwk, format: 'jwk' });
   const sig = Buffer.from(parts[2].replace(/-/g, '+').replace(/_/g, '/'), 'base64');
