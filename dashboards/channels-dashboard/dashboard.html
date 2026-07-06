@@ -2121,6 +2121,21 @@ function renderPartnerOR() {
     if (av == null) return 1; if (bv == null) return -1;
     return typeof av === 'string' ? av.localeCompare(bv) * dir : (av - bv) * dir;
   });
+  const T = rows.reduce((a, r) => {
+    a.qls += r.qls || 0; a.sqls += r.sqls || 0; a.won += r.won || 0; a.lost += r.lost || 0;
+    a.won_mrr += r.won_mrr || 0; a.pipeline_mrr += r.pipeline_mrr || 0; return a;
+  }, { qls: 0, sqls: 0, won: 0, lost: 0, won_mrr: 0, pipeline_mrr: 0 });
+  const totWin = (T.won + T.lost) ? (T.won * 100 / (T.won + T.lost)).toFixed(1) + '%' : '—';
+  const totalsHtml = `
+    <tr style="border-top:2px solid rgba(255,255,255,.2);font-weight:700;background:rgba(255,255,255,.04)">
+      <td class="primary">Total</td>
+      <td class="num">${T.qls}</td>
+      <td class="num">${T.sqls}</td>
+      <td class="num">${T.won}</td>
+      <td class="num">${php(T.won_mrr)}</td>
+      <td class="num">${totWin}</td>
+      <td class="num text-yellow">${php(T.pipeline_mrr)}</td>
+    </tr>`;
   tbody.innerHTML = rows.map(porRow => `
     <tr>
       <td class="primary">${esc2(porRow.partner)}</td>
@@ -2130,7 +2145,7 @@ function renderPartnerOR() {
       <td class="num">${php(porRow.won_mrr)}</td>
       <td class="num">${porRow.win_rate != null ? porRow.win_rate + '%' : '—'}</td>
       <td class="num">${php(porRow.pipeline_mrr)}</td>
-    </tr>`).join('');
+    </tr>`).join('') + totalsHtml;
 }
 
 function emptyRow(cols) {
@@ -2596,13 +2611,14 @@ function computeFromDeals(deals, filters) {
     if (d.client_journey_stage === 'Customer')    { porRow.won++; porRow.won_mrr += +d.mrr || 0; }
     if (d.client_journey_stage === 'Closed Lost') { porRow.lost++; }
   });
-  // Pipeline MRR: all currently open opportunities — not date-filtered, shows live pipeline per partner
-  deals.filter(d => segMatch(d) && d.client_journey_stage === 'Opportunity').forEach(d => {
+  // Pipeline MRR: open opportunities with projected_close_date within the selected date range
+  // (uses the same date-filtered pipeRows as the KPI, so it now responds to the date filter)
+  pipeRows.forEach(d => {
     getPOR(d.partner_on_record).pipeline_mrr += +d.mrr || 0;
   });
   const porTable = Object.values(porMap).map(porRow => ({
     partner: porRow.partner, qls: porRow.qls, sqls: porRow.sqls,
-    won: porRow.won, won_mrr: porRow.won_mrr,
+    won: porRow.won, lost: porRow.lost, won_mrr: porRow.won_mrr,
     win_rate: (porRow.won + porRow.lost) ? +(porRow.won * 100 / (porRow.won + porRow.lost)).toFixed(1) : null,
     pipeline_mrr: porRow.pipeline_mrr,
   })).sort((porA, porB) => porB.qls - porA.qls);
