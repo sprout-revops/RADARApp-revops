@@ -1069,12 +1069,10 @@ function buildMonthPicker() {
   const wrap = $id('month-picker');
   if (!wrap) return;
   let html = '';
-  // Show last 3 months + current + next 2
-  for (let offset = -3; offset <= 2; offset++) {
-    let y = CUR_YEAR, m = CUR_MON + offset;
-    while (m < 1)  { m += 12; y--; }
-    while (m > 12) { m -= 12; y++; }
-    const label  = MONTHS[m-1] + (y !== CUR_YEAR ? ' ' + y : '');
+  // Show current-year months, Jan → current month
+  const y = CUR_YEAR;
+  for (let m = 1; m <= CUR_MON; m++) {
+    const label  = MONTHS[m-1];
     const active = (y === selFcYear && m === selFcMon) ? 'active' : '';
     const hasSaved = localStorage.getItem(`fc_override_${y}_${m}`) ||
                      (STATIC_FORECAST && STATIC_FORECAST.month === m && STATIC_FORECAST.year === y);

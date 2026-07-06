@@ -2,8 +2,11 @@
 // Reads the published Google Sheet (Sales Rep | Month | Forecast Value) and returns
 // { "<year>_<canonicalRep>_<month>": value, _saved_at }. The sheet is the source of truth;
 // served here so the dashboard never depends on the (private) sales-dashboard repo.
-const SHEET_CSV = ('https://docs.google.com/spreadsheets/d/e/'
+const SHEET_BASE = ('https://docs.google.com/spreadsheets/d/e/'
   + '2PACX-1vQ8mhtR0d1Nw7kohUBatjQQHorI5DVT58v0pgkrfzDz8Y9CDdbO4y4JE13kzEc1416Q9Ch2eKGR3fqt/pub?output=csv');
+// Both tabs share the same layout (Sales Rep | Month | Forecast Value). New Business is the
+// default tab; Upsell is gid=1005447696. Rep sets are disjoint, so merging never collides.
+const SHEET_TABS = [SHEET_BASE, SHEET_BASE + '&gid=1005447696'];
 
 const MONTHS = { january:1, february:2, march:3, april:4, may:5, june:6, july:7,
   august:8, september:9, october:10, november:11, december:12 };
@@ -21,6 +24,7 @@ const ALIAS = {
   'rizzalyn morada berce':'Rizzalyn Berce','rizzalyn morada':'Rizzalyn Berce',
   'brian dominic azarcon':'Brian Azarcon','ricardo rigodon':'Ric Rigodon',
   'akisha a':'Akisha Abella','marie christine espineda':'Chress Espineda',
+  'ric rogodon':'Ric Rigodon',
 };
 function canon(s) {
   if (!s) return null;
@@ -70,18 +74,20 @@ module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(204).end();
 
   try {
-    const r = await fetch(SHEET_CSV);   // global fetch follows the 307 redirect
-    if (!r.ok) return res.status(502).json({ error: 'Sheet fetch failed: ' + r.status });
-    const text = await r.text();
-    const lines = text.split(/\r?\n/).filter(l => l.length);
     const out = {};
-    for (let i = 1; i < lines.length; i++) {            // skip header
-      const cells = splitCsvLine(lines[i]);
-      const rep = canon(cells[0]);
-      const mm = parseMonth(cells[1]);
-      const val = parseFloat(String(cells[2] || '').replace(/[^0-9.\-]/g, ''));
-      if (!rep || !mm || !mm.mon || isNaN(val)) continue;
-      out[`${mm.year}_${rep}_${mm.mon}`] = val;
+    for (const url of SHEET_TABS) {
+      const r = await fetch(url);   // global fetch follows the 307 redirect
+      if (!r.ok) return res.status(502).json({ error: 'Sheet fetch failed: ' + r.status });
+      const text = await r.text();
+      const lines = text.split(/\r?\n/).filter(l => l.length);
+      for (let i = 1; i < lines.length; i++) {          // skip header
+        const cells = splitCsvLine(lines[i]);
+        const rep = canon(cells[0]);
+        const mm = parseMonth(cells[1]);
+        const val = parseFloat(String(cells[2] || '').replace(/[^0-9.\-]/g, ''));
+        if (!rep || !mm || !mm.mon || isNaN(val)) continue;
+        out[`${mm.year}_${rep}_${mm.mon}`] = val;
+      }
     }
     out._saved_at = Date.now();
     out._source = 'gsheet-live';
