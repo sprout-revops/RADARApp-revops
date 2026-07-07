@@ -803,7 +803,7 @@ select.filter-control option{background:var(--surface2)}
         <button class="tab-btn" data-tab="ptype">🏢 Partner Type</button>
         <button class="tab-btn" data-tab="reps">👤 Sales Reps</button>
         <button class="tab-btn" data-tab="leads">🎯 Leads</button>
-        <button class="tab-btn" data-tab="sql">🔍 SQL Deals</button>
+        <button class="tab-btn" data-tab="sql">📋 All Deals</button>
       </div>
 
       <!-- WON DEALS -->
@@ -977,7 +977,7 @@ select.filter-control option{background:var(--surface2)}
       <!-- SQL DEALS -->
       <div class="tab-panel" id="panel-sql">
         <div class="tbl-toolbar">
-          <span class="tbl-title">Active Deals (IDD+)</span>
+          <span class="tbl-title">All Deals</span>
           <span class="tbl-count" id="count-sql">0 rows</span>
           <input class="tbl-search" placeholder="Search deals…" id="search-sql" autocomplete="off"/>
           <button class="btn-export" onclick="exportCSV('sql','channels_sql_deals')">
@@ -2579,13 +2579,8 @@ function computeFromDeals(deals, filters) {
     stage: d.client_journey_stage, stage_label: d.stage_label, mrr: +d.mrr || 0,
   })).sort((a, b) => (b.create_date || '').localeCompare(a.create_date || ''));
 
-  // ─── SQL Deals table — ALL active deals from IDD onwards (no date filter) ───
-  // Opportunity only: IDD, Solutioning, Commercial Negotiation (excl. Won/Lost/Churn — separate tabs)
-  const sqlTable = deals.filter(d =>
-    d.client_journey_stage === 'Opportunity' &&
-    !/(renewal)/i.test(d.deal_type || '') &&
-    !/(renewal)/i.test(d.deal_name || '')
-  ).map(d => ({
+  // ─── All Deals table — every deal created within the selected date range (by create_date) ───
+  const sqlTable = byCreate.map(d => ({
     deal_id: d.deal_id, deal_name: d.deal_name,
     create_date: d.create_date, close_date: d.close_date,
     projected_close_date: d.projected_close_date,
