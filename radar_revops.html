@@ -4817,7 +4817,8 @@ function diyReset(){
    SAVE TO RADAR + TEAM DASHBOARD REQUEST FLOW
    ════════════════════════════════════════════════ */
 var DASH_ADMINS = ['lurbina@sprout.ph', 'apanares@sprout.ph'];
-var DASH_REGISTRY_URL = 'https://raw.githubusercontent.com/sprout-revops/RADARApp-revops/master/user-dashboards/registry.json';
+// Served by Vercel (honors ?cb cache-bust; GitHub raw CDN ignores query strings and lags ~5 min)
+var DASH_REGISTRY_URL = 'https://radar-revops.vercel.app/user-dashboards/registry.json';
 
 function dashUserEmail(){ return (localStorage.getItem('radar_user_email') || '').toLowerCase(); }
 function dashUserName(){ return localStorage.getItem('radar_user_name') || (dashUserEmail().split('@')[0] || 'user'); }

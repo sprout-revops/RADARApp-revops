@@ -4,7 +4,8 @@
 const https = require('https');
 const { verifyGoogleToken } = require('./_verify.js');
 
-const REGISTRY_RAW = 'https://raw.githubusercontent.com/sprout-revops/RADARApp-revops/master/user-dashboards/registry.json';
+// Vercel-served copy honors cache-busting (GitHub raw CDN ignores query strings and lags ~5 min)
+const REGISTRY_RAW = 'https://radar-revops.vercel.app/user-dashboards/registry.json';
 const DASH_ADMINS = ['lurbina@sprout.ph', 'apanares@sprout.ph'];
 
 function getJson(url) {
