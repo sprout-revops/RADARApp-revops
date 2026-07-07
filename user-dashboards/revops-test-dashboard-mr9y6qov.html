@@ -484,7 +484,7 @@ const CONFIG = { host: (localStorage.getItem('radar_db_host')||''), token: (loca
 async function dbQuery(sql) {
   const sub = await fetch("https://radar-revops.vercel.app/api/databricks", {
     method: "POST",
-    headers: { "x-db-host": CONFIG.host, "x-db-token": CONFIG.token, "Content-Type": "application/json" },
+    headers: { "x-db-host": CONFIG.host, "x-db-token": CONFIG.token, 'x-radar-token': (localStorage.getItem('radar_id_token')||''), "Content-Type": "application/json" },
     body: JSON.stringify({ warehouse_id: CONFIG.warehouseId, statement: sql, wait_timeout: "0s", on_wait_timeout: "CONTINUE", format: "JSON_ARRAY" })
   });
   const subJson = await sub.json();
@@ -492,7 +492,7 @@ async function dbQuery(sql) {
   for (let i = 0; i < 120; i++) {
     await new Promise(r => setTimeout(r, 3000));
     const poll = await fetch("https://radar-revops.vercel.app/api/databricks-poll?id=" + subJson.statement_id, {
-      headers: { "x-db-host": CONFIG.host, "x-db-token": CONFIG.token }
+      headers: { "x-db-host": CONFIG.host, "x-db-token": CONFIG.token , 'x-radar-token': (localStorage.getItem('radar_id_token')||'')}
     });
     const p = await poll.json();
     const state = p && p.status && p.status.state;
@@ -1081,3 +1081,4 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+<!--radar-db-token-upgraded-->
