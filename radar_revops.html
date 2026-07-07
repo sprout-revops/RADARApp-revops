@@ -3893,29 +3893,29 @@ function goToBuilder() {
 <script>
 // ── DIY BUILDER DATA ──
 var DIY_TABLES = [
-  {id:'silver_deals', name:'silver_deals', icon:'📋', desc:'1 row per deal · pipeline, stage, MRR, reps', src:'hs', srcLabel:'HubSpot',
+  {id:'silver_deals', name:'silver_deals', label:'Deals', icon:'📋', desc:'1 row per deal · pipeline, stage, MRR, reps', src:'hs', srcLabel:'HubSpot',
    joins:['silver_line_items','silver_company','gold_monthly_exec_summary']},
-  {id:'gold_monthly_exec_summary', name:'gold_monthly_exec_summary', icon:'⭐', desc:'Pre-aggregated KPIs · PRIMARY for dashboards', src:'db', srcLabel:'Databricks',
+  {id:'gold_monthly_exec_summary', name:'gold_monthly_exec_summary', label:'Monthly Exec Summary (KPIs)', icon:'⭐', desc:'Pre-aggregated KPIs · PRIMARY for dashboards', src:'db', srcLabel:'Databricks',
    joins:['gold_targets','gold_targets_per_rep']},
-  {id:'gold_targets', name:'gold_targets', icon:'🎯', desc:'Monthly targets by pipeline, segment, dept', src:'db', srcLabel:'Databricks',
+  {id:'gold_targets', name:'gold_targets', label:'Targets', icon:'🎯', desc:'Monthly targets by pipeline, segment, dept', src:'db', srcLabel:'Databricks',
    joins:['gold_monthly_exec_summary']},
-  {id:'gold_targets_per_rep', name:'gold_targets_per_rep', icon:'👤', desc:'Monthly MRR & EF MRR targets per sales rep', src:'db', srcLabel:'Databricks',
+  {id:'gold_targets_per_rep', name:'gold_targets_per_rep', label:'Rep Targets', icon:'👤', desc:'Monthly MRR & EF MRR targets per sales rep', src:'db', srcLabel:'Databricks',
    joins:['gold_monthly_exec_summary','silver_deals']},
-  {id:'silver_company', name:'silver_company', icon:'🏢', desc:'Company attributes, segment, CSM, lifecycle', src:'hs', srcLabel:'HubSpot',
+  {id:'silver_company', name:'silver_company', label:'Companies', icon:'🏢', desc:'Company attributes, segment, CSM, lifecycle', src:'hs', srcLabel:'HubSpot',
    joins:['silver_contacts','silver_licenses','netsuite_invoices_summary','company_active_headcount']},
-  {id:'silver_contacts', name:'silver_contacts', icon:'👥', desc:'Contact data, lifecycle stage, source', src:'hs', srcLabel:'HubSpot',
+  {id:'silver_contacts', name:'silver_contacts', label:'Contacts', icon:'👥', desc:'Contact data, lifecycle stage, source', src:'hs', srcLabel:'HubSpot',
    joins:['silver_company']},
-  {id:'silver_leads', name:'silver_leads', icon:'🔍', desc:'Lead pipeline, LDU qualification, disqualification', src:'hs', srcLabel:'HubSpot',
+  {id:'silver_leads', name:'silver_leads', label:'Leads', icon:'🔍', desc:'Lead pipeline, LDU qualification, disqualification', src:'hs', srcLabel:'HubSpot',
    joins:['silver_company','silver_contacts']},
-  {id:'silver_line_items', name:'silver_line_items', icon:'📦', desc:'Product-level MRR, billing term, attach rate', src:'hs', srcLabel:'HubSpot',
+  {id:'silver_line_items', name:'silver_line_items', label:'Deal Line Items', icon:'📦', desc:'Product-level MRR, billing term, attach rate', src:'hs', srcLabel:'HubSpot',
    joins:['silver_deals']},
-  {id:'silver_licenses', name:'silver_licenses', icon:'🔑', desc:'License / product data, renewal, churn', src:'hs', srcLabel:'HubSpot',
+  {id:'silver_licenses', name:'silver_licenses', label:'Licenses & Products', icon:'🔑', desc:'License / product data, renewal, churn', src:'hs', srcLabel:'HubSpot',
    joins:['silver_company']},
-  {id:'netsuite_invoices_summary', name:'netsuite_invoices_summary', icon:'💰', desc:'Billing & collections, invoice status, overdue', src:'ns', srcLabel:'NetSuite',
+  {id:'netsuite_invoices_summary', name:'netsuite_invoices_summary', label:'Invoices (Billing & Collections)', icon:'💰', desc:'Billing & collections, invoice status, overdue', src:'ns', srcLabel:'NetSuite',
    joins:['silver_company','netsuite_invoice_lineitems']},
-  {id:'netsuite_invoice_lineitems', name:'netsuite_invoice_lineitems', icon:'📄', desc:'Invoice line-item detail, product billing', src:'ns', srcLabel:'NetSuite',
+  {id:'netsuite_invoice_lineitems', name:'netsuite_invoice_lineitems', label:'Invoice Line Items', icon:'📄', desc:'Invoice line-item detail, product billing', src:'ns', srcLabel:'NetSuite',
    joins:['netsuite_invoices_summary']},
-  {id:'company_active_headcount', name:'company_active_headcount', icon:'📊', desc:'Monthly headcount per company, HR vs Payroll', src:'int', srcLabel:'Internal',
+  {id:'company_active_headcount', name:'company_active_headcount', label:'Active Headcount', icon:'📊', desc:'Monthly headcount per company, HR vs Payroll', src:'int', srcLabel:'Internal',
    joins:['silver_company']}
 ];
 
@@ -3966,7 +3966,8 @@ var diyState = {
       : '';
     return '<div class="diy-table-card" id="dtc-'+t.id+'" onclick="diyToggleTable(\''+t.id+'\')">'
       + '<div class="diy-check-mark">&#x2713;</div>'
-      + '<div class="dtc-name">'+t.icon+' '+t.name+'</div>'
+      + '<div class="dtc-name">'+t.icon+' '+(t.label||t.name)+'</div>'
+      + '<div style="font-size:9px;font-family:\'Fira Code\',monospace;color:rgba(255,255,255,.28);margin-bottom:5px">'+t.name+'</div>'
       + '<div class="dtc-desc">'+t.desc+'</div>'
       + '<span class="dtc-src '+t.src+'">'+t.srcLabel+'</span>'
       + (joinHtml ? '<div class="diy-join-badges">'+joinHtml+'</div>' : '')
