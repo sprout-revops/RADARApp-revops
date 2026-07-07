@@ -153,11 +153,21 @@
       "ownerName": "lurbina",
       "file": "user-dashboards/revops-test-dashboard-mr9y6qov.html",
       "url": "https://radar-revops.vercel.app/user-dashboards/revops-test-dashboard-mr9y6qov.html",
-      "status": "requested",
+      "status": "published",
       "createdAt": "2026-07-07T01:05:51.042Z",
       "updatedAt": "2026-07-07T01:05:51.042Z",
       "requestedAt": "2026-07-07T02:25:50.319Z",
-      "publishedAt": null
+      "publishedAt": "2026-07-07T04:06:06.748Z",
+      "access": [
+        {
+          "email": "nduran@sprout.ph",
+          "level": "view"
+        },
+        {
+          "email": "louieb@sprout.ph",
+          "level": "edit"
+        }
+      ]
     }
   ]
 }
