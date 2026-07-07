@@ -150,7 +150,19 @@
   .pipeline-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
 </style>
 </head>
-<body>
+<body><script data-radar-access-guard>(function(){
+  var ID="revops-test-dashboard-mr9y6qov";
+  document.documentElement.style.visibility='hidden';
+  function block(msg){try{document.documentElement.style.visibility='';document.body.innerHTML='<div style="font-family:system-ui,-apple-system,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center;background:#0a0a0a;color:#e2e8f0;padding:24px"><div><div style="font-size:44px">&#128274;</div><div style="font-size:18px;font-weight:700;margin-top:14px">'+msg+'</div></div></div>';}catch(e){}}
+  fetch('https://radar-revops.vercel.app/api/dashboard-access?id='+encodeURIComponent(ID)+'&_='+Date.now(),{headers:{'x-radar-token':localStorage.getItem('radar_id_token')||''}})
+    .then(function(r){return r.json();})
+    .then(function(j){
+      if(j&&j.allowed){document.documentElement.style.visibility='';}
+      else if(j&&j.reason==='signin'){block('Sign in to RADAR with your @sprout.ph account to view this dashboard.');}
+      else{block('You do not have access to this dashboard.<br><span style="font-size:13px;font-weight:400;color:#94a3b8">Ask the owner to share it with your account.</span>');}
+    })
+    .catch(function(){document.documentElement.style.visibility='';});
+})();</script>
 
 <!-- LOADING OVERLAY -->
 <div class="loading-overlay" id="loadingOverlay">
