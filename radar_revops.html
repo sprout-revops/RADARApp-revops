@@ -2461,8 +2461,18 @@ function goToBuilder() {
 
   <div class="connect-body">
 
+    <!-- Mode toggle: connect by approved metrics, or by raw tables -->
+    <div style="display:flex;gap:10px;margin-bottom:18px">
+      <button id="cmode-metrics" onclick="connectSetMode('metrics')" style="flex:1;padding:12px;border-radius:10px;border:1.5px solid #1DB954;background:rgba(29,185,84,.15);color:#1DB954;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;text-align:left">
+        🎯 Connect by Metrics<div style="font-size:10px;font-weight:400;color:rgba(255,255,255,.4);margin-top:2px">Use RADAR's approved metric definitions</div>
+      </button>
+      <button id="cmode-tables" onclick="connectSetMode('tables')" style="flex:1;padding:12px;border-radius:10px;border:1.5px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:rgba(255,255,255,.6);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;text-align:left">
+        🗃️ Connect by Tables<div style="font-size:10px;font-weight:400;color:rgba(255,255,255,.4);margin-top:2px">Connect to specific raw tables + schemas</div>
+      </button>
+    </div>
+
     <!-- Step 1: Metrics -->
-    <div class="connect-step">
+    <div class="connect-step" id="connect-step-metrics">
       <div class="connect-step-header">
         <div class="connect-step-num">1</div>
         <div class="connect-step-title">What data do you need from RADAR?</div>
@@ -2513,6 +2523,16 @@ function goToBuilder() {
         <div class="metric-chip" data-id="sql_to_won" onclick="this.classList.toggle('selected')"><div class="mc-label">WON/SQL</div><div class="mc-sub">Won Deals (Month) ÷ SQL/ACTIVE — SQL to close conversion</div></div>
         <div class="metric-chip" data-id="lead_to_won" onclick="this.classList.toggle('selected')"><div class="mc-label">Lead to Won Conversion %</div><div class="mc-sub">% of total leads that convert to Closed-Won — Won Leads ÷ Total Leads</div></div>
       </div>
+    </div>
+
+    <!-- Step 1 (alt): Tables -->
+    <div class="connect-step" id="connect-step-tables" style="display:none">
+      <div class="connect-step-header">
+        <div class="connect-step-num">1</div>
+        <div class="connect-step-title">Which tables do you want to connect to?</div>
+      </div>
+      <div class="connect-step-desc">Select the <code style="font-size:10px;background:rgba(255,255,255,.08);padding:1px 4px;border-radius:3px;color:#1DB954">shared.revops</code> tables to connect. The generated prompt includes each table's full column schema so Claude uses the real fields.</div>
+      <div id="connect-tables-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px"></div>
     </div>
 
 <!-- Step 2: Filters -->
@@ -8783,7 +8803,84 @@ function showConnectError(msg) {
   el.style.display = msg ? 'block' : 'none';
 }
 
+// ── Connect mode: metrics (approved definitions) vs tables (raw tables + schemas) ──
+var _connectMode = 'metrics';
+function connectSetMode(mode) {
+  _connectMode = mode;
+  var m = document.getElementById('cmode-metrics'), t = document.getElementById('cmode-tables');
+  var stepM = document.getElementById('connect-step-metrics'), stepT = document.getElementById('connect-step-tables');
+  function on(b){ if(b){ b.style.borderColor='#1DB954'; b.style.background='rgba(29,185,84,.15)'; b.style.color='#1DB954'; } }
+  function off(b){ if(b){ b.style.borderColor='rgba(255,255,255,.12)'; b.style.background='rgba(255,255,255,.04)'; b.style.color='rgba(255,255,255,.6)'; } }
+  if (mode === 'tables') { on(t); off(m); if(stepM) stepM.style.display='none'; if(stepT) stepT.style.display=''; connectRenderTables(); }
+  else { on(m); off(t); if(stepM) stepM.style.display=''; if(stepT) stepT.style.display='none'; }
+}
+function connectRenderTables() {
+  var el = document.getElementById('connect-tables-list');
+  if (!el || el.dataset.rendered) return;
+  el.dataset.rendered = '1';
+  el.innerHTML = (typeof DIY_TABLES !== 'undefined' ? DIY_TABLES : []).map(function(t){
+    return '<label style="display:flex;gap:8px;align-items:flex-start;padding:10px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:8px;cursor:pointer">'
+      + '<input type="checkbox" value="' + t.id + '" style="margin-top:2px;accent-color:#1DB954">'
+      + '<div><div style="font-size:12px;font-weight:700;color:#e2e8f0">' + t.icon + ' ' + (t.label || t.name) + '</div>'
+      + '<div style="font-size:9px;font-family:monospace;color:rgba(255,255,255,.3)">' + t.name + '</div>'
+      + '<div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:2px">' + t.desc + '</div></div></label>';
+  }).join('');
+}
+
+function generateConnectTablesPrompt() {
+  try {
+    showConnectError('');
+    var picked = [].slice.call(document.querySelectorAll('#connect-tables-list input[type=checkbox]:checked')).map(function(x){ return x.value; });
+    if (!picked.length) { showConnectError('⚠ Select at least one table to connect to.'); document.querySelector('.connect-body').scrollIntoView({ behavior:'smooth', block:'start' }); return; }
+    var desc = (document.getElementById('cf-desc').value || '').trim();
+    var code = window._cfUploadedCode || '';
+    var dr = [].slice.call(document.querySelectorAll('#cf-date .chip-opt.active')).map(function(x){ return x.dataset.val; });
+    var dateRange = dr.length ? dr.join(' + ') : 'YTD';
+
+    var schemaBlocks = picked.map(function(id){
+      var t = (typeof TABLES !== 'undefined') ? TABLES.find(function(x){ return x.name === id; }) : null;
+      var L = ['shared.revops.' + id];
+      if (t) {
+        if (t.grain) L.push('  Grain: ' + t.grain);
+        if (t.description) L.push('  Description: ' + t.description);
+        L.push('  Columns:');
+        (t.fields || []).forEach(function(f){ L.push('    ' + f.name + ' (' + f.type + ') — ' + f.desc); });
+      } else {
+        L.push('  (run DESCRIBE TABLE shared.revops.' + id + ' in the Databricks SQL editor to get its columns)');
+      }
+      return L.join('\n');
+    }).join('\n\n');
+
+    var connectionRef = '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nHOW TO CONNECT (Databricks via the RADAR proxy)\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n'
+      + 'Query through the RADAR proxy (avoids CORS). Submit a statement:\n'
+      + '  POST https://radar-revops.vercel.app/api/databricks\n'
+      + '  Headers: { "x-db-host": <DATABRICKS_HOST>, "x-db-token": <PAT>, "Content-Type": "application/json" }\n'
+      + '  Body: { "warehouse_id": <WAREHOUSE_ID>, "statement": <SQL>, "wait_timeout": "0s", "on_wait_timeout": "CONTINUE", "format": "JSON_ARRAY" }\n'
+      + 'The submit returns a statement_id; then poll until done:\n'
+      + '  GET https://radar-revops.vercel.app/api/databricks-poll?id={statement_id}\n'
+      + '  Poll every ~1s until status.state === "SUCCEEDED" (or "FAILED").\n'
+      + 'Parse results: manifest.schema.columns → column names; result.data_array → rows.\n'
+      + 'Credentials come from a .env file (Python projects) or localStorage (HTML-only). Never hardcode or commit them.';
+
+    var instructions = code
+      ? '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nWHAT I NEED YOU TO DO\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nUpdate my existing dashboard code (below) to query these RADAR tables directly:\n• Write SQL against the tables/columns listed above — do NOT invent columns\n• Keep my existing layout and style\n• Default date range: ' + dateRange + '\n• Show a loading state and a clear error if the connection fails\n• Add a 🔄 Refresh button that re-runs the queries'
+      : '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nWHAT I NEED YOU TO DO\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nBuild a dashboard that queries these RADAR tables directly:\n• Write SQL against the tables/columns listed above — do NOT invent columns\n• Default date range: ' + dateRange + '\n• Show a loading state and a clear error if the connection fails\n• Add a 🔄 Refresh button that re-runs the queries';
+
+    var prompt = "I'm building a dashboard and I want to connect it directly to specific tables in RADAR — Sprout Solutions' RevOps data platform on Databricks (schema: shared.revops).\n";
+    if (desc) prompt += '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nMY DASHBOARD\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' + desc + '\n';
+    prompt += '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nTABLES TO CONNECT (shared.revops)\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' + schemaBlocks + '\n\n' + connectionRef + '\n\n' + instructions;
+    if (code) prompt += '\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nMY CURRENT DASHBOARD CODE\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' + code;
+
+    document.getElementById('connect-prompt-text').textContent = prompt;
+    var out = document.getElementById('connect-output'); out.style.display = 'block';
+    setTimeout(function(){ out.scrollIntoView({ behavior:'smooth', block:'start' }); }, 50);
+  } catch(err) {
+    showConnectError('❌ Error generating prompt: ' + err.message);
+  }
+}
+
 function generateConnectPrompt() {
+  if (_connectMode === 'tables') { generateConnectTablesPrompt(); return; }
   try {
   showConnectError('');
   const selected = [...document.querySelectorAll('.metric-chip.selected')].map(el => el.dataset.id);
