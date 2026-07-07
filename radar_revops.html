@@ -2555,13 +2555,16 @@ function goToBuilder() {
   </div>
 
   <!-- Table tabs -->
-  <div class="cf-table-tabs">
+  <div class="cf-table-tabs" style="flex-wrap:wrap">
     <div class="cf-table-tab active" onclick="switchFilterTable('deals',this)">📋 Deals</div>
     <div class="cf-table-tab" onclick="switchFilterTable('companies',this)">🏢 Companies</div>
-    <div class="cf-table-tab" onclick="switchFilterTable('lineitems',this)">📦 Line Items</div>
     <div class="cf-table-tab" onclick="switchFilterTable('contacts',this)">👤 Contacts</div>
     <div class="cf-table-tab" onclick="switchFilterTable('leads',this)">🎯 Leads</div>
-    <div class="cf-table-tab" onclick="switchFilterTable('licenses',this)">📄 Licenses</div>
+    <div class="cf-table-tab" onclick="switchFilterTable('lineitems',this)">📦 Deal Line Items</div>
+    <div class="cf-table-tab" onclick="switchFilterTable('licenses',this)">🔑 Products Availed</div>
+    <div class="cf-table-tab" onclick="switchFilterTable('invoices',this)">💰 Invoices</div>
+    <div class="cf-table-tab" onclick="switchFilterTable('invoicelineitems',this)">📄 Invoice Line Items</div>
+    <div class="cf-table-tab" onclick="switchFilterTable('headcount',this)">📊 Active Headcount</div>
   </div>
 
   <!-- DEALS -->
@@ -3022,6 +3025,11 @@ function goToBuilder() {
     </div>
     </div>
   </div>
+
+  <!-- Schema-generated panels (built by connectBuildSchemaPanels on load) -->
+  <div class="cf-table-panel" id="cf-panel-invoices" style="display:none"></div>
+  <div class="cf-table-panel" id="cf-panel-invoicelineitems" style="display:none"></div>
+  <div class="cf-table-panel" id="cf-panel-headcount" style="display:none"></div>
 
 </div>
 
@@ -8689,10 +8697,12 @@ document.querySelectorAll('.home-card').forEach(card => {
 function initConnectSection() {}
 
 function switchFilterTable(name, el) {
+  if (typeof connectBuildSchemaPanels === 'function') connectBuildSchemaPanels();  // build schema panels on first use
   document.querySelectorAll('#section-connect .cf-table-tab').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
   document.querySelectorAll('#section-connect .cf-table-panel').forEach(p => p.style.display = 'none');
-  document.getElementById('cf-panel-' + name).style.display = 'block';
+  var panel = document.getElementById('cf-panel-' + name);
+  if (panel) panel.style.display = 'block';
 }
 
 function switchBdFilterTable(name, el) {
@@ -8827,6 +8837,34 @@ function connectRenderTables() {
   }).join('');
 }
 
+// Build the Step-2 filter panels for tables that have no hand-crafted panel, straight from
+// the table schema in TABLES. Known categorical fields get dropdowns; the rest get text inputs.
+function connectBuildSchemaPanels() {
+  var map = { invoices:'netsuite_invoices_summary', invoicelineitems:'netsuite_invoice_lineitems', headcount:'company_active_headcount' };
+  var known = { invoice_status: ['Paid','Open','Overdue','Cancelled - CM/CN'] };
+  Object.keys(map).forEach(function(key){
+    var panel = document.getElementById('cf-panel-' + key);
+    if (!panel || panel.dataset.built) return;
+    panel.dataset.built = '1';
+    var tname = map[key];
+    var t = (typeof TABLES !== 'undefined') ? TABLES.find(function(x){ return x.name === tname; }) : null;
+    var fields = (t && t.fields) ? t.fields : [];
+    if (!fields.length) { panel.innerHTML = '<div style="font-size:12px;color:rgba(255,255,255,.35);padding:8px 0">No filterable fields available for this table.</div>'; return; }
+    panel.innerHTML = fields.map(function(f){
+      if (known[f.name]) {
+        var opts = known[f.name].map(function(v){ return '<label class="cf-ms-opt"><input type="checkbox" value="' + v + '" onchange="updateMSDisplay(this.closest(\'.cf-multiselect\'))"> ' + v + '</label>'; }).join('');
+        return '<div class="cf-field-row"><div class="cf-field-name">' + f.name + '</div>'
+          + '<div class="cf-multiselect" data-table="' + tname + '" data-field="' + f.name + '">'
+          + '<button type="button" class="cf-ms-trigger" onclick="toggleMultiselect(this.parentElement)"><span class="cf-ms-display">&#8212; All &#8212;</span><span class="cf-ms-arrow">&#9660;</span></button>'
+          + '<div class="cf-ms-menu">' + opts + '</div></div></div>';
+      }
+      return '<div class="cf-field-row"><div class="cf-field-name" title="' + (f.desc || '') + '">' + f.name + ' <span style="font-size:9px;color:rgba(255,255,255,.25)">(' + f.type + ')</span></div>'
+        + '<input type="text" class="cf-textfilter connect-input" data-table="' + tname + '" data-field="' + f.name + '" placeholder="filter value (optional)" style="flex:1;box-sizing:border-box">'
+        + '</div>';
+    }).join('');
+  });
+}
+
 function generateConnectTablesPrompt() {
   try {
     showConnectError('');
@@ -8836,6 +8874,17 @@ function generateConnectTablesPrompt() {
     var code = window._cfUploadedCode || '';
     var dr = [].slice.call(document.querySelectorAll('#cf-date .chip-opt.active')).map(function(x){ return x.dataset.val; });
     var dateRange = dr.length ? dr.join(' + ') : 'YTD';
+
+    // Optional field filters (Step 2) — dropdowns + schema text inputs
+    var fieldFilters = [];
+    document.querySelectorAll('#section-connect .cf-multiselect').forEach(function(ms){
+      var vals = [].slice.call(ms.querySelectorAll('input[type=checkbox]:checked')).map(function(x){ return x.value; });
+      if (vals.length) fieldFilters.push('• ' + ms.dataset.table + '.' + ms.dataset.field + " IN (" + vals.map(function(v){ return "'" + v + "'"; }).join(', ') + ")");
+    });
+    document.querySelectorAll('#section-connect .cf-textfilter').forEach(function(inp){
+      var v = (inp.value || '').trim();
+      if (v) fieldFilters.push('• ' + inp.dataset.table + '.' + inp.dataset.field + " = '" + v + "'");
+    });
 
     var schemaBlocks = picked.map(function(id){
       var t = (typeof TABLES !== 'undefined') ? TABLES.find(function(x){ return x.name === id; }) : null;
@@ -8868,7 +8917,9 @@ function generateConnectTablesPrompt() {
 
     var prompt = "I'm building a dashboard and I want to connect it directly to specific tables in RADAR — Sprout Solutions' RevOps data platform on Databricks (schema: shared.revops).\n";
     if (desc) prompt += '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nMY DASHBOARD\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' + desc + '\n';
-    prompt += '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nTABLES TO CONNECT (shared.revops)\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' + schemaBlocks + '\n\n' + connectionRef + '\n\n' + instructions;
+    prompt += '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nTABLES TO CONNECT (shared.revops)\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' + schemaBlocks;
+    if (fieldFilters.length) prompt += '\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nFILTERS TO APPLY\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Date Range: ' + dateRange + '\n' + fieldFilters.join('\n');
+    prompt += '\n\n' + connectionRef + '\n\n' + instructions;
     if (code) prompt += '\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nMY CURRENT DASHBOARD CODE\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' + code;
 
     document.getElementById('connect-prompt-text').textContent = prompt;
@@ -8901,6 +8952,10 @@ function generateConnectPrompt() {
     const field = ms.dataset.field;
     const vals  = [...ms.querySelectorAll('input[type=checkbox]:checked')].map(x => x.value);
     if (vals.length) fieldFilters.push(`• ${tbl}.${field} IN (${vals.map(v => "'" + v + "'").join(', ')})`);
+  });
+  document.querySelectorAll('#section-connect .cf-textfilter').forEach(inp => {
+    const v = (inp.value || '').trim();
+    if (v) fieldFilters.push(`• ${inp.dataset.table}.${inp.dataset.field} = '${v}'`);
   });
 
   const filterLines = [
