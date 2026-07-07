@@ -666,6 +666,12 @@ body{font-family:'Rubik','Bahnschrift Light SemiCondensed','Bahnschrift',Arial,s
     <div class="home-cards-wrap">
       <div class="home-section-label">Explore RADAR</div>
       <div class="home-cards">
+        <div class="home-card card-diy" onclick="diyOpenFromHome()">
+          <div class="home-card-icon">🧪</div>
+          <div class="home-card-title">DIY Dashboard Builder <span style="font-size:9px;font-weight:800;letter-spacing:.5px;background:#1DB954;color:#030712;padding:2px 6px;border-radius:10px;vertical-align:middle;margin-left:6px">NEW</span></div>
+          <div class="home-card-desc">Pick your metrics and generate a live, Databricks-connected dashboard with AI — no code. Save it, share by email, and publish to the team.</div>
+          <div class="home-card-arrow">BUILD A DASHBOARD →</div>
+        </div>
         <div class="home-card" onclick="switchTab('db')">
           <div class="home-card-icon">🗄️</div>
           <div class="home-card-title">Database Explorer</div>
@@ -714,7 +720,7 @@ body{font-family:'Rubik','Bahnschrift Light SemiCondensed','Bahnschrift',Arial,s
         <div class="home-card-arrow" style="flex-shrink:0;white-space:nowrap">REQUEST DATA →</div>
       </div>
     </div>
-    <div class="home-version">RADAR v2.1 · shared.revops · Databricks · Jun 9 2026</div>
+    <div class="home-version">RADAR v2.2 · shared.revops · Databricks · Jul 7 2026</div>
   </div>
 </div>
 
@@ -5997,6 +6003,12 @@ function triggerGoogleSignIn() {
   if (errEl) {
     errEl.textContent = 'Sign-in button failed to load. Please disable any ad blockers, try a different browser, or reload the page.';
   }
+}
+
+// Home-page DIY card: open the builder if signed in, otherwise prompt @sprout.ph sign-in first.
+function diyOpenFromHome() {
+  if (localStorage.getItem('radar_user_email')) { switchTab('diy'); }
+  else { try { triggerGoogleSignIn(); } catch(e) {} }
 }
 
 function showFallbackBtn() {
