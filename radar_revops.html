@@ -8840,28 +8840,59 @@ function connectRenderTables() {
 // Build the Step-2 filter panels for tables that have no hand-crafted panel, straight from
 // the table schema in TABLES. Known categorical fields get dropdowns; the rest get text inputs.
 function connectBuildSchemaPanels() {
-  var map = { invoices:'netsuite_invoices_summary', invoicelineitems:'netsuite_invoice_lineitems', headcount:'company_active_headcount' };
-  var known = { invoice_status: ['Paid','Open','Overdue','Cancelled - CM/CN'] };
-  Object.keys(map).forEach(function(key){
+  var SPECS = {
+    invoices: { table:'netsuite_invoices_summary', fields:[
+      { name:'invoice_date',   label:'Invoice Date',   type:'daterange' },
+      { name:'invoice_status', label:'Invoice Status', type:'select', values:['Paid','Open','Overdue','Cancelled - CM/CN'] }
+    ]},
+    invoicelineitems: { table:'netsuite_invoice_lineitems', fields:[
+      { name:'invoice_reference',  label:'Invoice Reference',  type:'text' },
+      { name:'item_display_name',  label:'Item Display Name',  type:'text' }
+    ]},
+    headcount: { table:'company_active_headcount', fields:[
+      { name:'month_date', label:'Month Date', type:'daterange' }
+    ]}
+  };
+  Object.keys(SPECS).forEach(function(key){
     var panel = document.getElementById('cf-panel-' + key);
     if (!panel || panel.dataset.built) return;
     panel.dataset.built = '1';
-    var tname = map[key];
-    var t = (typeof TABLES !== 'undefined') ? TABLES.find(function(x){ return x.name === tname; }) : null;
-    var fields = (t && t.fields) ? t.fields : [];
-    if (!fields.length) { panel.innerHTML = '<div style="font-size:12px;color:rgba(255,255,255,.35);padding:8px 0">No filterable fields available for this table.</div>'; return; }
-    panel.innerHTML = fields.map(function(f){
-      if (known[f.name]) {
-        var opts = known[f.name].map(function(v){ return '<label class="cf-ms-opt"><input type="checkbox" value="' + v + '" onchange="updateMSDisplay(this.closest(\'.cf-multiselect\'))"> ' + v + '</label>'; }).join('');
-        return '<div class="cf-field-row"><div class="cf-field-name">' + f.name + '</div>'
-          + '<div class="cf-multiselect" data-table="' + tname + '" data-field="' + f.name + '">'
+    var spec = SPECS[key];
+    panel.innerHTML = spec.fields.map(function(f){
+      if (f.type === 'daterange') {
+        return '<div class="cf-field-row"><div class="cf-field-name">' + f.label + '</div>'
+          + '<div style="display:flex;gap:8px;flex:1;align-items:center">'
+          + '<input type="date" class="cf-datefilter connect-input" data-table="' + spec.table + '" data-field="' + f.name + '" data-bound="from" title="From" style="flex:1;box-sizing:border-box;color-scheme:dark">'
+          + '<span style="color:rgba(255,255,255,.3);font-size:11px">to</span>'
+          + '<input type="date" class="cf-datefilter connect-input" data-table="' + spec.table + '" data-field="' + f.name + '" data-bound="to" title="To" style="flex:1;box-sizing:border-box;color-scheme:dark">'
+          + '</div></div>';
+      }
+      if (f.type === 'select') {
+        var opts = f.values.map(function(v){ return '<label class="cf-ms-opt"><input type="checkbox" value="' + v + '" onchange="updateMSDisplay(this.closest(\'.cf-multiselect\'))"> ' + v + '</label>'; }).join('');
+        return '<div class="cf-field-row"><div class="cf-field-name">' + f.label + '</div>'
+          + '<div class="cf-multiselect" data-table="' + spec.table + '" data-field="' + f.name + '">'
           + '<button type="button" class="cf-ms-trigger" onclick="toggleMultiselect(this.parentElement)"><span class="cf-ms-display">&#8212; All &#8212;</span><span class="cf-ms-arrow">&#9660;</span></button>'
           + '<div class="cf-ms-menu">' + opts + '</div></div></div>';
       }
-      return '<div class="cf-field-row"><div class="cf-field-name" title="' + (f.desc || '') + '">' + f.name + ' <span style="font-size:9px;color:rgba(255,255,255,.25)">(' + f.type + ')</span></div>'
-        + '<input type="text" class="cf-textfilter connect-input" data-table="' + tname + '" data-field="' + f.name + '" placeholder="filter value (optional)" style="flex:1;box-sizing:border-box">'
-        + '</div>';
+      return '<div class="cf-field-row"><div class="cf-field-name">' + f.label + '</div>'
+        + '<input type="text" class="cf-textfilter connect-input" data-table="' + spec.table + '" data-field="' + f.name + '" placeholder="filter value (optional)" style="flex:1;box-sizing:border-box"></div>';
     }).join('');
+  });
+}
+
+// Collect date-range filters (paired from/to inputs) into "table.field BETWEEN 'a' AND 'b'" clauses.
+function collectConnectDateFilters(out) {
+  var groups = {};
+  document.querySelectorAll('#section-connect .cf-datefilter').forEach(function(inp){
+    var v = (inp.value || '').trim(); if (!v) return;
+    var k = inp.dataset.table + '.' + inp.dataset.field;
+    groups[k] = groups[k] || {}; groups[k][inp.dataset.bound] = v;
+  });
+  Object.keys(groups).forEach(function(k){
+    var g = groups[k];
+    if (g.from && g.to) out.push('• ' + k + " BETWEEN '" + g.from + "' AND '" + g.to + "'");
+    else if (g.from)   out.push('• ' + k + " >= '" + g.from + "'");
+    else if (g.to)     out.push('• ' + k + " <= '" + g.to + "'");
   });
 }
 
@@ -8885,6 +8916,7 @@ function generateConnectTablesPrompt() {
       var v = (inp.value || '').trim();
       if (v) fieldFilters.push('• ' + inp.dataset.table + '.' + inp.dataset.field + " = '" + v + "'");
     });
+    collectConnectDateFilters(fieldFilters);
 
     var schemaBlocks = picked.map(function(id){
       var t = (typeof TABLES !== 'undefined') ? TABLES.find(function(x){ return x.name === id; }) : null;
@@ -8957,6 +8989,7 @@ function generateConnectPrompt() {
     const v = (inp.value || '').trim();
     if (v) fieldFilters.push(`• ${inp.dataset.table}.${inp.dataset.field} = '${v}'`);
   });
+  collectConnectDateFilters(fieldFilters);
 
   const filterLines = [
     `• Date Range: ${dateRange}`,
