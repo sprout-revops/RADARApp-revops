@@ -5914,7 +5914,7 @@ function handleGoogleSignIn(response) {
 }
 
 function radarShowUser(email) {
-  var isDiy = ['lurbina@sprout.ph','jsayseng@sprout.ph'].indexOf(email) >= 0;
+  var isDiy = /@sprout\.ph$/.test((email || '').toLowerCase());   // DIY Builder open to all @sprout.ph accounts
   var pill = document.getElementById('user-email-display');
   var signout = document.getElementById('radar-signout-btn');
   var signin = document.getElementById('radar-signin-btn');
