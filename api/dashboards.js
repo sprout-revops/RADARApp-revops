@@ -208,14 +208,25 @@ module.exports = async function handler(req, res) {
         entry.access = Array.isArray(body.access)
           ? body.access.map(a => ({ email: (a.email || '').trim().toLowerCase(), level: a.level === 'edit' ? 'edit' : 'view' })).filter(a => a.email)
           : (entry.access || []);
-        // Inject the verified access guard into the saved HTML (once)
+        // Process the saved HTML: heal older credential patterns + inject the access guard.
         if (entry.file) {
           const f = await getFile(entry.file);
-          if (f && f.content.indexOf('data-radar-access-guard') === -1) {
-            let html = f.content;
-            const guard = buildGuard(entry.id);
-            html = /<body[^>]*>/i.test(html) ? html.replace(/<body[^>]*>/i, m => m + guard) : (guard + html);
-            await putFile(entry.file, html, `Access guard: ${entry.id}`, f.sha);
+          if (f) {
+            let html = f.content, changed = false;
+            // Older dashboards call /api/databricks with x-db-token (empty in shared mode) and
+            // no x-radar-token, so shared viewers get "no sign-in token". Add the RADAR token to
+            // any x-db-token headers so the shared-Databricks proxy can authorize the viewer.
+            if (html.indexOf('radar-db-token-upgraded') === -1 && /['"]x-db-token['"]/.test(html)) {
+              html = html.replace(/(['"]x-db-token['"]\s*:\s*[^,}\n]+)/g, "$1, 'x-radar-token': (localStorage.getItem('radar_id_token')||'')");
+              html += '\n<!--radar-db-token-upgraded-->';
+              changed = true;
+            }
+            if (html.indexOf('data-radar-access-guard') === -1) {
+              const guard = buildGuard(entry.id);
+              html = /<body[^>]*>/i.test(html) ? html.replace(/<body[^>]*>/i, m => m + guard) : (guard + html);
+              changed = true;
+            }
+            if (changed) await putFile(entry.file, html, `Publish processing: ${entry.id}`, f.sha);
           }
         }
       }
