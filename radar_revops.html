@@ -5913,6 +5913,22 @@ function handleGoogleSignIn(response) {
   radarShowUser(email);
 }
 
+// ── Silent token refresh (Google ID tokens expire ~1h) ──
+function radarTokenExpMs() {
+  var t = localStorage.getItem('radar_id_token');
+  if (!t) return 0;
+  var p = parseJwt(t);
+  return (p && p.exp) ? p.exp * 1000 : 0;
+}
+// Refresh the token in the background when it is missing / expired / within 10 min of expiry.
+function radarMaybeRefreshToken() {
+  if (!localStorage.getItem('radar_user_email')) return;       // only for returning users
+  if (!window.google) return;
+  var exp = radarTokenExpMs();
+  if (exp && exp - Date.now() > 10 * 60 * 1000) return;         // still fresh — nothing to do
+  try { google.accounts.id.prompt(); } catch (e) {}            // auto_select returns a fresh credential silently
+}
+
 function radarShowUser(email) {
   var isDiy = /@sprout\.ph$/.test((email || '').toLowerCase());   // DIY Builder open to all @sprout.ph accounts
   var pill = document.getElementById('user-email-display');
@@ -5948,7 +5964,7 @@ function initGoogleSignIn() {
   google.accounts.id.initialize({
     client_id: RADAR_CLIENT_ID,
     callback:  handleGoogleSignIn,
-    auto_select: false,
+    auto_select: true,   // lets prompt() silently return a fresh token for a returning user
     hd: 'sprout.ph',
   });
   google.accounts.id.renderButton(
@@ -5995,13 +6011,19 @@ function showFallbackBtn() {
     radarShowUser(stored);
   }
   // Init GSI in background so prompt() works when user clicks Sign In for DIY
-  if (window.google) {
+  function _afterGsiReady() {
     initGoogleSignIn();
+    if (stored) radarMaybeRefreshToken();                 // top up a stale token right away
+  }
+  if (window.google) {
+    _afterGsiReady();
   } else {
     const interval = setInterval(() => {
-      if (window.google) { clearInterval(interval); initGoogleSignIn(); }
+      if (window.google) { clearInterval(interval); _afterGsiReady(); }
     }, 100);
   }
+  // Keep the token fresh in the background so users aren't forced to re-sign-in mid-session
+  setInterval(radarMaybeRefreshToken, 5 * 60 * 1000);
 })();
 
 
