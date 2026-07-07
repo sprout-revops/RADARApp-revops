@@ -45,6 +45,26 @@ function stripSecrets(html) {
     .replace(/(['"])__DB_WAREHOUSE__\1/g,                                "((localStorage.getItem('radar_db_path')||'').split('/').pop())");
 }
 
+// Access guard injected into a published dashboard's HTML. On load it verifies the viewer's
+// @sprout.ph token against the dashboard's access list (via /api/dashboard-access) and blocks
+// the view for anyone not on the list. Injected once (marker: data-radar-access-guard).
+function buildGuard(id) {
+  const jid = JSON.stringify(id);
+  return `<script data-radar-access-guard>(function(){
+  var ID=${jid};
+  document.documentElement.style.visibility='hidden';
+  function block(msg){try{document.documentElement.style.visibility='';document.body.innerHTML='<div style="font-family:system-ui,-apple-system,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center;background:#0a0a0a;color:#e2e8f0;padding:24px"><div><div style="font-size:44px">&#128274;</div><div style="font-size:18px;font-weight:700;margin-top:14px">'+msg+'</div></div></div>';}catch(e){}}
+  fetch('https://radar-revops.vercel.app/api/dashboard-access?id='+encodeURIComponent(ID)+'&_='+Date.now(),{headers:{'x-radar-token':localStorage.getItem('radar_id_token')||''}})
+    .then(function(r){return r.json();})
+    .then(function(j){
+      if(j&&j.allowed){document.documentElement.style.visibility='';}
+      else if(j&&j.reason==='signin'){block('Sign in to RADAR with your @sprout.ph account to view this dashboard.');}
+      else{block('You do not have access to this dashboard.<br><span style="font-size:13px;font-weight:400;color:#94a3b8">Ask the owner to share it with your account.</span>');}
+    })
+    .catch(function(){document.documentElement.style.visibility='';});
+})();</script>`;
+}
+
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -122,6 +142,16 @@ module.exports = async function handler(req, res) {
     return r.status === 200 ? r.body.sha : undefined;
   }
 
+  async function getFile(path) {
+    const r = await ghRequest({
+      hostname: 'api.github.com',
+      path: `/repos/${REPO}/contents/${path}?ref=${BRANCH}`,
+      method: 'GET', headers: authHeaders
+    });
+    if (r.status === 200) return { sha: r.body.sha, content: Buffer.from(r.body.content, 'base64').toString('utf-8') };
+    return null;
+  }
+
   try {
     if (action === 'save') {
       if (!email || !body.html) return res.status(400).json({ error: 'Missing ownerEmail or html.' });
@@ -159,6 +189,39 @@ module.exports = async function handler(req, res) {
         return res.status(regResp.status).json({ error: regResp.body });
       }
       return res.status(200).json({ ok: true, id, url });
+    }
+
+    if (action === 'publish' || action === 'unpublish') {
+      const { data, sha } = await getRegistry();
+      const entry = data.dashboards.find(d => d.id === body.id);
+      if (!entry) return res.status(404).json({ error: 'Dashboard not found.' });
+      const isAdmin = DASH_ADMINS.includes(email);
+      const isOwner = entry.ownerEmail.toLowerCase() === email;
+      if (!isOwner && !isAdmin) return res.status(403).json({ error: 'Only the owner can publish or share this dashboard.' });
+      const now = new Date().toISOString();
+
+      if (action === 'unpublish') {
+        entry.status = 'private';
+      } else {
+        entry.status = 'published';
+        entry.publishedAt = entry.publishedAt || now;
+        entry.access = Array.isArray(body.access)
+          ? body.access.map(a => ({ email: (a.email || '').trim().toLowerCase(), level: a.level === 'edit' ? 'edit' : 'view' })).filter(a => a.email)
+          : (entry.access || []);
+        // Inject the verified access guard into the saved HTML (once)
+        if (entry.file) {
+          const f = await getFile(entry.file);
+          if (f && f.content.indexOf('data-radar-access-guard') === -1) {
+            let html = f.content;
+            const guard = buildGuard(entry.id);
+            html = /<body[^>]*>/i.test(html) ? html.replace(/<body[^>]*>/i, m => m + guard) : (guard + html);
+            await putFile(entry.file, html, `Access guard: ${entry.id}`, f.sha);
+          }
+        }
+      }
+      const regResp = await putFile(REG_PATH, JSON.stringify(data, null, 2), `Registry: ${action} ${body.id}`, sha);
+      if (regResp.status !== 200 && regResp.status !== 201) return res.status(regResp.status).json({ error: regResp.body });
+      return res.status(200).json({ ok: true, url: entry.url });
     }
 
     if (action === 'request' || action === 'delete' || action === 'approve' || action === 'reject') {

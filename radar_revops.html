@@ -4932,9 +4932,7 @@ function dashCardHtml(d, adminView){
     if(d.config){
       actions += '<button class="diy-btn diy-btn-ghost diy-btn-sm" onclick="dashEditEntry(\'' + safeId + '\')">✏️ Edit</button>';
     }
-    if(d.status === 'private' || d.status === 'rejected'){
-      actions += '<button class="diy-btn diy-btn-sm" style="background:#1DB954;color:#000" onclick="dashSubmitToTeam(\'' + safeId + '\')">📤 Submit to Team</button>';
-    }
+    actions += '<button class="diy-btn diy-btn-sm" style="background:#1DB954;color:#000" onclick="dashOpenShare(\'' + safeId + '\')">📢 ' + (d.status === 'published' ? 'Manage Access' : 'Publish &amp; Share') + '</button>';
     actions += '<button class="diy-btn diy-btn-ghost diy-btn-sm" onclick="dashDelete(\'' + safeId + '\')">🗑 Delete</button>';
   }
   var openBtn = d.url ? '<button class="diy-btn diy-btn-ghost diy-btn-sm" onclick="dashCloseModal(\'mydash\');dashCloseModal(\'adminreq\');openDashboardEmbed(\'' + d.url + '\',\'' + (d.name||'').replace(/'/g,"\\'") + '\')">🔗 Open</button>' : '';
@@ -4988,6 +4986,68 @@ function dashRefreshMine(){
   var modal = document.getElementById('mydash-modal-overlay');
   if (modal && modal.classList.contains('open')) dashOpenMyDashboards();
   if (typeof myDashRender === 'function' && document.getElementById('my-dashboards-list')) myDashRender();
+}
+
+/* ── Publish & Share ── */
+var _shareState = { id: null, access: [] };
+
+async function dashOpenShare(id){
+  var all = await dashFetchRegistry();
+  var e = all.find(function(x){ return x.id === id; });
+  if(!e){ alert('Dashboard not found.'); return; }
+  _shareState = { id: id, access: (e.access || []).map(function(a){ return { email: (a.email||'').toLowerCase(), level: a.level === 'edit' ? 'edit' : 'view' }; }) };
+  var st = document.getElementById('share-status'); if(st) st.textContent = '';
+  var inp = document.getElementById('share-email-input'); if(inp) inp.value = '';
+  dashRenderAccessList();
+  var ov = document.getElementById('share-modal-overlay'); if(ov) ov.classList.add('open');
+}
+
+function dashRenderAccessList(){
+  var el = document.getElementById('share-access-list');
+  if(!el) return;
+  var ownerRow = '<div style="display:flex;align-items:center;gap:8px;padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,.08)"><span style="flex:1;font-size:13px;color:rgba(255,255,255,.6)">' + dashUserEmail() + ' <span style="font-size:10px;color:rgba(255,255,255,.35)">(owner)</span></span><span style="font-size:11px;color:rgba(255,255,255,.4)">Full access</span></div>';
+  if(!_shareState.access.length){
+    el.innerHTML = ownerRow + '<div style="font-size:12px;color:rgba(255,255,255,.3);padding:6px 0">No one else added yet — add @sprout.ph emails below.</div>';
+    return;
+  }
+  el.innerHTML = ownerRow + _shareState.access.map(function(a, i){
+    return '<div style="display:flex;align-items:center;gap:8px">'
+      + '<span style="flex:1;font-size:13px;color:#e2e8f0">' + a.email + '</span>'
+      + '<select class="builder-input" style="width:120px;font-size:12px" onchange="_shareState.access[' + i + '].level=this.value">'
+      + '<option value="view"' + (a.level === 'view' ? ' selected' : '') + '>View</option>'
+      + '<option value="edit"' + (a.level === 'edit' ? ' selected' : '') + '>View + Edit</option>'
+      + '</select>'
+      + '<button class="diy-btn diy-btn-ghost diy-btn-sm" title="Remove" onclick="dashRemoveShareEmail(' + i + ')">✕</button>'
+      + '</div>';
+  }).join('');
+}
+
+function dashAddShareEmail(){
+  var inp = document.getElementById('share-email-input');
+  var lvl = document.getElementById('share-level-input');
+  var st  = document.getElementById('share-status');
+  var email = (inp.value || '').trim().toLowerCase();
+  function warn(m){ if(st){ st.textContent = m; st.style.color = '#f87171'; } }
+  if(!email) return;
+  if(!/^[^@\s]+@sprout\.ph$/.test(email)) return warn('⚠️ Only @sprout.ph emails can be added.');
+  if(email === dashUserEmail()) return warn('You already have full access as the owner.');
+  if(_shareState.access.some(function(a){ return a.email === email; })) return warn('That email is already added.');
+  _shareState.access.push({ email: email, level: (lvl && lvl.value === 'edit') ? 'edit' : 'view' });
+  inp.value = ''; if(st) st.textContent = '';
+  dashRenderAccessList();
+}
+
+function dashRemoveShareEmail(i){ _shareState.access.splice(i, 1); dashRenderAccessList(); }
+
+async function dashSaveShare(){
+  var st = document.getElementById('share-status');
+  if(st){ st.textContent = 'Publishing…'; st.style.color = 'rgba(255,255,255,.5)'; }
+  try {
+    await dashApi({ action: 'publish', id: _shareState.id, ownerEmail: dashUserEmail(), access: _shareState.access });
+    dashCloseModal('share');
+    dashRefreshMine();
+    if(typeof dashLoadPublished === 'function') dashLoadPublished();
+  } catch(e){ if(st){ st.textContent = '❌ ' + e.message; st.style.color = '#f87171'; } }
 }
 
 async function dashSubmitToTeam(id){
@@ -5092,6 +5152,29 @@ function dashUploadEdited(input){
     </div>
     <div style="margin-top:16px;text-align:right">
       <button class="diy-btn diy-btn-ghost" onclick="dashCloseModal('adminreq')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Publish & Share Modal -->
+<div class="submit-modal-overlay" id="share-modal-overlay" onclick="if(event.target===this)dashCloseModal('share')">
+  <div class="submit-modal" style="max-width:640px">
+    <h2>📢 Publish &amp; Share</h2>
+    <p class="sm-sub">Publish this dashboard to the Team Dashboards tab, and grant specific people access. Only listed people (plus you) can open it.</p>
+    <div style="margin:14px 0 8px;font-size:12px;font-weight:600;color:rgba(255,255,255,.6)">People with access</div>
+    <div id="share-access-list" style="display:flex;flex-direction:column;gap:8px;max-height:38vh;overflow-y:auto"></div>
+    <div style="display:flex;gap:8px;margin-top:12px;align-items:center;flex-wrap:wrap">
+      <input id="share-email-input" type="email" placeholder="name@sprout.ph" class="builder-input" style="flex:1;min-width:200px;box-sizing:border-box" onkeydown="if(event.key==='Enter'){event.preventDefault();dashAddShareEmail();}">
+      <select id="share-level-input" class="builder-input" style="width:130px">
+        <option value="view">View</option>
+        <option value="edit">View + Edit</option>
+      </select>
+      <button class="diy-btn diy-btn-ghost diy-btn-sm" onclick="dashAddShareEmail()">+ Add</button>
+    </div>
+    <div id="share-status" style="font-size:12px;margin-top:10px;min-height:16px"></div>
+    <div style="margin-top:16px;display:flex;justify-content:space-between;align-items:center">
+      <button class="diy-btn diy-btn-ghost" onclick="dashCloseModal('share')">Cancel</button>
+      <button class="diy-btn diy-btn-sm" style="background:#1DB954;color:#000" onclick="dashSaveShare()">💾 Publish &amp; Save Access</button>
     </div>
   </div>
 </div>
