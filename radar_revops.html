@@ -2305,35 +2305,30 @@ function myDashSave(list) {
   localStorage.setItem(MY_DASH_KEY, JSON.stringify(list));
 }
 
-function myDashRender() {
-  var list = myDashLoad();
+async function myDashRender() {
   var el = document.getElementById('my-dashboards-list');
   if (!el) return;
-  if (!list || list.length === 0) {
+  // Source of truth = the RADAR server registry (same as the DIY "My Dashboards" modal),
+  // filtered to the signed-in user. Reuses dashCardHtml for Open / Edit / Submit / Delete.
+  var mine = [];
+  try {
+    if (typeof dashFetchRegistry === 'function' && typeof dashUserEmail === 'function' && dashUserEmail()) {
+      var all = await dashFetchRegistry();
+      var email = dashUserEmail();
+      mine = (all || []).filter(function(d){ return d.ownerEmail && d.ownerEmail.toLowerCase() === email; });
+    }
+  } catch(e) {}
+  if (!mine.length) {
     el.innerHTML = '<div style="background:rgba(255,255,255,.03);border:1px dashed rgba(255,255,255,.1);border-radius:12px;padding:28px;text-align:center">'
       + '<div style="font-size:28px;margin-bottom:10px">🛠️</div>'
       + '<div style="font-size:13px;font-weight:600;color:rgba(255,255,255,.5);margin-bottom:6px">No dashboards yet — build your first one above</div>'
-      + '<div style="font-size:11px;color:rgba(255,255,255,.25);margin-bottom:16px">Use the DIY Dashboard Builder to generate a Claude prompt and build a dashboard in minutes.</div>'
+      + '<div style="font-size:11px;color:rgba(255,255,255,.25);margin-bottom:16px">Use the DIY Dashboard Builder to generate a dashboard, then Save to RADAR.</div>'
       + '<button onclick="goToBuilder()" style="background:rgba(29,185,84,.15);border:1.5px solid rgba(29,185,84,.4);color:#1DB954;font-family:Rubik,sans-serif;font-size:12px;font-weight:700;padding:8px 18px;border-radius:8px;cursor:pointer">Open Builder →</button>'
       + '</div>';
     return;
   }
-  el.innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px">'
-    + list.map(function(d, i) {
-      var tables = (d.tables||[]).join(', ') || '—';
-      var metrics = (d.metrics||[]).length;
-      var updated = d.updated ? new Date(d.updated).toLocaleDateString() : '—';
-      return '<div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:12px;padding:16px;position:relative">'
-        + '<div style="font-size:14px;font-weight:700;color:#e2e8f0;margin-bottom:4px">'+escHtml(d.name||'Untitled Dashboard')+'</div>'
-        + '<div style="font-size:10px;color:rgba(255,255,255,.3);margin-bottom:8px">Updated '+updated+'</div>'
-        + '<div style="font-size:11px;color:rgba(255,255,255,.35);margin-bottom:4px">Tables: '+escHtml(tables)+'</div>'
-        + '<div style="font-size:11px;color:rgba(255,255,255,.35);margin-bottom:12px">'+metrics+' metric'+(metrics!==1?'s':'')+'</div>'
-        + '<div style="display:flex;gap:8px">'
-        + '<button onclick="myDashEdit('+i+')" style="flex:1;background:rgba(29,185,84,.15);border:1px solid rgba(29,185,84,.35);color:#1DB954;font-family:Rubik,sans-serif;font-size:11px;font-weight:700;padding:6px 12px;border-radius:7px;cursor:pointer">✏️ Edit</button>'
-        + '<button onclick="myDashDelete('+i+')" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.4);font-family:Rubik,sans-serif;font-size:11px;padding:6px 10px;border-radius:7px;cursor:pointer" title="Delete">🗑</button>'
-        + '</div>'
-        + '</div>';
-    }).join('')
+  el.innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px">'
+    + mine.map(function(d){ return dashCardHtml(d, false); }).join('')
     + '</div>';
 }
 
@@ -4983,13 +4978,22 @@ async function dashEditEntry(id){
   var descEl=document.getElementById('diy-dash-desc'); if(descEl) descEl.value=e.desc||'';
   if(typeof diyRenderMetrics==='function') diyRenderMetrics();
   dashCloseModal('mydash');
+  if(typeof switchTab==='function') switchTab('diy');   // ensure the DIY Builder tab is active (works from the home page too)
   if(typeof diyGoStep==='function') diyGoStep(1);
+}
+
+// Re-render whichever "My Dashboards" surface is showing: the modal (if open) and/or the
+// home-page list. Avoids force-opening the modal when acting from the home cards.
+function dashRefreshMine(){
+  var modal = document.getElementById('mydash-modal-overlay');
+  if (modal && modal.classList.contains('open')) dashOpenMyDashboards();
+  if (typeof myDashRender === 'function' && document.getElementById('my-dashboards-list')) myDashRender();
 }
 
 async function dashSubmitToTeam(id){
   try {
     await dashApi({ action: 'request', id: id, ownerEmail: dashUserEmail() });
-    dashOpenMyDashboards();
+    dashRefreshMine();
   } catch(e){ alert('Submit failed: ' + e.message); }
 }
 
@@ -4997,7 +5001,7 @@ async function dashDelete(id){
   if(!confirm('Delete this dashboard?')) return;
   try {
     await dashApi({ action: 'delete', id: id, ownerEmail: dashUserEmail() });
-    dashOpenMyDashboards();
+    dashRefreshMine();
   } catch(e){ alert('Delete failed: ' + e.message); }
 }
 
