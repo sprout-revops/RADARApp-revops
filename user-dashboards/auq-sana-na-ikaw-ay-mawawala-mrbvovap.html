@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Auq sana. na ikaw ay mawawala.</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --bg2: #111111;
+    --bg3: #1a1a1a;
+    --bg4: #222222;
+    --accent: #1DB954;
+    --accent2: #17a348;
+    --accent3: #25e868;
+    --text: #f0f0f0;
+    --text2: #aaaaaa;
+    --text3: #666666;
+    --border: #2a2a2a;
+    --red: #ff4d4d;
+    --orange: #ff8c42;
+    --blue: #4d9fff;
+    --purple: #b44dff;
+    --yellow: #ffd700;
+    --teal: #00ccbb;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; font-size: 14px; min-height: 100vh; }
+
+  /* Header */
+  .header { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; position: sticky; top: 0; z-index: 100; }
+  .header-left { display: flex; flex-direction: column; gap: 2px; }
+  .header-title { font-size: 20px; font-weight: 700; color: var(--accent); letter-spacing: -0.3px; }
+  .header-sub { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; }
+  .header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .last-refresh { font-size: 11px; color: var(--text3); }
+  .btn { background: var(--accent); color: #000; border: none; padding: 8px 16px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; gap: 6px; }
+  .btn:hover { background: var(--accent3); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text2); }
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); background: transparent; }
+
+  /* Loading overlay */
+  .loading-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; }
+  .loading-overlay.hidden { display: none; }
+  .spinner { width: 48px; height: 48px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { color: var(--text2); font-size: 14px; }
+
+  /* Error banner */
+  .error-banner { background: #2a0a0a; border: 1px solid var(--red); color: var(--red); padding: 12px 20px; margin: 16px 24px; border-radius: 8px; font-size: 13px; display: none; }
+  .error-banner.show { display: block; }
+
+  /* Filters */
+  .filters-panel { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 12px 24px; display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; }
+  .filter-group { display: flex; flex-direction: column; gap: 4px; min-width: 130px; }
+  .filter-group label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.8px; }
+  .filter-group select, .filter-group input[type="date"] { background: var(--bg3); border: 1px solid var(--border); color: var(--text); padding: 6px 10px; border-radius: 6px; font-size: 12px; outline: none; cursor: pointer; appearance: none; -webkit-appearance: none; min-width: 120px; }
+  .filter-group select:focus, .filter-group input[type="date"]:focus { border-color: var(--accent); }
+  .filter-group select option { background: var(--bg3); }
+
+  /* Main content */
+  .main { padding: 20px 24px; display: flex; flex-direction: column; gap: 20px; }
+
+  /* Section headers */
+  .section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 2px; }
+  .section-title { font-size: 13px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 1px; }
+  .section-line { flex: 1; height: 1px; background: var(--border); }
+
+  /* Grid layouts */
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .grid-1-2 { display: grid; grid-template-columns: 1fr 2fr; gap: 16px; }
+  .grid-2-1 { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
+
+  /* Cards */
+  .card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 18px; }
+  .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .card-title { font-size: 12px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.8px; }
+  .card-badge { font-size: 10px; padding: 2px 8px; border-radius: 20px; background: var(--bg3); color: var(--text3); }
+
+  /* KPI Cards */
+  .kpi-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 20px; position: relative; overflow: hidden; transition: border-color 0.2s; }
+  .kpi-card:hover { border-color: var(--accent); }
+  .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--accent); border-radius: 10px 10px 0 0; }
+  .kpi-card.red::before { background: var(--red); }
+  .kpi-card.blue::before { background: var(--blue); }
+  .kpi-card.orange::before { background: var(--orange); }
+  .kpi-card.purple::before { background: var(--purple); }
+  .kpi-card.teal::before { background: var(--teal); }
+  .kpi-card.yellow::before { background: var(--yellow); }
+  .kpi-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
+  .kpi-value { font-size: 28px; font-weight: 800; color: var(--text); line-height: 1; margin-bottom: 6px; }
+  .kpi-value.small { font-size: 22px; }
+  .kpi-sub { font-size: 11px; color: var(--text3); }
+  .kpi-trend { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; padding: 2px 6px; border-radius: 4px; margin-top: 6px; }
+  .kpi-trend.up { background: rgba(29,185,84,0.1); color: var(--accent); }
+  .kpi-trend.down { background: rgba(255,77,77,0.1); color: var(--red); }
+  .kpi-trend.neutral { background: rgba(102,102,102,0.1); color: var(--text3); }
+
+  /* Scorecard */
+  .scorecard { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 20px; }
+  .scorecard-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .scorecard-item { background: var(--bg3); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 4px; }
+  .scorecard-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.7px; }
+  .scorecard-value { font-size: 20px; font-weight: 800; color: var(--accent); }
+  .scorecard-meta { font-size: 10px; color: var(--text3); }
+
+  /* Chart container */
+  .chart-wrap { position: relative; }
+  .chart-wrap canvas { max-height: 280px; }
+  .chart-wrap.tall canvas { max-height: 360px; }
+  .chart-wrap.short canvas { max-height: 200px; }
+
+  /* Data Table */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  thead tr { border-bottom: 1px solid var(--border); }
+  th { padding: 8px 12px; text-align: left; color: var(--text3); font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600; white-space: nowrap; }
+  td { padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.04); color: var(--text); white-space: nowrap; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--bg3); }
+  .pill { display: inline-flex; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; }
+  .pill-green { background: rgba(29,185,84,0.15); color: var(--accent); }
+  .pill-red { background: rgba(255,77,77,0.15); color: var(--red); }
+  .pill-orange { background: rgba(255,140,66,0.15); color: var(--orange); }
+  .pill-blue { background: rgba(77,159,255,0.15); color: var(--blue); }
+  .pill-gray { background: rgba(102,102,102,0.15); color: var(--text3); }
+
+  /* No data */
+  .no-data { display: flex; align-items: center; justify-content: center; min-height: 120px; color: var(--text3); font-size: 13px; }
+
+  /* Progress bar */
+  .progress-bar-wrap { display: flex; flex-direction: column; gap: 10px; }
+  .progress-item { display: flex; flex-direction: column; gap: 4px; }
+  .progress-label-row { display: flex; justify-content: space-between; font-size: 11px; }
+  .progress-label { color: var(--text2); }
+  .progress-val { color: var(--accent); font-weight: 600; }
+  .progress-track { height: 6px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.6s ease; }
+  .progress-fill.red { background: var(--red); }
+  .progress-fill.orange { background: var(--orange); }
+  .progress-fill.blue { background: var(--blue); }
+
+  @media (max-width: 1100px) {
+    .grid-3 { grid-template-columns: repeat(2, 1fr); }
+    .grid-4 { grid-template-columns: repeat(2, 1fr); }
+    .grid-1-2, .grid-2-1 { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 700px) {
+    .grid-3, .grid-4, .grid-2 { grid-template-columns: 1fr; }
+    .header { padding: 12px 16px; }
+    .main { padding: 16px; }
+    .filters-panel { padding: 10px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loadingText">Loading dashboard data...</div>
+</div>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-left">
+    <div class="header-title">Auq sana. na ikaw ay mawawala.</div>
+    <div class="header-sub">RevOps · Lead Funnel & Conversion Dashboard</div>
+  </div>
+  <div class="header-right">
+    <span class="last-refresh" id="lastRefresh">—</span>
+    <button class="btn btn-outline" onclick="init()" id="refreshBtn">↻ Refresh</button>
+  </div>
+</div>
+
+<!-- Error Banner -->
+<div class="error-banner" id="errorBanner"></div>
+
+<!-- Filters -->
+<div class="filters-panel">
+  <div class="filter-group">
+    <label>Date From</label>
+    <input type="date" id="filterDateFrom">
+  </div>
+  <div class="filter-group">
+    <label>Date To</label>
+    <input type="date" id="filterDateTo">
+  </div>
+  <div class="filter-group">
+    <label>Pipeline</label>
+    <select id="filterPipeline">
+      <option value="">All Pipelines</option>
+      <option>Sales Pipeline</option>
+      <option>TH Sales Pipeline</option>
+      <option>Unified Channel Pipeline</option>
+      <option>PH Upsell Pipeline</option>
+    </select>
+  </div>
+  <div class="filter-group">
+    <label>Segment</label>
+    <select id="filterSegment">
+      <option value="">All Segments</option>
+      <option>SME</option>
+      <option>ENT</option>
+      <option>Channels</option>
+    </select>
+  </div>
+  <div class="filter-group">
+    <label>Dept Source</label>
+    <select id="filterDeptSource">
+      <option value="">All Sources</option>
+      <option>MKT Inbound</option>
+      <option>LDU Outbound</option>
+      <option>Sales Outbound</option>
+      <option>Channels</option>
+      <option>CSM Inbound</option>
+      <option>Upsell Outbound</option>
+    </select>
+  </div>
+  <div class="filter-group">
+    <label>Deal Type</label>
+    <select id="filterDealType">
+      <option value="">All Deal Types</option>
+      <option>New Business</option>
+      <option>Upsell Deals</option>
+      <option>TH Deals</option>
+    </select>
+  </div>
+  <button class="btn" onclick="init()" style="margin-top:18px;">Apply</button>
+</div>
+
+<!-- Main -->
+<div class="main">
+
+  <!-- KPI Row 1 -->
+  <div>
+    <div class="section-header"><span class="section-title">Key Metrics</span><div class="section-line"></div></div>
+    <div class="grid-4" style="margin-top:12px;">
+      <div class="kpi-card" id="kpiQL">
+        <div class="kpi-label">Qualified Leads (QL)</div>
+        <div class="kpi-value" id="kpiQLVal">—</div>
+        <div class="kpi-sub">All qualified leads</div>
+      </div>
+      <div class="kpi-card blue" id="kpiMQL">
+        <div class="kpi-label">MQL</div>
+        <div class="kpi-value" id="kpiMQLVal">—</div>
+        <div class="kpi-sub">Marketing Qualified Leads</div>
+      </div>
+      <div class="kpi-card orange" id="kpiOQL">
+        <div class="kpi-label">OQL</div>
+        <div class="kpi-value" id="kpiOQLVal">—</div>
+        <div class="kpi-sub">Outbound Qualified Leads</div>
+      </div>
+      <div class="kpi-card purple" id="kpiSQL">
+        <div class="kpi-label">SQL</div>
+        <div class="kpi-value" id="kpiSQLVal">—</div>
+        <div class="kpi-sub">Sales Qualified Leads</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPI Row 2 -->
+  <div class="grid-4">
+    <div class="kpi-card teal">
+      <div class="kpi-label">DQ Rate</div>
+      <div class="kpi-value" id="kpiDQRateVal">—</div>
+      <div class="kpi-sub" id="kpiDQSub">Disqualified ÷ Total Leads</div>
+    </div>
+    <div class="kpi-card yellow">
+      <div class="kpi-label">SQL Conversion Rate</div>
+      <div class="kpi-value" id="kpiSQLConvVal">—</div>
+      <div class="kpi-sub">SQL ÷ QL</div>
+    </div>
+    <div class="kpi-card red">
+      <div class="kpi-label">Lead → Won %</div>
+      <div class="kpi-value" id="kpiL2WVal">—</div>
+      <div class="kpi-sub">Won Leads ÷ Total Leads</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Won / SQL</div>
+      <div class="kpi-value" id="kpiWonSQLVal">—</div>
+      <div class="kpi-sub">Won Deals ÷ SQL/Active</div>
+    </div>
+  </div>
+
+  <!-- Scorecard + Trend -->
+  <div class="grid-1-2">
+    <div class="scorecard">
+      <div class="card-header"><span class="card-title">Scorecard Summary</span></div>
+      <div class="scorecard-grid" id="scorecardGrid">
+        <div class="scorecard-item"><div class="scorecard-label">Total Leads</div><div class="scorecard-value" id="scTotalLeads">—</div></div>
+        <div class="scorecard-item"><div class="scorecard-label">DQ Leads</div><div class="scorecard-value" id="scDQLeads" style="color:var(--red)">—</div></div>
+        <div class="scorecard-item"><div class="scorecard-label">Won Deals</div><div class="scorecard-value" id="scWonDeals" style="color:var(--accent)">—</div></div>
+        <div class="scorecard-item"><div class="scorecard-label">Active SQL</div><div class="scorecard-value" id="scActiveSQL" style="color:var(--blue)">—</div></div>
+        <div class="scorecard-item"><div class="scorecard-label">MQL Target</div><div class="scorecard-value" id="scMQLTarget" style="color:var(--orange)">—</div></div>
+        <div class="scorecard-item"><div class="scorecard-label">QL Target</div><div class="scorecard-value" id="scQLTarget" style="color:var(--purple)">—</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">QL + SQL Monthly Trend</span></div>
+      <div class="chart-wrap tall"><canvas id="chartQLSQLTrend"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Bar + Donut row -->
+  <div class="grid-3">
+    <div class="card">
+      <div class="card-header"><span class="card-title">QL by Department Source</span></div>
+      <div class="chart-wrap"><canvas id="chartQLByDept"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">DQ Reasons Breakdown</span></div>
+      <div class="chart-wrap"><canvas id="chartDQReasons"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">SQL by Pipeline</span></div>
+      <div class="chart-wrap"><canvas id="chartSQLPipeline"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Stacked + Combo -->
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header"><span class="card-title">Monthly Lead Funnel (Stacked)</span><span class="card-badge">QL · SQL · Won</span></div>
+      <div class="chart-wrap tall"><canvas id="chartFunnelStacked"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">DQ Rate vs QL Trend (Combo)</span></div>
+      <div class="chart-wrap tall"><canvas id="chartCombo"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Progress bars + Pie -->
+  <div class="grid-1-2">
+    <div class="card">
+      <div class="card-header"><span class="card-title">Conversion Funnel Rates</span></div>
+      <div class="progress-bar-wrap" id="funnelProgress">
+        <div class="no-data">Loading…</div>
+      </div>
+    </div>
+    <div class="grid-2" style="gap:16px;">
+      <div class="card">
+        <div class="card-header"><span class="card-title">Leads by Segment</span></div>
+        <div class="chart-wrap short"><canvas id="chartSegmentPie"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">SQL by Segment</span></div>
+        <div class="chart-wrap short"><canvas id="chartSQLSegment"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rep Performance Table -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Sales Rep Performance — SQL & Won Deals</span>
+      <span class="card-badge" id="tableRepCount">0 reps</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Sales Rep</th>
+          <th>Pipeline</th>
+          <th>Segment</th>
+          <th>SQL Count</th>
+          <th>Won Deals</th>
+          <th>Won/SQL %</th>
+          <th>Dept Source</th>
+        </tr></thead>
+        <tbody id="tableRepBody"><tr><td colspan="7" style="text-align:center;color:var(--text3);padding:24px;">Loading…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Disqualification Table -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Lead Disqualification Detail</span>
+      <span class="card-badge" id="tableDQCount">0 records</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Month</th>
+          <th>Disqualification Reason</th>
+          <th>Lead Count</th>
+          <th>Dept Source</th>
+          <th>DQ Rate %</th>
+        </tr></thead>
+        <tbody id="tableDQBody"><tr><td colspan="5" style="text-align:center;color:var(--text3);padding:24px;">Loading…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const CONFIG = { host: (localStorage.getItem('radar_db_host')||''), token: (localStorage.getItem('radar_db_token')||''), warehouseId: ((localStorage.getItem('radar_db_path')||'').split('/').pop()) };
+
+async function dbQuery(sql) {
+  const RT = (function(){ try { return localStorage.getItem("radar_id_token") || ""; } catch(e){ return ""; } })();
+  const SHARED = !!RT;
+  const H  = SHARED ? { "x-radar-token": RT, "Content-Type": "application/json" }
+                    : { "x-db-host": CONFIG.host, "x-db-token": CONFIG.token, "Content-Type": "application/json" };
+  const PH = SHARED ? { "x-radar-token": RT } : { "x-db-host": CONFIG.host, "x-db-token": CONFIG.token };
+  const reqBody = { statement: sql, wait_timeout: "0s", on_wait_timeout: "CONTINUE", format: "JSON_ARRAY" };
+  if (!SHARED) reqBody.warehouse_id = CONFIG.warehouseId;
+  const sub = await fetch("https://radar-revops.vercel.app/api/databricks", {
+    method: "POST", headers: H, body: JSON.stringify(reqBody)
+  });
+  const subJson = await sub.json();
+  if (!subJson.statement_id) throw new Error("No statement_id returned: " + JSON.stringify(subJson));
+  for (let i = 0; i < 120; i++) {
+    await new Promise(r => setTimeout(r, 3000));
+    const poll = await fetch("https://radar-revops.vercel.app/api/databricks-poll?id=" + subJson.statement_id, { headers: PH });
+    const p = await poll.json();
+    const state = p && p.status && p.status.state;
+    if (state === "SUCCEEDED") {
+      const cols = (p.manifest && p.manifest.schema && p.manifest.schema.columns || []).map(c => c.name);
+      return (p.result && p.result.data_array || []).map(row => Object.fromEntries(cols.map((c, i) => [c, row[i]])));
+    }
+    if (state === "FAILED") throw new Error("Query failed: " + JSON.stringify(p.status));
+  }
+  throw new Error("Timed out after 6 minutes");
+}
+
+// Chart registry for cleanup
+const chartRegistry = {};
+
+function destroyChart(id) {
+  if (chartRegistry[id]) { chartRegistry[id].destroy(); delete chartRegistry[id]; }
+}
+
+function showLoading(msg) {
+  document.getElementById("loadingText").textContent = msg || "Loading…";
+  document.getElementById("loadingOverlay").classList.remove("hidden");
+  document.getElementById("refreshBtn").disabled = true;
+}
+function hideLoading() {
+  document.getElementById("loadingOverlay").classList.add("hidden");
+  document.getElementById("refreshBtn").disabled = false;
+}
+function showError(msg) {
+  const el = document.getElementById("errorBanner");
+  el.textContent = msg;
+  el.classList.add("show");
+}
+function clearError() {
+  const el = document.getElementById("errorBanner");
+  el.classList.remove("show");
+}
+
+function fmt(n, decimals=0) {
+  if (n === null || n === undefined || n === "" || isNaN(n)) return "—";
+  return Number(n).toLocaleString("en-PH", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+}
+function fmtPct(n) {
+  if (n === null || n === undefined || isNaN(n)) return "—";
+  return Number(n).toFixed(1) + "%";
+}
+function safe(v, fallback=0) {
+  const n = parseFloat(v);
+  return isNaN(n) ? fallback : n;
+}
+
+function getFilters() {
+  const today = new Date();
+  const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+  const fromEl = document.getElementById("filterDateFrom");
+  const toEl = document.getElementById("filterDateTo");
+  if (!fromEl.value) fromEl.value = firstDay.toISOString().split("T")[0];
+  if (!toEl.value) toEl.value = today.toISOString().split("T")[0];
+  return {
+    dateFrom: fromEl.value,
+    dateTo: toEl.value,
+    pipeline: document.getElementById("filterPipeline").value,
+    segment: document.getElementById("filterSegment").value,
+    deptSource: document.getElementById("filterDeptSource").value,
+    dealType: document.getElementById("filterDealType").value
+  };
+}
+
+function buildDealWhereClause(f, dateCol="create_date") {
+  let parts = [
+    `${dateCol} >= '${f.dateFrom}'`,
+    `${dateCol} <= '${f.dateTo}'`,
+    `deal_type NOT IN ('Renewal','Upsell - Renewal')`,
+    `LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%'`
+  ];
+  if (f.pipeline) parts.push(`pipeline_name = '${f.pipeline.replace(/'/g,"''")}'`);
+  if (f.segment) parts.push(`CASE WHEN segment = 'MICRO' THEN 'SME' ELSE segment END = '${f.segment}'`);
+  if (f.deptSource) parts.push(`department_source_clean = '${f.deptSource.replace(/'/g,"''")}'`);
+  if (f.dealType) parts.push(`deal_type = '${f.dealType.replace(/'/g,"''")}'`);
+  return "WHERE " + parts.join(" AND ");
+}
+
+function buildLeadWhereClause(f) {
+  let parts = [`create_date >= '${f.dateFrom}'`, `create_date <= '${f.dateTo}'`];
+  if (f.deptSource) parts.push(`department_source = '${f.deptSource.replace(/'/g,"''")}'`);
+  return "WHERE " + parts.join(" AND ");
+}
+
+const CHART_COLORS = ["#1DB954","#4d9fff","#ff8c42","#b44dff","#ffd700","#00ccbb","#ff4d4d","#e8c468","#68b5e8","#e868b5"];
+
+function mkChart(id, type, data, options={}) {
+  destroyChart(id);
+  const ctx = document.getElementById(id);
+  if (!ctx) return;
+  const defaults = {
+    responsive: true, maintainAspectRatio: true,
+    plugins: {
+      legend: { labels: { color: "#aaa", font: { size: 11 }, boxWidth: 12 } },
+      tooltip: { backgroundColor: "#1a1a1a", titleColor: "#f0f0f0", bodyColor: "#aaa", borderColor: "#333", borderWidth: 1 }
+    },
+    scales: type !== "pie" && type !== "doughnut" ? {
+      x: { ticks: { color: "#666", font: { size: 10 } }, grid: { color: "rgba(255,255,255,0.04)" } },
+      y: { ticks: { color: "#666", font: { size: 10 } }, grid: { color: "rgba(255,255,255,0.06)" } }
+    } : {}
+  };
+  const merged = deepMerge(defaults, options);
+  chartRegistry[id] = new Chart(ctx, { type, data, options: merged });
+}
+
+function deepMerge(a, b) {
+  const out = Object.assign({}, a);
+  for (const k in b) {
+    if (b[k] && typeof b[k] === "object" && !Array.isArray(b[k])) {
+      out[k] = deepMerge(a[k] || {}, b[k]);
+    } else out[k] = b[k];
+  }
+  return out;
+}
+
+async function init() {
+  clearError();
+  showLoading("Running queries…");
+  const f = getFilters();
+
+  try {
+    // 1. QL count
+    const sqlQL = `
+      SELECT COUNT(DISTINCT deal_id) AS ql_count
+      FROM shared.revops.silver_deals
+      ${buildDealWhereClause(f, "create_date")}
+        AND qualified_lead = 'Yes'
+    `;
+
+    // 2. MQL count
+    const sqlMQL = `
+      SELECT COUNT(DISTINCT deal_id) AS mql_count
+      FROM shared.revops.silver_deals
+      ${buildDealWhereClause(f, "create_date")}
+        AND qualified_lead = 'Yes'
+        AND department_source_clean = 'MKT Inbound'
+    `;
+
+    // 3. OQL count
+    const sqlOQL = `
+      SELECT COUNT(DISTINCT deal_id) AS oql_count
+      FROM shared.revops.silver_deals
+      ${buildDealWhereClause(f, "create_date")}
+        AND qualified_lead = 'Yes'
+        AND department_source_clean = 'LDU Outbound'
+    `;
+
+    // 4. SQL count
+    const sqlSQLCount = `
+      SELECT COUNT(DISTINCT deal_id) AS sql_count
+      FROM shared.revops.silver_deals
+      ${buildDealWhereClause(f, "create_date")}
+        AND stage_label IN ('Initial Demo Done','Solutioning','Commercial Negotiation','Committed Accounts','Contract Signed','Project Handover','Sales Handover','Sales Churn','Closed Lost')
+        AND ((pipeline_name IN ('Sales Pipeline','Unified Channel Pipeline') AND qualified_lead = 'Yes') OR (pipeline_name = 'PH Upsell Pipeline'))
+    `;
+
+    // 5. Won deals
+    const sqlWon = `
+      SELECT COUNT(DISTINCT deal_id) AS won_count
+      FROM shared.revops.silver_deals
+      ${buildDealWhereClause(f, "close_date")}
+        AND client_journey_stage = 'Customer'
+        AND LOWER(stage_label) IN ('contract signed','project handover','sales handover','sales churn')
+    `;
+
+    // 6. DQ from silver_leads
+    const sqlDQ = `
+      SELECT
+        COUNT(*) AS total_leads,
+        SUM(CASE WHEN disqualification_reason IS NOT NULL AND disqualification_reason != '' THEN 1 ELSE 0 END) AS dq_leads
+      FROM shared.revops.silver_leads
+      ${buildLeadWhereClause(f)}
+    `;
+
+    // 7. Monthly QL+SQL trend (last 12 months)
+    const sqlMonthlyTrend = `
+      WITH months AS (
+        SELECT
+          DATE_TRUNC('month', create_date) AS metric_month,
+          COUNT(DISTINCT CASE WHEN qualified_lead = 'Yes' THEN deal_id END) AS ql_count,
+          COUNT(DISTINCT CASE WHEN
+            stage_label IN ('Initial Demo Done','Solutioning','Commercial Negotiation','Committed Accounts','Contract Signed','Project Handover','Sales Handover','Sales Churn','Closed Lost')
+            AND ((pipeline_name IN ('Sales Pipeline','Unified Channel Pipeline') AND qualified_lead = 'Yes') OR pipeline_name = 'PH Upsell Pipeline')
+            THEN deal_id END) AS sql_count,
+          COUNT(DISTINCT CASE WHEN client_journey_stage = 'Customer' AND LOWER(stage_label) IN ('contract signed','project handover','sales handover','sales churn') THEN deal_id END) AS won_count
+        FROM shared.revops.silver_deals
+        WHERE create_date >= DATE_ADD(CURRENT_DATE(), -365)
+          AND deal_type NOT IN ('Renewal','Upsell - Renewal')
+          AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%'
+        GROUP BY 1
+      )
+      SELECT * FROM months ORDER BY metric_month ASC
+    `;
+
+    // 8. QL by dept source
+    const sqlQLDept = `
+      SELECT
+        department_source_clean,
+        COUNT(DISTINCT deal_id) AS ql_count
+      FROM shared.revops.silver_deals
+      ${buildDealWhereClause(f, "create_date")}
+        AND qualified_lead = 'Yes'
+      GROUP BY 1 ORDER BY 2 DESC
+    `;
+
+    // 9. DQ reasons from leads
+    const sqlDQReasons = `
+      SELECT
+        COALESCE(disqualification_reason,'Unknown') AS reason,
+        COUNT(*) AS cnt
+      FROM shared.revops.silver_leads
+      ${buildLeadWhereClause(f)}
+        AND disqualification_reason IS NOT NULL AND disqualification_reason != ''
+      GROUP BY 1 ORDER BY 2 DESC LIMIT 8
+    `;
+
+    // 10. SQL by pipeline
+    const sqlSQLPipeline = `
+      SELECT pipeline_name, COUNT(DISTINCT deal_id) AS sql_count
+      FROM shared.revops.silver_deals
+      ${buildDealWhereClause(f, "create_date")}
+        AND stage_label IN ('Initial Demo Done','Solutioning','Commercial Negotiation','Committed Accounts','Contract Signed','Project Handover','Sales Handover','Sales Churn','Closed Lost')
+        AND ((pipeline_name IN ('Sales Pipeline','Unified Channel Pipeline') AND qualified_lead = 'Yes') OR pipeline_name = 'PH Upsell Pipeline')
+      GROUP BY 1
+    `;
+
+    // 11. Stacked funnel monthly
+    const sqlFunnelStacked = `
+      SELECT
+        DATE_FORMAT(create_date, 'MMM yy') AS month_label,
+        DATE_TRUNC('month', create_date) AS sort_month,
+        COUNT(DISTINCT CASE WHEN qualified_lead = 'Yes' THEN deal_id END) AS ql,
+        COUNT(DISTINCT CASE WHEN
+          stage_label IN ('Initial Demo Done','Solutioning','Commercial Negotiation','Committed Accounts','Contract Signed','Project Handover','Sales Handover','Sales Churn','Closed Lost')
+          AND ((pipeline_name IN ('Sales Pipeline','Unified Channel Pipeline') AND qualified_lead = 'Yes') OR pipeline_name = 'PH Upsell Pipeline')
+          THEN deal_id END) AS sql_val,
+        COUNT(DISTINCT CASE WHEN client_journey_stage = 'Customer' AND LOWER(stage_label) IN ('contract signed','project handover','sales handover','sales churn') THEN deal_id END) AS won
+      FROM shared.revops.silver_deals
+      WHERE create_date >= DATE_ADD(CURRENT_DATE(), -365)
+        AND deal_type NOT IN ('Renewal','Upsell - Renewal')
+        AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%'
+      GROUP BY 1,2 ORDER BY 2 ASC
+    `;
+
+    // 12. DQ rate combo monthly
+    const sqlDQCombo = `
+      SELECT
+        DATE_FORMAT(l.create_date, 'MMM yy') AS month_label,
+        DATE_TRUNC('month', l.create_date) AS sort_month,
+        COUNT(*) AS total_leads,
+        SUM(CASE WHEN l.disqualification_reason IS NOT NULL AND l.disqualification_reason != '' THEN 1 ELSE 0 END) AS dq_leads
+      FROM shared.revops.silver_leads l
+      WHERE l.create_date >= DATE_ADD(CURRENT_DATE(), -365)
+      GROUP BY 1,2 ORDER BY 2 ASC
+    `;
+
+    // 13. Segment pie (leads)
+    const sqlSegmentPie = `
+      SELECT
+        CASE WHEN COALESCE(segment,'Unknown') = 'MICRO' THEN 'SME' ELSE COALESCE(segment,'Unknown') END AS seg,
+        COUNT(DISTINCT deal_id) AS cnt
+      FROM shared.revops.silver_deals
+      ${buildDealWhereClause(f, "create_date")}
+        AND qualified_lead = 'Yes'
+      GROUP BY 1
+    `;
+
+    // 14. SQL by segment
+    const sqlSQLSeg = `
+      SELECT
+        CASE WHEN COALESCE(segment,'Unknown') = 'MICRO' THEN 'SME' ELSE COALESCE(segment,'Unknown') END AS seg,
+        COUNT(DISTINCT deal_id) AS cnt
+      FROM shared.revops.silver_deals
+      ${buildDealWhereClause(f, "create_date")}
+        AND stage_label IN ('Initial Demo Done','Solutioning','Commercial Negotiation','Committed Accounts','Contract Signed','Project Handover','Sales Handover','Sales Churn','Closed Lost')
+        AND ((pipeline_name IN ('Sales Pipeline','Unified Channel Pipeline') AND qualified_lead = 'Yes') OR pipeline_name = 'PH Upsell Pipeline')
+      GROUP BY 1
+    `;
+
+    // 15. Rep performance
+    const sqlRepPerf = `
+      SELECT
+        COALESCE(sales_rep,'Unassigned') AS sales_rep,
+        pipeline_name,
+        CASE WHEN COALESCE(segment,'Unknown') = 'MICRO' THEN 'SME' ELSE COALESCE(segment,'Unknown') END AS seg,
+        department_source_clean,
+        COUNT(DISTINCT CASE WHEN
+          stage_label IN ('Initial Demo Done','Solutioning','Commercial Negotiation','Committed Accounts','Contract Signed','Project Handover','Sales Handover','Sales Churn','Closed Lost')
+          AND ((pipeline_name IN ('Sales Pipeline','Unified Channel Pipeline') AND qualified_lead = 'Yes') OR pipeline_name = 'PH Upsell Pipeline')
+          THEN deal_id END) AS sql_cnt,
+        COUNT(DISTINCT CASE WHEN client_journey_stage = 'Customer' AND LOWER(stage_label) IN ('contract signed','project handover','sales handover','sales churn') THEN deal_id END) AS won_cnt
+      FROM shared.revops.silver_deals
+      ${buildDealWhereClause(f, "create_date")}
+      GROUP BY 1,2,3,4
+      HAVING sql_cnt > 0 OR won_cnt > 0
+      ORDER BY won_cnt DESC, sql_cnt DESC
+      LIMIT 30
+    `;
+
+    // 16. DQ detail table
+    const sqlDQDetail = `
+      SELECT
+        DATE_FORMAT(create_date, 'MMM yy') AS month_label,
+        DATE_TRUNC('month', create_date) AS sort_month,
+        COALESCE(disqualification_reason,'Unknown') AS reason,
+        COALESCE(department_source,'Unknown') AS dept_src,
+        COUNT(*) AS lead_cnt
+      FROM shared.revops.silver_leads
+      ${buildLeadWhereClause(f)}
+        AND disqualification_reason IS NOT NULL AND disqualification_reason != ''
+      GROUP BY 1,2,3,4
+      ORDER BY 2 DESC, 5 DESC
+      LIMIT 50
+    `;
+
+    // 17. Targets for MQL and QL
+    const sqlTargets = `
+      SELECT target_type, SUM(target_value) AS total_target
+      FROM shared.revops.gold_targets
+      WHERE metric_month >= '${f.dateFrom}'
+        AND metric_month <= '${f.dateTo}'
+        AND target_type IN ('QL','MRR','Won Deals','EF MRR','OTP')
+      GROUP BY 1
+    `;
+
+    showLoading("Fetching QL / MQL / OQL…");
+    const [rQL, rMQL, rOQL] = await Promise.all([dbQuery(sqlQL), dbQuery(sqlMQL), dbQuery(sqlOQL)]);
+
+    showLoading("Fetching SQL / Won / DQ…");
+    const [rSQL, rWon, rDQ] = await Promise.all([dbQuery(sqlSQLCount), dbQuery(sqlWon), dbQuery(sqlDQ)]);
+
+    showLoading("Fetching trends & charts…");
+    const [rTrend, rQLDept, rDQR, rSQLPipe] = await Promise.all([dbQuery(sqlMonthlyTrend), dbQuery(sqlQLDept), dbQuery(sqlDQReasons), dbQuery(sqlSQLPipeline)]);
+
+    showLoading("Fetching funnel & segment data…");
+    const [rFunnel, rDQCombo, rSegPie, rSQLSeg] = await Promise.all([dbQuery(sqlFunnelStacked), dbQuery(sqlDQCombo), dbQuery(sqlSegmentPie), dbQuery(sqlSQLSeg)]);
+
+    showLoading("Fetching rep performance & targets…");
+    const [rRep, rDQDetail, rTargets] = await Promise.all([dbQuery(sqlRepPerf), dbQuery(sqlDQDetail), dbQuery(sqlTargets)]);
+
+    // --- Render KPIs ---
+    const qlCount = safe(rQL[0]?.ql_count);
+    const mqlCount = safe(rMQL[0]?.mql_count);
+    const oqlCount = safe(rOQL[0]?.oql_count);
+    const sqlCount = safe(rSQL[0]?.sql_count);
+    const wonCount = safe(rWon[0]?.won_count);
+    const totalLeads = safe(rDQ[0]?.total_leads);
+    const dqLeads = safe(rDQ[0]?.dq_leads);
+
+    document.getElementById("kpiQLVal").textContent = fmt(qlCount);
+    document.getElementById("kpiMQLVal").textContent = fmt(mqlCount);
+    document.getElementById("kpiOQLVal").textContent = fmt(oqlCount);
+    document.getElementById("kpiSQLVal").textContent = fmt(sqlCount);
+
+    const dqRate = totalLeads > 0 ? (dqLeads / totalLeads * 100) : 0;
+    const sqlConvRate = qlCount > 0 ? (sqlCount / qlCount * 100) : 0;
+    const l2wRate = totalLeads > 0 ? (wonCount / totalLeads * 100) : 0;
+    const wonSQLRate = sqlCount > 0 ? (wonCount / sqlCount * 100) : 0;
+
+    document.getElementById("kpiDQRateVal").textContent = fmtPct(dqRate);
+    document.getElementById("kpiDQSub").textContent = `${fmt(dqLeads)} DQ ÷ ${fmt(totalLeads)} Total`;
+    document.getElementById("kpiSQLConvVal").textContent = fmtPct(sqlConvRate);
+    document.getElementById("kpiL2WVal").textContent = fmtPct(l2wRate);
+    document.getElementById("kpiWonSQLVal").textContent = fmtPct(wonSQLRate);
+
+    // Scorecard
+    document.getElementById("scTotalLeads").textContent = fmt(totalLeads);
+    document.getElementById("scDQLeads").textContent = fmt(dqLeads);
+    document.getElementById("scWonDeals").textContent = fmt(wonCount);
+    document.getElementById("scActiveSQL").textContent = fmt(sqlCount);
+
+    const tgtMap = {};
+    rTargets.forEach(r => { tgtMap[r.target_type] = safe(r.total_target); });
+    document.getElementById("scMQLTarget").textContent = fmt(tgtMap["QL"] || 0);
+    document.getElementById("scQLTarget").textContent = fmt(tgtMap["Won Deals"] || 0);
+
+    // --- QL+SQL Trend Line Chart ---
+    {
+      const labels = rTrend.map(r => {
+        const d = new Date(r.metric_month);
+        return d.toLocaleString("default", { month: "short", year: "2-digit" });
+      });
+      mkChart("chartQLSQLTrend", "line", {
+        labels,
+        datasets: [
+          { label: "QL", data: rTrend.map(r => safe(r.ql_count)), borderColor: "#1DB954", backgroundColor: "rgba(29,185,84,0.08)", tension: 0.4, pointRadius: 4, fill: true },
+          { label: "SQL", data: rTrend.map(r => safe(r.sql_count)), borderColor: "#4d9fff", backgroundColor: "rgba(77,159,255,0.06)", tension: 0.4, pointRadius: 4, fill: true },
+          { label: "Won", data: rTrend.map(r => safe(r.won_count)), borderColor: "#ffd700", backgroundColor: "rgba(255,215,0,0.06)", tension: 0.4, pointRadius: 4, fill: true }
+        ]
+      }, { plugins: { legend: { position: "top" } } });
+    }
+
+    // --- QL by Dept Source Bar ---
+    {
+      mkChart("chartQLByDept", "bar", {
+        labels: rQLDept.map(r => r.department_source_clean || "Unknown"),
+        datasets: [{ label: "QL Count", data: rQLDept.map(r => safe(r.ql_count)), backgroundColor: CHART_COLORS, borderRadius: 5 }]
+      }, { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } });
+    }
+
+    // --- DQ Reasons Donut ---
+    {
+      const dqLabels = rDQR.map(r => (r.reason || "Unknown").substring(0, 30));
+      mkChart("chartDQReasons", "doughnut", {
+        labels: dqLabels,
+        datasets: [{ data: rDQR.map(r => safe(r.cnt)), backgroundColor: CHART_COLORS, borderWidth: 0, hoverOffset: 8 }]
+      }, { plugins: { legend: { position: "right", labels: { font: { size: 9 }, boxWidth: 10 } } } });
+    }
+
+    // --- SQL by Pipeline Pie ---
+    {
+      mkChart("chartSQLPipeline", "doughnut", {
+        labels: rSQLPipe.map(r => r.pipeline_name || "Unknown"),
+        datasets: [{ data: rSQLPipe.map(r => safe(r.sql_count)), backgroundColor: CHART_COLORS, borderWidth: 0, hoverOffset: 8 }]
+      }, { plugins: { legend: { position: "right", labels: { font: { size: 10 }, boxWidth: 10 } } } });
+    }
+
+    // --- Stacked Bar Funnel ---
+    {
+      const labels = rFunnel.map(r => r.month_label || "");
+      mkChart("chartFunnelStacked", "bar", {
+        labels,
+        datasets: [
+          { label: "QL", data: rFunnel.map(r => safe(r.ql)), backgroundColor: "rgba(29,185,84,0.7)", borderRadius: 3 },
+          { label: "SQL", data: rFunnel.map(r => safe(r.sql_val)), backgroundColor: "rgba(77,159,255,0.7)", borderRadius: 3 },
+          { label: "Won", data: rFunnel.map(r => safe(r.won)), backgroundColor: "rgba(255,215,0,0.7)", borderRadius: 3 }
+        ]
+      }, { plugins: { legend: { position: "top" } }, scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } } });
+    }
+
+    // --- Combo: DQ Rate line + QL bar ---
+    {
+      const labels = rDQCombo.map(r => r.month_label || "");
+      const dqRates = rDQCombo.map(r => {
+        const t = safe(r.total_leads);
+        const d = safe(r.dq_leads);
+        return t > 0 ? parseFloat((d / t * 100).toFixed(1)) : 0;
+      });
+      mkChart("chartCombo", "bar", {
+        labels,
+        datasets: [
+          { type: "bar", label: "Total Leads", data: rDQCombo.map(r => safe(r.total_leads)), backgroundColor: "rgba(29,185,84,0.3)", borderRadius: 4, yAxisID: "y" },
+          { type: "line", label: "DQ Rate %", data: dqRates, borderColor: "#ff4d4d", backgroundColor: "rgba(255,77,77,0.1)", tension: 0.4, pointRadius: 4, yAxisID: "y2" }
+        ]
+      }, {
+        plugins: { legend: { position: "top" } },
+        scales: {
+          y: { beginAtZero: true, ticks: { color: "#666", font: { size: 10 } }, grid: { color: "rgba(255,255,255,0.04)" } },
+          y2: { position: "right", beginAtZero: true, max: 100, ticks: { color: "#ff4d4d", font: { size: 10 }, callback: v => v + "%" }, grid: { display: false } }
+        }
+      });
+    }
+
+    // --- Segment Pie ---
+    {
+      mkChart("chartSegmentPie", "pie", {
+        labels: rSegPie.map(r => r.seg || "Unknown"),
+        datasets: [{ data: rSegPie.map(r => safe(r.cnt)), backgroundColor: CHART_COLORS, borderWidth: 0, hoverOffset: 6 }]
+      }, { plugins: { legend: { position: "bottom", labels: { font: { size: 10 } } } } });
+    }
+
+    // --- SQL Segment Donut ---
+    {
+      mkChart("chartSQLSegment", "doughnut", {
+        labels: rSQLSeg.map(r => r.seg || "Unknown"),
+        datasets: [{ data: rSQLSeg.map(r => safe(r.cnt)), backgroundColor: CHART_COLORS, borderWidth: 0, hoverOffset: 6 }]
+      }, { plugins: { legend: { position: "bottom", labels: { font: { size: 10 } } } } });
+    }
+
+    // --- Progress Bars ---
+    {
+      const bars = [
+        { label: "SQL Conv. Rate (SQL/QL)", val: sqlConvRate, max: 100, cls: "" },
+        { label: "Lead → Won Rate", val: l2wRate, max: 100, cls: "orange" },
+        { label: "DQ Rate", val: dqRate, max: 100, cls: "red" },
+        { label: "Won / SQL Rate", val: wonSQLRate, max: 100, cls: "blue" },
+        { label: "MQL / QL Share", val: qlCount > 0 ? (mqlCount / qlCount * 100) : 0, max: 100, cls: "" },
+        { label: "OQL / QL Share", val: qlCount > 0 ? (oqlCount / qlCount * 100) : 0, max: 100, cls: "orange" }
+      ];
+      const container = document.getElementById("funnelProgress");
+      container.innerHTML = bars.map(b => `
+        <div class="progress-item">
+          <div class="progress-label-row">
+            <span class="progress-label">${b.label}</span>
+            <span class="progress-val">${fmtPct(b.val)}</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill ${b.cls}" style="width:${Math.min(b.val, 100).toFixed(1)}%"></div>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    // --- Rep Performance Table ---
+    {
+      document.getElementById("tableRepCount").textContent = rRep.length + " reps";
+      const tbody = document.getElementById("tableRepBody");
+      if (!rRep.length) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:24px;">No data found</td></tr>`;
+      } else {
+        tbody.innerHTML = rRep.map(r => {
+          const wonSQL = safe(r.sql_cnt) > 0 ? (safe(r.won_cnt) / safe(r.sql_cnt) * 100).toFixed(1) + "%" : "—";
+          const wonPill = safe(r.won_cnt) > 0 ? `<span class="pill pill-green">${fmt(r.won_cnt)}</span>` : `<span class="pill pill-gray">0</span>`;
+          return `<tr>
+            <td>${r.sales_rep || "—"}</td>
+            <td><span class="pill pill-blue">${(r.pipeline_name||"—").replace(" Pipeline","")}</span></td>
+            <td>${r.seg || "—"}</td>
+            <td>${fmt(r.sql_cnt)}</td>
+            <td>${wonPill}</td>
+            <td>${wonSQL}</td>
+            <td><span class="pill pill-gray" style="font-size:10px;">${r.department_source_clean||"—"}</span></td>
+          </tr>`;
+        }).join("");
+      }
+    }
+
+    // --- DQ Detail Table ---
+    {
+      document.getElementById("tableDQCount").textContent = rDQDetail.length + " records";
+      const tbody = document.getElementById("tableDQBody");
+      if (!rDQDetail.length) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:24px;">No disqualified leads found</td></tr>`;
+      } else {
+        // get total per month for DQ rate calc
+        const monthTotals = {};
+        rDQCombo.forEach(r => { monthTotals[r.month_label] = safe(r.total_leads); });
+        tbody.innerHTML = rDQDetail.map(r => {
+          const mTotal = monthTotals[r.month_label] || 0;
+          const dqR = mTotal > 0 ? (safe(r.lead_cnt) / mTotal * 100).toFixed(1) + "%" : "—";
+          return `<tr>
+            <td>${r.month_label || "—"}</td>
+            <td>${r.reason || "—"}</td>
+            <td><span class="pill pill-red">${fmt(r.lead_cnt)}</span></td>
+            <td>${r.dept_src || "—"}</td>
+            <td>${dqR}</td>
+          </tr>`;
+        }).join("");
+      }
+    }
+
+    document.getElementById("lastRefresh").textContent = "Last refreshed: " + new Date().toLocaleString("en-PH");
+    hideLoading();
+
+  } catch(e) {
+    hideLoading();
+    showError("Failed to load dashboard: " + e.message);
+    console.error(e);
+  }
+}
+
+// Default date range: current month
+(function setDefaultDates() {
+  const today = new Date();
+  const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+  document.getElementById("filterDateFrom").value = firstDay.toISOString().split("T")[0];
+  document.getElementById("filterDateTo").value = today.toISOString().split("T")[0];
+})();
+
+document.addEventListener("DOMContentLoaded", init);
+</script>
+</body>
+</html>
