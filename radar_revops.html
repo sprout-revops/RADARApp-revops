@@ -5334,7 +5334,7 @@ const STEPS = {
       ${step(4,'Authenticate with Personal Access Token','Select <strong>Token</strong> authentication. Generate a PAT in Databricks under <strong>Settings → Developer → Access Tokens → Generate New Token</strong>. Paste it into Power BI.',null)}
       ${step(5,'Select Your Tables','Navigate to <strong>shared.revops</strong> schema. Select <strong>gold_monthly_exec_summary</strong> for standard KPI dashboards, or silver tables for custom drill-downs.',null)}
       ${step(6,'Choose Import or Direct Query','Use <strong>Import</strong> for faster performance on historical dashboards. Use <strong>Direct Query</strong> for near-real-time data — note this increases Databricks compute usage.',null)}
-      <div class="step-note"><strong>💡 Recommended starting table:</strong> <code>gold_monthly_exec_summary</code> — all KPIs pre-computed, just filter by metric_month, pipeline_name, and segment_official.</div>`
+      <div class="step-note"><strong>💡 Recommended starting table:</strong> <code>gold_monthly_exec_summary</code> — all KPIs pre-computed, just filter by metric_month, pipeline_name, and segment.</div>`
   },
   databricks: {
     title: '📊 Databricks SQL Editor — Query Directly',
@@ -9123,7 +9123,7 @@ AVAILABLE TABLES — shared.revops (Databricks)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🥇 GOLD (use first — pre-aggregated)
 shared.revops.gold_monthly_exec_summary — monthly KPIs
-  Fields: metric_month, pipeline_name, segment_official, department_source_clean,
+  Fields: metric_month, pipeline_name, segment, department_source_clean,
           qualified_leads, sales_qualified_leads, won_deals, won_mrr, won_ef_mrr, won_amount,
           win_rate, avg_deal_size, avg_deal_velocity, mrr_in_pipeline
 
