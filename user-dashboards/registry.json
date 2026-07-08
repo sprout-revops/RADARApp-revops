@@ -212,11 +212,12 @@
       "ownerName": "louieb",
       "file": "user-dashboards/auq-sana-na-ikaw-ay-mawawala-mrbvovap.html",
       "url": "https://radar-revops.vercel.app/user-dashboards/auq-sana-na-ikaw-ay-mawawala-mrbvovap.html",
-      "status": "private",
+      "status": "published",
       "createdAt": "2026-07-08T09:31:30.401Z",
       "updatedAt": "2026-07-08T09:31:30.401Z",
       "requestedAt": null,
-      "publishedAt": null
+      "publishedAt": "2026-07-08T09:32:33.663Z",
+      "access": []
     }
   ]
 }
