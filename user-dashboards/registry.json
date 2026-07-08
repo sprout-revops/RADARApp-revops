@@ -157,7 +157,12 @@
       "updatedAt": "2026-07-08T06:11:21.958Z",
       "requestedAt": null,
       "publishedAt": "2026-07-08T10:00:12.255Z",
-      "access": []
+      "access": [
+        {
+          "email": "lurbina@sprout.ph",
+          "level": "edit"
+        }
+      ]
     },
     {
       "id": "auq-sana-na-ikaw-ay-mawawala-mrbvovap",
