@@ -4437,8 +4437,11 @@ function diyFinalizeGenerated(rawText, previewWrap, iframe, btn, statusEl){
   // Store for download
   window._diyGeneratedHTML = html;
 
-  // Render in iframe
-  if(iframe){ iframe.srcdoc = html; }
+  // Render the preview from the secret-free copy: placeholders become runtime localStorage
+  // lookups and the baked dbQuery prefers the shared x-radar-token credential. The preview
+  // then authenticates exactly like a published dashboard, so it loads for ANY signed-in
+  // @sprout.ph user — no personal Databricks token required.
+  if(iframe){ iframe.srcdoc = window._diyGeneratedSave || html; }
   if(previewWrap){ previewWrap.style.display = ''; }
 
   if(btn){ btn.disabled = false; btn.textContent = '⚡ Regenerate'; }
@@ -4479,18 +4482,27 @@ function diyBuildPrompt(){
   lines.push('const CONFIG = { host: "__DB_HOST__", token: "__DB_TOKEN__", warehouseId: "__DB_WAREHOUSE__" };');
   lines.push('');
   lines.push('// Returns array of plain objects [{col: val, ...}]. Polls until SUCCEEDED.');
+  lines.push('// Inside RADAR (signed in) it uses the shared @sprout.ph credential automatically;');
+  lines.push('// a standalone copy falls back to the personal token in CONFIG.');
   lines.push('async function dbQuery(sql) {');
+  lines.push('  const RT = (function(){ try { return localStorage.getItem("radar_id_token") || ""; } catch(e){ return ""; } })();');
+  lines.push('  const SHARED = !!RT;');
+  lines.push('  const H  = SHARED ? { "x-radar-token": RT, "Content-Type": "application/json" }');
+  lines.push('                    : { "x-db-host": CONFIG.host, "x-db-token": CONFIG.token, "Content-Type": "application/json" };');
+  lines.push('  const PH = SHARED ? { "x-radar-token": RT } : { "x-db-host": CONFIG.host, "x-db-token": CONFIG.token };');
+  lines.push('  const reqBody = { statement: sql, wait_timeout: "0s", on_wait_timeout: "CONTINUE", format: "JSON_ARRAY" };');
+  lines.push('  if (!SHARED) reqBody.warehouse_id = CONFIG.warehouseId;');
   lines.push('  const sub = await fetch("https://radar-revops.vercel.app/api/databricks", {');
   lines.push('    method: "POST",');
-  lines.push('    headers: { "x-db-host": CONFIG.host, "x-db-token": CONFIG.token, "Content-Type": "application/json" },');
-  lines.push('    body: JSON.stringify({ warehouse_id: CONFIG.warehouseId, statement: sql, wait_timeout: "0s", on_wait_timeout: "CONTINUE", format: "JSON_ARRAY" })');
+  lines.push('    headers: H,');
+  lines.push('    body: JSON.stringify(reqBody)');
   lines.push('  });');
   lines.push('  const subJson = await sub.json();');
   lines.push('  if (!subJson.statement_id) throw new Error("No statement_id returned: " + JSON.stringify(subJson));');
   lines.push('  for (let i = 0; i < 120; i++) {');
   lines.push('    await new Promise(r => setTimeout(r, 3000));');
   lines.push('    const poll = await fetch("https://radar-revops.vercel.app/api/databricks-poll?id=" + subJson.statement_id, {');
-  lines.push('      headers: { "x-db-host": CONFIG.host, "x-db-token": CONFIG.token }');
+  lines.push('      headers: PH');
   lines.push('    });');
   lines.push('    const p = await poll.json();');
   lines.push('    const state = p && p.status && p.status.state;');
@@ -5714,26 +5726,37 @@ const LC = {
 // ── DATABRICKS SQL API ──
 async function dbQuery(sql, timeout) {
   timeout = timeout || 30;
-  if (!LC.connected) throw new Error('Not connected to Databricks.');
-  const warehouseId = LC.warehouseId();
-  if (!warehouseId) throw new Error('Could not parse warehouse ID from HTTP Path.');
+  // Prefer the SHARED, server-side Databricks credential for any signed-in @sprout.ph user
+  // (the /api/databricks proxy verifies the token server-side). No personal Databricks token
+  // is needed in-app. Only fall back to a user-supplied personal PAT when NOT signed in.
+  const idToken = localStorage.getItem('radar_id_token') || '';
+  const useShared = !!idToken;
+  if (!useShared && !LC.connected) throw new Error('Sign in with your @sprout.ph account to load data.');
 
+  const headers = { 'Content-Type': 'application/json' };
   const body = {
     statement: sql,
-    warehouse_id: warehouseId,
     wait_timeout: timeout + 's',
     on_wait_timeout: 'CONTINUE',
     format: 'JSON_ARRAY'
   };
+  let pollHeaders;
+  if (useShared) {
+    headers['x-radar-token'] = idToken;          // server injects warehouse_id from its env
+    pollHeaders = { 'x-radar-token': idToken };
+  } else {
+    const warehouseId = LC.warehouseId();
+    if (!warehouseId) throw new Error('Could not parse warehouse ID from HTTP Path.');
+    body.warehouse_id = warehouseId;
+    headers['x-db-host'] = LC.host;
+    headers['x-db-token'] = LC.token;
+    pollHeaders = { 'x-db-host': LC.host, 'x-db-token': LC.token };
+  }
 
   // Route through /api/databricks proxy to avoid CORS
   const res = await fetch('/api/databricks', {
     method: 'POST',
-    headers: {
-      'x-db-host': LC.host,
-      'x-db-token': LC.token,
-      'Content-Type': 'application/json'
-    },
+    headers: headers,
     body: JSON.stringify(body)
   });
 
@@ -5750,7 +5773,7 @@ async function dbQuery(sql, timeout) {
     await new Promise(function(r) { setTimeout(r, 1500); });
     const pollRes = await fetch('/api/databricks-poll?id=' + data.statement_id, {
       method: 'GET',
-      headers: { 'x-db-host': LC.host, 'x-db-token': LC.token }
+      headers: pollHeaders
     });
     data = await pollRes.json();
     polls++;
@@ -5825,7 +5848,11 @@ function updateConnBadge() {
   const badge = document.getElementById('conn-badge');
   const dot   = document.getElementById('conn-dot');
   const text  = document.getElementById('conn-badge-text');
-  if (LC.connected) {
+  if (!badge || !dot || !text) return;
+  // "Live" means data will actually load: a signed-in @sprout.ph user uses the shared
+  // credential, so being signed in is enough — a personal Databricks connection also counts.
+  const signedIn = !!localStorage.getItem('radar_id_token');
+  if (LC.connected || signedIn) {
     badge.classList.add('live');
     dot.style.background = '#10B981';
     text.textContent = 'Live';
@@ -5991,9 +6018,9 @@ updateConnBadge();
 // ── LOGIN ──
 const RADAR_CLIENT_ID = '1083460218316-p1tf3fg79257vp77s8rvmf6e9ver6uts.apps.googleusercontent.com';
 
-var RADAR_ALLOWED_EMAILS = ['lurbina@sprout.ph','jsayseng@sprout.ph'];
+// RADAR access is restricted to @sprout.ph accounts (also enforced server-side in _verify.js).
 function isSproutEmail(email) {
-  return typeof email === 'string' && RADAR_ALLOWED_EMAILS.indexOf(email.toLowerCase()) >= 0;
+  return typeof email === 'string' && /@sprout\.ph$/.test(email.toLowerCase());
 }
 
 function parseJwt(token) {
@@ -6006,10 +6033,26 @@ function handleGoogleSignIn(response) {
   const payload = parseJwt(response.credential);
   if (!payload || !payload.email) return;
   const email = payload.email.toLowerCase();
+  // Restrict access to @sprout.ph accounts. Reject anyone else: drop the token, revoke the
+  // Google session, and show a clear message. (Server endpoints also enforce this.)
+  if (!isSproutEmail(email)) {
+    localStorage.removeItem('radar_user_email');
+    localStorage.removeItem('radar_id_token');
+    try {
+      if (window.google) {
+        google.accounts.id.disableAutoSelect();
+        google.accounts.id.revoke(email, function(){});
+      }
+    } catch (e) {}
+    var errEl = document.getElementById('login-error');
+    if (errEl) errEl.textContent = 'Access is restricted to @sprout.ph accounts. Please sign in with your Sprout email.';
+    return;
+  }
   localStorage.setItem('radar_user_email', email);
   // Keep the signed Google token — sent to protected APIs which verify it server-side.
   localStorage.setItem('radar_id_token', response.credential);
   radarShowUser(email);
+  updateConnBadge();
   if (typeof radarTrack === 'function') radarTrack('signin');
 }
 
@@ -6057,6 +6100,7 @@ function radarLogout() {
   if (signout) signout.style.display = 'none';
   if (signin) signin.style.display = '';
   if (diyTab) diyTab.style.display = 'none';
+  updateConnBadge();
 }
 
 // Init Google Sign-In once the GSI library is ready
@@ -6113,8 +6157,13 @@ function showFallbackBtn() {
 // Restore session on load — RADAR is always open; only DIY tab is restricted
 (function() {
   const stored = localStorage.getItem('radar_user_email');
-  if (stored) {
+  if (stored && isSproutEmail(stored)) {
     radarShowUser(stored);
+    updateConnBadge();
+  } else if (stored) {
+    // Stale or non-@sprout.ph session — clear it so only Sprout accounts stay signed in.
+    localStorage.removeItem('radar_user_email');
+    localStorage.removeItem('radar_id_token');
   }
   // Init GSI in background so prompt() works when user clicks Sign In for DIY
   function _afterGsiReady() {
