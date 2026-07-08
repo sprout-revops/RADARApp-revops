@@ -1,0 +1,1401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Julius_test107</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --surface: #141414;
+    --surface2: #1a1a1a;
+    --surface3: #222222;
+    --accent: #1DB954;
+    --accent2: #17a349;
+    --accent3: #25e066;
+    --text: #f0f0f0;
+    --text2: #a0a0a0;
+    --text3: #606060;
+    --border: #2a2a2a;
+    --red: #e05252;
+    --amber: #f5a623;
+    --blue: #4a90d9;
+    --purple: #9b59b6;
+    --teal: #1abc9c;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
+
+  /* HEADER */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-left { display: flex; align-items: center; gap: 14px; }
+  .logo { width: 36px; height: 36px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 18px; color: #000; }
+  .header-title h1 { font-size: 18px; font-weight: 700; color: var(--text); }
+  .header-title p { font-size: 12px; color: var(--text2); }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .last-refresh { font-size: 11px; color: var(--text3); }
+  .btn { background: var(--accent); color: #000; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: background 0.2s; }
+  .btn:hover { background: var(--accent3); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-ghost { background: var(--surface3); color: var(--text); border: 1px solid var(--border); }
+  .btn-ghost:hover { background: var(--surface2); }
+
+  /* LOADING */
+  .loading-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    z-index: 999; gap: 16px;
+  }
+  .loading-overlay.hidden { display: none; }
+  .spinner { width: 48px; height: 48px; border: 4px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { color: var(--text2); font-size: 14px; }
+
+  /* ERROR */
+  .error-banner {
+    background: rgba(224,82,82,0.15);
+    border: 1px solid var(--red);
+    color: var(--red);
+    padding: 12px 20px;
+    border-radius: 8px;
+    margin: 16px 24px;
+    font-size: 13px;
+    display: none;
+  }
+  .error-banner.visible { display: block; }
+
+  /* FILTERS */
+  .filters-bar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 24px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: flex-end;
+  }
+  .filter-group { display: flex; flex-direction: column; gap: 4px; }
+  .filter-group label { font-size: 11px; color: var(--text2); font-weight: 500; }
+  .filter-group select, .filter-group input {
+    background: var(--surface3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    min-width: 130px;
+    outline: none;
+    appearance: none;
+  }
+  .filter-group select:focus, .filter-group input:focus { border-color: var(--accent); }
+  .filter-group input[type="date"] { min-width: 140px; }
+  .filter-actions { display: flex; gap: 8px; align-items: flex-end; }
+
+  /* MAIN */
+  .main { padding: 20px 24px; }
+
+  /* SECTION */
+  .section-header {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 16px; padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-header h2 { font-size: 15px; font-weight: 600; color: var(--text); }
+  .section-badge {
+    background: var(--accent);
+    color: #000;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+  }
+
+  /* GRID */
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
+  .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 20px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
+  .col-span-2 { grid-column: span 2; }
+  .col-span-3 { grid-column: span 3; }
+
+  /* CARD */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--accent);
+    border-radius: 12px 12px 0 0;
+  }
+  .card.red::before { background: var(--red); }
+  .card.amber::before { background: var(--amber); }
+  .card.blue::before { background: var(--blue); }
+  .card.purple::before { background: var(--purple); }
+  .card.teal::before { background: var(--teal); }
+
+  /* KPI CARD */
+  .kpi-label { font-size: 11px; color: var(--text2); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .kpi-value { font-size: 32px; font-weight: 800; color: var(--text); line-height: 1; margin-bottom: 6px; }
+  .kpi-sub { font-size: 12px; color: var(--text2); }
+  .kpi-trend { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; margin-top: 6px; }
+  .kpi-trend.up { color: var(--accent); }
+  .kpi-trend.down { color: var(--red); }
+  .kpi-icon { position: absolute; top: 16px; right: 16px; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+
+  /* CHART CARD */
+  .chart-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .chart-card-title { font-size: 14px; font-weight: 600; color: var(--text); }
+  .chart-card-subtitle { font-size: 11px; color: var(--text2); margin-top: 2px; }
+  .chart-container { position: relative; }
+
+  /* TABLE */
+  .table-wrapper { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  thead th {
+    background: var(--surface2);
+    color: var(--text2);
+    padding: 10px 12px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    white-space: nowrap;
+    border-bottom: 1px solid var(--border);
+  }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+  tbody tr:hover { background: var(--surface2); }
+  tbody td { padding: 10px 12px; color: var(--text); white-space: nowrap; }
+  tbody tr:last-child { border-bottom: none; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; }
+  .badge-green { background: rgba(29,185,84,0.15); color: var(--accent); }
+  .badge-red { background: rgba(224,82,82,0.15); color: var(--red); }
+  .badge-amber { background: rgba(245,166,35,0.15); color: var(--amber); }
+  .badge-blue { background: rgba(74,144,217,0.15); color: var(--blue); }
+
+  /* SCORECARD */
+  .scorecard-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .scorecard-item { background: var(--surface2); border-radius: 8px; padding: 14px; border: 1px solid var(--border); }
+  .scorecard-item-label { font-size: 11px; color: var(--text2); margin-bottom: 6px; }
+  .scorecard-item-value { font-size: 22px; font-weight: 700; }
+  .scorecard-item-value.green { color: var(--accent); }
+  .scorecard-item-value.red { color: var(--red); }
+  .scorecard-item-value.amber { color: var(--amber); }
+  .scorecard-item-value.blue { color: var(--blue); }
+
+  /* TABS */
+  .tabs { display: flex; gap: 4px; margin-bottom: 16px; }
+  .tab { padding: 7px 14px; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; color: var(--text2); border: 1px solid transparent; transition: all 0.15s; }
+  .tab.active { background: var(--accent); color: #000; font-weight: 700; }
+  .tab:hover:not(.active) { background: var(--surface3); color: var(--text); }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* SEPARATOR */
+  .section-gap { margin-bottom: 28px; }
+
+  /* EMPTY STATE */
+  .empty-state { text-align: center; padding: 40px; color: var(--text3); font-size: 13px; }
+
+  @media (max-width: 900px) {
+    .grid-3 { grid-template-columns: repeat(2, 1fr); }
+    .grid-4 { grid-template-columns: repeat(2, 1fr); }
+    .col-span-2 { grid-column: span 1; }
+    .col-span-3 { grid-column: span 2; }
+  }
+  @media (max-width: 600px) {
+    .grid-3, .grid-2, .grid-4 { grid-template-columns: 1fr; }
+    .col-span-2, .col-span-3 { grid-column: span 1; }
+    .filters-bar { flex-direction: column; }
+    .header { flex-direction: column; gap: 10px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loadingText">Loading dashboard data…</div>
+</div>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-left">
+    <div class="logo">S</div>
+    <div class="header-title">
+      <h1>Julius_test107</h1>
+      <p>RevOps · Lead Qualification & Funnel Dashboard</p>
+    </div>
+  </div>
+  <div class="header-right">
+    <span class="last-refresh" id="lastRefresh">Never refreshed</span>
+    <button class="btn" id="refreshBtn" onclick="init()">↻ Refresh</button>
+  </div>
+</div>
+
+<!-- ERROR -->
+<div class="error-banner" id="errorBanner"></div>
+
+<!-- FILTERS -->
+<div class="filters-bar">
+  <div class="filter-group">
+    <label>Date From</label>
+    <input type="date" id="dateFrom" value="">
+  </div>
+  <div class="filter-group">
+    <label>Date To</label>
+    <input type="date" id="dateTo" value="">
+  </div>
+  <div class="filter-group">
+    <label>Pipeline</label>
+    <select id="filterPipeline">
+      <option value="">All Pipelines</option>
+      <option>Sales Pipeline</option>
+      <option>Unified Channel Pipeline</option>
+      <option>PH Upsell Pipeline</option>
+      <option>TH Sales Pipeline</option>
+    </select>
+  </div>
+  <div class="filter-group">
+    <label>Segment</label>
+    <select id="filterSegment">
+      <option value="">All Segments</option>
+      <option>SME</option>
+      <option>ENT</option>
+      <option>Channels</option>
+    </select>
+  </div>
+  <div class="filter-group">
+    <label>Dept Source</label>
+    <select id="filterDeptSource">
+      <option value="">All Sources</option>
+      <option>MKT Inbound</option>
+      <option>LDU Outbound</option>
+      <option>Sales Outbound</option>
+      <option>Channels</option>
+      <option>CSM Inbound</option>
+      <option>Upsell Outbound</option>
+    </select>
+  </div>
+  <div class="filter-group">
+    <label>Deal Type</label>
+    <select id="filterDealType">
+      <option value="">All Types</option>
+      <option>New Business</option>
+      <option>Upsell Deals</option>
+      <option>TH Deals</option>
+    </select>
+  </div>
+  <div class="filter-actions">
+    <button class="btn" onclick="applyFilters()">Apply</button>
+    <button class="btn btn-ghost" onclick="resetFilters()">Reset</button>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="main">
+
+  <!-- KPI SCORECARDS -->
+  <div class="section-gap">
+    <div class="section-header">
+      <h2>Key Performance Indicators</h2>
+      <span class="section-badge">FUNNEL</span>
+    </div>
+    <div class="grid-4">
+      <div class="card" id="kpiQL">
+        <div class="kpi-icon" style="background:rgba(29,185,84,0.1)">🎯</div>
+        <div class="kpi-label">Qualified Leads (QL)</div>
+        <div class="kpi-value" id="valQL">—</div>
+        <div class="kpi-sub">qualified_lead = Yes</div>
+      </div>
+      <div class="card blue" id="kpiSQL">
+        <div class="kpi-icon" style="background:rgba(74,144,217,0.1)">📊</div>
+        <div class="kpi-label">Sales Qualified Leads (SQL)</div>
+        <div class="kpi-value" id="valSQL">—</div>
+        <div class="kpi-sub">Pipeline-aware filter</div>
+      </div>
+      <div class="card amber" id="kpiMQL">
+        <div class="kpi-icon" style="background:rgba(245,166,35,0.1)">📣</div>
+        <div class="kpi-label">MQL (MKT Inbound)</div>
+        <div class="kpi-value" id="valMQL">—</div>
+        <div class="kpi-sub">dept_source = MKT Inbound</div>
+      </div>
+      <div class="card purple" id="kpiOQL">
+        <div class="kpi-icon" style="background:rgba(155,89,182,0.1)">📤</div>
+        <div class="kpi-label">OQL (LDU Outbound)</div>
+        <div class="kpi-value" id="valOQL">—</div>
+        <div class="kpi-sub">dept_source = LDU Outbound</div>
+      </div>
+    </div>
+    <div class="grid-4">
+      <div class="card teal">
+        <div class="kpi-icon" style="background:rgba(26,188,156,0.1)">✅</div>
+        <div class="kpi-label">SQL Conversion Rate</div>
+        <div class="kpi-value" id="valSQLRate">—</div>
+        <div class="kpi-sub">SQL ÷ QL × 100</div>
+      </div>
+      <div class="card red">
+        <div class="kpi-icon" style="background:rgba(224,82,82,0.1)">❌</div>
+        <div class="kpi-label">DQ Rate</div>
+        <div class="kpi-value" id="valDQRate">—</div>
+        <div class="kpi-sub">DQ Leads ÷ Total Leads</div>
+      </div>
+      <div class="card">
+        <div class="kpi-icon" style="background:rgba(29,185,84,0.1)">🏆</div>
+        <div class="kpi-label">Lead → Won Conversion</div>
+        <div class="kpi-value" id="valLWConv">—</div>
+        <div class="kpi-sub">Won Leads ÷ Total Leads</div>
+      </div>
+      <div class="card amber">
+        <div class="kpi-icon" style="background:rgba(245,166,35,0.1)">🚫</div>
+        <div class="kpi-label">Sales Disqualified</div>
+        <div class="kpi-value" id="valSalesDQ">—</div>
+        <div class="kpi-sub">Stage = Disqualified + QL=Yes</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCORECARD SECTION -->
+  <div class="section-gap">
+    <div class="section-header">
+      <h2>Funnel Scorecard</h2>
+      <span class="section-badge">OVERVIEW</span>
+    </div>
+    <div class="grid-3">
+      <div class="card">
+        <div class="chart-card-header">
+          <div>
+            <div class="chart-card-title">Funnel Breakdown</div>
+            <div class="chart-card-subtitle">Key funnel metrics at a glance</div>
+          </div>
+        </div>
+        <div class="scorecard-grid" id="scorecardGrid">
+          <div class="scorecard-item"><div class="scorecard-item-label">Total QL</div><div class="scorecard-item-value green" id="scQL">—</div></div>
+          <div class="scorecard-item"><div class="scorecard-item-label">Total SQL</div><div class="scorecard-item-value blue" id="scSQL">—</div></div>
+          <div class="scorecard-item"><div class="scorecard-item-label">Won Deals</div><div class="scorecard-item-value green" id="scWon">—</div></div>
+          <div class="scorecard-item"><div class="scorecard-item-label">Lost Deals</div><div class="scorecard-item-value red" id="scLost">—</div></div>
+          <div class="scorecard-item"><div class="scorecard-item-label">Win Rate</div><div class="scorecard-item-value amber" id="scWinRate">—</div></div>
+          <div class="scorecard-item"><div class="scorecard-item-label">DQ Leads</div><div class="scorecard-item-value red" id="scDQ">—</div></div>
+        </div>
+      </div>
+      <div class="card col-span-2">
+        <div class="chart-card-header">
+          <div>
+            <div class="chart-card-title">QL vs SQL vs Won — Monthly Trend</div>
+            <div class="chart-card-subtitle">Create date basis for QL/SQL · Close date for Won</div>
+          </div>
+        </div>
+        <div class="chart-container" style="height:220px">
+          <canvas id="chartFunnelTrend"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHARTS ROW 1 -->
+  <div class="section-gap">
+    <div class="section-header">
+      <h2>Lead Qualification Analysis</h2>
+      <span class="section-badge">BREAKDOWN</span>
+    </div>
+    <div class="grid-3">
+      <div class="card">
+        <div class="chart-card-header">
+          <div>
+            <div class="chart-card-title">QL by Department Source</div>
+            <div class="chart-card-subtitle">Qualified leads split by source</div>
+          </div>
+        </div>
+        <div class="chart-container" style="height:220px">
+          <canvas id="chartQLBySource"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="chart-card-header">
+          <div>
+            <div class="chart-card-title">QL by Pipeline</div>
+            <div class="chart-card-subtitle">Distribution across pipelines</div>
+          </div>
+        </div>
+        <div class="chart-container" style="height:220px">
+          <canvas id="chartQLByPipeline"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="chart-card-header">
+          <div>
+            <div class="chart-card-title">QL by Segment</div>
+            <div class="chart-card-subtitle">SME vs ENT vs Channels</div>
+          </div>
+        </div>
+        <div class="chart-container" style="height:220px">
+          <canvas id="chartQLBySegment"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHARTS ROW 2 — BAR + COMBO -->
+  <div class="section-gap">
+    <div class="section-header">
+      <h2>Monthly Performance Trends</h2>
+      <span class="section-badge">TREND</span>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="chart-card-header">
+          <div>
+            <div class="chart-card-title">MQL vs OQL Monthly</div>
+            <div class="chart-card-subtitle">Marketing vs LDU qualified leads by month</div>
+          </div>
+        </div>
+        <div class="chart-container" style="height:240px">
+          <canvas id="chartMQLvsOQL"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="chart-card-header">
+          <div>
+            <div class="chart-card-title">SQL Conversion Rate Trend</div>
+            <div class="chart-card-subtitle">% of QLs converting to SQL month-over-month</div>
+          </div>
+        </div>
+        <div class="chart-container" style="height:240px">
+          <canvas id="chartSQLRateTrend"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DQ + WIN RATE COMBO -->
+  <div class="section-gap">
+    <div class="section-header">
+      <h2>DQ Rate & Win Rate Analysis</h2>
+      <span class="section-badge">COMBO</span>
+    </div>
+    <div class="grid-3">
+      <div class="card col-span-2">
+        <div class="chart-card-header">
+          <div>
+            <div class="chart-card-title">DQ Rate vs Win Rate — Monthly Combo</div>
+            <div class="chart-card-subtitle">Bars = DQ Rate · Line = Win Rate</div>
+          </div>
+        </div>
+        <div class="chart-container" style="height:240px">
+          <canvas id="chartDQWinCombo"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="chart-card-header">
+          <div>
+            <div class="chart-card-title">Lead → Won Conv. by Source</div>
+            <div class="chart-card-subtitle">Won deals ÷ Total leads by dept source</div>
+          </div>
+        </div>
+        <div class="chart-container" style="height:240px">
+          <canvas id="chartConvBySource"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STACKED BAR -->
+  <div class="section-gap">
+    <div class="section-header">
+      <h2>Stacked Lead Volume</h2>
+      <span class="section-badge">STACKED</span>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="chart-card-header">
+          <div>
+            <div class="chart-card-title">Monthly QL by Source (Stacked)</div>
+            <div class="chart-card-subtitle">Volume of QLs per department source stacked by month</div>
+          </div>
+        </div>
+        <div class="chart-container" style="height:260px">
+          <canvas id="chartStackedQL"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="chart-card-header">
+          <div>
+            <div class="chart-card-title">Monthly QL by Segment (Stacked)</div>
+            <div class="chart-card-subtitle">SME vs ENT vs Channels stacked monthly</div>
+          </div>
+        </div>
+        <div class="chart-container" style="height:260px">
+          <canvas id="chartStackedSegment"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SALES REP PERFORMANCE TABLE -->
+  <div class="section-gap">
+    <div class="section-header">
+      <h2>Sales Rep Performance</h2>
+      <span class="section-badge">TABLE</span>
+    </div>
+    <div class="card">
+      <div class="chart-card-header">
+        <div>
+          <div class="chart-card-title">Rep-Level Funnel Summary</div>
+          <div class="chart-card-subtitle">QL, SQL, Won, Lost, DQ per sales rep</div>
+        </div>
+        <div class="tabs" id="repTableTabs">
+          <div class="tab active" onclick="switchTab('repTableTabs','tabRepAll')" >All</div>
+          <div class="tab" onclick="switchTab('repTableTabs','tabRepTop10')">Top 10</div>
+        </div>
+      </div>
+      <div class="tab-content active" id="tabRepAll">
+        <div class="table-wrapper">
+          <table id="tableRepAll">
+            <thead><tr><th>Sales Rep</th><th>QL</th><th>SQL</th><th>Won</th><th>Lost</th><th>DQ</th><th>SQL Conv %</th><th>Win Rate %</th></tr></thead>
+            <tbody id="tbodyRepAll"><tr><td colspan="8" class="empty-state">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="tab-content" id="tabRepTop10">
+        <div class="table-wrapper">
+          <table id="tableRepTop10">
+            <thead><tr><th>Sales Rep</th><th>QL</th><th>SQL</th><th>Won</th><th>Lost</th><th>DQ</th><th>SQL Conv %</th><th>Win Rate %</th></tr></thead>
+            <tbody id="tbodyRepTop10"><tr><td colspan="8" class="empty-state">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DQ REASONS TABLE -->
+  <div class="section-gap">
+    <div class="section-header">
+      <h2>Disqualification Analysis</h2>
+      <span class="section-badge">DETAIL</span>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="chart-card-header">
+          <div>
+            <div class="chart-card-title">DQ Reasons Breakdown</div>
+            <div class="chart-card-subtitle">Top reasons for lost/disqualified deals</div>
+          </div>
+        </div>
+        <div class="chart-container" style="height:240px">
+          <canvas id="chartDQReasons"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="chart-card-header">
+          <div>
+            <div class="chart-card-title">Sales Disqualified by Stage Label</div>
+            <div class="chart-card-subtitle">Count per stage where deals were disqualified</div>
+          </div>
+        </div>
+        <div class="chart-container" style="height:240px">
+          <canvas id="chartDQByStage"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FULL DETAIL TABLE -->
+  <div class="section-gap">
+    <div class="section-header">
+      <h2>Monthly Exec Summary Detail</h2>
+      <span class="section-badge">DATA TABLE</span>
+    </div>
+    <div class="card">
+      <div class="chart-card-header">
+        <div>
+          <div class="chart-card-title">Month-by-Month Funnel Data</div>
+          <div class="chart-card-subtitle">From gold_monthly_exec_summary — all pipelines aggregated</div>
+        </div>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Month</th>
+              <th>Pipeline</th>
+              <th>Segment</th>
+              <th>Dept Source</th>
+              <th>QL</th>
+              <th>SQL</th>
+              <th>Won</th>
+              <th>Lost</th>
+              <th>DQ</th>
+              <th>SQL %</th>
+              <th>Win Rate %</th>
+              <th>DQ Rate %</th>
+              <th>Won MRR</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyExec"><tr><td colspan="13" class="empty-state">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const CONFIG = { host: (localStorage.getItem('radar_db_host')||''), token: (localStorage.getItem('radar_db_token')||''), warehouseId: ((localStorage.getItem('radar_db_path')||'').split('/').pop()) };
+
+async function dbQuery(sql) {
+  const RT = (function(){ try { return localStorage.getItem("radar_id_token") || ""; } catch(e){ return ""; } })();
+  const SHARED = !!RT;
+  const H  = SHARED ? { "x-radar-token": RT, "Content-Type": "application/json" }
+                    : { "x-db-host": CONFIG.host, "x-db-token": CONFIG.token, "Content-Type": "application/json" };
+  const PH = SHARED ? { "x-radar-token": RT } : { "x-db-host": CONFIG.host, "x-db-token": CONFIG.token };
+  const reqBody = { statement: sql, wait_timeout: "0s", on_wait_timeout: "CONTINUE", format: "JSON_ARRAY" };
+  if (!SHARED) reqBody.warehouse_id = CONFIG.warehouseId;
+  const sub = await fetch("https://radar-revops.vercel.app/api/databricks", {
+    method: "POST", headers: H, body: JSON.stringify(reqBody)
+  });
+  const subJson = await sub.json();
+  if (!subJson.statement_id) throw new Error("No statement_id returned: " + JSON.stringify(subJson));
+  for (let i = 0; i < 120; i++) {
+    await new Promise(r => setTimeout(r, 3000));
+    const poll = await fetch("https://radar-revops.vercel.app/api/databricks-poll?id=" + subJson.statement_id, { headers: PH });
+    const p = await poll.json();
+    const state = p && p.status && p.status.state;
+    if (state === "SUCCEEDED") {
+      const cols = (p.manifest && p.manifest.schema && p.manifest.schema.columns || []).map(c => c.name);
+      return (p.result && p.result.data_array || []).map(row => Object.fromEntries(cols.map((c, i) => [c, row[i]])));
+    }
+    if (state === "FAILED") throw new Error("Query failed: " + JSON.stringify(p.status));
+  }
+  throw new Error("Timed out after 6 minutes");
+}
+
+// ── CHART INSTANCES ──────────────────────────────────────────────────────────
+const charts = {};
+
+function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function fmtNum(v) { const n = Number(v); return isNaN(n) ? '—' : n.toLocaleString('en-PH'); }
+function fmtPct(v) { const n = Number(v); return isNaN(n) ? '—' : n.toFixed(1) + '%'; }
+function fmtMRR(v) { const n = Number(v); return isNaN(n) ? '—' : '₱' + n.toLocaleString('en-PH', {minimumFractionDigits:0,maximumFractionDigits:0}); }
+function safe(v, fallback='—') { return (v === null || v === undefined || v === '') ? fallback : v; }
+function safeNum(v, fallback=0) { const n = Number(v); return isNaN(n) ? fallback : n; }
+
+const COLORS = {
+  green: '#1DB954', blue: '#4a90d9', amber: '#f5a623',
+  red: '#e05252', purple: '#9b59b6', teal: '#1abc9c',
+  pink: '#e91e8c', cyan: '#00bcd4', orange: '#ff6b35',
+  lime: '#8bc34a'
+};
+const PALETTE = Object.values(COLORS);
+
+function chartDefaults() {
+  return {
+    plugins: {
+      legend: { labels: { color: '#a0a0a0', font: { size: 11 }, padding: 12 } },
+      tooltip: { backgroundColor: '#1a1a1a', titleColor: '#f0f0f0', bodyColor: '#a0a0a0', borderColor: '#2a2a2a', borderWidth: 1 }
+    },
+    scales: {
+      x: { ticks: { color: '#606060', font: { size: 10 } }, grid: { color: '#1e1e1e' } },
+      y: { ticks: { color: '#606060', font: { size: 10 } }, grid: { color: '#1e1e1e' } }
+    }
+  };
+}
+
+// ── FILTER STATE ──────────────────────────────────────────────────────────────
+let filterState = {};
+
+function getFilters() {
+  return {
+    dateFrom: document.getElementById('dateFrom').value,
+    dateTo: document.getElementById('dateTo').value,
+    pipeline: document.getElementById('filterPipeline').value,
+    segment: document.getElementById('filterSegment').value,
+    deptSource: document.getElementById('filterDeptSource').value,
+    dealType: document.getElementById('filterDealType').value
+  };
+}
+
+function buildWhereClause(dateCol, extras=[]) {
+  const f = filterState;
+  const parts = [
+    `deal_type NOT IN ('Renewal','Upsell - Renewal')`,
+    `LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%'`
+  ];
+  if (f.dateFrom) parts.push(`${dateCol} >= '${f.dateFrom}'`);
+  if (f.dateTo)   parts.push(`${dateCol} <= '${f.dateTo}'`);
+  if (f.pipeline)  parts.push(`pipeline_name = '${f.pipeline}'`);
+  if (f.segment)   parts.push(`(CASE WHEN segment = 'MICRO' THEN 'SME' ELSE segment END) = '${f.segment}'`);
+  if (f.deptSource) parts.push(`department_source_clean = '${f.deptSource}'`);
+  if (f.dealType)  parts.push(`deal_type = '${f.dealType}'`);
+  extras.forEach(e => parts.push(e));
+  return parts.length ? 'WHERE ' + parts.join(' AND ') : '';
+}
+
+function buildGoldWhere(extras=[]) {
+  const f = filterState;
+  const parts = [];
+  if (f.dateFrom) parts.push(`metric_month >= '${f.dateFrom}'`);
+  if (f.dateTo)   parts.push(`metric_month <= '${f.dateTo}'`);
+  if (f.pipeline)  parts.push(`pipeline_name = '${f.pipeline}'`);
+  if (f.segment)   parts.push(`segment = '${f.segment}'`);
+  if (f.deptSource) parts.push(`department_source_clean = '${f.deptSource}'`);
+  extras.forEach(e => parts.push(e));
+  return parts.length ? 'WHERE ' + parts.join(' AND ') : '';
+}
+
+// ── UI ─────────────────────────────���──────────────────────────────────────────
+function showLoading(msg) {
+  document.getElementById('loadingText').textContent = msg || 'Loading…';
+  document.getElementById('loadingOverlay').classList.remove('hidden');
+  document.getElementById('refreshBtn').disabled = true;
+}
+function hideLoading() {
+  document.getElementById('loadingOverlay').classList.add('hidden');
+  document.getElementById('refreshBtn').disabled = false;
+}
+function showError(msg) {
+  const el = document.getElementById('errorBanner');
+  el.textContent = msg;
+  el.classList.add('visible');
+  setTimeout(() => el.classList.remove('visible'), 8000);
+}
+
+function applyFilters() { filterState = getFilters(); init(); }
+function resetFilters() {
+  ['dateFrom','dateTo','filterPipeline','filterSegment','filterDeptSource','filterDealType'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  filterState = {};
+  init();
+}
+
+function switchTab(groupId, activeId) {
+  const group = document.getElementById(groupId);
+  group.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById(activeId).classList.add('active');
+}
+
+// ── DEFAULTS ──────────────────────────────────────────────────────────────────
+(function setDefaultDates() {
+  const now = new Date();
+  const to = now.toISOString().slice(0,10);
+  const from = new Date(now.getFullYear(), now.getMonth() - 11, 1).toISOString().slice(0,10);
+  document.getElementById('dateFrom').value = from;
+  document.getElementById('dateTo').value = to;
+})();
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+async function init() {
+  filterState = getFilters();
+  showLoading('Querying Databricks…');
+  document.getElementById('errorBanner').classList.remove('visible');
+
+  try {
+    const w = buildWhereClause('create_date');
+    const gw = buildGoldWhere();
+
+    // ── Q1: KPI Summary (silver_deals, create_date basis)
+    const q1 = `
+      SELECT
+        COUNT(DISTINCT CASE WHEN qualified_lead = 'Yes' THEN deal_id END) AS ql,
+        COUNT(DISTINCT CASE WHEN qualified_lead = 'Yes'
+          AND (
+            (pipeline_name IN ('Sales Pipeline','Unified Channel Pipeline') AND stage_label IN ('Initial Demo Done','Solutioning','Commercial Negotiation','Committed Accounts','Contract Signed','Project Handover','Sales Handover','Sales Churn','Closed Lost'))
+            OR (pipeline_name = 'PH Upsell Pipeline' AND stage_label IN ('Initial Demo Done','Solutioning','Commercial Negotiation','Committed Accounts','Contract Signed','Project Handover','Sales Handover','Sales Churn','Closed Lost'))
+          )
+          THEN deal_id END) AS sql_count,
+        COUNT(DISTINCT CASE WHEN qualified_lead = 'Yes' AND department_source_clean = 'MKT Inbound' THEN deal_id END) AS mql,
+        COUNT(DISTINCT CASE WHEN qualified_lead = 'Yes' AND department_source_clean = 'LDU Outbound' THEN deal_id END) AS oql,
+        COUNT(DISTINCT CASE WHEN qualified_lead = 'Yes' AND stage_label = 'Disqualified' THEN deal_id END) AS sales_dq,
+        COUNT(DISTINCT CASE WHEN client_journey_stage = 'Customer' THEN deal_id END) AS won
+      FROM shared.revops.silver_deals
+      ${w}
+    `;
+
+    // ── Q2: DQ Rate (total QLs vs DQ)
+    const q2 = `
+      SELECT
+        COUNT(DISTINCT CASE WHEN qualified_lead = 'Yes' THEN deal_id END) AS total_ql,
+        COUNT(DISTINCT CASE WHEN qualified_lead = 'Yes' AND stage_label = 'Disqualified' THEN deal_id END) AS dq_leads,
+        COUNT(DISTINCT deal_id) AS total_leads,
+        COUNT(DISTINCT CASE WHEN client_journey_stage = 'Customer' THEN deal_id END) AS won_leads
+      FROM shared.revops.silver_deals
+      ${w}
+    `;
+
+    // ── Q3: Monthly funnel trend (gold)
+    const q3 = `
+      SELECT
+        DATE_FORMAT(metric_month,'yyyy-MM') AS mo,
+        SUM(qualified_leads) AS ql,
+        SUM(sales_qualified_leads) AS sql_c,
+        SUM(won_deals) AS won,
+        SUM(lost_deals) AS lost,
+        SUM(dq_leads) AS dq,
+        ROUND(SUM(sales_qualified_leads)*100.0 / NULLIF(SUM(qualified_leads),0),1) AS sql_pct,
+        ROUND(SUM(won_deals)*100.0 / NULLIF(SUM(won_deals)+SUM(lost_deals),0),1) AS win_rate,
+        ROUND(SUM(dq_leads)*100.0 / NULLIF(SUM(qualified_leads),0),1) AS dq_rate,
+        SUM(won_mrr) AS won_mrr
+      FROM shared.revops.gold_monthly_exec_summary
+      ${gw}
+      GROUP BY 1
+      ORDER BY 1
+    `;
+
+    // ── Q4: QL by dept source
+    const q4 = `
+      SELECT
+        COALESCE(department_source_clean,'Unknown') AS src,
+        COUNT(DISTINCT deal_id) AS ql
+      FROM shared.revops.silver_deals
+      ${buildWhereClause('create_date', ["qualified_lead = 'Yes'"])}
+      GROUP BY 1 ORDER BY 2 DESC
+    `;
+
+    // ── Q5: QL by pipeline
+    const q5 = `
+      SELECT
+        COALESCE(pipeline_name,'Unknown') AS pipe,
+        COUNT(DISTINCT deal_id) AS ql
+      FROM shared.revops.silver_deals
+      ${buildWhereClause('create_date', ["qualified_lead = 'Yes'"])}
+      GROUP BY 1 ORDER BY 2 DESC
+    `;
+
+    // ── Q6: QL by segment
+    const q6 = `
+      SELECT
+        CASE WHEN segment = 'MICRO' THEN 'SME' ELSE COALESCE(segment,'Unknown') END AS seg,
+        COUNT(DISTINCT deal_id) AS ql
+      FROM shared.revops.silver_deals
+      ${buildWhereClause('create_date', ["qualified_lead = 'Yes'"])}
+      GROUP BY 1 ORDER BY 2 DESC
+    `;
+
+    // ── Q7: MQL vs OQL monthly
+    const q7 = `
+      SELECT
+        DATE_FORMAT(create_date,'yyyy-MM') AS mo,
+        COUNT(DISTINCT CASE WHEN department_source_clean = 'MKT Inbound' AND qualified_lead = 'Yes' THEN deal_id END) AS mql,
+        COUNT(DISTINCT CASE WHEN department_source_clean = 'LDU Outbound' AND qualified_lead = 'Yes' THEN deal_id END) AS oql
+      FROM shared.revops.silver_deals
+      ${w}
+      GROUP BY 1 ORDER BY 1
+    `;
+
+    // ── Q8: SQL Conversion rate trend (gold)
+    const q8 = `
+      SELECT
+        DATE_FORMAT(metric_month,'yyyy-MM') AS mo,
+        ROUND(SUM(sales_qualified_leads)*100.0 / NULLIF(SUM(qualified_leads),0),1) AS sql_pct
+      FROM shared.revops.gold_monthly_exec_summary
+      ${gw}
+      GROUP BY 1 ORDER BY 1
+    `;
+
+    // ── Q9: DQ Rate vs Win Rate monthly (gold)
+    const q9 = `
+      SELECT
+        DATE_FORMAT(metric_month,'yyyy-MM') AS mo,
+        ROUND(SUM(dq_leads)*100.0 / NULLIF(SUM(qualified_leads),0),1) AS dq_rate,
+        ROUND(SUM(won_deals)*100.0 / NULLIF(SUM(won_deals)+SUM(lost_deals),0),1) AS win_rate
+      FROM shared.revops.gold_monthly_exec_summary
+      ${gw}
+      GROUP BY 1 ORDER BY 1
+    `;
+
+    // ── Q10: Lead→Won Conv by Dept Source
+    const q10 = `
+      SELECT
+        COALESCE(department_source_clean,'Unknown') AS src,
+        COUNT(DISTINCT deal_id) AS total_leads,
+        COUNT(DISTINCT CASE WHEN client_journey_stage = 'Customer' THEN deal_id END) AS won_leads,
+        ROUND(COUNT(DISTINCT CASE WHEN client_journey_stage = 'Customer' THEN deal_id END)*100.0 / NULLIF(COUNT(DISTINCT deal_id),0),1) AS conv_pct
+      FROM shared.revops.silver_deals
+      ${w}
+      GROUP BY 1 ORDER BY 2 DESC
+    `;
+
+    // ── Q11: Stacked QL by source monthly
+    const q11 = `
+      SELECT
+        DATE_FORMAT(create_date,'yyyy-MM') AS mo,
+        COALESCE(department_source_clean,'Unknown') AS src,
+        COUNT(DISTINCT deal_id) AS ql
+      FROM shared.revops.silver_deals
+      ${buildWhereClause('create_date', ["qualified_lead = 'Yes'"])}
+      GROUP BY 1,2 ORDER BY 1
+    `;
+
+    // ── Q12: Stacked QL by segment monthly
+    const q12 = `
+      SELECT
+        DATE_FORMAT(create_date,'yyyy-MM') AS mo,
+        CASE WHEN segment = 'MICRO' THEN 'SME' ELSE COALESCE(segment,'Unknown') END AS seg,
+        COUNT(DISTINCT deal_id) AS ql
+      FROM shared.revops.silver_deals
+      ${buildWhereClause('create_date', ["qualified_lead = 'Yes'"])}
+      GROUP BY 1,2 ORDER BY 1
+    `;
+
+    // ── Q13: Sales rep performance
+    const q13 = `
+      SELECT
+        COALESCE(sales_rep,'Unknown') AS rep,
+        COUNT(DISTINCT CASE WHEN qualified_lead = 'Yes' THEN deal_id END) AS ql,
+        COUNT(DISTINCT CASE WHEN qualified_lead = 'Yes'
+          AND stage_label IN ('Initial Demo Done','Solutioning','Commercial Negotiation','Committed Accounts','Contract Signed','Project Handover','Sales Handover','Sales Churn','Closed Lost')
+          THEN deal_id END) AS sql_c,
+        COUNT(DISTINCT CASE WHEN client_journey_stage = 'Customer' THEN deal_id END) AS won,
+        COUNT(DISTINCT CASE WHEN client_journey_stage = 'Closed Lost' THEN deal_id END) AS lost,
+        COUNT(DISTINCT CASE WHEN qualified_lead = 'Yes' AND stage_label = 'Disqualified' THEN deal_id END) AS dq
+      FROM shared.revops.silver_deals
+      ${w}
+      GROUP BY 1
+      HAVING ql > 0
+      ORDER BY ql DESC
+    `;
+
+    // ── Q14: DQ Reasons
+    const q14 = `
+      SELECT
+        COALESCE(reasons_for_lost_deal,'Not Specified') AS reason,
+        COUNT(DISTINCT deal_id) AS cnt
+      FROM shared.revops.silver_deals
+      ${buildWhereClause('create_date', ["client_journey_stage = 'Closed Lost'"])}
+      GROUP BY 1 ORDER BY 2 DESC
+      LIMIT 10
+    `;
+
+    // ── Q15: DQ by Stage
+    const q15 = `
+      SELECT
+        COALESCE(stage_label,'Unknown') AS stage,
+        COUNT(DISTINCT deal_id) AS cnt
+      FROM shared.revops.silver_deals
+      ${buildWhereClause('create_date', ["qualified_lead = 'Yes'", "stage_label = 'Disqualified'"])}
+      GROUP BY 1 ORDER BY 2 DESC
+    `;
+
+    // ── Q16: Gold exec table detail
+    const q16 = `
+      SELECT
+        DATE_FORMAT(metric_month,'yyyy-MM') AS mo,
+        pipeline_name,
+        segment,
+        department_source_clean,
+        SUM(qualified_leads) AS ql,
+        SUM(sales_qualified_leads) AS sql_c,
+        SUM(won_deals) AS won,
+        SUM(lost_deals) AS lost,
+        SUM(dq_leads) AS dq,
+        ROUND(SUM(sales_qualified_leads)*100.0/NULLIF(SUM(qualified_leads),0),1) AS sql_pct,
+        ROUND(SUM(won_deals)*100.0/NULLIF(SUM(won_deals)+SUM(lost_deals),0),1) AS win_rate,
+        ROUND(SUM(dq_leads)*100.0/NULLIF(SUM(qualified_leads),0),1) AS dq_rate,
+        SUM(won_mrr) AS won_mrr
+      FROM shared.revops.gold_monthly_exec_summary
+      ${gw}
+      GROUP BY 1,2,3,4
+      ORDER BY 1 DESC, 5 DESC
+      LIMIT 200
+    `;
+
+    showLoading('Running 16 queries… please wait');
+
+    // Run all in parallel batches
+    const [r1,r2,r3,r4,r5,r6,r7,r8] = await Promise.all([
+      dbQuery(q1), dbQuery(q2), dbQuery(q3), dbQuery(q4),
+      dbQuery(q5), dbQuery(q6), dbQuery(q7), dbQuery(q8)
+    ]);
+    showLoading('Loading remaining data…');
+    const [r9,r10,r11,r12,r13,r14,r15,r16] = await Promise.all([
+      dbQuery(q9), dbQuery(q10), dbQuery(q11), dbQuery(q12),
+      dbQuery(q13), dbQuery(q14), dbQuery(q15), dbQuery(q16)
+    ]);
+
+    // ── RENDER ──────────────────────────────────────────────────────────────
+
+    // KPI Cards
+    const kd = r1[0] || {};
+    const ql  = safeNum(kd.ql);
+    const sql = safeNum(kd.sql_count);
+    const mql = safeNum(kd.mql);
+    const oql = safeNum(kd.oql);
+    const won = safeNum(kd.won);
+    const sdq = safeNum(kd.sales_dq);
+
+    document.getElementById('valQL').textContent    = fmtNum(ql);
+    document.getElementById('valSQL').textContent   = fmtNum(sql);
+    document.getElementById('valMQL').textContent   = fmtNum(mql);
+    document.getElementById('valOQL').textContent   = fmtNum(oql);
+    document.getElementById('valSQLRate').textContent = ql ? fmtPct(sql/ql*100) : '—';
+    document.getElementById('valSalesDQ').textContent = fmtNum(sdq);
+
+    const dqd = r2[0] || {};
+    const tl  = safeNum(dqd.total_leads);
+    const tql = safeNum(dqd.total_ql);
+    const dql = safeNum(dqd.dq_leads);
+    const wl  = safeNum(dqd.won_leads);
+    document.getElementById('valDQRate').textContent  = tql ? fmtPct(dql/tql*100) : '—';
+    document.getElementById('valLWConv').textContent  = tl ? fmtPct(wl/tl*100) : '—';
+
+    // Scorecard
+    document.getElementById('scQL').textContent    = fmtNum(ql);
+    document.getElementById('scSQL').textContent   = fmtNum(sql);
+    document.getElementById('scDQ').textContent    = fmtNum(dql);
+
+    // Won/Lost from gold trend
+    const totalWon  = r3.reduce((a,r)=>a+safeNum(r.won),0);
+    const totalLost = r3.reduce((a,r)=>a+safeNum(r.lost),0);
+    document.getElementById('scWon').textContent     = fmtNum(totalWon);
+    document.getElementById('scLost').textContent    = fmtNum(totalLost);
+    document.getElementById('scWinRate').textContent = (totalWon+totalLost) ? fmtPct(totalWon/(totalWon+totalLost)*100) : '—';
+
+    // Chart 1 — Funnel Trend Line
+    renderFunnelTrend(r3);
+
+    // Chart 2 — QL by Source (Donut)
+    renderDonut('chartQLBySource', r4.map(r=>r.src), r4.map(r=>safeNum(r.ql)), 'QL by Dept Source');
+
+    // Chart 3 — QL by Pipeline (Donut)
+    renderDonut('chartQLByPipeline', r5.map(r=>r.pipe), r5.map(r=>safeNum(r.ql)), 'QL by Pipeline');
+
+    // Chart 4 — QL by Segment (Donut)
+    renderDonut('chartQLBySegment', r6.map(r=>r.seg), r6.map(r=>safeNum(r.ql)), 'QL by Segment');
+
+    // Chart 5 — MQL vs OQL Monthly Bar
+    renderMQLvsOQL(r7);
+
+    // Chart 6 — SQL Rate Trend Line
+    renderSQLRateTrend(r8);
+
+    // Chart 7 — DQ Rate vs Win Rate Combo
+    renderDQWinCombo(r9);
+
+    // Chart 8 — Lead→Won Conv by Source (Bar)
+    renderConvBySource(r10);
+
+    // Chart 9 — Stacked QL by Source
+    renderStackedQL(r11);
+
+    // Chart 10 — Stacked QL by Segment
+    renderStackedSegment(r12);
+
+    // Rep table
+    renderRepTable(r13);
+
+    // DQ Reasons Donut
+    renderDonutDQ('chartDQReasons', r14.map(r=>r.reason), r14.map(r=>safeNum(r.cnt)), 'DQ Reasons');
+
+    // DQ by Stage Bar
+    renderDQByStage(r15);
+
+    // Exec Table
+    renderExecTable(r16);
+
+    document.getElementById('lastRefresh').textContent = 'Last refreshed: ' + new Date().toLocaleTimeString('en-PH');
+    hideLoading();
+
+  } catch(e) {
+    hideLoading();
+    showError('Failed to load data: ' + e.message);
+    console.error(e);
+  }
+}
+
+// ── CHART RENDERERS ──────────────────────────────────��────────────────────────
+
+function renderFunnelTrend(rows) {
+  destroyChart('chartFunnelTrend');
+  const labels = rows.map(r=>r.mo);
+  const def = chartDefaults();
+  charts['chartFunnelTrend'] = new Chart(document.getElementById('chartFunnelTrend'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'QL', data: rows.map(r=>safeNum(r.ql)), borderColor: COLORS.green, backgroundColor: 'rgba(29,185,84,0.08)', tension:0.3, pointRadius:4, fill:true },
+        { label: 'SQL', data: rows.map(r=>safeNum(r.sql_c)), borderColor: COLORS.blue, backgroundColor: 'rgba(74,144,217,0.08)', tension:0.3, pointRadius:4, fill:true },
+        { label: 'Won', data: rows.map(r=>safeNum(r.won)), borderColor: COLORS.amber, backgroundColor: 'rgba(245,166,35,0.08)', tension:0.3, pointRadius:4, fill:false },
+        { label: 'Lost', data: rows.map(r=>safeNum(r.lost)), borderColor: COLORS.red, backgroundColor: 'transparent', tension:0.3, pointRadius:4, fill:false, borderDash:[4,4] }
+      ]
+    },
+    options: { ...def, responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false } }
+  });
+}
+
+function renderDonut(id, labels, data, title) {
+  destroyChart(id);
+  if (!labels.length) return;
+  charts[id] = new Chart(document.getElementById(id), {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{ data, backgroundColor: PALETTE.slice(0, labels.length), borderColor: '#0a0a0a', borderWidth: 2 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'right', labels: { color: '#a0a0a0', font: { size: 10 }, padding: 8 } },
+        tooltip: { backgroundColor:'#1a1a1a', titleColor:'#f0f0f0', bodyColor:'#a0a0a0', borderColor:'#2a2a2a', borderWidth:1 }
+      },
+      cutout: '65%'
+    }
+  });
+}
+
+function renderDonutDQ(id, labels, data, title) {
+  destroyChart(id);
+  if (!labels.length) return;
+  const shortened = labels.map(l => l.length > 25 ? l.slice(0,25)+'…' : l);
+  charts[id] = new Chart(document.getElementById(id), {
+    type: 'doughnut',
+    data: {
+      labels: shortened,
+      datasets: [{ data, backgroundColor: [COLORS.red, COLORS.amber, COLORS.purple, COLORS.blue, COLORS.teal, COLORS.orange, COLORS.pink, COLORS.cyan, COLORS.lime, COLORS.green], borderColor:'#0a0a0a', borderWidth:2 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position:'right', labels:{ color:'#a0a0a0', font:{size:9}, padding:6 } },
+        tooltip: { backgroundColor:'#1a1a1a', titleColor:'#f0f0f0', bodyColor:'#a0a0a0', borderColor:'#2a2a2a', borderWidth:1 }
+      },
+      cutout: '60%'
+    }
+  });
+}
+
+function renderMQLvsOQL(rows) {
+  destroyChart('chartMQLvsOQL');
+  const labels = rows.map(r=>r.mo);
+  const def = chartDefaults();
+  charts['chartMQLvsOQL'] = new Chart(document.getElementById('chartMQLvsOQL'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: 'MQL', data: rows.map(r=>safeNum(r.mql)), backgroundColor: 'rgba(245,166,35,0.8)', borderRadius: 4 },
+        { label: 'OQL', data: rows.map(r=>safeNum(r.oql)), backgroundColor: 'rgba(155,89,182,0.8)', borderRadius: 4 }
+      ]
+    },
+    options: { ...def, responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false} }
+  });
+}
+
+function renderSQLRateTrend(rows) {
+  destroyChart('chartSQLRateTrend');
+  const labels = rows.map(r=>r.mo);
+  const def = chartDefaults();
+  charts['chartSQLRateTrend'] = new Chart(document.getElementById('chartSQLRateTrend'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'SQL Conv %',
+        data: rows.map(r=>safeNum(r.sql_pct)),
+        borderColor: COLORS.teal,
+        backgroundColor: 'rgba(26,188,156,0.1)',
+        tension: 0.3, pointRadius: 5, fill: true
+      }]
+    },
+    options: {
+      ...def,
+      responsive: true, maintainAspectRatio: false,
+      plugins: { ...def.plugins, legend:{display:false} },
+      scales: {
+        ...def.scales,
+        y: { ...def.scales.y, ticks: { ...def.scales.y.ticks, callback: v => v+'%' }, min:0, max:100 }
+      }
+    }
+  });
+}
+
+function renderDQWinCombo(rows) {
+  destroyChart('chartDQWinCombo');
+  const labels = rows.map(r=>r.mo);
+  const def = chartDefaults();
+  charts['chartDQWinCombo'] = new Chart(document.getElementById('chartDQWinCombo'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { type:'bar', label:'DQ Rate %', data:rows.map(r=>safeNum(r.dq_rate)), backgroundColor:'rgba(224,82,82,0.7)', borderRadius:4, yAxisID:'y' },
+        { type:'line', label:'Win Rate %', data:rows.map(r=>safeNum(r.win_rate)), borderColor:COLORS.green, backgroundColor:'transparent', tension:0.3, pointRadius:5, yAxisID:'y2' }
+      ]
+    },
+    options: {
+      ...def, responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false},
+      scales: {
+        x: def.scales.x,
+        y: { ...def.scales.y, position:'left', ticks:{...def.scales.y.ticks, callback:v=>v+'%'} },
+        y2: { ...def.scales.y, position:'right', grid:{display:false}, ticks:{...def.scales.y.ticks, callback:v=>v+'%'} }
+      }
+    }
+  });
+}
+
+function renderConvBySource(rows) {
+  destroyChart('chartConvBySource');
+  const labels = rows.map(r=>r.src);
+  const def = chartDefaults();
+  charts['chartConvBySource'] = new Chart(document.getElementById('chartConvBySource'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Conv %',
+        data: rows.map(r=>safeNum(r.conv_pct)),
+        backgroundColor: labels.map((_,i) => PALETTE[i % PALETTE.length] + 'bb'),
+        borderRadius: 4
+      }]
+    },
+    options: {
+      ...def, responsive:true, maintainAspectRatio:false, indexAxis:'y',
+      plugins: { ...def.plugins, legend:{display:false} },
+      scales: {
+        x: { ...def.scales.x, ticks:{...def.scales.x.ticks, callback:v=>v+'%'} },
+        y: def.scales.y
+      }
+    }
+  });
+}
+
+function renderStackedQL(rows) {
+  destroyChart('chartStackedQL');
+  const months = [...new Set(rows.map(r=>r.mo))].sort();
+  const sources = [...new Set(rows.map(r=>r.src))];
+  const def = chartDefaults();
+  charts['chartStackedQL'] = new Chart(document.getElementById('chartStackedQL'), {
+    type: 'bar',
+    data: {
+      labels: months,
+      datasets: sources.map((s,i) => ({
+        label: s,
+        data: months.map(m => {
+          const found = rows.find(r=>r.mo===m && r.src===s);
+          return found ? safeNum(found.ql) : 0;
+        }),
+        backgroundColor: PALETTE[i % PALETTE.length] + 'cc',
+        borderRadius: 2
+      }))
+    },
+    options: { ...def, responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false}, scales:{ ...def.scales, x:{...def.scales.x,stacked:true}, y:{...def.scales.y,stacked:true} } }
+  });
+}
+
+function renderStackedSegment(rows) {
+  destroyChart('chartStackedSegment');
+  const months = [...new Set(rows.map(r=>r.mo))].sort();
+  const segs = [...new Set(rows.map(r=>r.seg))];
+  const def = chartDefaults();
+  const segColors = { 'SME': COLORS.green, 'ENT': COLORS.blue, 'Channels': COLORS.amber, 'Unknown': COLORS.purple };
+  charts['chartStackedSegment'] = new Chart(document.getElementById('chartStackedSegment'), {
+    type: 'bar',
+    data: {
+      labels: months,
+      datasets: segs.map((s,i) => ({
+        label: s,
+        data: months.map(m => {
+          const found = rows.find(r=>r.mo===m && r.seg===s);
+          return found ? safeNum(found.ql) : 0;
+        }),
+        backgroundColor: (segColors[s] || PALETTE[i]) + 'cc',
+        borderRadius: 2
+      }))
+    },
+    options: { ...def, responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false}, scales:{ ...def.scales, x:{...def.scales.x,stacked:true}, y:{...def.scales.y,stacked:true} } }
+  });
+}
+
+function renderRepTable(rows) {
+  const makeRow = (r) => {
+    const sqlPct = safeNum(r.ql) ? (safeNum(r.sql_c)/safeNum(r.ql)*100).toFixed(1) : '—';
+    const winR   = (safeNum(r.won)+safeNum(r.lost)) ? (safeNum(r.won)/(safeNum(r.won)+safeNum(r.lost))*100).toFixed(1) : '—';
+    return `<tr>
+      <td><strong>${safe(r.rep)}</strong></td>
+      <td>${fmtNum(r.ql)}</td>
+      <td>${fmtNum(r.sql_c)}</td>
+      <td><span class="badge badge-green">${fmtNum(r.won)}</span></td>
+      <td><span class="badge badge-red">${fmtNum(r.lost)}</span></td>
+      <td><span class="badge badge-amber">${fmtNum(r.dq)}</span></td>
+      <td>${sqlPct !== '—' ? sqlPct+'%' : '—'}</td>
+      <td>${winR !== '—' ? winR+'%' : '—'}</td>
+    </tr>`;
+  };
+  const allHtml  = rows.length ? rows.map(makeRow).join('') : '<tr><td colspan="8" class="empty-state">No data</td></tr>';
+  const top10    = rows.slice(0,10);
+  const topHtml  = top10.length ? top10.map(makeRow).join('') : '<tr><td colspan="8" class="empty-state">No data</td></tr>';
+  document.getElementById('tbodyRepAll').innerHTML  = allHtml;
+  document.getElementById('tbodyRepTop10').innerHTML = topHtml;
+}
+
+function renderDQByStage(rows) {
+  destroyChart('chartDQByStage');
+  const labels = rows.map(r=>r.stage);
+  const def = chartDefaults();
+  charts['chartDQByStage'] = new Chart(document.getElementById('chartDQByStage'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'DQ Count',
+        data: rows.map(r=>safeNum(r.cnt)),
+        backgroundColor: 'rgba(224,82,82,0.7)',
+        borderRadius: 4
+      }]
+    },
+    options: {
+      ...def, responsive:true, maintainAspectRatio:false,
+      plugins:{...def.plugins, legend:{display:false}},
+      indexAxis:'y'
+    }
+  });
+}
+
+function renderExecTable(rows) {
+  const html = rows.length ? rows.map(r => `
+    <tr>
+      <td>${safe(r.mo)}</td>
+      <td>${safe(r.pipeline_name)}</td>
+      <td>${safe(r.segment)}</td>
+      <td>${safe(r.department_source_clean)}</td>
+      <td>${fmtNum(r.ql)}</td>
+      <td>${fmtNum(r.sql_c)}</td>
+      <td><span class="badge badge-green">${fmtNum(r.won)}</span></td>
+      <td><span class="badge badge-red">${fmtNum(r.lost)}</span></td>
+      <td><span class="badge badge-amber">${fmtNum(r.dq)}</span></td>
+      <td>${safe(r.sql_pct) !== '—' ? r.sql_pct+'%' : '—'}</td>
+      <td>${safe(r.win_rate) !== '—' ? r.win_rate+'%' : '—'}</td>
+      <td>${safe(r.dq_rate) !== '—' ? r.dq_rate+'%' : '—'}</td>
+      <td>${fmtMRR(r.won_mrr)}</td>
+    </tr>
+  `).join('') : '<tr><td colspan="13" class="empty-state">No data</td></tr>';
+  document.getElementById('tbodyExec').innerHTML = html;
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
