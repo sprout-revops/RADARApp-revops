@@ -28,11 +28,17 @@
       "ownerName": "jsayseng",
       "file": "user-dashboards/julius-test101-mr1h9a2w.html",
       "url": "https://radar-revops.vercel.app/user-dashboards/julius-test101-mr1h9a2w.html",
-      "status": "private",
+      "status": "published",
       "createdAt": "2026-07-01T02:49:47.110Z",
       "updatedAt": "2026-07-01T02:49:47.110Z",
       "requestedAt": null,
-      "publishedAt": null
+      "publishedAt": "2026-07-08T10:11:09.033Z",
+      "access": [
+        {
+          "email": "louieb@sprout.ph",
+          "level": "view"
+        }
+      ]
     },
     {
       "id": "revops-test-dashboard-mr9y6qov",
