@@ -294,6 +294,68 @@
       "updatedAt": "2026-07-08T09:58:44.169Z",
       "requestedAt": null,
       "publishedAt": null
+    },
+    {
+      "id": "julius-test107-mrbx1dor",
+      "name": "Julius_test107",
+      "desc": "",
+      "tags": [
+        "RevOps"
+      ],
+      "config": {
+        "tables": [
+          "silver_deals",
+          "silver_company",
+          "gold_monthly_exec_summary",
+          "silver_line_items",
+          "silver_leads"
+        ],
+        "slicers": [
+          "date_range",
+          "pipeline_name",
+          "segment",
+          "department_source",
+          "channel_source",
+          "sales_rep",
+          "hubspot_team",
+          "deal_type",
+          "stage_label",
+          "client_journey_stage"
+        ],
+        "fieldSlicers": [],
+        "views": [
+          "kpi_cards",
+          "bar_chart",
+          "line_chart",
+          "data_table",
+          "pie_donut",
+          "combo_chart",
+          "stacked_bar",
+          "scorecard"
+        ],
+        "metrics": [
+          "DQ Rate",
+          "Lead to Won Conversion %",
+          "Marketing Qualified Leads (MQL)",
+          "Outbound Qualified Leads (OQL)",
+          "Qualified Leads (QL)",
+          "SQL Conversion Rate",
+          "Sales Disqualified",
+          "Sales Qualified Leads (SQL)"
+        ],
+        "dateScope": "between",
+        "dateBasis": "dynamic",
+        "layout": "3col"
+      },
+      "ownerEmail": "jsayseng@sprout.ph",
+      "ownerName": "jsayseng",
+      "file": "user-dashboards/julius-test107-mrbx1dor.html",
+      "url": "https://radar-revops.vercel.app/user-dashboards/julius-test107-mrbx1dor.html",
+      "status": "private",
+      "createdAt": "2026-07-08T10:09:13.894Z",
+      "updatedAt": "2026-07-08T10:09:13.894Z",
+      "requestedAt": null,
+      "publishedAt": null
     }
   ]
 }
