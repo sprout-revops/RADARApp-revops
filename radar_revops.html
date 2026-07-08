@@ -2278,6 +2278,7 @@ python fetch_data.py
       <p>Dashboards built by the team using <strong>shared.revops</strong> data — browse, explore, and share yours.</p>
     </div>
     <div style="display:flex;gap:10px;align-items:center">
+      <button class="submit-dash-btn" id="admin-usage-btn" onclick="openUsagePanel()" style="display:none;background:#0e2438;border:1px solid #38bdf8;color:#38bdf8">📈 Usage</button>
       <button class="submit-dash-btn" id="admin-requests-btn" onclick="dashOpenAdminRequests()" style="display:none;background:#16102e;border:1px solid #c4b5fd;color:#c4b5fd">🛡️ Pending Requests</button>
       <button class="submit-dash-btn" onclick="openSubmitModal()">➕ Submit Your Dashboard</button>
     </div>
@@ -4343,6 +4344,7 @@ function diyGenerate(){
     return;
   }
 
+  if (typeof radarTrack === 'function') radarTrack('diy_generate', ((document.getElementById('diy-dash-name')||{}).value || ''));
   var prompt = diyBuildPrompt();
   // Append instruction to return only HTML
   prompt += '\n\nIMPORTANT: Return ONLY the complete HTML file — no explanation, no markdown, no commentary. Start with <!DOCTYPE html> and end with </html>.';
@@ -4858,6 +4860,16 @@ var DASH_REGISTRY_URL = 'https://radar-revops.vercel.app/user-dashboards/registr
 function dashUserEmail(){ return (localStorage.getItem('radar_user_email') || '').toLowerCase(); }
 function dashUserName(){ return localStorage.getItem('radar_user_name') || (dashUserEmail().split('@')[0] || 'user'); }
 function dashIsAdmin(){ return DASH_ADMINS.indexOf(dashUserEmail()) !== -1; }
+
+// Fire-and-forget usage event (no-op if the usage store isn't configured server-side)
+function radarTrack(action, meta){
+  try {
+    fetch('/api/track', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, keepalive: true,
+      body: JSON.stringify({ action: action, email: (localStorage.getItem('radar_user_email') || 'anonymous'), meta: meta || '' })
+    }).catch(function(){});
+  } catch(e) {}
+}
 function dashSetStatus(msg, color){
   var el = document.getElementById('dash-save-status');
   if(el){ el.textContent = msg; el.style.color = color || 'rgba(255,255,255,.5)'; }
@@ -4911,6 +4923,7 @@ async function dashSaveToRadar(){
       id: window._diySavedId || undefined
     });
     window._diySavedId = res.id;
+    if (typeof radarTrack === 'function') radarTrack('save_dashboard', name);
     dashSetStatus('✅ Saved! It will be live in ~1–2 min. Open "My Dashboards" to submit it to the team.', '#1DB954');
   } catch(e){
     dashSetStatus('❌ Save failed: ' + e.message, '#f87171');
@@ -4922,6 +4935,46 @@ async function dashSaveToRadar(){
 function dashCloseModal(which){
   var ov = document.getElementById(which + '-modal-overlay');
   if(ov) ov.classList.remove('open');
+}
+
+async function openUsagePanel(){
+  var ov = document.getElementById('usage-modal-overlay');
+  if(ov) ov.classList.add('open');
+  var body = document.getElementById('usage-body');
+  body.innerHTML = '<div style="color:rgba(255,255,255,.5);font-size:13px">Loading…</div>';
+  try {
+    var r = await fetch('/api/usage?_=' + Date.now(), { headers: { 'x-radar-token': localStorage.getItem('radar_id_token') || '' } });
+    var d = await r.json();
+    if(!r.ok){ body.innerHTML = '<div style="color:#f87171;font-size:13px">' + (d.error || 'Error loading usage.') + '</div>'; return; }
+    if(!d.configured){
+      body.innerHTML = '<div style="color:#fbbf24;font-size:13px;line-height:1.7">⚠️ <strong>Usage store not configured yet.</strong><br>In Vercel, open the project → <strong>Storage</strong> → <strong>Create</strong> → a KV / Upstash Redis store. It auto-adds the environment variables, and usage will start recording on the next visit.</div>';
+      return;
+    }
+    var labels = { signin:'Sign-ins', diy_generate:'DIY Generations', save_dashboard:'Saved to RADAR', publish_dashboard:'Published', connect_metrics:'Connect (Metrics)', connect_tables:'Connect (Tables)' };
+    function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    var stat = function(v,l,hi){ return '<div style="flex:1;background:'+(hi?'rgba(56,189,248,.1)':'rgba(255,255,255,.04)')+';border:1px solid '+(hi?'rgba(56,189,248,.3)':'rgba(255,255,255,.1)')+';border-radius:10px;padding:12px;text-align:center"><div style="font-size:22px;font-weight:800;color:'+(hi?'#38bdf8':'#e2e8f0')+'">'+v+'</div><div style="font-size:10px;color:rgba(255,255,255,.5);margin-top:2px">'+l+'</div></div>'; };
+    var actionsHtml = Object.keys(d.byAction||{}).sort(function(a,b){ return d.byAction[b]-d.byAction[a]; }).map(function(k){
+      return '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:13px"><span style="color:#cbd5e1">'+esc(labels[k]||k)+'</span><span style="color:#38bdf8;font-weight:700">'+d.byAction[k]+'</span></div>';
+    }).join('') || '<div style="font-size:12px;color:rgba(255,255,255,.3)">No events yet</div>';
+    var usersHtml = (d.topUsers||[]).slice(0,15).map(function(u){
+      return '<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12px;color:rgba(255,255,255,.6)"><span>'+esc(u.email)+'</span><span style="color:rgba(255,255,255,.4)">'+u.count+'</span></div>';
+    }).join('') || '<div style="font-size:12px;color:rgba(255,255,255,.3)">None yet</div>';
+    var recentHtml = (d.recent||[]).slice(0,40).map(function(e){
+      return '<div style="font-size:11px;color:rgba(255,255,255,.45);padding:2px 0">'+esc((e.t||'').replace('T',' ').slice(0,16))+' · '+esc(e.email)+' · '+esc(labels[e.action]||e.action)+(e.meta?(' · '+esc(e.meta)):'')+'</div>';
+    }).join('') || '<div style="font-size:12px;color:rgba(255,255,255,.3)">None yet</div>';
+    body.innerHTML =
+      '<div style="display:flex;gap:10px;margin-bottom:16px">'
+      + stat(d.activeUsers7,'Active users (7d)',true)
+      + stat(d.activeUsers30,'Active (30d)')
+      + stat(d.uniqueUsers,'Total users')
+      + stat(d.total,'Total events')
+      + '</div>'
+      + '<div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.6);margin:6px 0 4px">By feature</div>' + actionsHtml
+      + '<div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.6);margin:16px 0 4px">Top users</div>' + usersHtml
+      + '<div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.6);margin:16px 0 4px">Recent activity</div>' + recentHtml;
+  } catch(e){
+    body.innerHTML = '<div style="color:#f87171;font-size:13px">Error: ' + (e.message||e) + '</div>';
+  }
 }
 
 async function dashOpenMyDashboards(){
@@ -5080,6 +5133,7 @@ async function dashSaveShare(){
   if(st){ st.textContent = 'Publishing…'; st.style.color = 'rgba(255,255,255,.5)'; }
   try {
     await dashApi({ action: 'publish', id: _shareState.id, ownerEmail: dashUserEmail(), access: _shareState.access });
+    if (typeof radarTrack === 'function') radarTrack('publish_dashboard', _shareState.id);
     dashCloseModal('share');
     dashRefreshMine();
     if(typeof dashLoadPublished === 'function') dashLoadPublished();
@@ -5212,6 +5266,16 @@ function dashUploadEdited(input){
       <button class="diy-btn diy-btn-ghost" onclick="dashCloseModal('share')">Cancel</button>
       <button class="diy-btn diy-btn-sm" style="background:#1DB954;color:#000" onclick="dashSaveShare()">💾 Publish &amp; Save Access</button>
     </div>
+  </div>
+</div>
+
+<!-- Usage Panel Modal (admin only) -->
+<div class="submit-modal-overlay" id="usage-modal-overlay" onclick="if(event.target===this)dashCloseModal('usage')">
+  <div class="submit-modal" style="max-width:720px">
+    <h2>📈 RADAR Usage</h2>
+    <p class="sm-sub">Sign-ins and feature usage across RADAR. Newest activity first.</p>
+    <div id="usage-body" style="margin-top:14px;max-height:64vh;overflow-y:auto"><div style="color:rgba(255,255,255,.5);font-size:13px">Loading…</div></div>
+    <div style="margin-top:16px;text-align:right"><button class="diy-btn diy-btn-ghost" onclick="dashCloseModal('usage')">Close</button></div>
   </div>
 </div>
 
@@ -5946,6 +6010,7 @@ function handleGoogleSignIn(response) {
   // Keep the signed Google token — sent to protected APIs which verify it server-side.
   localStorage.setItem('radar_id_token', response.credential);
   radarShowUser(email);
+  if (typeof radarTrack === 'function') radarTrack('signin');
 }
 
 // ── Silent token refresh (Google ID tokens expire ~1h) ──
@@ -7479,6 +7544,8 @@ async function dashLoadPublished(){
   if(typeof dashIsAdmin === 'function' && dashIsAdmin()){
     var ab = document.getElementById('admin-requests-btn');
     if(ab) ab.style.display = '';
+    var ub = document.getElementById('admin-usage-btn');
+    if(ub) ub.style.display = '';
   }
   if(typeof dashFetchRegistry !== 'function') return;
   var all = await dashFetchRegistry();
@@ -8899,6 +8966,7 @@ function collectConnectDateFilters(out) {
 function generateConnectTablesPrompt() {
   try {
     showConnectError('');
+    if (typeof radarTrack === 'function') radarTrack('connect_tables');
     var picked = [].slice.call(document.querySelectorAll('#connect-tables-list input[type=checkbox]:checked')).map(function(x){ return x.value; });
     if (!picked.length) { showConnectError('⚠ Select at least one table to connect to.'); document.querySelector('.connect-body').scrollIntoView({ behavior:'smooth', block:'start' }); return; }
     var desc = (document.getElementById('cf-desc').value || '').trim();
@@ -8966,6 +9034,7 @@ function generateConnectPrompt() {
   if (_connectMode === 'tables') { generateConnectTablesPrompt(); return; }
   try {
   showConnectError('');
+  if (typeof radarTrack === 'function') radarTrack('connect_metrics');
   const selected = [...document.querySelectorAll('.metric-chip.selected')].map(el => el.dataset.id);
   if (selected.length === 0) {
     showConnectError('⚠ Please select at least one metric in Step 1 before generating.');
