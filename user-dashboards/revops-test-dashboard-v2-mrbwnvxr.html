@@ -1,0 +1,1247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REVOPS TEST DASHBOARD v2</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --bg2: #111111;
+    --bg3: #1a1a1a;
+    --bg4: #222222;
+    --accent: #1DB954;
+    --accent2: #17a349;
+    --accent3: #25e066;
+    --text: #e8e8e8;
+    --text2: #aaaaaa;
+    --text3: #666666;
+    --border: #2a2a2a;
+    --red: #e74c3c;
+    --orange: #f39c12;
+    --blue: #3498db;
+    --purple: #9b59b6;
+    --teal: #1abc9c;
+    --pink: #e91e8c;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', Arial, sans-serif; min-height: 100vh; }
+  
+  /* HEADER */
+  .header { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+  .header-left { display: flex; align-items: center; gap: 14px; }
+  .logo { width: 36px; height: 36px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 18px; color: #000; }
+  .header-title { font-size: 18px; font-weight: 700; color: var(--text); letter-spacing: 0.5px; }
+  .header-sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .refresh-btn { background: var(--accent); color: #000; border: none; border-radius: 6px; padding: 8px 18px; font-weight: 700; font-size: 13px; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; gap: 6px; }
+  .refresh-btn:hover { background: var(--accent3); }
+  .refresh-btn:disabled { background: var(--text3); cursor: not-allowed; }
+  .last-updated { font-size: 11px; color: var(--text3); }
+
+  /* LOADING */
+  .loading-overlay { position: fixed; inset: 0; background: rgba(10,10,10,0.92); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; gap: 18px; }
+  .loading-overlay.hidden { display: none; }
+  .spinner { width: 50px; height: 50px; border: 4px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { color: var(--text2); font-size: 15px; }
+  .loading-sub { color: var(--text3); font-size: 12px; }
+
+  /* ERROR */
+  .error-banner { background: rgba(231,76,60,0.1); border: 1px solid var(--red); border-radius: 8px; padding: 14px 18px; margin: 16px 24px; color: var(--red); font-size: 13px; display: none; }
+  .error-banner.show { display: block; }
+
+  /* FILTERS */
+  .filters-section { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 14px 24px; }
+  .filters-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; }
+  .filter-group { display: flex; flex-direction: column; gap: 4px; }
+  .filter-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.8px; }
+  .filter-select, .filter-input { background: var(--bg3); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 7px 10px; font-size: 12px; outline: none; transition: border-color 0.2s; min-width: 130px; }
+  .filter-select:focus, .filter-input:focus { border-color: var(--accent); }
+  .filter-input[type="date"] { min-width: 140px; color-scheme: dark; }
+  .apply-btn { background: var(--bg4); border: 1px solid var(--accent); color: var(--accent); border-radius: 6px; padding: 7px 16px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+  .apply-btn:hover { background: var(--accent); color: #000; }
+  .clear-btn { background: var(--bg4); border: 1px solid var(--border); color: var(--text2); border-radius: 6px; padding: 7px 14px; font-size: 12px; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+  .clear-btn:hover { border-color: var(--text2); color: var(--text); }
+
+  /* MAIN CONTENT */
+  .main { padding: 20px 24px; max-width: 1600px; margin: 0 auto; }
+  .section-title { font-size: 13px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+  .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* KPI CARDS */
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(175px, 1fr)); gap: 12px; margin-bottom: 24px; }
+  .kpi-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 16px; position: relative; overflow: hidden; transition: border-color 0.2s; }
+  .kpi-card:hover { border-color: var(--accent); }
+  .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+  .kpi-card.green::before { background: var(--accent); }
+  .kpi-card.blue::before { background: var(--blue); }
+  .kpi-card.orange::before { background: var(--orange); }
+  .kpi-card.red::before { background: var(--red); }
+  .kpi-card.purple::before { background: var(--purple); }
+  .kpi-card.teal::before { background: var(--teal); }
+  .kpi-card.pink::before { background: var(--pink); }
+  .kpi-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
+  .kpi-value { font-size: 26px; font-weight: 800; color: var(--text); line-height: 1; }
+  .kpi-value.small { font-size: 20px; }
+  .kpi-sub { font-size: 11px; color: var(--text3); margin-top: 5px; }
+  .kpi-trend { font-size: 11px; margin-top: 6px; }
+  .kpi-trend.up { color: var(--accent); }
+  .kpi-trend.down { color: var(--red); }
+
+  /* CHART CARDS */
+  .chart-grid { display: grid; gap: 16px; margin-bottom: 24px; }
+  .chart-grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+  .chart-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+  .chart-grid.cols-1 { grid-template-columns: 1fr; }
+  .chart-grid.cols-2-1 { grid-template-columns: 2fr 1fr; }
+  .chart-grid.cols-1-2 { grid-template-columns: 1fr 2fr; }
+  .chart-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 18px; }
+  .chart-card-title { font-size: 12px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; }
+  .chart-wrapper { position: relative; }
+  .chart-wrapper canvas { max-height: 280px; }
+  .chart-wrapper.tall canvas { max-height: 350px; }
+  .chart-wrapper.short canvas { max-height: 200px; }
+
+  /* TABLE */
+  .table-wrapper { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th { background: var(--bg3); color: var(--text3); text-transform: uppercase; font-size: 10px; letter-spacing: 0.8px; padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  td { padding: 9px 12px; border-bottom: 1px solid rgba(255,255,255,0.04); color: var(--text); white-space: nowrap; }
+  tr:hover td { background: rgba(29,185,84,0.04); }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; }
+  .badge-green { background: rgba(29,185,84,0.15); color: var(--accent); }
+  .badge-red { background: rgba(231,76,60,0.15); color: var(--red); }
+  .badge-orange { background: rgba(243,156,18,0.15); color: var(--orange); }
+  .badge-blue { background: rgba(52,152,219,0.15); color: var(--blue); }
+
+  /* SCORECARD */
+  .scorecard-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin-bottom: 24px; }
+  .scorecard { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 10px; }
+  .scorecard-header { display: flex; align-items: center; gap: 10px; }
+  .scorecard-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .scorecard-name { font-size: 12px; color: var(--text2); font-weight: 600; }
+  .scorecard-value { font-size: 28px; font-weight: 800; color: var(--text); }
+  .scorecard-meta { font-size: 11px; color: var(--text3); }
+  .scorecard-bar { height: 4px; background: var(--bg4); border-radius: 2px; overflow: hidden; }
+  .scorecard-bar-fill { height: 100%; border-radius: 2px; transition: width 1s ease; }
+
+  /* COMBO */
+  .metric-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+  .metric-pill { background: var(--bg4); border: 1px solid var(--border); border-radius: 20px; padding: 4px 12px; font-size: 11px; color: var(--text2); }
+  .metric-pill span { font-weight: 700; color: var(--text); }
+
+  /* TABS */
+  .tab-row { display: flex; gap: 4px; margin-bottom: 16px; flex-wrap: wrap; }
+  .tab-btn { background: var(--bg3); border: 1px solid var(--border); color: var(--text3); border-radius: 6px; padding: 6px 14px; font-size: 12px; cursor: pointer; transition: all 0.2s; }
+  .tab-btn.active { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 700; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* NO DATA */
+  .no-data { text-align: center; color: var(--text3); padding: 40px; font-size: 13px; }
+
+  @media (max-width: 768px) {
+    .chart-grid.cols-2, .chart-grid.cols-3, .chart-grid.cols-2-1, .chart-grid.cols-1-2 { grid-template-columns: 1fr; }
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .header { padding: 10px 14px; }
+    .main { padding: 14px; }
+    .filters-section { padding: 12px 14px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loadingText">Loading dashboard data...</div>
+  <div class="loading-sub" id="loadingSub">Querying Databricks — please wait</div>
+</div>
+
+<div class="header">
+  <div class="header-left">
+    <div class="logo">R</div>
+    <div>
+      <div class="header-title">REVOPS TEST DASHBOARD v2</div>
+      <div class="header-sub">RevOps Team · Powered by Databricks</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="last-updated" id="lastUpdated">—</div>
+    <button class="refresh-btn" id="refreshBtn" onclick="init()">↻ Refresh</button>
+  </div>
+</div>
+
+<div class="error-banner" id="errorBanner"></div>
+
+<div class="filters-section">
+  <div class="filters-row">
+    <div class="filter-group">
+      <div class="filter-label">Date From</div>
+      <input type="date" class="filter-input" id="dateFrom">
+    </div>
+    <div class="filter-group">
+      <div class="filter-label">Date To</div>
+      <input type="date" class="filter-input" id="dateTo">
+    </div>
+    <div class="filter-group">
+      <div class="filter-label">Pipeline</div>
+      <select class="filter-select" id="filterPipeline">
+        <option value="">All Pipelines</option>
+        <option>Sales Pipeline</option>
+        <option>TH Sales Pipeline</option>
+        <option>Unified Channel Pipeline</option>
+        <option>PH Upsell Pipeline</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <div class="filter-label">Segment</div>
+      <select class="filter-select" id="filterSegment">
+        <option value="">All Segments</option>
+        <option>SME</option>
+        <option>ENT</option>
+        <option>Channels</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <div class="filter-label">Dept Source</div>
+      <select class="filter-select" id="filterDeptSource">
+        <option value="">All Sources</option>
+        <option>MKT Inbound</option>
+        <option>LDU Outbound</option>
+        <option>Sales Outbound</option>
+        <option>Channels</option>
+        <option>CSM Inbound</option>
+        <option>Upsell Outbound</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <div class="filter-label">Deal Type</div>
+      <select class="filter-select" id="filterDealType">
+        <option value="">All Types</option>
+        <option>New Business</option>
+        <option>Upsell Deals</option>
+        <option>TH Deals</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <div class="filter-label">HubSpot Team</div>
+      <select class="filter-select" id="filterTeam">
+        <option value="">All Teams</option>
+      </select>
+    </div>
+    <button class="apply-btn" onclick="applyFilters()">Apply Filters</button>
+    <button class="clear-btn" onclick="clearFilters()">Clear</button>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- KPI SCORECARDS -->
+  <div class="section-title">Key Performance Indicators</div>
+  <div class="kpi-grid" id="kpiGrid">
+    <!-- filled by JS -->
+  </div>
+
+  <!-- SCORECARD ROW -->
+  <div class="section-title">Revenue Scorecard</div>
+  <div class="scorecard-grid" id="scorecardGrid"></div>
+
+  <!-- TREND CHARTS -->
+  <div class="section-title">Monthly Trends</div>
+  <div class="chart-grid cols-2">
+    <div class="chart-card">
+      <div class="chart-card-title">QL / SQL / MQL / OQL — Monthly Trend</div>
+      <div class="chart-wrapper tall"><canvas id="chartLeadTrend"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">Won MRR vs EF MRR — Monthly</div>
+      <div class="chart-wrapper tall"><canvas id="chartMrrTrend"></canvas></div>
+    </div>
+  </div>
+
+  <!-- BAR + PIE ROW -->
+  <div class="section-title">Pipeline & Conversion Analysis</div>
+  <div class="chart-grid cols-3">
+    <div class="chart-card">
+      <div class="chart-card-title">Won vs Lost Deals by Month</div>
+      <div class="chart-wrapper"><canvas id="chartWonLost"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">Deals by Department Source</div>
+      <div class="chart-wrapper"><canvas id="chartDeptSource"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">Deals by Segment</div>
+      <div class="chart-wrapper"><canvas id="chartSegment"></canvas></div>
+    </div>
+  </div>
+
+  <!-- COMBO CHART -->
+  <div class="section-title">Win Rate & Deal Volume</div>
+  <div class="chart-grid cols-2-1">
+    <div class="chart-card">
+      <div class="chart-card-title">Win Rate % + Won Deals (Combo) — Monthly</div>
+      <div class="chart-wrapper tall"><canvas id="chartCombo"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">Pipeline MRR by Stage</div>
+      <div class="chart-wrapper tall"><canvas id="chartPipeline"></canvas></div>
+    </div>
+  </div>
+
+  <!-- STACKED BAR -->
+  <div class="section-title">MRR Breakdown</div>
+  <div class="chart-grid cols-1">
+    <div class="chart-card">
+      <div class="chart-card-title">Stacked MRR Breakdown by Month (MRR | EF MRR | OTP | MRR &lt;12m)</div>
+      <div class="chart-wrapper tall"><canvas id="chartStackedMrr"></canvas></div>
+    </div>
+  </div>
+
+  <!-- STACKED BY PIPELINE -->
+  <div class="section-title">Pipeline Performance</div>
+  <div class="chart-grid cols-2">
+    <div class="chart-card">
+      <div class="chart-card-title">Won Deals by Pipeline — Stacked</div>
+      <div class="chart-wrapper"><canvas id="chartPipelineStacked"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">SQL Conversion Rate by Month</div>
+      <div class="chart-wrapper"><canvas id="chartSqlRate"></canvas></div>
+    </div>
+  </div>
+
+  <!-- DONUT CHARTS -->
+  <div class="section-title">Deal Distribution</div>
+  <div class="chart-grid cols-3">
+    <div class="chart-card">
+      <div class="chart-card-title">Lost Deal Reasons (Top 8)</div>
+      <div class="chart-wrapper"><canvas id="chartLostReasons"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">Deals by Client Journey Stage</div>
+      <div class="chart-wrapper"><canvas id="chartJourneyStage"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">MRR by Segment Donut</div>
+      <div class="chart-wrapper"><canvas id="chartMrrSegment"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ADV + ADS TREND -->
+  <div class="section-title">Deal Efficiency</div>
+  <div class="chart-grid cols-2">
+    <div class="chart-card">
+      <div class="chart-card-title">Average Deal Velocity (Days) — Monthly</div>
+      <div class="chart-wrapper"><canvas id="chartAdv"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">Average Deal Size (MRR) — Monthly</div>
+      <div class="chart-wrapper"><canvas id="chartAds"></canvas></div>
+    </div>
+  </div>
+
+  <!-- DATA TABLE -->
+  <div class="section-title">Rep Performance Table</div>
+  <div class="chart-card" style="margin-bottom:24px;">
+    <div class="chart-card-title">Sales Rep Leaderboard (Won Deals Period)</div>
+    <div class="table-wrapper">
+      <table id="repTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Sales Rep</th>
+            <th>QL</th>
+            <th>SQL</th>
+            <th>Won Deals</th>
+            <th>Lost Deals</th>
+            <th>Win Rate</th>
+            <th>Won MRR</th>
+            <th>EF MRR</th>
+            <th>Avg Velocity (Days)</th>
+            <th>Avg Deal Size</th>
+          </tr>
+        </thead>
+        <tbody id="repTableBody"><tr><td colspan="11" class="no-data">Loading…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- MONTHLY EXEC TABLE -->
+  <div class="section-title">Monthly Executive Summary</div>
+  <div class="chart-card" style="margin-bottom:24px;">
+    <div class="tab-row">
+      <button class="tab-btn active" onclick="switchTab('execAll')">All</button>
+      <button class="tab-btn" onclick="switchTab('execSME')">SME</button>
+      <button class="tab-btn" onclick="switchTab('execENT')">ENT</button>
+      <button class="tab-btn" onclick="switchTab('execCH')">Channels</button>
+    </div>
+    <div class="table-wrapper">
+      <table id="execTable">
+        <thead>
+          <tr>
+            <th>Month</th>
+            <th>QL</th>
+            <th>SQL</th>
+            <th>SQL%</th>
+            <th>Won</th>
+            <th>Lost</th>
+            <th>Win Rate</th>
+            <th>DQ</th>
+            <th>DQ Rate</th>
+            <th>Won MRR</th>
+            <th>EF MRR</th>
+            <th>OTP</th>
+            <th>Pipeline MRR</th>
+            <th>Avg Deal Size</th>
+            <th>Avg Velocity</th>
+          </tr>
+        </thead>
+        <tbody id="execTableBody"><tr><td colspan="15" class="no-data">Loading…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<script>
+const CONFIG = { host: (localStorage.getItem('radar_db_host')||''), token: (localStorage.getItem('radar_db_token')||''), warehouseId: ((localStorage.getItem('radar_db_path')||'').split('/').pop()) };
+
+async function dbQuery(sql) {
+  const RT = (function(){ try { return localStorage.getItem("radar_id_token") || ""; } catch(e){ return ""; } })();
+  const SHARED = !!RT;
+  const H  = SHARED ? { "x-radar-token": RT, "Content-Type": "application/json" }
+                    : { "x-db-host": CONFIG.host, "x-db-token": CONFIG.token, "Content-Type": "application/json" };
+  const PH = SHARED ? { "x-radar-token": RT } : { "x-db-host": CONFIG.host, "x-db-token": CONFIG.token };
+  const reqBody = { statement: sql, wait_timeout: "0s", on_wait_timeout: "CONTINUE", format: "JSON_ARRAY" };
+  if (!SHARED) reqBody.warehouse_id = CONFIG.warehouseId;
+  const sub = await fetch("https://radar-revops.vercel.app/api/databricks", {
+    method: "POST",
+    headers: H,
+    body: JSON.stringify(reqBody)
+  });
+  const subJson = await sub.json();
+  if (!subJson.statement_id) throw new Error("No statement_id returned: " + JSON.stringify(subJson));
+  for (let i = 0; i < 120; i++) {
+    await new Promise(r => setTimeout(r, 3000));
+    const poll = await fetch("https://radar-revops.vercel.app/api/databricks-poll?id=" + subJson.statement_id, {
+      headers: PH
+    });
+    const p = await poll.json();
+    const state = p && p.status && p.status.state;
+    if (state === "SUCCEEDED") {
+      const cols = (p.manifest && p.manifest.schema && p.manifest.schema.columns || []).map(c => c.name);
+      return (p.result && p.result.data_array || []).map(row => Object.fromEntries(cols.map((c, i) => [c, row[i]])));
+    }
+    if (state === "FAILED") throw new Error("Query failed: " + JSON.stringify(p.status));
+  }
+  throw new Error("Timed out after 6 minutes");
+}
+
+// ─── Globals ───
+let charts = {};
+let execData = [];
+let execTab = 'execAll';
+
+// ─── Helpers ───
+function fmt(v, digits=0) {
+  if (v == null || isNaN(v)) return '—';
+  return Number(v).toLocaleString('en-PH', { minimumFractionDigits: digits, maximumFractionDigits: digits });
+}
+function peso(v) {
+  if (v == null || isNaN(v)) return '—';
+  return '��' + Number(v).toLocaleString('en-PH', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+}
+function pct(v, digits=1) {
+  if (v == null || isNaN(v)) return '—';
+  return Number(v).toFixed(digits) + '%';
+}
+function safe(v, fallback=0) { return (v == null || isNaN(Number(v))) ? fallback : Number(v); }
+function safeStr(v, fallback='—') { return (v == null || v === '') ? fallback : v; }
+
+function showLoading(msg, sub) {
+  document.getElementById('loadingOverlay').classList.remove('hidden');
+  document.getElementById('loadingText').textContent = msg || 'Loading…';
+  document.getElementById('loadingSub').textContent = sub || 'Querying Databricks — please wait';
+  document.getElementById('refreshBtn').disabled = true;
+}
+function hideLoading() {
+  document.getElementById('loadingOverlay').classList.add('hidden');
+  document.getElementById('refreshBtn').disabled = false;
+  document.getElementById('lastUpdated').textContent = 'Updated: ' + new Date().toLocaleTimeString('en-PH');
+}
+function showError(msg) {
+  const b = document.getElementById('errorBanner');
+  b.textContent = msg;
+  b.classList.add('show');
+}
+function hideError() { document.getElementById('errorBanner').classList.remove('show'); }
+
+function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
+
+function getFilters() {
+  return {
+    dateFrom: document.getElementById('dateFrom').value,
+    dateTo: document.getElementById('dateTo').value,
+    pipeline: document.getElementById('filterPipeline').value,
+    segment: document.getElementById('filterSegment').value,
+    deptSource: document.getElementById('filterDeptSource').value,
+    dealType: document.getElementById('filterDealType').value,
+    team: document.getElementById('filterTeam').value,
+  };
+}
+
+function buildWhereCreate(f, alias='') {
+  const t = alias ? alias + '.' : '';
+  let clauses = [
+    `${t}deal_type NOT IN ('Renewal','Upsell - Renewal')`,
+    `LOWER(COALESCE(${t}deal_name,'')) NOT LIKE '%renewal%'`
+  ];
+  if (f.dateFrom) clauses.push(`${t}create_date >= '${f.dateFrom}'`);
+  if (f.dateTo) clauses.push(`${t}create_date <= '${f.dateTo} 23:59:59'`);
+  if (f.pipeline) clauses.push(`${t}pipeline_name = '${f.pipeline.replace(/'/g,"''")}'`);
+  if (f.segment) clauses.push(`CASE WHEN ${t}segment='MICRO' THEN 'SME' ELSE ${t}segment END = '${f.segment}'`);
+  if (f.deptSource) clauses.push(`${t}department_source_clean = '${f.deptSource.replace(/'/g,"''")}'`);
+  if (f.dealType) clauses.push(`${t}deal_type = '${f.dealType.replace(/'/g,"''")}'`);
+  if (f.team) clauses.push(`${t}hubspot_team = '${f.team.replace(/'/g,"''")}'`);
+  return clauses.join(' AND ');
+}
+function buildWhereClose(f, alias='') {
+  const t = alias ? alias + '.' : '';
+  let clauses = [
+    `${t}deal_type NOT IN ('Renewal','Upsell - Renewal')`,
+    `LOWER(COALESCE(${t}deal_name,'')) NOT LIKE '%renewal%'`
+  ];
+  if (f.dateFrom) clauses.push(`${t}close_date >= '${f.dateFrom}'`);
+  if (f.dateTo) clauses.push(`${t}close_date <= '${f.dateTo} 23:59:59'`);
+  if (f.pipeline) clauses.push(`${t}pipeline_name = '${f.pipeline.replace(/'/g,"''")}'`);
+  if (f.segment) clauses.push(`CASE WHEN ${t}segment='MICRO' THEN 'SME' ELSE ${t}segment END = '${f.segment}'`);
+  if (f.deptSource) clauses.push(`${t}department_source_clean = '${f.deptSource.replace(/'/g,"''")}'`);
+  if (f.dealType) clauses.push(`${t}deal_type = '${f.dealType.replace(/'/g,"''")}'`);
+  if (f.team) clauses.push(`${t}hubspot_team = '${f.team.replace(/'/g,"''")}'`);
+  return clauses.join(' AND ');
+}
+
+// Colour palettes
+const PALETTE = ['#1DB954','#3498db','#f39c12','#e74c3c','#9b59b6','#1abc9c','#e91e8c','#e67e22','#27ae60','#2980b9','#8e44ad','#16a085'];
+const PALETTE2 = ['rgba(29,185,84,0.7)','rgba(52,152,219,0.7)','rgba(243,156,18,0.7)','rgba(231,76,60,0.7)','rgba(155,89,182,0.7)','rgba(26,188,156,0.7)','rgba(233,30,140,0.7)','rgba(230,126,34,0.7)'];
+
+function makeChart(id, config) {
+  destroyChart(id);
+  const ctx = document.getElementById(id);
+  if (!ctx) return;
+  charts[id] = new Chart(ctx, config);
+}
+
+// ─── RENDER KPIs ───
+function renderKPIs(kpiData) {
+  const g = document.getElementById('kpiGrid');
+  const cards = [
+    { label:'Qualified Leads (QL)', value: fmt(kpiData.ql), color:'green', sub:'create_date basis' },
+    { label:'MQL (MKT Inbound)', value: fmt(kpiData.mql), color:'blue', sub:'create_date basis' },
+    { label:'OQL (LDU Outbound)', value: fmt(kpiData.oql), color:'teal', sub:'create_date basis' },
+    { label:'SQL', value: fmt(kpiData.sql), color:'purple', sub:'create_date basis' },
+    { label:'SQL Conversion Rate', value: pct(kpiData.sqlPct), color:'orange', sub:'SQL ÷ QL' },
+    { label:'Won Deals', value: fmt(kpiData.wonDeals), color:'green', sub:'close_date basis' },
+    { label:'Lost Deals', value: fmt(kpiData.lostDeals), color:'red', sub:'close_date basis' },
+    { label:'Win Rate', value: pct(kpiData.winRate), color:'green', sub:'Won ÷ (Won+Lost)' },
+    { label:'DQ Rate', value: pct(kpiData.dqRate), color:'orange', sub:'DQ ÷ Total QL' },
+    { label:'Sales Disqualified', value: fmt(kpiData.salesDq), color:'red', sub:'Stage = Disqualified' },
+    { label:'Lead→Won Conv.%', value: pct(kpiData.leadToWon), color:'teal', sub:'Won ÷ Total QL' },
+    { label:'Won MRR', value: peso(kpiData.wonMrr), color:'green', sub:'close_date basis', small:true },
+    { label:'EF MRR', value: peso(kpiData.efMrr), color:'blue', sub:'ReadyCash+ReadyWage', small:true },
+    { label:'OTP Revenue', value: peso(kpiData.otp), color:'orange', sub:'One-time payments', small:true },
+    { label:'Pipeline MRR', value: peso(kpiData.pipelineMrr), color:'purple', sub:'Active stages', small:true },
+    { label:'Avg Deal Size', value: peso(kpiData.ads), color:'teal', sub:'Won MRR ÷ Won Deals', small:true },
+    { label:'Avg Deal Velocity', value: fmt(kpiData.adv,1) + ' days', color:'pink', sub:'Won deals avg days' },
+  ];
+  g.innerHTML = cards.map(c => `
+    <div class="kpi-card ${c.color}">
+      <div class="kpi-label">${c.label}</div>
+      <div class="kpi-value ${c.small?'small':''}">${c.value}</div>
+      <div class="kpi-sub">${c.sub}</div>
+    </div>
+  `).join('');
+}
+
+function renderScorecards(kpiData) {
+  const sg = document.getElementById('scorecardGrid');
+  const items = [
+    { icon:'📈', name:'Won MRR', value: peso(kpiData.wonMrr), meta:'Contract Signed + PH', color:'#1DB954', pct: Math.min(100,safe(kpiData.wonMrr)/5000000*100) },
+    { icon:'💠', name:'EF MRR', value: peso(kpiData.efMrr), meta:'ReadyCash + ReadyWage', color:'#3498db', pct: Math.min(100,safe(kpiData.efMrr)/1000000*100) },
+    { icon:'💰', name:'OTP Revenue', value: peso(kpiData.otp), meta:'One-time payments', color:'#f39c12', pct: Math.min(100,safe(kpiData.otp)/2000000*100) },
+    { icon:'🏗️', name:'Pipeline MRR', value: peso(kpiData.pipelineMrr), meta:'Active pipeline', color:'#9b59b6', pct: Math.min(100,safe(kpiData.pipelineMrr)/10000000*100) },
+    { icon:'🎯', name:'Won Deals', value: fmt(kpiData.wonDeals), meta:'Contract Signed+PH+SC', color:'#1DB954', pct: Math.min(100,safe(kpiData.wonDeals)/50*100) },
+    { icon:'📊', name:'Win Rate', value: pct(kpiData.winRate), meta:'Won ÷ (Won+Lost)', color:'#1abc9c', pct: safe(kpiData.winRate) },
+  ];
+  sg.innerHTML = items.map(s => `
+    <div class="scorecard">
+      <div class="scorecard-header">
+        <div class="scorecard-icon" style="background:${s.color}20">${s.icon}</div>
+        <div class="scorecard-name">${s.name}</div>
+      </div>
+      <div class="scorecard-value">${s.value}</div>
+      <div class="scorecard-meta">${s.meta}</div>
+      <div class="scorecard-bar"><div class="scorecard-bar-fill" style="width:${s.pct}%;background:${s.color}"></div></div>
+    </div>
+  `).join('');
+}
+
+// ─── CHART RENDERERS ───
+function renderLeadTrend(rows) {
+  const labels = rows.map(r => r.metric_month ? r.metric_month.slice(0,7) : '');
+  makeChart('chartLeadTrend', {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label:'QL', data: rows.map(r=>safe(r.ql)), borderColor:'#1DB954', backgroundColor:'rgba(29,185,84,0.1)', tension:0.4, fill:true, pointRadius:4 },
+        { label:'SQL', data: rows.map(r=>safe(r.sql_count)), borderColor:'#3498db', backgroundColor:'rgba(52,152,219,0.1)', tension:0.4, fill:true, pointRadius:4 },
+        { label:'MQL', data: rows.map(r=>safe(r.mql)), borderColor:'#f39c12', backgroundColor:'rgba(243,156,18,0.1)', tension:0.4, fill:false, pointRadius:4 },
+        { label:'OQL', data: rows.map(r=>safe(r.oql)), borderColor:'#9b59b6', backgroundColor:'rgba(155,89,182,0.1)', tension:0.4, fill:false, pointRadius:4 },
+      ]
+    },
+    options: chartDefaults()
+  });
+}
+
+function renderMrrTrend(rows) {
+  const labels = rows.map(r => r.metric_month ? r.metric_month.slice(0,7) : '');
+  makeChart('chartMrrTrend', {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label:'Won MRR', data: rows.map(r=>safe(r.won_mrr)), backgroundColor:'rgba(29,185,84,0.75)', borderRadius:4 },
+        { label:'EF MRR', data: rows.map(r=>safe(r.ef_mrr)), backgroundColor:'rgba(52,152,219,0.75)', borderRadius:4 },
+      ]
+    },
+    options: { ...chartDefaults(), plugins: { ...chartDefaults().plugins, legend:{...chartDefaults().plugins.legend} } }
+  });
+}
+
+function renderWonLost(rows) {
+  const labels = rows.map(r => r.metric_month ? r.metric_month.slice(0,7) : '');
+  makeChart('chartWonLost', {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label:'Won', data: rows.map(r=>safe(r.won_deals)), backgroundColor:'rgba(29,185,84,0.8)', borderRadius:4 },
+        { label:'Lost', data: rows.map(r=>safe(r.lost_deals)), backgroundColor:'rgba(231,76,60,0.8)', borderRadius:4 },
+      ]
+    },
+    options: chartDefaults()
+  });
+}
+
+function renderDeptSource(rows) {
+  const labels = rows.map(r => safeStr(r.department_source_clean,'Unknown'));
+  const vals = rows.map(r => safe(r.cnt));
+  makeChart('chartDeptSource', {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{ data: vals, backgroundColor: PALETTE.slice(0,labels.length), borderColor:'#111', borderWidth:2 }]
+    },
+    options: donutDefaults()
+  });
+}
+
+function renderSegment(rows) {
+  const labels = rows.map(r => safeStr(r.seg,'Unknown'));
+  const vals = rows.map(r => safe(r.cnt));
+  makeChart('chartSegment', {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{ data: vals, backgroundColor:['#1DB954','#3498db','#f39c12'], borderColor:'#111', borderWidth:2 }]
+    },
+    options: donutDefaults()
+  });
+}
+
+function renderCombo(rows) {
+  const labels = rows.map(r => r.metric_month ? r.metric_month.slice(0,7) : '');
+  makeChart('chartCombo', {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { type:'bar', label:'Won Deals', data: rows.map(r=>safe(r.won_deals)), backgroundColor:'rgba(29,185,84,0.6)', yAxisID:'y', borderRadius:4 },
+        { type:'line', label:'Win Rate %', data: rows.map(r=>safe(r.win_rate)), borderColor:'#f39c12', backgroundColor:'transparent', yAxisID:'y2', tension:0.4, pointRadius:4, borderWidth:2 },
+        { type:'line', label:'DQ Rate %', data: rows.map(r=>safe(r.dq_rate)), borderColor:'#e74c3c', backgroundColor:'transparent', yAxisID:'y2', tension:0.4, pointRadius:3, borderDash:[5,3], borderWidth:2 },
+      ]
+    },
+    options: {
+      ...chartDefaults(),
+      scales: {
+        x: scaleX(),
+        y: { ...scaleY(), position:'left', title:{ display:true, text:'Deal Count', color:'#666', font:{size:10} } },
+        y2: { ...scaleY(), position:'right', grid:{drawOnChartArea:false}, title:{ display:true, text:'Rate %', color:'#666', font:{size:10} }, min:0, max:100 },
+      }
+    }
+  });
+}
+
+function renderPipelineBar(rows) {
+  const labels = rows.map(r => safeStr(r.stage_label).length > 20 ? safeStr(r.stage_label).slice(0,18)+'…' : safeStr(r.stage_label));
+  const vals = rows.map(r=>safe(r.pipeline_mrr));
+  makeChart('chartPipeline', {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{ label:'Pipeline MRR', data:vals, backgroundColor:'rgba(155,89,182,0.75)', borderRadius:4 }]
+    },
+    options: { ...chartDefaults(), indexAxis:'y', scales:{ x:{...scaleY()}, y:{...scaleX()} } }
+  });
+}
+
+function renderStackedMrr(rows) {
+  const labels = rows.map(r => r.metric_month ? r.metric_month.slice(0,7) : '');
+  makeChart('chartStackedMrr', {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label:'MRR', data:rows.map(r=>safe(r.won_mrr)), backgroundColor:'rgba(29,185,84,0.8)', stack:'s' },
+        { label:'EF MRR', data:rows.map(r=>safe(r.ef_mrr)), backgroundColor:'rgba(52,152,219,0.8)', stack:'s' },
+        { label:'OTP', data:rows.map(r=>safe(r.otp)), backgroundColor:'rgba(243,156,18,0.8)', stack:'s' },
+        { label:'MRR <12m', data:rows.map(r=>safe(r.mrr_lt12)), backgroundColor:'rgba(155,89,182,0.8)', stack:'s' },
+      ]
+    },
+    options: chartDefaults()
+  });
+}
+
+function renderPipelineStacked(rows) {
+  const months = [...new Set(rows.map(r => r.metric_month ? r.metric_month.slice(0,7) : ''))].sort();
+  const pipelines = [...new Set(rows.map(r => safeStr(r.pipeline_name,'Other')))];
+  const datasets = pipelines.map((p,i) => ({
+    label: p,
+    data: months.map(m => {
+      const found = rows.find(r => r.metric_month && r.metric_month.slice(0,7)===m && r.pipeline_name===p);
+      return found ? safe(found.won_count) : 0;
+    }),
+    backgroundColor: PALETTE[i % PALETTE.length],
+    stack: 's',
+    borderRadius: 3
+  }));
+  makeChart('chartPipelineStacked', {
+    type: 'bar',
+    data: { labels: months, datasets },
+    options: chartDefaults()
+  });
+}
+
+function renderSqlRate(rows) {
+  const labels = rows.map(r => r.metric_month ? r.metric_month.slice(0,7) : '');
+  makeChart('chartSqlRate', {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label:'SQL Conv. Rate %', data:rows.map(r=>safe(r.sql_pct)), borderColor:'#1DB954', backgroundColor:'rgba(29,185,84,0.15)', tension:0.4, fill:true, pointRadius:4 },
+        { label:'DQ Rate %', data:rows.map(r=>safe(r.dq_rate)), borderColor:'#e74c3c', backgroundColor:'rgba(231,76,60,0.1)', tension:0.4, fill:false, pointRadius:3, borderDash:[4,4] },
+      ]
+    },
+    options: { ...chartDefaults(), scales:{ x:scaleX(), y:{...scaleY(), min:0, max:100, ticks:{color:'#666', font:{size:10}, callback:v=>v+'%'}} } }
+  });
+}
+
+function renderLostReasons(rows) {
+  const labels = rows.map(r => {
+    const s = safeStr(r.reason,'Unknown');
+    return s.length > 22 ? s.slice(0,20)+'…' : s;
+  });
+  makeChart('chartLostReasons', {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{ data: rows.map(r=>safe(r.cnt)), backgroundColor: PALETTE.slice(0,labels.length), borderColor:'#111', borderWidth:2 }]
+    },
+    options: donutDefaults()
+  });
+}
+
+function renderJourneyStage(rows) {
+  const labels = rows.map(r => safeStr(r.stage,'Unknown'));
+  makeChart('chartJourneyStage', {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{ data: rows.map(r=>safe(r.cnt)), backgroundColor:['#1DB954','#3498db','#f39c12','#e74c3c','#9b59b6'], borderColor:'#111', borderWidth:2 }]
+    },
+    options: donutDefaults()
+  });
+}
+
+function renderMrrSegment(rows) {
+  const labels = rows.map(r => safeStr(r.seg,'Unknown'));
+  makeChart('chartMrrSegment', {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{ data: rows.map(r=>safe(r.total_mrr)), backgroundColor:['#1DB954','#3498db','#f39c12'], borderColor:'#111', borderWidth:2 }]
+    },
+    options: donutDefaults()
+  });
+}
+
+function renderAdv(rows) {
+  const labels = rows.map(r => r.metric_month ? r.metric_month.slice(0,7) : '');
+  makeChart('chartAdv', {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{ label:'Avg Deal Velocity (Days)', data:rows.map(r=>safe(r.avg_velocity)), borderColor:'#e91e8c', backgroundColor:'rgba(233,30,140,0.1)', tension:0.4, fill:true, pointRadius:4 }]
+    },
+    options: chartDefaults()
+  });
+}
+
+function renderAds(rows) {
+  const labels = rows.map(r => r.metric_month ? r.metric_month.slice(0,7) : '');
+  makeChart('chartAds', {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{ label:'Avg Deal Size (MRR)', data:rows.map(r=>safe(r.avg_mrr)), backgroundColor:'rgba(26,188,156,0.75)', borderRadius:4 }]
+    },
+    options: { ...chartDefaults(), scales:{ x:scaleX(), y:{...scaleY(), ticks:{color:'#666', font:{size:10}, callback:v=>'₱'+Number(v).toLocaleString()}} } }
+  });
+}
+
+function renderRepTable(rows) {
+  const tbody = document.getElementById('repTableBody');
+  if (!rows || !rows.length) { tbody.innerHTML = '<tr><td colspan="11" class="no-data">No data</td></tr>'; return; }
+  tbody.innerHTML = rows.map((r,i) => {
+    const wr = safe(r.won_deals) + safe(r.lost_deals) > 0 ? (safe(r.won_deals) / (safe(r.won_deals)+safe(r.lost_deals)) * 100).toFixed(1) : '0.0';
+    const badge = Number(wr) >= 50 ? 'badge-green' : Number(wr) >= 30 ? 'badge-orange' : 'badge-red';
+    return `<tr>
+      <td>${i+1}</td>
+      <td><strong>${safeStr(r.sales_rep)}</strong></td>
+      <td>${fmt(r.ql_count)}</td>
+      <td>${fmt(r.sql_count)}</td>
+      <td>${fmt(r.won_deals)}</td>
+      <td>${fmt(r.lost_deals)}</td>
+      <td><span class="badge ${badge}">${wr}%</span></td>
+      <td>${peso(r.won_mrr)}</td>
+      <td>${peso(r.ef_mrr)}</td>
+      <td>${fmt(r.avg_velocity,1)}</td>
+      <td>${peso(r.avg_deal_size)}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderExecTable(rows, seg) {
+  const tbody = document.getElementById('execTableBody');
+  let filtered = rows;
+  if (seg === 'execSME') filtered = rows.filter(r => r.segment === 'SME');
+  else if (seg === 'execENT') filtered = rows.filter(r => r.segment === 'ENT');
+  else if (seg === 'execCH') filtered = rows.filter(r => r.segment === 'Channels');
+  // Aggregate by month
+  const byMonth = {};
+  filtered.forEach(r => {
+    const m = r.metric_month ? r.metric_month.slice(0,7) : '';
+    if (!byMonth[m]) byMonth[m] = { metric_month:m, ql:0, sql:0, won:0, lost:0, dq:0, wonMrr:0, efMrr:0, otp:0, pipelineMrr:0, sumAds:0, sumAdv:0, wonCount:0 };
+    const b = byMonth[m];
+    b.ql += safe(r.qualified_leads);
+    b.sql += safe(r.sales_qualified_leads);
+    b.won += safe(r.won_deals);
+    b.lost += safe(r.lost_deals);
+    b.dq += safe(r.dq_leads);
+    b.wonMrr += safe(r.won_mrr);
+    b.efMrr += safe(r.won_ef_mrr);
+    b.otp += safe(r.won_otp_only);
+    b.pipelineMrr += safe(r.mrr_in_pipeline);
+    if (safe(r.won_deals) > 0) { b.sumAds += safe(r.avg_deal_size) * safe(r.won_deals); b.wonCount += safe(r.won_deals); }
+    b.sumAdv += safe(r.avg_deal_velocity);
+  });
+  const months = Object.keys(byMonth).sort().reverse();
+  if (!months.length) { tbody.innerHTML = '<tr><td colspan="15" class="no-data">No data</td></tr>'; return; }
+  tbody.innerHTML = months.map(m => {
+    const b = byMonth[m];
+    const sqlPct = b.ql > 0 ? (b.sql/b.ql*100).toFixed(1) : '0.0';
+    const winRate = (b.won+b.lost) > 0 ? (b.won/(b.won+b.lost)*100).toFixed(1) : '0.0';
+    const dqRate = b.ql > 0 ? (b.dq/b.ql*100).toFixed(1) : '0.0';
+    const ads = b.wonCount > 0 ? b.sumAds/b.wonCount : 0;
+    const wr_badge = Number(winRate) >= 50 ? 'badge-green' : Number(winRate) >= 30 ? 'badge-orange' : 'badge-red';
+    return `<tr>
+      <td><strong>${m}</strong></td>
+      <td>${fmt(b.ql)}</td>
+      <td>${fmt(b.sql)}</td>
+      <td><span class="badge badge-blue">${sqlPct}%</span></td>
+      <td>${fmt(b.won)}</td>
+      <td>${fmt(b.lost)}</td>
+      <td><span class="badge ${wr_badge}">${winRate}%</span></td>
+      <td>${fmt(b.dq)}</td>
+      <td>${dqRate}%</td>
+      <td>${peso(b.wonMrr)}</td>
+      <td>${peso(b.efMrr)}</td>
+      <td>${peso(b.otp)}</td>
+      <td>${peso(b.pipelineMrr)}</td>
+      <td>${peso(ads)}</td>
+      <td>—</td>
+    </tr>`;
+  }).join('');
+}
+
+// ─── CHART OPTION HELPERS ───
+function chartDefaults() {
+  return {
+    responsive: true,
+    maintainAspectRatio: true,
+    plugins: { legend:{ labels:{ color:'#aaa', font:{size:11}, boxWidth:12, padding:12 } }, tooltip:{ backgroundColor:'#1a1a1a', titleColor:'#eee', bodyColor:'#aaa', borderColor:'#333', borderWidth:1 } },
+    scales: { x: scaleX(), y: scaleY() }
+  };
+}
+function donutDefaults() {
+  return {
+    responsive: true,
+    maintainAspectRatio: true,
+    plugins: {
+      legend:{ position:'bottom', labels:{ color:'#aaa', font:{size:10}, boxWidth:10, padding:8 } },
+      tooltip:{ backgroundColor:'#1a1a1a', titleColor:'#eee', bodyColor:'#aaa', borderColor:'#333', borderWidth:1 }
+    }
+  };
+}
+function scaleX() { return { grid:{color:'rgba(255,255,255,0.05)'}, ticks:{color:'#666', font:{size:10}, maxRotation:45} }; }
+function scaleY() { return { grid:{color:'rgba(255,255,255,0.05)'}, ticks:{color:'#666', font:{size:10}} }; }
+
+// ─── TAB SWITCHING ───
+function switchTab(tab) {
+  execTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  renderExecTable(execData, tab);
+}
+
+function applyFilters() { init(); }
+function clearFilters() {
+  document.getElementById('dateFrom').value = '';
+  document.getElementById('dateTo').value = '';
+  document.getElementById('filterPipeline').value = '';
+  document.getElementById('filterSegment').value = '';
+  document.getElementById('filterDeptSource').value = '';
+  document.getElementById('filterDealType').value = '';
+  document.getElementById('filterTeam').value = '';
+  init();
+}
+
+// Set defaults: last 12 months
+function setDefaultDates() {
+  const to = new Date();
+  const from = new Date();
+  from.setMonth(from.getMonth() - 11);
+  from.setDate(1);
+  document.getElementById('dateTo').value = to.toISOString().slice(0,10);
+  document.getElementById('dateFrom').value = from.toISOString().slice(0,10);
+}
+
+// ─── MAIN INIT ───
+async function init() {
+  hideError();
+  showLoading('Loading dashboard data…', 'Running Databricks queries…');
+  const f = getFilters();
+  try {
+    // 1. KPI Snapshot — create_date basis (QL, MQL, OQL, SQL, DQ)
+    showLoading('Loading KPIs…', 'Query 1/10: Funnel KPIs');
+    const whereCreate = buildWhereCreate(f);
+    const kpiCreateRows = await dbQuery(`
+      SELECT
+        COUNT(DISTINCT CASE WHEN qualified_lead='Yes' THEN deal_id END) AS ql,
+        COUNT(DISTINCT CASE WHEN qualified_lead='Yes' AND department_source_clean='MKT Inbound' THEN deal_id END) AS mql,
+        COUNT(DISTINCT CASE WHEN qualified_lead='Yes' AND department_source_clean='LDU Outbound' THEN deal_id END) AS oql,
+        COUNT(DISTINCT CASE WHEN qualified_lead='Yes' AND stage_label='Disqualified' THEN deal_id END) AS sales_dq,
+        COUNT(DISTINCT CASE WHEN
+          stage_label IN ('Initial Demo Done','Solutioning','Commercial Negotiation','Committed Accounts','Contract Signed','Project Handover','Sales Handover','Sales Churn','Closed Lost')
+          AND ((pipeline_name IN ('Sales Pipeline','Unified Channel Pipeline') AND qualified_lead='Yes') OR pipeline_name='PH Upsell Pipeline')
+          THEN deal_id END) AS sql_count
+      FROM shared.revops.silver_deals
+      WHERE ${whereCreate}
+        AND create_date IS NOT NULL
+    `);
+
+    // 2. KPI — close_date basis (Won, Lost, MRR, EF MRR, OTP, ADV, ADS)
+    showLoading('Loading KPIs…', 'Query 2/10: Won/Lost KPIs');
+    const whereClose = buildWhereClose(f);
+    const kpiCloseRows = await dbQuery(`
+      SELECT
+        COUNT(DISTINCT CASE WHEN client_journey_stage='Customer' AND stage_label IN ('Contract Signed','Project Handover','Sales Handover','Sales Churn') THEN deal_id END) AS won_deals,
+        COUNT(DISTINCT CASE WHEN client_journey_stage='Closed Lost' THEN deal_id END) AS lost_deals,
+        SUM(CASE WHEN client_journey_stage='Customer' AND stage_label IN ('Contract Signed','Project Handover','Sales Handover','Sales Churn') THEN mrr ELSE 0 END) AS won_mrr,
+        SUM(CASE WHEN client_journey_stage='Customer' AND stage_label IN ('Contract Signed','Project Handover','Sales Handover','Sales Churn') THEN ef_mrr ELSE 0 END) AS ef_mrr,
+        SUM(CASE WHEN client_journey_stage='Customer' AND stage_label IN ('Contract Signed','Project Handover','Sales Handover','Sales Churn') THEN otp_only ELSE 0 END) AS otp,
+        AVG(CASE WHEN client_journey_stage='Customer' AND stage_label IN ('Contract Signed','Project Handover','Sales Handover','Sales Churn') THEN deal_velocity_days END) AS adv
+      FROM shared.revops.silver_deals
+      WHERE ${whereClose}
+        AND close_date IS NOT NULL
+    `);
+
+    // 3. Pipeline MRR (active stages, projected_close_date)
+    showLoading('Loading pipeline…', 'Query 3/10: Pipeline MRR');
+    let pipelineWhere = `deal_type NOT IN ('Renewal','Upsell - Renewal') AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%' AND stage_label IN ('Initial Demo Done','Solutioning','Commercial Negotiation','Committed Accounts')`;
+    if (f.pipeline) pipelineWhere += ` AND pipeline_name='${f.pipeline.replace(/'/g,"''")}'`;
+    if (f.segment) pipelineWhere += ` AND CASE WHEN segment='MICRO' THEN 'SME' ELSE segment END='${f.segment}'`;
+    if (f.deptSource) pipelineWhere += ` AND department_source_clean='${f.deptSource.replace(/'/g,"''")}'`;
+    const pipelineRows = await dbQuery(`
+      SELECT stage_label, SUM(mrr) AS pipeline_mrr, COUNT(DISTINCT deal_id) AS deal_count
+      FROM shared.revops.silver_deals
+      WHERE ${pipelineWhere}
+      GROUP BY stage_label
+      ORDER BY pipeline_mrr DESC
+    `);
+
+    // 4. Monthly lead trend
+    showLoading('Loading trends…', 'Query 4/10: Monthly lead trend');
+    const leadTrendRows = await dbQuery(`
+      SELECT
+        DATE_TRUNC('month', create_date) AS metric_month,
+        COUNT(DISTINCT CASE WHEN qualified_lead='Yes' THEN deal_id END) AS ql,
+        COUNT(DISTINCT CASE WHEN
+          stage_label IN ('Initial Demo Done','Solutioning','Commercial Negotiation','Committed Accounts','Contract Signed','Project Handover','Sales Handover','Sales Churn','Closed Lost')
+          AND ((pipeline_name IN ('Sales Pipeline','Unified Channel Pipeline') AND qualified_lead='Yes') OR pipeline_name='PH Upsell Pipeline')
+          THEN deal_id END) AS sql_count,
+        COUNT(DISTINCT CASE WHEN qualified_lead='Yes' AND department_source_clean='MKT Inbound' THEN deal_id END) AS mql,
+        COUNT(DISTINCT CASE WHEN qualified_lead='Yes' AND department_source_clean='LDU Outbound' THEN deal_id END) AS oql
+      FROM shared.revops.silver_deals
+      WHERE ${whereCreate} AND create_date IS NOT NULL
+      GROUP BY 1 ORDER BY 1 ASC
+    `);
+
+    // 5. Monthly MRR trend
+    showLoading('Loading trends…', 'Query 5/10: Monthly MRR trend');
+    const mrrTrendRows = await dbQuery(`
+      SELECT
+        DATE_TRUNC('month', close_date) AS metric_month,
+        SUM(CASE WHEN client_journey_stage='Customer' AND stage_label IN ('Contract Signed','Project Handover','Sales Handover','Sales Churn') THEN mrr ELSE 0 END) AS won_mrr,
+        SUM(CASE WHEN client_journey_stage='Customer' AND stage_label IN ('Contract Signed','Project Handover','Sales Handover','Sales Churn') THEN ef_mrr ELSE 0 END) AS ef_mrr,
+        SUM(CASE WHEN client_journey_stage='Customer' AND stage_label IN ('Contract Signed','Project Handover','Sales Handover','Sales Churn') THEN otp_only ELSE 0 END) AS otp,
+        SUM(CASE WHEN client_journey_stage='Customer' AND stage_label IN ('Contract Signed','Project Handover','Sales Handover','Sales Churn') THEN mrr_lt_12 ELSE 0 END) AS mrr_lt12
+      FROM shared.revops.silver_deals
+      WHERE ${whereClose} AND close_date IS NOT NULL
+      GROUP BY 1 ORDER BY 1 ASC
+    `);
+
+    // 6. Won/Lost by month
+    showLoading('Loading charts…', 'Query 6/10: Won/Lost monthly');
+    const wonLostRows = await dbQuery(`
+      SELECT
+        DATE_TRUNC('month', close_date) AS metric_month,
+        COUNT(DISTINCT CASE WHEN client_journey_stage='Customer' AND stage_label IN ('Contract Signed','Project Handover','Sales Handover','Sales Churn') THEN deal_id END) AS won_deals,
+        COUNT(DISTINCT CASE WHEN client_journey_stage='Closed Lost' THEN deal_id END) AS lost_deals,
+        ROUND(100.0*COUNT(DISTINCT CASE WHEN client_journey_stage='Customer' AND stage_label IN ('Contract Signed','Project Handover','Sales Handover','Sales Churn') THEN deal_id END) /
+          NULLIF(COUNT(DISTINCT CASE WHEN client_journey_stage IN ('Customer','Closed Lost') THEN deal_id END),0),1) AS win_rate,
+        ROUND(100.0*COUNT(DISTINCT CASE WHEN stage_label='Disqualified' AND qualified_lead='Yes' THEN deal_id END) /
+          NULLIF(COUNT(DISTINCT CASE WHEN qualified_lead='Yes' THEN deal_id END),0),1) AS dq_rate
+      FROM shared.revops.silver_deals
+      WHERE ${whereClose} AND close_date IS NOT NULL
+      GROUP BY 1 ORDER BY 1 ASC
+    `);
+
+    // 7. Dept source + segment distributions
+    showLoading('Loading distributions…', 'Query 7/10: Dept & Segment');
+    const deptRows = await dbQuery(`
+      SELECT department_source_clean, COUNT(DISTINCT deal_id) AS cnt
+      FROM shared.revops.silver_deals
+      WHERE ${whereCreate} AND create_date IS NOT NULL AND department_source_clean IS NOT NULL
+      GROUP BY 1 ORDER BY cnt DESC
+    `);
+    const segRows = await dbQuery(`
+      SELECT CASE WHEN segment='MICRO' THEN 'SME' ELSE segment END AS seg, COUNT(DISTINCT deal_id) AS cnt
+      FROM shared.revops.silver_deals
+      WHERE ${whereCreate} AND create_date IS NOT NULL AND segment IS NOT NULL
+      GROUP BY 1 ORDER BY cnt DESC
+    `);
+
+    // 8. Pipeline by pipeline name stacked
+    showLoading('Loading pipeline breakdown…', 'Query 8/10: Pipeline stacked');
+    const pipelineStackedRows = await dbQuery(`
+      SELECT
+        DATE_TRUNC('month', close_date) AS metric_month,
+        pipeline_name,
+        COUNT(DISTINCT CASE WHEN client_journey_stage='Customer' AND stage_label IN ('Contract Signed','Project Handover','Sales Handover','Sales Churn') THEN deal_id END) AS won_count
+      FROM shared.revops.silver_deals
+      WHERE ${whereClose} AND close_date IS NOT NULL
+      GROUP BY 1,2 ORDER BY 1 ASC
+    `);
+
+    // 9. SQL rate by month (from exec summary)
+    showLoading('Loading exec summary…', 'Query 9/10: Exec Summary');
+    const execWhere = [];
+    if (f.dateFrom) execWhere.push(`metric_month >= '${f.dateFrom}'`);
+    if (f.dateTo) execWhere.push(`metric_month <= '${f.dateTo}'`);
+    if (f.pipeline) execWhere.push(`pipeline_name = '${f.pipeline.replace(/'/g,"''")}'`);
+    if (f.segment) execWhere.push(`segment = '${f.segment.replace(/'/g,"''")}'`);
+    if (f.deptSource) execWhere.push(`department_source_clean = '${f.deptSource.replace(/'/g,"''")}'`);
+    const execWhereStr = execWhere.length ? 'WHERE ' + execWhere.join(' AND ') : '';
+    const execRows = await dbQuery(`
+      SELECT
+        metric_month,
+        segment,
+        pipeline_name,
+        department_source_clean,
+        SUM(qualified_leads) AS qualified_leads,
+        SUM(sales_qualified_leads) AS sales_qualified_leads,
+        SUM(won_deals) AS won_deals,
+        SUM(lost_deals) AS lost_deals,
+        SUM(dq_leads) AS dq_leads,
+        ROUND(100.0*SUM(sales_qualified_leads)/NULLIF(SUM(qualified_leads),0),1) AS sql_pct,
+        ROUND(100.0*SUM(won_deals)/NULLIF(SUM(won_deals)+SUM(lost_deals),0),1) AS win_rate,
+        ROUND(100.0*SUM(dq_leads)/NULLIF(SUM(qualified_leads),0),1) AS dq_rate,
+        SUM(won_mrr) AS won_mrr,
+        SUM(won_ef_mrr) AS won_ef_mrr,
+        SUM(won_otp_only) AS won_otp_only,
+        SUM(mrr_in_pipeline) AS mrr_in_pipeline,
+        AVG(avg_deal_size) AS avg_deal_size,
+        AVG(avg_deal_velocity) AS avg_deal_velocity
+      FROM shared.revops.gold_monthly_exec_summary
+      ${execWhereStr}
+      GROUP BY 1,2,3,4
+      ORDER BY metric_month DESC
+    `);
+
+    // 10. Rep performance + Lost reasons + Journey stage + MRR by segment
+    showLoading('Loading rep data…', 'Query 10/10: Rep performance & distributions');
+    const repRows = await dbQuery(`
+      SELECT
+        sales_rep,
+        COUNT(DISTINCT CASE WHEN qualified_lead='Yes' THEN deal_id END) AS ql_count,
+        COUNT(DISTINCT CASE WHEN
+          stage_label IN ('Initial Demo Done','Solutioning','Commercial Negotiation','Committed Accounts','Contract Signed','Project Handover','Sales Handover','Sales Churn','Closed Lost')
+          AND qualified_lead='Yes' THEN deal_id END) AS sql_count,
+        COUNT(DISTINCT CASE WHEN client_journey_stage='Customer' AND stage_label IN ('Contract Signed','Project Handover','Sales Handover','Sales Churn') THEN deal_id END) AS won_deals,
+        COUNT(DISTINCT CASE WHEN client_journey_stage='Closed Lost' THEN deal_id END) AS lost_deals,
+        SUM(CASE WHEN client_journey_stage='Customer' AND stage_label IN ('Contract Signed','Project Handover','Sales Handover','Sales Churn') THEN mrr ELSE 0 END) AS won_mrr,
+        SUM(CASE WHEN client_journey_stage='Customer' AND stage_label IN ('Contract Signed','Project Handover','Sales Handover','Sales Churn') THEN ef_mrr ELSE 0 END) AS ef_mrr,
+        AVG(CASE WHEN client_journey_stage='Customer' AND stage_label IN ('Contract Signed','Project Handover','Sales Handover','Sales Churn') THEN deal_velocity_days END) AS avg_velocity,
+        SUM(CASE WHEN client_journey_stage='Customer' AND stage_label IN ('Contract Signed','Project Handover','Sales Handover','Sales Churn') THEN mrr ELSE 0 END) /
+          NULLIF(COUNT(DISTINCT CASE WHEN client_journey_stage='Customer' AND stage_label IN ('Contract Signed','Project Handover','Sales Handover','Sales Churn') THEN deal_id END),0) AS avg_deal_size
+      FROM shared.revops.silver_deals
+      WHERE ${whereClose} AND sales_rep IS NOT NULL AND sales_rep != ''
+      GROUP BY sales_rep
+      ORDER BY won_deals DESC, won_mrr DESC
+      LIMIT 30
+    `);
+
+    const lostRows = await dbQuery(`
+      SELECT reasons_for_lost_deal AS reason, COUNT(DISTINCT deal_id) AS cnt
+      FROM shared.revops.silver_deals
+      WHERE client_journey_stage='Closed Lost'
+        AND reasons_for_lost_deal IS NOT NULL AND reasons_for_lost_deal != ''
+        AND deal_type NOT IN ('Renewal','Upsell - Renewal')
+        AND LOWER(COALESCE(deal_name,'')) NOT LIKE '%renewal%'
+      GROUP BY 1 ORDER BY cnt DESC LIMIT 8
+    `);
+
+    const journeyRows = await dbQuery(`
+      SELECT client_journey_stage AS stage, COUNT(DISTINCT deal_id) AS cnt
+      FROM shared.revops.silver_deals
+      WHERE ${whereCreate} AND client_journey_stage IS NOT NULL
+      GROUP BY 1 ORDER BY cnt DESC
+    `);
+
+    const mrrSegRows = await dbQuery(`
+      SELECT CASE WHEN segment='MICRO' THEN 'SME' ELSE segment END AS seg,
+        SUM(mrr) AS total_mrr
+      FROM shared.revops.silver_deals
+      WHERE ${whereClose}
+        AND client_journey_stage='Customer'
+        AND stage_label IN ('Contract Signed','Project Handover','Sales Handover','Sales Churn')
+        AND segment IS NOT NULL
+      GROUP BY 1 ORDER BY total_mrr DESC
+    `);
+
+    const advRows = await dbQuery(`
+      SELECT
+        DATE_TRUNC('month', close_date) AS metric_month,
+        AVG(CASE WHEN client_journey_stage='Customer' AND stage_label IN ('Contract Signed','Project Handover','Sales Handover','Sales Churn') THEN deal_velocity_days END) AS avg_velocity,
+        AVG(CASE WHEN client_journey_stage='Customer' AND stage_label IN ('Contract Signed','Project Handover','Sales Handover','Sales Churn') THEN mrr END) AS avg_mrr
+      FROM shared.revops.silver_deals
+      WHERE ${whereClose} AND close_date IS NOT NULL
+      GROUP BY 1 ORDER BY 1 ASC
+    `);
+
+    // ─── Populate Teams dropdown ───
+    const teamSet = new Set(repRows.map(r=>r.hubspot_team).filter(Boolean));
+    const teamSel = document.getElementById('filterTeam');
+    const curTeam = teamSel.value;
+    teamSel.innerHTML = '<option value="">All Teams</option>';
+    teamSet.forEach(t => { const o=document.createElement('option'); o.value=t; o.textContent=t; if(t===curTeam) o.selected=true; teamSel.appendChild(o); });
+
+    // ─── Compute KPI values ───
+    const kRow = kpiCreateRows[0] || {};
+    const cRow = kpiCloseRows[0] || {};
+    const ql = safe(kRow.ql);
+    const mql = safe(kRow.mql);
+    const oql = safe(kRow.oql);
+    const sql = safe(kRow.sql_count);
+    const salesDq = safe(kRow.sales_dq);
+    const wonDeals = safe(cRow.won_deals);
+    const lostDeals = safe(cRow.lost_deals);
+    const wonMrr = safe(cRow.won_mrr);
+    const efMrr = safe(cRow.ef_mrr);
+    const otp = safe(cRow.otp);
+    const adv = safe(cRow.adv);
+    const ads = wonDeals > 0 ? wonMrr / wonDeals : 0;
+    const winRate = (wonDeals+lostDeals) > 0 ? wonDeals/(wonDeals+lostDeals)*100 : 0;
+    const sqlPct = ql > 0 ? sql/ql*100 : 0;
+    const dqRate = ql > 0 ? salesDq/ql*100 : 0;
+    const leadToWon = ql > 0 ? wonDeals/ql*100 : 0;
+    const pipelineMrr = pipelineRows.reduce((s,r) => s+safe(r.pipeline_mrr), 0);
+
+    const kpiData = { ql, mql, oql, sql, salesDq, wonDeals, lostDeals, wonMrr, efMrr, otp, adv, ads, winRate, sqlPct, dqRate, leadToWon, pipelineMrr };
+
+    // ─── Render all ───
+    renderKPIs(kpiData);
+    renderScorecards(kpiData);
+    renderLeadTrend(leadTrendRows);
+    renderMrrTrend(mrrTrendRows);
+    renderWonLost(wonLostRows);
+    renderDeptSource(deptRows);
+    renderSegment(segRows);
+    renderCombo(wonLostRows);
+    renderPipelineBar(pipelineRows);
+    renderStackedMrr(mrrTrendRows);
+    renderPipelineStacked(pipelineStackedRows);
+    // SQL rate from exec summary
+    const sqlRateRows = Object.values(
+      execRows.reduce((acc,r) => {
+        const m = r.metric_month ? r.metric_month.slice(0,7) : '';
+        if (!acc[m]) acc[m] = { metric_month:m, sql_pct:0, dq_rate:0, cnt:0 };
+        acc[m].sql_pct += safe(r.sql_pct);
+        acc[m].dq_rate += safe(r.dq_rate);
+        acc[m].cnt += 1;
+        return acc;
+      }, {})
+    ).map(r => ({ metric_month:r.metric_month, sql_pct: r.cnt>0?r.sql_pct/r.cnt:0, dq_rate: r.cnt>0?r.dq_rate/r.cnt:0 }))
+     .sort((a,b) => a.metric_month.localeCompare(b.metric_month));
+    renderSqlRate(sqlRateRows);
+    renderLostReasons(lostRows);
+    renderJourneyStage(journeyRows);
+    renderMrrSegment(mrrSegRows);
+    renderAdv(advRows);
+    renderAds(advRows);
+    renderRepTable(repRows);
+    execData = execRows;
+    renderExecTable(execRows, execTab);
+
+    hideLoading();
+  } catch(e) {
+    hideLoading();
+    showError('Failed to load data: ' + e.message);
+    console.error(e);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  setDefaultDates();
+  init();
+});
+</script>
+</body>
+</html>
