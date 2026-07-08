@@ -357,11 +357,12 @@
       "ownerName": "jsayseng",
       "file": "user-dashboards/julius-test107-mrbx1dor.html",
       "url": "https://radar-revops.vercel.app/user-dashboards/julius-test107-mrbx1dor.html",
-      "status": "private",
+      "status": "published",
       "createdAt": "2026-07-08T10:09:13.894Z",
       "updatedAt": "2026-07-08T10:09:13.894Z",
       "requestedAt": null,
-      "publishedAt": null
+      "publishedAt": "2026-07-08T10:12:36.521Z",
+      "access": []
     }
   ]
 }
