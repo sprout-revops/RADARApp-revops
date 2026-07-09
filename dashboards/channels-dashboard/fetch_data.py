@@ -100,13 +100,32 @@ ORDER BY create_date DESC
 """
 
 TARGETS_SQL = f"""
+WITH pipe_targets AS (
+  SELECT
+    metric_month,
+    SUM(CASE WHEN target_type = 'mrr_target'       THEN target_value ELSE 0 END) AS mrr_target,
+    SUM(CASE WHEN target_type = 'won_deals_target' THEN target_value ELSE 0 END) AS won_deals_target
+  FROM shared.revops.gold_targets
+  WHERE pipeline_name = '{PIPELINE}'
+  GROUP BY metric_month
+),
+leads_targets AS (
+  -- QL / leads target lives under target_type='ql_target' with pipeline_name NULL;
+  -- the Channels slice is department_source_clean='CHANNELS'
+  SELECT
+    metric_month,
+    SUM(target_value) AS leads_target
+  FROM shared.revops.gold_targets
+  WHERE target_type = 'ql_target' AND department_source_clean = 'CHANNELS'
+  GROUP BY metric_month
+)
 SELECT
-  metric_month,
-  SUM(CASE WHEN target_type = 'mrr_target'       THEN target_value ELSE 0 END) AS mrr_target,
-  SUM(CASE WHEN target_type = 'won_deals_target' THEN target_value ELSE 0 END) AS won_deals_target
-FROM shared.revops.gold_targets
-WHERE pipeline_name = '{PIPELINE}'
-GROUP BY metric_month
+  COALESCE(p.metric_month, l.metric_month) AS metric_month,
+  COALESCE(p.mrr_target, 0)                AS mrr_target,
+  COALESCE(p.won_deals_target, 0)          AS won_deals_target,
+  l.leads_target                           AS leads_target
+FROM pipe_targets p
+FULL OUTER JOIN leads_targets l ON p.metric_month = l.metric_month
 ORDER BY metric_month DESC
 """
 

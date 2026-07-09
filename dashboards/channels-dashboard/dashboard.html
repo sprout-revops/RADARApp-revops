@@ -646,7 +646,7 @@ select.filter-control option{background:var(--surface2)}
         </div>
       </div>
 
-      <!-- TOP-RIGHT: QL & SQL Trend chart -->
+      <!-- TOP-RIGHT: QL vs Target chart -->
       <div class="chart-card" style="align-self:stretch">
         <div class="chart-header">
           <div class="chart-title">
@@ -655,7 +655,7 @@ select.filter-control option{background:var(--surface2)}
         </div>
         <div class="chart-header" style="margin-top:6px">
           <div class="chart-title">
-            QL &amp; SQL Trend
+            QL vs Target
             <span class="badge">Month-over-Month</span>
           </div>
         </div>
@@ -1656,12 +1656,12 @@ function buildChart(id, config) {
 }
 
 function initCharts() {
-  // QL & SQL MoM Trend — grouped vertical bar
+  // QL vs Target MoM Trend — grouped vertical bar
   buildChart('chart-funnel', {
     type: 'bar',
     data: { labels: [], datasets: [
       { label: 'Qualified Leads (QL)', data: [], backgroundColor: 'rgba(14,165,233,.75)', borderRadius: 3 },
-      { label: 'SQL',                  data: [], backgroundColor: 'rgba(168,85,247,.75)', borderRadius: 3 },
+      { label: 'Leads Target',         data: [], backgroundColor: 'rgba(232,184,109,.75)', borderRadius: 3 },
     ]},
     options: {
       responsive: true, maintainAspectRatio: false,
@@ -1720,8 +1720,15 @@ function updateFunnelTrendChart(data) {
   const ch = S.charts['chart-funnel'];
   const sorted = [...data].sort((a,b) => (a.month||'').localeCompare(b.month||''));
   ch.data.labels = sorted.map(d => d.month);
-  ch.data.datasets[0].data = sorted.map(d => Number(d.ql_count  || 0));
-  ch.data.datasets[1].data = sorted.map(d => Number(d.sql_count || 0));
+  ch.data.datasets[0].data = sorted.map(d => Number(d.ql_count || 0));
+  // Target bars — match each month (YYYY-MM) to its monthly Channels leads target
+  const tgtByMonth = {};
+  (S.allTargets || []).forEach(t => {
+    const m = String(t.metric_month || '').slice(0, 7);
+    const v = +t.leads_target || 0;
+    if (m && v > 0) tgtByMonth[m] = v;
+  });
+  ch.data.datasets[1].data = sorted.map(d => (tgtByMonth[d.month] != null ? tgtByMonth[d.month] : null));
   ch.update();
 }
 

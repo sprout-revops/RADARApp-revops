@@ -5100,7 +5100,9 @@ async function dashEditEntry(id){
   if(typeof diyRenderMetrics==='function') diyRenderMetrics();
   dashCloseModal('mydash');
   if(typeof switchTab==='function') switchTab('diy');   // ensure the DIY Builder tab is active (works from the home page too)
-  if(typeof diyGoStep==='function') diyGoStep(1);
+  // Go to Step 4 (the review/generate step) — that panel contains the preview + Download /
+  // Save / Upload buttons. Step 1 would hide the preview (it lives inside panel 4).
+  if(typeof diyGoStep==='function') diyGoStep(4);
 
   // Load the dashboard's CURRENT html into the preview so the user can Upload an edited file
   // or Save right away WITHOUT spending credits on a Regenerate. Best-effort: if the fetch
