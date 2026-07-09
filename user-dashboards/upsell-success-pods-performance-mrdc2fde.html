@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Upsell | Success Pods Performance</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --bg2: #111111;
+    --bg3: #1a1a1a;
+    --bg4: #222222;
+    --accent: #1DB954;
+    --accent2: #17a349;
+    --accent3: #25e066;
+    --text: #f0f0f0;
+    --text2: #aaaaaa;
+    --text3: #666666;
+    --border: #2a2a2a;
+    --red: #e74c3c;
+    --orange: #f39c12;
+    --blue: #3498db;
+    --purple: #9b59b6;
+    --teal: #1abc9c;
+    --yellow: #f1c40f;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', Arial, sans-serif; min-height: 100vh; }
+
+  /* HEADER */
+  .header { background: linear-gradient(135deg, #0d1f15 0%, #0a0a0a 100%); border-bottom: 1px solid var(--border); padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+  .header-left { display: flex; align-items: center; gap: 16px; }
+  .logo { width: 36px; height: 36px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 18px; color: #000; }
+  .header-title h1 { font-size: 20px; font-weight: 700; color: var(--text); }
+  .header-title p { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .header-right { display: flex; align-items: center; gap: 10px; }
+  .refresh-btn { background: var(--accent); color: #000; border: none; border-radius: 8px; padding: 8px 18px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: background 0.2s; }
+  .refresh-btn:hover { background: var(--accent3); }
+  .refresh-btn:disabled { background: var(--text3); cursor: not-allowed; }
+  .last-updated { font-size: 11px; color: var(--text3); }
+
+  /* LOADING */
+  .loading-overlay { position: fixed; inset: 0; background: rgba(10,10,10,0.92); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; }
+  .loading-overlay.hidden { display: none; }
+  .spinner { width: 48px; height: 48px; border: 4px solid var(--border); border-top: 4px solid var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { color: var(--text2); font-size: 14px; }
+
+  /* ERROR */
+  .error-banner { background: #2d1010; border: 1px solid var(--red); border-radius: 8px; padding: 12px 16px; margin: 16px 24px; color: #ff8080; font-size: 13px; display: none; }
+  .error-banner.visible { display: block; }
+
+  /* FILTERS */
+  .filters-bar { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 12px 24px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .filter-group { display: flex; flex-direction: column; gap: 4px; }
+  .filter-group label { font-size: 10px; color: var(--text3); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .filter-group select, .filter-group input { background: var(--bg3); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 5px 10px; font-size: 12px; outline: none; cursor: pointer; min-width: 130px; }
+  .filter-group select:hover, .filter-group input:hover { border-color: var(--accent); }
+  .filter-divider { width: 1px; height: 40px; background: var(--border); margin: 0 4px; }
+  .apply-filters-btn { background: var(--accent); color: #000; border: none; border-radius: 6px; padding: 7px 16px; font-size: 12px; font-weight: 700; cursor: pointer; align-self: flex-end; transition: background 0.2s; }
+  .apply-filters-btn:hover { background: var(--accent3); }
+
+  /* PODS LEGEND */
+  .pods-section { padding: 16px 24px 0; }
+  .pods-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .pod-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; border-top: 3px solid; }
+  .pod-card:nth-child(1) { border-top-color: var(--accent); }
+  .pod-card:nth-child(2) { border-top-color: var(--blue); }
+  .pod-card:nth-child(3) { border-top-color: var(--orange); }
+  .pod-card:nth-child(4) { border-top-color: var(--purple); }
+  .pod-rep { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+  .pod-role { font-size: 10px; color: var(--text3); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .pod-csms { display: flex; flex-direction: column; gap: 3px; }
+  .csm-chip { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text2); }
+  .csm-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+
+  /* MAIN CONTENT */
+  .main-content { padding: 20px 24px; }
+  .section-title { font-size: 14px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+  .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* KPI CARDS */
+  .kpi-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px; margin-bottom: 24px; }
+  .kpi-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; position: relative; overflow: hidden; transition: border-color 0.2s; }
+  .kpi-card:hover { border-color: var(--accent); }
+  .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--accent); }
+  .kpi-card.red::before { background: var(--red); }
+  .kpi-card.blue::before { background: var(--blue); }
+  .kpi-card.orange::before { background: var(--orange); }
+  .kpi-card.purple::before { background: var(--purple); }
+  .kpi-card.teal::before { background: var(--teal); }
+  .kpi-card.yellow::before { background: var(--yellow); }
+  .kpi-label { font-size: 10px; color: var(--text3); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .kpi-value { font-size: 22px; font-weight: 800; color: var(--text); line-height: 1; margin-bottom: 4px; }
+  .kpi-sub { font-size: 11px; color: var(--text3); }
+  .kpi-icon { position: absolute; top: 14px; right: 14px; font-size: 20px; opacity: 0.15; }
+
+  /* CHART GRID */
+  .chart-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+  .chart-grid-2 { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 24px; }
+  .chart-grid-2b { display: grid; grid-template-columns: 1fr 2fr; gap: 16px; margin-bottom: 24px; }
+  .chart-grid-full { margin-bottom: 24px; }
+  .chart-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+  .chart-card.span-2 { grid-column: span 2; }
+  .chart-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .chart-title { font-size: 13px; font-weight: 700; color: var(--text); }
+  .chart-subtitle { font-size: 11px; color: var(--text3); margin-top: 2px; }
+  .chart-body { position: relative; }
+  canvas { max-width: 100%; }
+
+  /* DATA TABLE */
+  .table-wrapper { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  thead th { background: var(--bg3); color: var(--text2); font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+  tbody tr:hover { background: var(--bg3); }
+  tbody td { padding: 9px 12px; color: var(--text); vertical-align: middle; }
+  tbody td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 700; }
+  .badge-green { background: rgba(29,185,84,0.15); color: var(--accent); }
+  .badge-red { background: rgba(231,76,60,0.15); color: var(--red); }
+  .badge-blue { background: rgba(52,152,219,0.15); color: var(--blue); }
+  .badge-orange { background: rgba(243,156,18,0.15); color: var(--orange); }
+  .badge-purple { background: rgba(155,89,182,0.15); color: var(--purple); }
+
+  /* SCORECARD */
+  .scorecard-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+  .scorecard-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 16px; text-align: center; }
+  .scorecard-rep { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 12px; }
+  .scorecard-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .scorecard-metric { background: var(--bg3); border-radius: 6px; padding: 8px; }
+  .scorecard-metric-label { font-size: 9px; color: var(--text3); font-weight: 600; text-transform: uppercase; margin-bottom: 4px; }
+  .scorecard-metric-value { font-size: 15px; font-weight: 800; color: var(--accent); }
+  .scorecard-metric-value.red { color: var(--red); }
+  .scorecard-metric-value.blue { color: var(--blue); }
+  .scorecard-metric-value.orange { color: var(--orange); }
+
+  /* WIN RATE GAUGE */
+  .gauge-container { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px; }
+  .gauge-value { font-size: 36px; font-weight: 900; color: var(--accent); margin-top: -10px; }
+  .gauge-label { font-size: 11px; color: var(--text3); }
+
+  /* MINI STAT */
+  .mini-stats { display: flex; gap: 12px; flex-wrap: wrap; }
+  .mini-stat { background: var(--bg3); border-radius: 6px; padding: 8px 12px; flex: 1; min-width: 80px; }
+  .mini-stat-label { font-size: 10px; color: var(--text3); margin-bottom: 4px; }
+  .mini-stat-value { font-size: 16px; font-weight: 800; color: var(--text); }
+
+  /* RESPONSIVE */
+  @media (max-width: 1200px) {
+    .kpi-grid { grid-template-columns: repeat(4, 1fr); }
+    .chart-grid-3 { grid-template-columns: repeat(2, 1fr); }
+    .pods-grid { grid-template-columns: repeat(2, 1fr); }
+    .scorecard-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 768px) {
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .chart-grid-3 { grid-template-columns: 1fr; }
+    .chart-grid-2, .chart-grid-2b { grid-template-columns: 1fr; }
+    .pods-grid { grid-template-columns: 1fr 1fr; }
+    .scorecard-grid { grid-template-columns: 1fr; }
+    .filters-bar { flex-direction: column; align-items: flex-start; }
+  }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text3); }
+
+  .no-data { display: flex; align-items: center; justify-content: center; height: 120px; color: var(--text3); font-size: 13px; }
+  .trend-up { color: var(--accent); }
+  .trend-down { color: var(--red); }
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loadingText">Loading dashboard data...</div>
+</div>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-left">
+    <div class="logo">S</div>
+    <div class="header-title">
+      <h1>Upsell | Success Pods Performance</h1>
+      <p>PH Upsell Pipeline · CSM Inbound · Success Pods View</p>
+    </div>
+  </div>
+  <div class="header-right">
+    <span class="last-updated" id="lastUpdated">—</span>
+    <button class="refresh-btn" id="refreshBtn" onclick="init()">
+      <span>↻</span> Refresh
+    </button>
+  </div>
+</div>
+
+<!-- ERROR -->
+<div class="error-banner" id="errorBanner"></div>
+
+<!-- FILTERS -->
+<div class="filters-bar">
+  <div class="filter-group">
+    <label>Month</label>
+    <select id="filterMonth">
+      <option value="">All Months</option>
+    </select>
+  </div>
+  <div class="filter-group">
+    <label>Year</label>
+    <select id="filterYear">
+      <option value="">All Years</option>
+    </select>
+  </div>
+  <div class="filter-divider"></div>
+  <div class="filter-group">
+    <label>Segment</label>
+    <select id="filterSegment">
+      <option value="">All Segments</option>
+      <option value="SME">SME</option>
+      <option value="ENT">ENT</option>
+    </select>
+  </div>
+  <div class="filter-group">
+    <label>Sales Rep</label>
+    <select id="filterRep">
+      <option value="">All Reps</option>
+    </select>
+  </div>
+  <div class="filter-group">
+    <label>CSM Owner</label>
+    <select id="filterCSM">
+      <option value="">All CSMs</option>
+      <option value="France Paredes">France Paredes</option>
+      <option value="Princess Mikhaela Manikan">Princess Mikhaela Manikan</option>
+      <option value="Ma. Rexelle Estacio">Ma. Rexelle Estacio</option>
+      <option value="Jerome Portera">Jerome Portera</option>
+      <option value="Demcy Charles Cachero">Demcy Charles Cachero</option>
+      <option value="Wil Luna">Wil Luna</option>
+      <option value="Lucky Penalosa">Lucky Penalosa</option>
+      <option value="Mikhaela Angela Batara">Mikhaela Angela Batara</option>
+    </select>
+  </div>
+  <div class="filter-group">
+    <label>Stage</label>
+    <select id="filterStage">
+      <option value="">All Stages</option>
+      <option value="Contract Signed">Contract Signed</option>
+      <option value="Project Handover">Project Handover</option>
+      <option value="Sales Churn">Sales Churn</option>
+      <option value="Closed Lost">Closed Lost</option>
+      <option value="Initial Discovery Done">Initial Discovery Done</option>
+      <option value="Solutioning">Solutioning</option>
+      <option value="Commercial Negotiation">Commercial Negotiation</option>
+      <option value="Committed Accounts">Committed Accounts</option>
+    </select>
+  </div>
+  <button class="apply-filters-btn" onclick="applyFilters()">Apply</button>
+</div>
+
+<!-- PODS SECTION -->
+<div class="pods-section">
+  <div style="font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Success Pods Assignment</div>
+  <div class="pods-grid">
+    <div class="pod-card">
+      <div class="pod-rep">Kurt Ang</div>
+      <div class="pod-role">Upsell Rep</div>
+      <div class="pod-csms">
+        <div class="csm-chip"><span class="csm-dot" style="color:var(--accent)"></span>France Paredes</div>
+        <div class="csm-chip"><span class="csm-dot" style="color:var(--accent)"></span>Princess Mikhaela Manikan</div>
+      </div>
+    </div>
+    <div class="pod-card">
+      <div class="pod-rep">Marie Christine Espineda</div>
+      <div class="pod-role">Upsell Rep</div>
+      <div class="pod-csms">
+        <div class="csm-chip"><span class="csm-dot" style="color:var(--blue)"></span>Ma. Rexelle Estacio</div>
+        <div class="csm-chip"><span class="csm-dot" style="color:var(--blue)"></span>Jerome Portera</div>
+      </div>
+    </div>
+    <div class="pod-card">
+      <div class="pod-rep">Ricardo Rigodon</div>
+      <div class="pod-role">Upsell Rep</div>
+      <div class="pod-csms">
+        <div class="csm-chip"><span class="csm-dot" style="color:var(--orange)"></span>Demcy Charles Cachero</div>
+        <div class="csm-chip"><span class="csm-dot" style="color:var(--orange)"></span>Wil Luna</div>
+      </div>
+    </div>
+    <div class="pod-card">
+      <div class="pod-rep">Javier Lopez</div>
+      <div class="pod-role">Upsell Rep</div>
+      <div class="pod-csms">
+        <div class="csm-chip"><span class="csm-dot" style="color:var(--purple)"></span>Lucky Penalosa</div>
+        <div class="csm-chip"><span class="csm-dot" style="color:var(--purple)"></span>Mikhaela Angela Batara</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main-content">
+
+  <!-- KPI CARDS -->
+  <div class="section-title">Overall KPIs</div>
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-label">Won/Closed Rate</div>
+      <div class="kpi-value" id="kpiWinRate">—</div>
+      <div class="kpi-sub">Won ÷ (Won + Lost)</div>
+      <div class="kpi-icon">🏆</div>
+    </div>
+    <div class="kpi-card blue">
+      <div class="kpi-label">Won Deals</div>
+      <div class="kpi-value" id="kpiWonDeals">—</div>
+      <div class="kpi-sub">Contract Signed / PH / SC</div>
+      <div class="kpi-icon">✅</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">MRR</div>
+      <div class="kpi-value" id="kpiMRR">—</div>
+      <div class="kpi-sub">Term ≥ 12 months</div>
+      <div class="kpi-icon">💰</div>
+    </div>
+    <div class="kpi-card teal">
+      <div class="kpi-label">EF MRR</div>
+      <div class="kpi-value" id="kpiEFMRR">—</div>
+      <div class="kpi-sub">ReadyCash / ReadyWage</div>
+      <div class="kpi-icon">⚡</div>
+    </div>
+    <div class="kpi-card orange">
+      <div class="kpi-label">Avg Deal Size</div>
+      <div class="kpi-value" id="kpiADS">—</div>
+      <div class="kpi-sub">MRR ÷ Won Deals</div>
+      <div class="kpi-icon">📊</div>
+    </div>
+    <div class="kpi-card purple">
+      <div class="kpi-label">Pipeline MRR</div>
+      <div class="kpi-value" id="kpiPipelineMRR">—</div>
+      <div class="kpi-sub">Active stages</div>
+      <div class="kpi-icon">🔮</div>
+    </div>
+    <div class="kpi-card red">
+      <div class="kpi-label">Lost Deals</div>
+      <div class="kpi-value" id="kpiLostDeals">—</div>
+      <div class="kpi-sub">Closed Lost</div>
+      <div class="kpi-icon">❌</div>
+    </div>
+  </div>
+
+  <!-- SCORECARD PER REP -->
+  <div class="section-title">Rep Scorecards</div>
+  <div class="scorecard-grid" id="scorecardGrid">
+    <!-- dynamic -->
+  </div>
+
+  <!-- ROW 1: Charts -->
+  <div class="section-title">Performance Overview</div>
+  <div class="chart-grid-3">
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Won vs Lost by Rep</div>
+          <div class="chart-subtitle">Deal count comparison</div>
+        </div>
+      </div>
+      <div class="chart-body"><canvas id="wonLostBar" height="220"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">MRR by Rep</div>
+          <div class="chart-subtitle">Monthly recurring revenue</div>
+        </div>
+      </div>
+      <div class="chart-body"><canvas id="mrrByRepBar" height="220"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Win Rate by Rep</div>
+          <div class="chart-subtitle">% Won of all closed</div>
+        </div>
+      </div>
+      <div class="chart-body"><canvas id="winRateBar" height="220"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ROW 2 -->
+  <div class="chart-grid-2">
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Monthly MRR Trend</div>
+          <div class="chart-subtitle">MRR + EF MRR over time (close_date)</div>
+        </div>
+      </div>
+      <div class="chart-body"><canvas id="mrrTrendLine" height="200"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Pipeline by Stage</div>
+          <div class="chart-subtitle">Active pipeline distribution</div>
+        </div>
+      </div>
+      <div class="chart-body">
+        <canvas id="pipelineDonut" height="200"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROW 3 -->
+  <div class="chart-grid-2b">
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Deal Mix by Segment</div>
+          <div class="chart-subtitle">SME vs ENT distribution</div>
+        </div>
+      </div>
+      <div class="chart-body"><canvas id="segmentDonut" height="200"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Won Deals Trend by Rep</div>
+          <div class="chart-subtitle">Monthly won deals stacked (close_date)</div>
+        </div>
+      </div>
+      <div class="chart-body"><canvas id="wonTrendStacked" height="200"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ROW 4 : CSM Performance -->
+  <div class="section-title">CSM Pod Performance</div>
+  <div class="chart-grid-3">
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">MRR by CSM (company_owner)</div>
+          <div class="chart-subtitle">Contribution per CSM</div>
+        </div>
+      </div>
+      <div class="chart-body"><canvas id="mrrByCSMBar" height="220"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Won Deals by CSM</div>
+          <div class="chart-subtitle">Count of won deals per CSM</div>
+        </div>
+      </div>
+      <div class="chart-body"><canvas id="wonByCSMBar" height="220"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Pipeline MRR by CSM</div>
+          <div class="chart-subtitle">Active pipeline MRR per CSM</div>
+        </div>
+      </div>
+      <div class="chart-body"><canvas id="pipelineByCSMBar" height="220"></canvas></div>
+    </div>
+  </div>
+
+  <!-- COMBO: ADS + Won count -->
+  <div class="chart-grid-2">
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">ADS & Won Deals — Monthly Combo</div>
+          <div class="chart-subtitle">Avg Deal Size (line) vs Won Deals (bars)</div>
+        </div>
+      </div>
+      <div class="chart-body"><canvas id="adsComboChart" height="200"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">EF MRR by Rep</div>
+          <div class="chart-subtitle">ReadyCash / ReadyWage contribution</div>
+        </div>
+      </div>
+      <div class="chart-body"><canvas id="efMrrByRepBar" height="200"></canvas></div>
+    </div>
+  </div>
+
+  <!-- DATA TABLE -->
+  <div class="section-title">Deal Detail Table</div>
+  <div class="chart-card chart-grid-full">
+    <div class="chart-header">
+      <div>
+        <div class="chart-title">All Deals — Rep + CSM View</div>
+        <div class="chart-subtitle">PH Upsell Pipeline · CSM Inbound</div>
+      </div>
+      <div style="font-size:11px;color:var(--text3)" id="tableCount"></div>
+    </div>
+    <div class="table-wrapper">
+      <table id="dealTable">
+        <thead>
+          <tr>
+            <th>Deal Name</th>
+            <th>Sales Rep</th>
+            <th>CSM (Owner)</th>
+            <th>Stage</th>
+            <th>Segment</th>
+            <th>Close Date</th>
+            <th class="num">MRR</th>
+            <th class="num">EF MRR</th>
+            <th class="num">OTP</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="dealTableBody">
+          <tr><td colspan="10" class="no-data">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div><!-- end main-content -->
+
+<script>
+const CONFIG = { host: (localStorage.getItem('radar_db_host')||''), token: (localStorage.getItem('radar_db_token')||''), warehouseId: ((localStorage.getItem('radar_db_path')||'').split('/').pop()) };
+
+async function dbQuery(sql) {
+  const RT = (function(){ try { return localStorage.getItem("radar_id_token") || ""; } catch(e){ return ""; } })();
+  const SHARED = !!RT;
+  const H  = SHARED ? { "x-radar-token": RT, "Content-Type": "application/json" }
+                    : { "x-db-host": CONFIG.host, "x-db-token": CONFIG.token, "Content-Type": "application/json" };
+  const PH = SHARED ? { "x-radar-token": RT } : { "x-db-host": CONFIG.host, "x-db-token": CONFIG.token };
+  const reqBody = { statement: sql, wait_timeout: "0s", on_wait_timeout: "CONTINUE", format: "JSON_ARRAY" };
+  if (!SHARED) reqBody.warehouse_id = CONFIG.warehouseId;
+  const sub = await fetch("https://radar-revops.vercel.app/api/databricks", {
+    method: "POST",
+    headers: H,
+    body: JSON.stringify(reqBody)
+  });
+  const subJson = await sub.json();
+  if (!subJson.statement_id) throw new Error("No statement_id returned: " + JSON.stringify(subJson));
+  for (let i = 0; i < 120; i++) {
+    await new Promise(r => setTimeout(r, 3000));
+    const poll = await fetch("https://radar-revops.vercel.app/api/databricks-poll?id=" + subJson.statement_id, { headers: PH });
+    const p = await poll.json();
+    const state = p && p.status && p.status.state;
+    if (state === "SUCCEEDED") {
+      const cols = (p.manifest && p.manifest.schema && p.manifest.schema.columns || []).map(c => c.name);
+      return (p.result && p.result.data_array || []).map(row => Object.fromEntries(cols.map((c, i) => [c, row[i]])));
+    }
+    if (state === "FAILED") throw new Error("Query failed: " + JSON.stringify(p.status));
+  }
+  throw new Error("Timed out after 6 minutes");
+}
+
+// ─── State ───────────────────────────────────────────────────────────────────
+let allDeals = [], allPipeline = [], allTrend = [], allCSM = [], allEFMRR = [];
+let charts = {};
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+function fmt(v) {
+  const n = parseFloat(v) || 0;
+  if (n >= 1000000) return '₱' + (n/1000000).toFixed(1) + 'M';
+  if (n >= 1000) return '₱' + (n/1000).toFixed(1) + 'K';
+  return '₱' + n.toLocaleString('en-PH', {maximumFractionDigits:0});
+}
+function fmtFull(v) {
+  const n = parseFloat(v) || 0;
+  return '₱' + n.toLocaleString('en-PH', {minimumFractionDigits:0, maximumFractionDigits:0});
+}
+function pct(v) { return (parseFloat(v)||0).toFixed(1) + '%'; }
+function num(v) { return parseInt(v)||0; }
+function safe(v) { return (v === null || v === undefined || v === '') ? '—' : v; }
+function showLoading(msg) {
+  document.getElementById('loadingOverlay').classList.remove('hidden');
+  document.getElementById('loadingText').textContent = msg || 'Loading...';
+  document.getElementById('refreshBtn').disabled = true;
+}
+function hideLoading() {
+  document.getElementById('loadingOverlay').classList.add('hidden');
+  document.getElementById('refreshBtn').disabled = false;
+  document.getElementById('lastUpdated').textContent = 'Updated: ' + new Date().toLocaleString('en-PH', {timeZone:'Asia/Manila',hour12:true,hour:'2-digit',minute:'2-digit',day:'2-digit',month:'short',year:'numeric'});
+}
+function showError(msg) {
+  const b = document.getElementById('errorBanner');
+  b.textContent = msg;
+  b.classList.add('visible');
+  setTimeout(() => b.classList.remove('visible'), 8000);
+}
+function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
+
+const POD_COLORS = {
+  'Kurt Ang': '#1DB954',
+  'Marie Christine Espineda': '#3498db',
+  'Ricardo Rigodon': '#f39c12',
+  'Javier Lopez': '#9b59b6'
+};
+const CSM_TO_REP = {
+  'France Paredes': 'Kurt Ang',
+  'Princess Mikhaela Manikan': 'Kurt Ang',
+  'Ma. Rexelle Estacio': 'Marie Christine Espineda',
+  'Jerome Portera': 'Marie Christine Espineda',
+  'Demcy Charles Cachero': 'Ricardo Rigodon',
+  'Wil Luna': 'Ricardo Rigodon',
+  'Lucky Penalosa': 'Javier Lopez',
+  'Mikhaela Angela Batara': 'Javier Lopez'
+};
+const REP_ORDER = ['Kurt Ang','Marie Christine Espineda','Ricardo Rigodon','Javier Lopez'];
+const CSM_ORDER = ['France Paredes','Princess Mikhaela Manikan','Ma. Rexelle Estacio','Jerome Portera','Demcy Charles Cachero','Wil Luna','Lucky Penalosa','Mikhaela Angela Batara'];
+
+function repColor(rep) { return POD_COLORS[rep] || '#aaa'; }
+function csmColor(csm) { const rep = CSM_TO_REP[csm]; return rep ? repColor(rep) : '#aaa'; }
+
+// ─── Filter helpers ──────────────────────────────────────────────────────────
+function getFilters() {
+  return {
+    month: document.getElementById('filterMonth').value,
+    year: document.getElementById('filterYear').value,
+    segment: document.getElementById('filterSegment').value,
+    rep: document.getElementById('filterRep').value,
+    csm: document.getElementById('filterCSM').value,
+    stage: document.getElementById('filterStage').value
+  };
+}
+
+function filterDeals(rows) {
+  const f = getFilters();
+  return rows.filter(r => {
+    if (f.segment && normSeg(r.segment) !== f.segment) return false;
+    if (f.rep && r.sales_rep !== f.rep) return false;
+    if (f.csm && r.company_owner !== f.csm) return false;
+    if (f.stage && r.stage_label !== f.stage) return false;
+    if (f.month || f.year) {
+      const d = new Date(r.close_date || r.create_date);
+      if (f.month && (d.getMonth()+1) !== parseInt(f.month)) return false;
+      if (f.year && d.getFullYear() !== parseInt(f.year)) return false;
+    }
+    return true;
+  });
+}
+
+function normSeg(s) { if (!s) return ''; return s === 'MICRO' ? 'SME' : s; }
+
+// ─── Build filter dropdowns from data ────────────────────────────────────────
+function populateFilters(rows) {
+  const reps = [...new Set(rows.map(r => r.sales_rep).filter(Boolean))].sort();
+  const repSel = document.getElementById('filterRep');
+  repSel.innerHTML = '<option value="">All Reps</option>';
+  reps.forEach(r => { repSel.innerHTML += `<option value="${r}">${r}</option>`; });
+
+  const years = [...new Set(rows.map(r => { const d = new Date(r.close_date || r.create_date); return d.getFullYear(); }).filter(y => !isNaN(y)))].sort((a,b)=>b-a);
+  const yearSel = document.getElementById('filterYear');
+  yearSel.innerHTML = '<option value="">All Years</option>';
+  years.forEach(y => { yearSel.innerHTML += `<option value="${y}">${y}</option>`; });
+
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const monthSel = document.getElementById('filterMonth');
+  monthSel.innerHTML = '<option value="">All Months</option>';
+  months.forEach((m,i) => { monthSel.innerHTML += `<option value="${i+1}">${m}</option>`; });
+}
+
+// ─── KPI Computation ─────────────────────────────────────────────────────────
+function computeKPIs(rows) {
+  const wonStages = ['contract signed','project handover','sales handover','sales churn'];
+  const wonRows = rows.filter(r => wonStages.includes((r.stage_label||'').toLowerCase()));
+  const lostRows = rows.filter(r => (r.stage_label||'').toLowerCase() === 'closed lost');
+  const totalClosed = wonRows.length + lostRows.length;
+
+  const winRate = totalClosed > 0 ? (wonRows.length / totalClosed * 100) : 0;
+  const wonDeals = wonRows.length;
+  const mrr = wonRows.reduce((s,r) => s + (parseFloat(r.mrr)||0), 0);
+  const efMrr = wonRows.reduce((s,r) => s + (parseFloat(r.ef_mrr)||0), 0);
+  const ads = wonDeals > 0 ? mrr / wonDeals : 0;
+  const pipelineStages = ['initial discovery done','solutioning','commercial negotiation','committed accounts'];
+  const pipelineRows = rows.filter(r => pipelineStages.includes((r.stage_label||'').toLowerCase()));
+  const pipelineMRR = pipelineRows.reduce((s,r) => s + (parseFloat(r.mrr)||0), 0);
+  const lostDeals = lostRows.length;
+
+  return { winRate, wonDeals, mrr, efMrr, ads, pipelineMRR, lostDeals, wonRows, lostRows, pipelineRows };
+}
+
+// ─── Render KPI Cards ────────────────────────────────────────────────────────
+function renderKPIs(kpis) {
+  document.getElementById('kpiWinRate').textContent = pct(kpis.winRate);
+  document.getElementById('kpiWonDeals').textContent = kpis.wonDeals;
+  document.getElementById('kpiMRR').textContent = fmt(kpis.mrr);
+  document.getElementById('kpiEFMRR').textContent = fmt(kpis.efMrr);
+  document.getElementById('kpiADS').textContent = fmt(kpis.ads);
+  document.getElementById('kpiPipelineMRR').textContent = fmt(kpis.pipelineMRR);
+  document.getElementById('kpiLostDeals').textContent = kpis.lostDeals;
+}
+
+// ─── Render Scorecards ───────────────────────────────────────────────────────
+function renderScorecards(rows) {
+  const wonStages = ['contract signed','project handover','sales handover','sales churn'];
+  const grid = document.getElementById('scorecardGrid');
+  grid.innerHTML = '';
+  const repColors = ['var(--accent)','var(--blue)','var(--orange)','var(--purple)'];
+
+  REP_ORDER.forEach((rep, idx) => {
+    const repRows = rows.filter(r => r.sales_rep === rep);
+    const wonRows = repRows.filter(r => wonStages.includes((r.stage_label||'').toLowerCase()));
+    const lostRows = repRows.filter(r => (r.stage_label||'').toLowerCase() === 'closed lost');
+    const totalClosed = wonRows.length + lostRows.length;
+    const winRate = totalClosed > 0 ? (wonRows.length / totalClosed * 100) : 0;
+    const mrr = wonRows.reduce((s,r) => s+(parseFloat(r.mrr)||0),0);
+    const pipelineStages = ['initial discovery done','solutioning','commercial negotiation','committed accounts'];
+    const pipelineMRR = repRows.filter(r => pipelineStages.includes((r.stage_label||'').toLowerCase())).reduce((s,r)=>s+(parseFloat(r.mrr)||0),0);
+
+    const card = document.createElement('div');
+    card.className = 'scorecard-card';
+    card.style.borderTop = `3px solid ${repColors[idx]}`;
+    card.innerHTML = `
+      <div class="scorecard-rep" style="color:${repColors[idx]}">${rep}</div>
+      <div class="scorecard-metrics">
+        <div class="scorecard-metric">
+          <div class="scorecard-metric-label">Won Deals</div>
+          <div class="scorecard-metric-value" style="color:${repColors[idx]}">${wonRows.length}</div>
+        </div>
+        <div class="scorecard-metric">
+          <div class="scorecard-metric-label">Win Rate</div>
+          <div class="scorecard-metric-value" style="color:${repColors[idx]}">${pct(winRate)}</div>
+        </div>
+        <div class="scorecard-metric">
+          <div class="scorecard-metric-label">MRR</div>
+          <div class="scorecard-metric-value blue" style="color:var(--blue)">${fmt(mrr)}</div>
+        </div>
+        <div class="scorecard-metric">
+          <div class="scorecard-metric-label">Pipeline MRR</div>
+          <div class="scorecard-metric-value orange" style="color:var(--orange)">${fmt(pipelineMRR)}</div>
+        </div>
+        <div class="scorecard-metric">
+          <div class="scorecard-metric-label">Lost</div>
+          <div class="scorecard-metric-value red">${lostRows.length}</div>
+        </div>
+        <div class="scorecard-metric">
+          <div class="scorecard-metric-label">Total Deals</div>
+          <div class="scorecard-metric-value" style="color:var(--text)">${repRows.length}</div>
+        </div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+// ─── Won vs Lost Bar ──────────────────────────────────────────���──────────────
+function renderWonLostBar(rows) {
+  destroyChart('wonLostBar');
+  const wonStages = ['contract signed','project handover','sales handover','sales churn'];
+  const reps = REP_ORDER;
+  const wonData = reps.map(rep => rows.filter(r => r.sales_rep===rep && wonStages.includes((r.stage_label||'').toLowerCase())).length);
+  const lostData = reps.map(rep => rows.filter(r => r.sales_rep===rep && (r.stage_label||'').toLowerCase()==='closed lost').length);
+  const ctx = document.getElementById('wonLostBar').getContext('2d');
+  charts['wonLostBar'] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: reps.map(r => r.split(' ')[0]),
+      datasets: [
+        { label: 'Won', data: wonData, backgroundColor: '#1DB954', borderRadius: 4 },
+        { label: 'Lost', data: lostData, backgroundColor: '#e74c3c', borderRadius: 4 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { labels: { color: '#aaa', font: { size: 11 } } }, datalabels: { display: false } },
+      scales: {
+        x: { ticks: { color: '#aaa', font: { size: 11 } }, grid: { color: '#222' } },
+        y: { ticks: { color: '#aaa', font: { size: 11 } }, grid: { color: '#222' }, beginAtZero: true }
+      }
+    }
+  });
+}
+
+// ─── MRR by Rep ──────────────────────────────────────────────────────────────
+function renderMRRByRep(rows) {
+  destroyChart('mrrByRepBar');
+  const wonStages = ['contract signed','project handover','sales handover','sales churn'];
+  const wonRows = rows.filter(r => wonStages.includes((r.stage_label||'').toLowerCase()));
+  const data = REP_ORDER.map(rep => wonRows.filter(r=>r.sales_rep===rep).reduce((s,r)=>s+(parseFloat(r.mrr)||0),0));
+  const ctx = document.getElementById('mrrByRepBar').getContext('2d');
+  charts['mrrByRepBar'] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: REP_ORDER.map(r => r.split(' ')[0]),
+      datasets: [{ label: 'MRR', data, backgroundColor: REP_ORDER.map(r=>repColor(r)), borderRadius: 4 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: {
+        legend: { display: false },
+        datalabels: { color: '#fff', font: { size: 10, weight: 'bold' }, formatter: v => fmt(v), anchor: 'end', align: 'top' }
+      },
+      scales: {
+        x: { ticks: { color: '#aaa', font: { size: 11 } }, grid: { color: '#222' } },
+        y: { ticks: { color: '#aaa', font: { size: 11 }, callback: v => fmt(v) }, grid: { color: '#222' }, beginAtZero: true }
+      }
+    },
+    plugins: [ChartDataLabels]
+  });
+}
+
+// ─── Win Rate Bar ─────────────────────────────────────────────────────────────
+function renderWinRateBar(rows) {
+  destroyChart('winRateBar');
+  const wonStages = ['contract signed','project handover','sales handover','sales churn'];
+  const data = REP_ORDER.map(rep => {
+    const repRows = rows.filter(r => r.sales_rep === rep);
+    const won = repRows.filter(r => wonStages.includes((r.stage_label||'').toLowerCase())).length;
+    const lost = repRows.filter(r => (r.stage_label||'').toLowerCase() === 'closed lost').length;
+    const total = won + lost;
+    return total > 0 ? (won/total*100) : 0;
+  });
+  const ctx = document.getElementById('winRateBar').getContext('2d');
+  charts['winRateBar'] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: REP_ORDER.map(r => r.split(' ')[0]),
+      datasets: [{ label: 'Win Rate %', data, backgroundColor: REP_ORDER.map(r=>repColor(r)), borderRadius: 4 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: {
+        legend: { display: false },
+        datalabels: { color: '#fff', font: { size: 10, weight: 'bold' }, formatter: v => v.toFixed(1)+'%', anchor: 'end', align: 'top' }
+      },
+      scales: {
+        x: { ticks: { color: '#aaa', font: { size: 11 } }, grid: { color: '#222' } },
+        y: { ticks: { color: '#aaa', font: { size: 11 }, callback: v => v+'%' }, grid: { color: '#222' }, beginAtZero: true, max: 100 }
+      }
+    },
+    plugins: [ChartDataLabels]
+  });
+}
+
+// ─── MRR Trend Line ──────────────────────────────────────────────────────────
+function renderMRRTrend(rows) {
+  destroyChart('mrrTrendLine');
+  const wonStages = ['contract signed','project handover','sales handover','sales churn'];
+  const wonRows = rows.filter(r => wonStages.includes((r.stage_label||'').toLowerCase()) && r.close_date);
+  const byMonth = {};
+  wonRows.forEach(r => {
+    const d = new Date(r.close_date);
+    const k = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    if (!byMonth[k]) byMonth[k] = { mrr: 0, efMrr: 0 };
+    byMonth[k].mrr += parseFloat(r.mrr)||0;
+    byMonth[k].efMrr += parseFloat(r.ef_mrr)||0;
+  });
+  const labels = Object.keys(byMonth).sort();
+  const ctx = document.getElementById('mrrTrendLine').getContext('2d');
+  charts['mrrTrendLine'] = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'MRR', data: labels.map(k=>byMonth[k].mrr), borderColor: '#1DB954', backgroundColor: 'rgba(29,185,84,0.1)', fill: true, tension: 0.4, pointRadius: 4, pointBackgroundColor: '#1DB954' },
+        { label: 'EF MRR', data: labels.map(k=>byMonth[k].efMrr), borderColor: '#1abc9c', backgroundColor: 'rgba(26,188,156,0.1)', fill: true, tension: 0.4, pointRadius: 4, pointBackgroundColor: '#1abc9c', borderDash: [5,3] }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { labels: { color: '#aaa', font: { size: 11 } } }, datalabels: { display: false } },
+      scales: {
+        x: { ticks: { color: '#aaa', font: { size: 10 } }, grid: { color: '#222' } },
+        y: { ticks: { color: '#aaa', font: { size: 10 }, callback: v => fmt(v) }, grid: { color: '#222' }, beginAtZero: true }
+      }
+    }
+  });
+}
+
+// ─── Pipeline Donut ──────────────────────────────────────────────────────────
+function renderPipelineDonut(rows) {
+  destroyChart('pipelineDonut');
+  const pipelineStages = ['initial discovery done','solutioning','commercial negotiation','committed accounts'];
+  const pipeRows = rows.filter(r => pipelineStages.includes((r.stage_label||'').toLowerCase()));
+  const byStage = {};
+  pipeRows.forEach(r => {
+    const s = r.stage_label || 'Unknown';
+    byStage[s] = (byStage[s]||0) + (parseFloat(r.mrr)||0);
+  });
+  const stageColors = { 'Initial Discovery Done': '#3498db', 'Solutioning': '#f39c12', 'Commercial Negotiation': '#9b59b6', 'Committed Accounts': '#1DB954' };
+  const labels = Object.keys(byStage);
+  const ctx = document.getElementById('pipelineDonut').getContext('2d');
+  charts['pipelineDonut'] = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{ data: labels.map(l=>byStage[l]), backgroundColor: labels.map(l=>stageColors[l]||'#666'), borderWidth: 2, borderColor: '#111' }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true, cutout: '65%',
+      plugins: {
+        legend: { position: 'bottom', labels: { color: '#aaa', font: { size: 10 }, boxWidth: 12 } },
+        datalabels: { color: '#fff', font: { size: 10, weight: 'bold' }, formatter: (v,ctx) => { const total = ctx.dataset.data.reduce((a,b)=>a+b,0); return total>0 ? (v/total*100).toFixed(0)+'%' : ''; } }
+      }
+    },
+    plugins: [ChartDataLabels]
+  });
+}
+
+// ─── Segment Donut ───────────────────────────────────────────────────────────
+function renderSegmentDonut(rows) {
+  destroyChart('segmentDonut');
+  const wonStages = ['contract signed','project handover','sales handover','sales churn'];
+  const wonRows = rows.filter(r => wonStages.includes((r.stage_label||'').toLowerCase()));
+  const bySeg = {};
+  wonRows.forEach(r => {
+    const s = normSeg(r.segment) || 'Unknown';
+    bySeg[s] = (bySeg[s]||0) + 1;
+  });
+  const labels = Object.keys(bySeg);
+  const ctx = document.getElementById('segmentDonut').getContext('2d');
+  charts['segmentDonut'] = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{ data: labels.map(l=>bySeg[l]), backgroundColor: ['#1DB954','#3498db','#f39c12','#9b59b6'], borderWidth: 2, borderColor: '#111' }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true, cutout: '60%',
+      plugins: {
+        legend: { position: 'bottom', labels: { color: '#aaa', font: { size: 10 }, boxWidth: 12 } },
+        datalabels: { color: '#fff', font: { size: 10, weight: 'bold' }, formatter: (v,ctx) => { const total = ctx.dataset.data.reduce((a,b)=>a+b,0); return total>0 ? (v/total*100).toFixed(0)+'%' : ''; } }
+      }
+    },
+    plugins: [ChartDataLabels]
+  });
+}
+
+// ─── Won Trend Stacked ───────────────────────────────────────────────────────
+function renderWonTrendStacked(rows) {
+  destroyChart('wonTrendStacked');
+  const wonStages = ['contract signed','project handover','sales handover','sales churn'];
+  const wonRows = rows.filter(r => wonStages.includes((r.stage_label||'').toLowerCase()) && r.close_date);
+  const byMonthRep = {};
+  wonRows.forEach(r => {
+    const d = new Date(r.close_date);
+    const k = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    if (!byMonthRep[k]) byMonthRep[k] = {};
+    byMonthRep[k][r.sales_rep] = (byMonthRep[k][r.sales_rep]||0) + 1;
+  });
+  const labels = Object.keys(byMonthRep).sort();
+  const ctx = document.getElementById('wonTrendStacked').getContext('2d');
+  charts['wonTrendStacked'] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: REP_ORDER.map(rep => ({
+        label: rep.split(' ')[0],
+        data: labels.map(k => (byMonthRep[k]&&byMonthRep[k][rep])||0),
+        backgroundColor: repColor(rep), borderRadius: 2
+      }))
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { labels: { color: '#aaa', font: { size: 10 } } }, datalabels: { display: false } },
+      scales: {
+        x: { stacked: true, ticks: { color: '#aaa', font: { size: 10 } }, grid: { color: '#222' } },
+        y: { stacked: true, ticks: { color: '#aaa', font: { size: 10 } }, grid: { color: '#222' }, beginAtZero: true }
+      }
+    }
+  });
+}
+
+// ─── MRR by CSM ──────────────────────────────────────────────────────────────
+function renderMRRByCSM(rows) {
+  destroyChart('mrrByCSMBar');
+  const wonStages = ['contract signed','project handover','sales handover','sales churn'];
+  const wonRows = rows.filter(r => wonStages.includes((r.stage_label||'').toLowerCase()));
+  const data = CSM_ORDER.map(csm => wonRows.filter(r=>r.company_owner===csm).reduce((s,r)=>s+(parseFloat(r.mrr)||0),0));
+  const ctx = document.getElementById('mrrByCSMBar').getContext('2d');
+  charts['mrrByCSMBar'] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: CSM_ORDER.map(c => c.split(' ')[0]),
+      datasets: [{ label: 'MRR', data, backgroundColor: CSM_ORDER.map(c=>csmColor(c)), borderRadius: 4 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { display: false }, datalabels: { display: false } },
+      scales: {
+        x: { ticks: { color: '#aaa', font: { size: 10 } }, grid: { color: '#222' } },
+        y: { ticks: { color: '#aaa', font: { size: 10 }, callback: v => fmt(v) }, grid: { color: '#222' }, beginAtZero: true }
+      }
+    }
+  });
+}
+
+// ─── Won by CSM ──────────────────────────────────────────────────────────────
+function renderWonByCSM(rows) {
+  destroyChart('wonByCSMBar');
+  const wonStages = ['contract signed','project handover','sales handover','sales churn'];
+  const wonRows = rows.filter(r => wonStages.includes((r.stage_label||'').toLowerCase()));
+  const data = CSM_ORDER.map(csm => wonRows.filter(r=>r.company_owner===csm).length);
+  const ctx = document.getElementById('wonByCSMBar').getContext('2d');
+  charts['wonByCSMBar'] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: CSM_ORDER.map(c => c.split(' ')[0]),
+      datasets: [{ label: 'Won Deals', data, backgroundColor: CSM_ORDER.map(c=>csmColor(c)), borderRadius: 4 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: {
+        legend: { display: false },
+        datalabels: { color: '#fff', font: { size: 10, weight: 'bold' }, anchor: 'end', align: 'top', formatter: v => v || '' }
+      },
+      scales: {
+        x: { ticks: { color: '#aaa', font: { size: 10 } }, grid: { color: '#222' } },
+        y: { ticks: { color: '#aaa', font: { size: 10 } }, grid: { color: '#222' }, beginAtZero: true }
+      }
+    },
+    plugins: [ChartDataLabels]
+  });
+}
+
+// ─── Pipeline MRR by CSM ─────────────────────────────────────────────────────
+function renderPipelineByCSM(rows) {
+  destroyChart('pipelineByCSMBar');
+  const pipelineStages = ['initial discovery done','solutioning','commercial negotiation','committed accounts'];
+  const pipeRows = rows.filter(r => pipelineStages.includes((r.stage_label||'').toLowerCase()));
+  const data = CSM_ORDER.map(csm => pipeRows.filter(r=>r.company_owner===csm).reduce((s,r)=>s+(parseFloat(r.mrr)||0),0));
+  const ctx = document.getElementById('pipelineByCSMBar').getContext('2d');
+  charts['pipelineByCSMBar'] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: CSM_ORDER.map(c => c.split(' ')[0]),
+      datasets: [{ label: 'Pipeline MRR', data, backgroundColor: CSM_ORDER.map(c=>csmColor(c)+'99'), borderRadius: 4 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { display: false }, datalabels: { display: false } },
+      scales: {
+        x: { ticks: { color: '#aaa', font: { size: 10 } }, grid: { color: '#222' } },
+        y: { ticks: { color: '#aaa', font: { size: 10 }, callback: v => fmt(v) }, grid: { color: '#222' }, beginAtZero: true }
+      }
+    }
+  });
+}
+
+// ─── ADS Combo ───────────────────────────────────────────────────────────────
+function renderADSCombo(rows) {
+  destroyChart('adsComboChart');
+  const wonStages = ['contract signed','project handover','sales handover','sales churn'];
+  const wonRows = rows.filter(r => wonStages.includes((r.stage_label||'').toLowerCase()) && r.close_date);
+  const byMonth = {};
+  wonRows.forEach(r => {
+    const d = new Date(r.close_date);
+    const k = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    if (!byMonth[k]) byMonth[k] = { count: 0, mrr: 0 };
+    byMonth[k].count++;
+    byMonth[k].mrr += parseFloat(r.mrr)||0;
+  });
+  const labels = Object.keys(byMonth).sort();
+  const ctx = document.getElementById('adsComboChart').getContext('2d');
+  charts['adsComboChart'] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { type: 'bar', label: 'Won Deals', data: labels.map(k=>byMonth[k].count), backgroundColor: 'rgba(29,185,84,0.4)', borderRadius: 4, yAxisID: 'y' },
+        { type: 'line', label: 'Avg Deal Size', data: labels.map(k=>byMonth[k].count>0?byMonth[k].mrr/byMonth[k].count:0), borderColor: '#f39c12', backgroundColor: 'transparent', tension: 0.4, pointRadius: 4, pointBackgroundColor: '#f39c12', yAxisID: 'y1' }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { labels: { color: '#aaa', font: { size: 11 } } }, datalabels: { display: false } },
+      scales: {
+        x: { ticks: { color: '#aaa', font: { size: 10 } }, grid: { color: '#222' } },
+        y: { type: 'linear', position: 'left', ticks: { color: '#aaa', font: { size: 10 } }, grid: { color: '#222' }, beginAtZero: true },
+        y1: { type: 'linear', position: 'right', ticks: { color: '#f39c12', font: { size: 10 }, callback: v => fmt(v) }, grid: { drawOnChartArea: false }, beginAtZero: true }
+      }
+    }
+  });
+}
+
+// ─── EF MRR by Rep ───────────────────────────────────────────────────────────
+function renderEFMRRByRep(rows) {
+  destroyChart('efMrrByRepBar');
+  const wonStages = ['contract signed','project handover','sales handover','sales churn'];
+  const wonRows = rows.filter(r => wonStages.includes((r.stage_label||'').toLowerCase()));
+  const data = REP_ORDER.map(rep => wonRows.filter(r=>r.sales_rep===rep).reduce((s,r)=>s+(parseFloat(r.ef_mrr)||0),0));
+  const ctx = document.getElementById('efMrrByRepBar').getContext('2d');
+  charts['efMrrByRepBar'] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: REP_ORDER.map(r => r.split(' ')[0]),
+      datasets: [{ label: 'EF MRR', data, backgroundColor: '#1abc9c', borderRadius: 4 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { display: false }, datalabels: { display: false } },
+      scales: {
+        x: { ticks: { color: '#aaa', font: { size: 11 } }, grid: { color: '#222' } },
+        y: { ticks: { color: '#aaa', font: { size: 10 }, callback: v => fmt(v) }, grid: { color: '#222' }, beginAtZero: true }
+      }
+    }
+  });
+}
+
+// ─── Deal Table ──────────────────────────────────────────────────────────────
+function renderDealTable(rows) {
+  const tbody = document.getElementById('dealTableBody');
+  const wonStages = ['contract signed','project handover','sales handover','sales churn'];
+  const display = rows.slice(0, 200);
+  document.getElementById('tableCount').textContent = `Showing ${display.length} of ${rows.length} deals`;
+
+  if (!display.length) {
+    tbody.innerHTML = '<tr><td colspan="10" class="no-data">No deals found</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = display.map(r => {
+    const isWon = wonStages.includes((r.stage_label||'').toLowerCase());
+    const isLost = (r.stage_label||'').toLowerCase() === 'closed lost';
+    const statusBadge = isWon
+      ? `<span class="badge badge-green">Won</span>`
+      : isLost ? `<span class="badge badge-red">Lost</span>`
+      : `<span class="badge badge-blue">Pipeline</span>`;
+    const closeDate = r.close_date ? new Date(r.close_date).toLocaleDateString('en-PH',{day:'2-digit',month:'short',year:'numeric'}) : '—';
+    const repColor2 = repColor(r.sales_rep);
+    const csmRep = CSM_TO_REP[r.company_owner];
+    const csmBadgeColor = csmRep ? repColor(csmRep) : '#666';
+    return `<tr>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${safe(r.deal_name)}">${safe(r.deal_name)}</td>
+      <td><span style="color:${repColor2};font-weight:600">${safe(r.sales_rep)}</span></td>
+      <td><span style="color:${csmBadgeColor}">${safe(r.company_owner)}</span></td>
+      <td><span style="font-size:11px">${safe(r.stage_label)}</span></td>
+      <td>${normSeg(r.segment)||'—'}</td>
+      <td style="white-space:nowrap">${closeDate}</td>
+      <td class="num">${r.mrr && parseFloat(r.mrr) > 0 ? fmtFull(r.mrr) : '—'}</td>
+      <td class="num">${r.ef_mrr && parseFloat(r.ef_mrr) > 0 ? fmtFull(r.ef_mrr) : '—'}</td>
+      <td class="num">${r.otp_only && parseFloat(r.otp_only) > 0 ? fmtFull(r.otp_only) : '—'}</td>
+      <td>${statusBadge}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ─── Main render from cached data ─────────────────────────────────────────────
+function renderAll() {
+  const rows = filterDeals(allDeals);
+  const kpis = computeKPIs(rows);
+  renderKPIs(kpis);
+  renderScorecards(rows);
+  renderWonLostBar(rows);
+  renderMRRByRep(rows);
+  renderWinRateBar(rows);
+  renderMRRTrend(rows);
+  renderPipelineDonut(rows);
+  renderSegmentDonut(rows);
+  renderWonTrendStacked(rows);
+  renderMRRByCSM(rows);
+  renderWonByCSM(rows);
+  renderPipelineByCSM(rows);
+  renderADSCombo(rows);
+  renderEFMRRByRep(rows);
+  renderDealTable(rows);
+}
+
+function applyFilters() { renderAll(); }
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+async function init() {
+  showLoading('Loading dashboard data...');
+  document.getElementById('errorBanner').classList.remove('visible');
+
+  try {
+    const sql = `
+      SELECT
+        d.deal_id,
+        d.deal_name,
+        d.pipeline_name,
+        d.deal_type,
+        d.stage_label,
+        d.client_journey_stage,
+        d.create_date,
+        d.close_date,
+        d.projected_close_date,
+        d.amount,
+        d.mrr,
+        d.ef_mrr,
+        d.otp_only,
+        d.implem_fee,
+        d.tcv,
+        d.arr,
+        d.sales_rep,
+        d.co_owner,
+        d.hubspot_team,
+        d.company_id,
+        CASE WHEN d.segment = 'MICRO' THEN 'SME' ELSE d.segment END AS segment,
+        d.department_source_clean,
+        d.original_channel_source,
+        d.qualified_lead,
+        d.reasons_for_lost_deal,
+        d.deal_velocity_days,
+        c.company_owner,
+        c.Company_name,
+        c.Customer_Success_Manager,
+        c.Client_status,
+        c.Service_level_csm
+      FROM shared.revops.silver_deals d
+      LEFT JOIN shared.revops.silver_company c ON CAST(d.company_id AS STRING) = c.Company_id
+      WHERE d.pipeline_name = 'PH Upsell Pipeline'
+        AND d.department_source_clean = 'CSM Inbound'
+        AND d.deal_type NOT IN ('Renewal','Upsell - Renewal')
+        AND LOWER(COALESCE(d.deal_name,'')) NOT LIKE '%renewal%'
+      ORDER BY d.close_date DESC NULLS LAST
+    `;
+
+    document.getElementById('loadingText').textContent = 'Fetching deals from Databricks...';
+    allDeals = await dbQuery(sql);
+
+    populateFilters(allDeals);
+    renderAll();
+    hideLoading();
+
+  } catch(e) {
+    hideLoading();
+    showError('Failed to load data: ' + e.message);
+    console.error(e);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
