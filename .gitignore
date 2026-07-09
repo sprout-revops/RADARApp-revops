@@ -1,3 +1,8 @@
 .claude/
 *.zip
 radar_revops_updated.html
+
+.vercel
+
+# Internal ops docs — keep in the folder, never publish (contains connection endpoints)
+docs/
