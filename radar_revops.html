@@ -4344,15 +4344,27 @@ function diyGenerate(){
     return;
   }
 
-  if (typeof radarTrack === 'function') radarTrack('diy_generate', ((document.getElementById('diy-dash-name')||{}).value || ''));
-  var prompt = diyBuildPrompt();
-  // Append instruction to return only HTML
-  prompt += '\n\nIMPORTANT: Return ONLY the complete HTML file — no explanation, no markdown, no commentary. Start with <!DOCTYPE html> and end with </html>.';
+  var basePrompt = diyBuildPrompt();
 
   var btn = document.getElementById('diy-generate-btn');
   var statusEl = document.getElementById('diy-generate-status');
   var previewWrap = document.getElementById('diy-preview-wrap');
   var iframe = document.getElementById('diy-preview-iframe');
+
+  // No-change guard: if a dashboard is already built and the builder selections haven't
+  // changed since that build, DON'T call the Claude API again (that would cost credits).
+  // Just re-show the existing dashboard and tell the user nothing changed.
+  if(window._diyGeneratedHTML && window._diyLastGenPrompt === basePrompt){
+    if(iframe){ iframe.srcdoc = window._diyGeneratedSave || window._diyGeneratedHTML; }
+    if(previewWrap){ previewWrap.style.display = ''; previewWrap.scrollIntoView({behavior:'smooth', block:'start'}); }
+    if(btn){ btn.disabled = false; btn.textContent = '⚡ Regenerate'; }
+    if(statusEl){ statusEl.style.color = '#1DB954'; statusEl.textContent = '✓ No changes since the last build — nothing to regenerate (no credits used). Adjust a selection to rebuild, or use 💾 Save / ⬇ Download / 📤 Upload edited HTML.'; }
+    return;
+  }
+
+  if (typeof radarTrack === 'function') radarTrack('diy_generate', ((document.getElementById('diy-dash-name')||{}).value || ''));
+  // Append instruction to return only HTML
+  var prompt = basePrompt + '\n\nIMPORTANT: Return ONLY the complete HTML file — no explanation, no markdown, no commentary. Start with <!DOCTYPE html> and end with </html>.';
 
   if(btn){ btn.disabled = true; btn.textContent = '⏳ Generating…'; }
   if(statusEl){ statusEl.style.color = 'rgba(255,255,255,.4)'; statusEl.textContent = 'Connecting to Claude…'; }
@@ -4389,7 +4401,7 @@ function diyGenerate(){
   }).then(function(data){
     clearInterval(spinner);
     var text = (data.content && data.content[0] && data.content[0].text) || '';
-    diyFinalizeGenerated(text, previewWrap, iframe, btn, statusEl);
+    diyFinalizeGenerated(text, previewWrap, iframe, btn, statusEl, basePrompt);
   }).catch(function(err){
     clearInterval(spinner);
     if(btn){ btn.disabled = false; btn.textContent = '⚡ Generate Dashboard'; }
@@ -4397,7 +4409,7 @@ function diyGenerate(){
   });
 }
 
-function diyFinalizeGenerated(rawText, previewWrap, iframe, btn, statusEl){
+function diyFinalizeGenerated(rawText, previewWrap, iframe, btn, statusEl, basePrompt){
   // Extract HTML — strip markdown code fences if present
   var html = rawText.trim();
   var fenceMatch = html.match(/```(?:html)?\s*([\s\S]*?)```/i);
@@ -4436,6 +4448,9 @@ function diyFinalizeGenerated(rawText, previewWrap, iframe, btn, statusEl){
 
   // Store for download
   window._diyGeneratedHTML = html;
+  // Record the selections this build was made from, so an unchanged Regenerate is a no-op
+  // (no credits). Cleared/updated whenever selections change and a new build runs.
+  window._diyLastGenPrompt = basePrompt || null;
 
   // Render the preview from the secret-free copy: placeholders become runtime localStorage
   // lookups and the baked dbQuery prefers the shared x-radar-token credential. The preview
@@ -4859,6 +4874,13 @@ function diyReset(){
   var teamEl=document.getElementById('diy-dash-team'); if(teamEl) teamEl.value='';
   var descEl=document.getElementById('diy-dash-desc'); if(descEl) descEl.value='';
   diyRenderMetrics();
+  // Clear any cached build so the no-change guard starts fresh and the old preview is hidden.
+  window._diyGeneratedHTML = null;
+  window._diyGeneratedSave = null;
+  window._diyLastGenPrompt = null;
+  window._diySavedId = null;
+  var pw = document.getElementById('diy-preview-wrap'); if(pw) pw.style.display = 'none';
+  var gs = document.getElementById('diy-generate-status'); if(gs) gs.textContent = '';
   diyGoStep(1);
 }
 
@@ -5079,6 +5101,24 @@ async function dashEditEntry(id){
   dashCloseModal('mydash');
   if(typeof switchTab==='function') switchTab('diy');   // ensure the DIY Builder tab is active (works from the home page too)
   if(typeof diyGoStep==='function') diyGoStep(1);
+
+  // Load the dashboard's CURRENT html into the preview so the user can Upload an edited file
+  // or Save right away WITHOUT spending credits on a Regenerate. Best-effort: if the fetch
+  // fails we just leave them at Step 1 (same as the old behavior).
+  try {
+    var htmlUrl = e.url || ('https://radar-revops.vercel.app/user-dashboards/' + id + '.html');
+    var r = await fetch(htmlUrl + (htmlUrl.indexOf('?') >= 0 ? '&' : '?') + 'cb=' + Date.now());
+    if(r.ok){
+      var savedHtml = await r.text();
+      window._diyGeneratedHTML = savedHtml;
+      window._diyGeneratedSave = (typeof dashSanitizeForSave === 'function') ? dashSanitizeForSave(savedHtml) : savedHtml;
+      window._diyLastGenPrompt = (typeof diyBuildPrompt === 'function') ? diyBuildPrompt() : null;  // baseline → unchanged Regenerate = no-op
+      var pf = document.getElementById('diy-preview-iframe'); if(pf) pf.srcdoc = savedHtml;
+      var pw = document.getElementById('diy-preview-wrap'); if(pw){ pw.style.display = ''; }
+      var gs = document.getElementById('diy-generate-status');
+      if(gs){ gs.style.color = '#1DB954'; gs.textContent = '✓ Loaded this dashboard (no credits used). 📤 Upload edited HTML then 💾 Save — or change a selection and ⚡ Regenerate.'; }
+    }
+  } catch(e2){ /* leave the user at Step 1, same as before */ }
 }
 
 // Re-render whichever "My Dashboards" surface is showing: the modal (if open) and/or the
