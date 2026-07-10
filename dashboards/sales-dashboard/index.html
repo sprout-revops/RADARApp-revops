@@ -1850,7 +1850,7 @@ function renderRepSummary() {
     setTh('rep-th-won',    'YTD Won');
     setTh('rep-th-att',    'YTD Att%');
     setTh('rep-th-fcst',   'YTD Forecast');
-    setTh('rep-th-actual', 'Mo. Actual');
+    setTh('rep-th-actual', 'YTD Actual');
   } else {
     setTh('rep-th-quota',  `${MON_NAMES[repFilterMon-1]} Quota`);
     setTh('rep-th-won',    `${MON_NAMES[repFilterMon-1]} Won`);
@@ -1877,7 +1877,7 @@ function renderRepSummary() {
     return repAttMap[b[0]] - repAttMap[a[0]];
   });
   let totalYTDTarget = 0, totalYTDWon = 0, totalYTDEF = 0, totalLogos = 0;
-  let totalMoFcst = 0, totalMoWon = 0;
+  let totalMoFcst = 0, totalActual = 0, totalMoTarget = 0;
 
   sortedReps.forEach(([rep, info]) => {
     const { team, color, resigned } = info;
@@ -1910,18 +1910,24 @@ function renderRepSummary() {
       hasFcst = v !== null || moMon === CUR_MON;
     }
     const moWon   = sum(won(inMonth(repDs, 'close_date', CUR_YEAR, moMon)), mrr);
+    // Actual shown in the Actual column matches the period: YTD-to-date when YTD is selected,
+    // the single month otherwise — so it lines up with the Forecast column and FCST Acc%.
+    const dispActual = isYTD ? ytdWon : moWon;
     // Accuracy pairs forecast with the matching actual: YTD won for YTD, the month's won otherwise.
-    const fcstAcc = moFcst > 0 ? pct(isYTD ? ytdWon : moWon, moFcst) : null;
+    const fcstAcc = moFcst > 0 ? pct(dispActual, moFcst) : null;
 
     const attCls = spAttClass(ytdAtt);
     const bg = color+'18', bd = color+'30';
 
-    if (!resigned) totalYTDTarget += ytdTarget;
+    // Totals foot the visible column: include every displayed rep (resigned reps' won/EF/logos
+    // are already counted, so their quota is too — otherwise the Quota column wouldn't add up).
+    totalYTDTarget += ytdTarget;
     totalYTDWon  += ytdWon;
     totalYTDEF   += ytdEF;
     totalLogos   += logos;
     totalMoFcst  += moFcst;
-    totalMoWon   += moWon;
+    totalActual  += dispActual;
+    totalMoTarget += moTarget;
 
     const repNameHtml = resigned
       ? `<span style="color:#6b7280;" title="Resigned">${rep}</span>`
@@ -1942,7 +1948,7 @@ function renderRepSummary() {
       <td><span class="sp-rep-att ${attCls}">${ytdAtt}%</span></td>
       <td style="color:#f87171;">${toGo ? fmt(toGo) : '<span style="color:#4ade80;">✓</span>'}</td>
       ${fcstCell}
-      <td style="color:#4ade80;">${fmt(moWon)}</td>
+      <td style="color:#4ade80;">${fmt(dispActual)}</td>
       ${fcstAccCell}
       <td style="color:#e8b86d;">${ytdEF ? fmt(ytdEF) : '<span style="color:#ffffff20;">—</span>'}</td>
       <td style="color:#ffffff70;">${logos || '<span style="color:#ffffff25;">0</span>'}</td>
@@ -1959,12 +1965,13 @@ function renderRepSummary() {
   const unassEF    = sum(unassYTD, efMrr);
   const unassLogos = unassYTD.length;
   const unasMoWon  = sum(won(inMonth(unassDs, 'close_date', CUR_YEAR, moMon)), mrr);
+  const unasActual = isYTD ? unassWon : unasMoWon;
 
   if (unassWon > 0 || unassLogos > 0) {
     totalYTDWon += unassWon;
     totalYTDEF  += unassEF;
     totalLogos  += unassLogos;
-    totalMoWon  += unasMoWon;
+    totalActual += unasActual;
     html += `<tr style="opacity:0.6;border-top:1px dashed #ffffff12;">
       <td><span style="color:#6b7280;font-style:italic;">Unassigned</span></td>
       <td><span style="color:#6b7280;font-size:10px;">—</span></td>
@@ -1973,7 +1980,7 @@ function renderRepSummary() {
       <td><span style="color:#ffffff25;">—</span></td>
       <td><span style="color:#ffffff20;">—</span></td>
       <td><span style="color:#ffffff20;">—</span></td>
-      <td style="color:#4ade80;">${fmt(unasMoWon)}</td>
+      <td style="color:#4ade80;">${fmt(unasActual)}</td>
       <td><span style="color:#ffffff25;">—</span></td>
       <td style="color:#e8b86d;">${unassEF ? fmt(unassEF) : '<span style="color:#ffffff20;">—</span>'}</td>
       <td style="color:#ffffff70;">${unassLogos || '<span style="color:#ffffff25;">0</span>'}</td>
@@ -1985,11 +1992,11 @@ function renderRepSummary() {
   const totAtt     = pct(totalYTDWon, totalYTDTarget);
   const totAttCls  = spAttClass(totAtt);
   const totToGo    = Math.max(0, totalYTDTarget - totalYTDWon);
-  const totFcstAcc = totalMoFcst > 0 ? pct(totalMoWon, totalMoFcst) : null;
-  const totFcstCell = moMon === CUR_MON
+  const totFcstAcc = totalMoFcst > 0 ? pct(totalActual, totalMoFcst) : null;
+  const totFcstCell = totalMoFcst > 0
     ? `<td style="color:#c4b5fd;font-weight:600;">${fmt(totalMoFcst)}</td>`
     : `<td><span style="color:#ffffff20;">—</span></td>`;
-  const totFcstAccCell = (moMon === CUR_MON && totFcstAcc !== null)
+  const totFcstAccCell = (totalMoFcst > 0 && totFcstAcc !== null)
     ? `<td><span style="color:${attColor(totFcstAcc)};font-weight:600;">${totFcstAcc}%</span></td>`
     : `<td><span style="color:#ffffff25;">—</span></td>`;
 
@@ -2001,11 +2008,11 @@ function renderRepSummary() {
     <td><span class="sp-rep-att ${totAttCls}" style="font-weight:700;">${totAtt}%</span></td>
     <td style="color:#f87171;font-weight:600;">${totToGo ? fmt(totToGo) : '<span style="color:#4ade80;">✓</span>'}</td>
     ${totFcstCell}
-    <td style="color:#4ade80;font-weight:700;">${fmt(totalMoWon)}</td>
+    <td style="color:#4ade80;font-weight:700;">${fmt(totalActual)}</td>
     ${totFcstAccCell}
     <td style="color:#e8b86d;font-weight:600;">${totalYTDEF ? fmt(totalYTDEF) : '<span style="color:#ffffff20;">—</span>'}</td>
     <td style="color:#ffffff70;font-weight:600;">${totalLogos}</td>
-    <td></td>
+    <td style="color:#ffffff40;font-weight:600;">${fmt(totalMoTarget)}</td>
   </tr>`;
 
   $id('sp-rep-body').innerHTML = html || '<tr><td colspan="12" class="empty-row">No data found</td></tr>';
