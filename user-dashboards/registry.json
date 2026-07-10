@@ -415,11 +415,17 @@
       "ownerName": "nduran",
       "file": "user-dashboards/upsell-success-pods-performance-mrdc2fde.html",
       "url": "https://radar-revops.vercel.app/user-dashboards/upsell-success-pods-performance-mrdc2fde.html",
-      "status": "private",
+      "status": "published",
       "createdAt": "2026-07-09T09:57:43.055Z",
       "updatedAt": "2026-07-10T05:19:17.684Z",
       "requestedAt": null,
-      "publishedAt": null
+      "publishedAt": "2026-07-10T05:23:46.876Z",
+      "access": [
+        {
+          "email": "lurbina@sprout.ph",
+          "level": "edit"
+        }
+      ]
     }
   ]
 }
