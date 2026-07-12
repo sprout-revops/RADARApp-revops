@@ -669,7 +669,7 @@ tfoot td:first-child { text-align:left; font-size:10px; font-weight:700; letter-
               <th>Fcst Acc%</th>
               <th>E/F MRR</th>
               <th>Logos</th>
-              <th>Mo. Quota</th>
+              <th id="rep-th-eftgt">YTD EF Target</th>
             </tr></thead>
             <tbody id="sp-rep-body">
               <tr><td colspan="12" class="empty-row">Loading…</td></tr>
@@ -1851,12 +1851,14 @@ function renderRepSummary() {
     setTh('rep-th-att',    'YTD Att%');
     setTh('rep-th-fcst',   'YTD Forecast');
     setTh('rep-th-actual', 'YTD Actual');
+    setTh('rep-th-eftgt',  'YTD EF Target');
   } else {
     setTh('rep-th-quota',  `${MON_NAMES[repFilterMon-1]} Quota`);
     setTh('rep-th-won',    `${MON_NAMES[repFilterMon-1]} Won`);
     setTh('rep-th-att',    'Att%');
     setTh('rep-th-fcst',   `${MON_NAMES[repFilterMon-1]} Forecast`);
     setTh('rep-th-actual', `${MON_NAMES[repFilterMon-1]} Actual`);
+    setTh('rep-th-eftgt',  `${MON_NAMES[repFilterMon-1]} EF Target`);
   }
 
   let html = '';
@@ -1877,11 +1879,13 @@ function renderRepSummary() {
     return repAttMap[b[0]] - repAttMap[a[0]];
   });
   let totalYTDTarget = 0, totalYTDWon = 0, totalYTDEF = 0, totalLogos = 0;
-  let totalMoFcst = 0, totalActual = 0, totalMoTarget = 0;
+  let totalMoFcst = 0, totalActual = 0, totalEFTarget = 0;
 
   sortedReps.forEach(([rep, info]) => {
     const { team, color, resigned } = info;
-    const moTarget  = repMonthTarget(rep, moMon);   // selected month's quota (for Mo. Quota column)
+    // Last column shows the EF (Embedded Finance) MRR target for the period — YTD-to-date when
+    // YTD is selected, the single month otherwise — to sit beside the E/F MRR (actual) column.
+    const efTarget  = isYTD ? repEFYTDTarget(rep, CUR_MON) : ((repEFTargets[rep] || {})[repFilterMon] || 0);
     const ytdTarget = isYTD ? repYTDTarget(rep, CUR_MON) : repMonthTarget(rep, repFilterMon);
 
     const repDs  = spRepDeals(rep);
@@ -1927,7 +1931,7 @@ function renderRepSummary() {
     totalLogos   += logos;
     totalMoFcst  += moFcst;
     totalActual  += dispActual;
-    totalMoTarget += moTarget;
+    totalEFTarget += efTarget;
 
     const repNameHtml = resigned
       ? `<span style="color:#6b7280;" title="Resigned">${rep}</span>`
@@ -1952,7 +1956,7 @@ function renderRepSummary() {
       ${fcstAccCell}
       <td style="color:#e8b86d;">${ytdEF ? fmt(ytdEF) : '<span style="color:#ffffff20;">—</span>'}</td>
       <td style="color:#ffffff70;">${logos || '<span style="color:#ffffff25;">0</span>'}</td>
-      <td style="color:#ffffff40;">${fmt(moTarget)}</td>
+      <td style="color:#ffffff40;">${fmt(efTarget)}</td>
     </tr>`;
   });
 
@@ -2012,7 +2016,7 @@ function renderRepSummary() {
     ${totFcstAccCell}
     <td style="color:#e8b86d;font-weight:600;">${totalYTDEF ? fmt(totalYTDEF) : '<span style="color:#ffffff20;">—</span>'}</td>
     <td style="color:#ffffff70;font-weight:600;">${totalLogos}</td>
-    <td style="color:#ffffff40;font-weight:600;">${fmt(totalMoTarget)}</td>
+    <td style="color:#ffffff40;font-weight:600;">${fmt(totalEFTarget)}</td>
   </tr>`;
 
   $id('sp-rep-body').innerHTML = html || '<tr><td colspan="12" class="empty-row">No data found</td></tr>';
