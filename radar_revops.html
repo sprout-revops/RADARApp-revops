@@ -2470,6 +2470,22 @@ function goToBuilder() {
       <button id="cmode-tables" onclick="connectSetMode('tables')" style="flex:1;padding:12px;border-radius:10px;border:1.5px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:rgba(255,255,255,.6);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;text-align:left">
         🗃️ Connect by Tables<div style="font-size:10px;font-weight:400;color:rgba(255,255,255,.4);margin-top:2px">Connect to specific raw tables + schemas</div>
       </button>
+      <button id="cmode-saved" onclick="connectSetMode('saved')" style="flex:1;padding:12px;border-radius:10px;border:1.5px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:rgba(255,255,255,.6);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;text-align:left">
+        📑 Saved Query<div style="font-size:10px;font-weight:400;color:rgba(255,255,255,.4);margin-top:2px">Reusable RevOps-authored data recipes</div>
+      </button>
+    </div>
+
+    <!-- Step 1 (Saved Query mode): pick a reusable query -->
+    <div class="connect-step" id="connect-step-saved" style="display:none">
+      <div class="connect-step-header"><div class="connect-step-num">1</div><div class="connect-step-title">Pick a saved query</div></div>
+      <div class="connect-step-desc">Reusable queries against <strong>shared.revops</strong>, authored by RevOps — pick one and generate a ready-to-run connection for your app.</div>
+      <select id="connect-saved-select" class="builder-input" style="width:100%;max-width:560px;box-sizing:border-box" onchange="connectRenderSavedDesc()">
+        <option value="">— Loading saved queries… —</option>
+      </select>
+      <div id="connect-saved-desc" style="margin-top:12px;font-size:12px;color:rgba(255,255,255,.6);line-height:1.65"></div>
+      <div id="connect-saved-admin" style="margin-top:16px;display:none">
+        <button class="diy-btn diy-btn-ghost diy-btn-sm" onclick="openSaveQueryModal()">＋ Save a new query (RevOps only)</button>
+      </div>
     </div>
 
     <!-- Step 1: Metrics -->
@@ -5330,6 +5346,25 @@ function dashUploadEdited(input){
     <p class="sm-sub">Sign-ins and feature usage across RADAR. Newest activity first.</p>
     <div id="usage-body" style="margin-top:14px;max-height:64vh;overflow-y:auto"><div style="color:rgba(255,255,255,.5);font-size:13px">Loading…</div></div>
     <div style="margin-top:16px;text-align:right"><button class="diy-btn diy-btn-ghost" onclick="dashCloseModal('usage')">Close</button></div>
+  </div>
+</div>
+
+<!-- Save a Query Modal (RevOps admins) -->
+<div class="submit-modal-overlay" id="savedq-modal-overlay" onclick="if(event.target===this)dashCloseModal('savedq')">
+  <div class="submit-modal" style="max-width:720px">
+    <h2>📑 Save a Query</h2>
+    <p class="sm-sub">Author a reusable query against <strong>shared.revops</strong>. Requesters can then connect to it from <strong>Connect to RADAR → Saved Query</strong>.</p>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-top:12px">
+      <input id="sq-name" class="builder-input" placeholder="Query name (e.g. Implementation Onboarding Table)" style="box-sizing:border-box">
+      <input id="sq-desc" class="builder-input" placeholder="Short description" style="box-sizing:border-box">
+      <input id="sq-tags" class="builder-input" placeholder="Tags, comma-separated (e.g. Implementation, Onboarding)" style="box-sizing:border-box">
+      <textarea id="sq-sql" class="builder-input" placeholder="SELECT ... FROM shared.revops...." style="min-height:220px;font-family:'Courier New',monospace;font-size:12px;box-sizing:border-box"></textarea>
+    </div>
+    <div id="sq-status" style="font-size:12px;margin-top:10px;min-height:16px"></div>
+    <div style="margin-top:14px;display:flex;justify-content:space-between;align-items:center">
+      <button class="diy-btn diy-btn-ghost" onclick="dashCloseModal('savedq')">Cancel</button>
+      <button class="diy-btn diy-btn-sm" style="background:#1DB954;color:#000" onclick="saveQuery()">💾 Save Query</button>
+    </div>
   </div>
 </div>
 
@@ -8975,12 +9010,94 @@ function showConnectError(msg) {
 var _connectMode = 'metrics';
 function connectSetMode(mode) {
   _connectMode = mode;
-  var m = document.getElementById('cmode-metrics'), t = document.getElementById('cmode-tables');
-  var stepM = document.getElementById('connect-step-metrics'), stepT = document.getElementById('connect-step-tables');
+  var m = document.getElementById('cmode-metrics'), t = document.getElementById('cmode-tables'), s = document.getElementById('cmode-saved');
+  var stepM = document.getElementById('connect-step-metrics'), stepT = document.getElementById('connect-step-tables'), stepS = document.getElementById('connect-step-saved');
   function on(b){ if(b){ b.style.borderColor='#1DB954'; b.style.background='rgba(29,185,84,.15)'; b.style.color='#1DB954'; } }
   function off(b){ if(b){ b.style.borderColor='rgba(255,255,255,.12)'; b.style.background='rgba(255,255,255,.04)'; b.style.color='rgba(255,255,255,.6)'; } }
-  if (mode === 'tables') { on(t); off(m); if(stepM) stepM.style.display='none'; if(stepT) stepT.style.display=''; connectRenderTables(); }
-  else { on(m); off(t); if(stepM) stepM.style.display=''; if(stepT) stepT.style.display='none'; }
+  [m,t,s].forEach(off);
+  if(stepM) stepM.style.display='none'; if(stepT) stepT.style.display='none'; if(stepS) stepS.style.display='none';
+  if (mode === 'tables')      { on(t); if(stepT) stepT.style.display=''; connectRenderTables(); }
+  else if (mode === 'saved')  { on(s); if(stepS) stepS.style.display=''; connectLoadSavedQueries(); }
+  else                        { on(m); if(stepM) stepM.style.display=''; }
+}
+
+// ── Saved Queries (Data Recipes) ──
+var _savedQueries = [];
+function connectLoadSavedQueries() {
+  var admin = document.getElementById('connect-saved-admin');
+  if (admin) admin.style.display = (typeof dashIsAdmin === 'function' && dashIsAdmin()) ? '' : 'none';
+  var sel = document.getElementById('connect-saved-select');
+  fetch('https://radar-revops.vercel.app/saved-queries/registry.json?_=' + Date.now())
+    .then(function(r){ return r.ok ? r.json() : { queries: [] }; })
+    .then(function(j){
+      _savedQueries = (j && j.queries) || [];
+      if (!sel) return;
+      if (!_savedQueries.length) { sel.innerHTML = '<option value="">— No saved queries yet —</option>'; connectRenderSavedDesc(); return; }
+      sel.innerHTML = '<option value="">— Select a saved query —</option>' +
+        _savedQueries.map(function(q){ return '<option value="' + q.id + '">' + String(q.name||q.id).replace(/</g,'&lt;') + '</option>'; }).join('');
+      connectRenderSavedDesc();
+    })
+    .catch(function(){ if(sel) sel.innerHTML = '<option value="">— Could not load saved queries —</option>'; });
+}
+function connectRenderSavedDesc() {
+  var sel = document.getElementById('connect-saved-select'), d = document.getElementById('connect-saved-desc');
+  if (!sel || !d) return;
+  function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+  var q = _savedQueries.filter(function(x){ return x.id === sel.value; })[0];
+  if (!q) { d.innerHTML = ''; return; }
+  var tags = (q.tags||[]).map(function(t){ return '<span style="background:rgba(29,185,84,.12);border:1px solid rgba(29,185,84,.3);color:#1DB954;border-radius:999px;padding:2px 9px;font-size:10px;margin-right:5px">' + esc(t) + '</span>'; }).join('');
+  d.innerHTML = (q.description ? esc(q.description) : '') + (tags ? '<div style="margin-top:8px">' + tags + '</div>' : '');
+}
+function generateConnectSavedPrompt() {
+  try {
+    showConnectError('');
+    if (typeof radarTrack === 'function') radarTrack('connect_saved');
+    var sel = document.getElementById('connect-saved-select');
+    var q = _savedQueries.filter(function(x){ return x.id === (sel && sel.value); })[0];
+    if (!q) { showConnectError('⚠ Pick a saved query first.'); return; }
+    var connectionRef = '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nHOW TO CONNECT (Databricks via the RADAR proxy)\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n'
+      + 'Submit the SQL below, then poll for the result:\n'
+      + '  POST https://radar-revops.vercel.app/api/databricks\n'
+      + '  Headers: { "x-db-host": <DATABRICKS_HOST>, "x-db-token": <PAT>, "Content-Type": "application/json" }\n'
+      + '  Body: { "warehouse_id": <WAREHOUSE_ID>, "statement": <SQL below>, "wait_timeout": "0s", "on_wait_timeout": "CONTINUE", "format": "JSON_ARRAY" }\n'
+      + 'The submit returns a statement_id; then poll until done:\n'
+      + '  GET https://radar-revops.vercel.app/api/databricks-poll?id={statement_id}\n'
+      + '  Poll every ~1s until status.state === "SUCCEEDED" (or "FAILED").\n'
+      + 'Parse results: manifest.schema.columns → column names; result.data_array → rows.\n'
+      + 'The token is a read-only Databricks credential issued by RevOps — keep it secret, never hardcode/commit it.';
+    var prompt = "I'm connecting an app to RADAR — Sprout Solutions' RevOps data platform on Databricks (schema: shared.revops).\n\n"
+      + '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSAVED QUERY: ' + q.name + '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n'
+      + (q.description ? q.description + '\n' : '')
+      + '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSQL TO RUN (governed query — do not modify)\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' + q.sql + '\n\n'
+      + connectionRef + '\n\n'
+      + '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nWHAT I NEED YOU TO DO\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nWire the SQL above into my app using the connection pattern shown, and render the returned rows as a table. Add a loading state, a clear error if the connection fails, and a 🔄 Refresh button that re-runs the query.';
+    document.getElementById('connect-prompt-text').textContent = prompt;
+    var out = document.getElementById('connect-output'); out.style.display = 'block';
+    setTimeout(function(){ out.scrollIntoView({ behavior:'smooth', block:'start' }); }, 50);
+  } catch(err) { showConnectError('❌ Error: ' + err.message); }
+}
+function openSaveQueryModal() {
+  var ov = document.getElementById('savedq-modal-overlay'); if(ov) ov.classList.add('open');
+  ['sq-name','sq-desc','sq-tags','sq-sql'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+  var st=document.getElementById('sq-status'); if(st) st.textContent='';
+}
+function saveQuery() {
+  var g=function(id){ return (document.getElementById(id)||{}).value||''; };
+  var name=g('sq-name').trim(), desc=g('sq-desc').trim(), sql=g('sq-sql');
+  var tags=g('sq-tags').split(',').map(function(s){return s.trim();}).filter(Boolean);
+  var st=document.getElementById('sq-status');
+  if(!name || !sql.trim()){ if(st){st.style.color='#f87171';st.textContent='Name and SQL are required.';} return; }
+  if(st){ st.style.color='rgba(255,255,255,.5)'; st.textContent='Saving…'; }
+  fetch('/api/queries', { method:'POST', headers:{'Content-Type':'application/json','x-radar-token':localStorage.getItem('radar_id_token')||''},
+    body: JSON.stringify({ action:'save', name:name, description:desc, tags:tags, sql:sql }) })
+    .then(function(r){ return r.json().then(function(j){ return { ok:r.ok, j:j }; }); })
+    .then(function(res){
+      if(!res.ok){ if(st){st.style.color='#f87171';st.textContent='✗ '+((res.j&&res.j.error)||'Save failed');} return; }
+      if(st){ st.style.color='#1DB954'; st.textContent='✓ Saved.'; }
+      connectLoadSavedQueries();
+      setTimeout(function(){ dashCloseModal('savedq'); }, 800);
+    })
+    .catch(function(e){ if(st){st.style.color='#f87171';st.textContent='✗ '+e.message;} });
 }
 function connectRenderTables() {
   var el = document.getElementById('connect-tables-list');
@@ -9122,6 +9239,7 @@ function generateConnectTablesPrompt() {
 }
 
 function generateConnectPrompt() {
+  if (_connectMode === 'saved') { generateConnectSavedPrompt(); return; }
   if (_connectMode === 'tables') { generateConnectTablesPrompt(); return; }
   try {
   showConnectError('');
