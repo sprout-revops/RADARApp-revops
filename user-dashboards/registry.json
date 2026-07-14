@@ -424,6 +424,26 @@
         {
           "email": "lurbina@sprout.ph",
           "level": "edit"
+        },
+        {
+          "email": "jmchumacera@sprout.ph",
+          "level": "edit"
+        },
+        {
+          "email": "kang@sprout.ph",
+          "level": "view"
+        },
+        {
+          "email": "rrigodon@sprout.ph",
+          "level": "view"
+        },
+        {
+          "email": "mespineda@sprout.ph",
+          "level": "view"
+        },
+        {
+          "email": "jlopez@sprout.ph",
+          "level": "view"
         }
       ]
     }
