@@ -367,7 +367,7 @@
     {
       "id": "upsell-success-pods-performance-mrdc2fde",
       "name": "Upsell | Success Pods Performance",
-      "desc": "Upsell team monitors their performance along with CSMs assigned to each Upsell. company_owner is the CSM and should be added in the dashboard.\n\nKurt Ang - CSM assigned are: France Paredes and Princess Mikhaela Manikan\nMarie Christine Espineda - CSM assigned are: Ma. Rexelle Estacio and Jerome Portera\nRicardo Rigodon  - CSM assigned are: Demcy Charles Cachero and Wil Luna\nJavier Lopez  - CSM assigned are:  Lucky Penalosa and Mikhaela Angela Batara\n\nif possible to see the performance the upsell rep with the csm assigned",
+      "desc": "The Upsell | Success Pods Performance dashboard tracks how each of the 4 upsell reps and their mapped CSM pods are performing across the PH Upsell Pipeline — covering deal counts, MRR, win rates, and leaderboards, all filterable by date, segment, rep, CSM, and stage. It's built to show actual pod contribution and performance at a glance, cross-checking real deal data against official CSM-to-rep assignments rather than relying on static mapping alone.",
       "tags": [],
       "config": {
         "tables": [
