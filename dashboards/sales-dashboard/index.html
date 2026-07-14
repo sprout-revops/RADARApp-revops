@@ -1828,7 +1828,7 @@ function switchMode(mode) {
 const DEPTMIX = {
   sme: {
     title: 'SME', match: d => isNB(d) && (d.segment || '').toUpperCase() === 'SME',
-    targetPipes: ['Sales Pipeline'], targetSeg: 'SME',
+    targetPipes: ['Sales Pipeline'], targetSeg: 'SME', chanFrac: 0.5,
     depts: [
       { key:'MKT Inbound',    tag:'MKT', label:'Marketing Inbound', pct:50, color:'#4ade80' },
       { key:'LDU Outbound',   tag:'LDU', label:'LDU Outbound',      pct:30, color:'#a78bfa' },
@@ -1838,16 +1838,16 @@ const DEPTMIX = {
   },
   ent: {
     title: 'ENT', match: d => isNB(d) && (d.segment || '').toUpperCase() === 'ENT',
-    targetPipes: ['Sales Pipeline'], targetSeg: 'ENT',
+    targetPipes: ['Sales Pipeline'], targetSeg: 'ENT', chanFrac: 0.5,
     depts: [
-      { key:'MKT Inbound',  tag:'MKT', label:'Marketing Inbound', pct:50, color:'#4ade80' },
-      { key:'LDU Outbound', tag:'LDU', label:'LDU Outbound',      pct:50, color:'#a78bfa' },
-      { key:'Channels',     tag:'CHN', label:'Channels',          pct:5,  color:'#fb923c' },
+      { key:'MKT Inbound',  tag:'MKT', label:'Marketing Inbound', pct:47.5, color:'#4ade80' },
+      { key:'LDU Outbound', tag:'LDU', label:'LDU Outbound',      pct:47.5, color:'#a78bfa' },
+      { key:'Channels',     tag:'CHN', label:'Channels',          pct:5,    color:'#fb923c' },
     ],
   },
   ups: {
     title: 'Upsell', match: d => isUS(d),
-    targetPipes: ['PH Upsell Pipeline'], targetSeg: null,
+    targetPipes: ['PH Upsell Pipeline'], targetSeg: null, chanFrac: 0,
     depts: [
       { key:'MKT Inbound',     tag:'MKT', label:'Marketing Inbound', pct:10, color:'#4ade80' },
       { key:'Upsell Outbound', tag:'UPS', label:'Upsell Outbound',   pct:20, color:'#a78bfa' },
@@ -1855,6 +1855,17 @@ const DEPTMIX = {
     ],
   },
 };
+// Separate Channels target bucket (Unified Channel Pipeline). Split between SME/ENT via chanFrac,
+// matching the Segment Summary tab so the two views reconcile.
+function dmChannelsTarget(year, mon) {
+  return allTargets.reduce((s, t) => {
+    const dt = parseDate(t.metric_month);
+    if (!dt || isNaN(dt)) return s;
+    if (dt.getFullYear() !== year || (dt.getMonth() + 1) !== mon) return s;
+    if (t.pipeline_name !== 'Unified Channel Pipeline' || (t.segment || '') !== 'Channels') return s;
+    return s + (parseFloat(t.mrr_target) || 0);
+  }, 0);
+}
 let dmSeg = 'sme';
 
 // 4-band color to match the dashboard legend (<60 / 60–79 / 80–99 / ≥100)
@@ -1866,9 +1877,11 @@ function dmShort(n) {
   return '' + n;
 }
 
-// Monthly total target from Databricks for a segment (departments split it by %)
+// Monthly total target from Databricks for a segment (departments split it by %).
+// Base = segment's pipeline target + its share of the separate Channels bucket (chanFrac),
+// which mirrors the Segment Summary tab exactly.
 function dmTotalTarget(cfg, year, mon) {
-  return allTargets.reduce((s, t) => {
+  const base = allTargets.reduce((s, t) => {
     const dt = parseDate(t.metric_month);
     if (!dt || isNaN(dt)) return s;
     if (dt.getFullYear() !== year || (dt.getMonth() + 1) !== mon) return s;
@@ -1876,6 +1889,7 @@ function dmTotalTarget(cfg, year, mon) {
     if (cfg.targetSeg && (t.segment || '').toUpperCase() !== cfg.targetSeg.toUpperCase()) return s;
     return s + (parseFloat(t.mrr_target) || 0);
   }, 0);
+  return base + (cfg.chanFrac ? cfg.chanFrac * dmChannelsTarget(year, mon) : 0);
 }
 
 function switchDmTab(t) {
