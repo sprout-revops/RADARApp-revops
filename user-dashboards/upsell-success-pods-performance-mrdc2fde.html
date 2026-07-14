@@ -156,6 +156,13 @@
   ::-webkit-scrollbar-thumb:hover { background: var(--text3); }
 
   .no-data { display: flex; align-items: center; justify-content: center; height: 120px; color: var(--text3); font-size: 13px; }
+
+  /* LEADERBOARD LISTS */
+  .lb-list { display: flex; flex-direction: column; gap: 8px; }
+  .lb-row { display: flex; align-items: center; gap: 10px; background: var(--bg3); border-radius: 8px; padding: 9px 12px; }
+  .lb-rank { font-size: 13px; font-weight: 800; width: 22px; text-align: center; flex-shrink: 0; }
+  .lb-rep { font-weight: 700; font-size: 13px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lb-value { font-weight: 800; font-size: 13px; flex-shrink: 0; }
   .trend-up { color: var(--accent); }
   .trend-down { color: var(--red); }
 
@@ -170,19 +177,7 @@
   .pivot-table tbody tr.report-total-row td:first-child { border-right: none; }
 </style>
 </head>
-<body><script data-radar-access-guard>(function(){
-  var ID="upsell-success-pods-performance-mrdc2fde";
-  document.documentElement.style.visibility='hidden';
-  function block(msg){try{document.documentElement.style.visibility='';document.body.innerHTML='<div style="font-family:system-ui,-apple-system,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center;background:#0a0a0a;color:#e2e8f0;padding:24px"><div><div style="font-size:44px">&#128274;</div><div style="font-size:18px;font-weight:700;margin-top:14px">'+msg+'</div></div></div>';}catch(e){}}
-  fetch('https://radar-revops.vercel.app/api/dashboard-access?id='+encodeURIComponent(ID)+'&_='+Date.now(),{headers:{'x-radar-token':localStorage.getItem('radar_id_token')||''}})
-    .then(function(r){return r.json();})
-    .then(function(j){
-      if(j&&j.allowed){document.documentElement.style.visibility='';}
-      else if(j&&j.reason==='signin'){block('Sign in to RADAR with your @sprout.ph account to view this dashboard.');}
-      else{block('You do not have access to this dashboard.<br><span style="font-size:13px;font-weight:400;color:#94a3b8">Ask the owner to share it with your account.</span>');}
-    })
-    .catch(function(){document.documentElement.style.visibility='';});
-})();</script>
+<body>
 
 <!-- LOADING -->
 <div class="loading-overlay" id="loadingOverlay">
@@ -196,7 +191,7 @@
     <div class="logo">S</div>
     <div class="header-title">
       <h1>Upsell | Success Pods Performance</h1>
-      <p>PH Upsell Pipeline · CSM Inbound · Success Pods View</p>
+      <p>Tracks the 4 upsell reps and their assigned CSM pods across the PH Upsell Pipeline — deal counts, MRR, win rates, and leaderboards</p>
     </div>
   </div>
   <div class="header-right">
@@ -230,7 +225,7 @@
     </select>
   </div>
   <div class="filter-group">
-    <label>Sales Rep</label>
+    <label>Upsell Rep</label>
     <select id="filterRep">
       <option value="">All Reps</option>
     </select>
@@ -257,6 +252,7 @@
       <option value="Project Handover">Project Handover</option>
       <option value="Sales Churn">Sales Churn</option>
       <option value="Closed Lost">Closed Lost</option>
+      <option value="Disqualified">Disqualified</option>
       <option value="Initial Discovery Done">Initial Discovery Done</option>
       <option value="Solutioning">Solutioning</option>
       <option value="Commercial Negotiation">Commercial Negotiation</option>
@@ -268,6 +264,38 @@
 
 <!-- MAIN -->
 <div class="main-content">
+
+  <!-- 0. LEADERBOARD (top of dashboard) -->
+  <div class="section-title">Upsell Rep Leaderboard</div>
+  <div class="chart-grid-3" style="margin-bottom:24px;">
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">🔥 Active Deals</div>
+          <div class="chart-subtitle">Most open deals in pipeline</div>
+        </div>
+      </div>
+      <div class="lb-list" id="lbActiveDeals"><!-- dynamic --></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">💰 Theoretical MRR</div>
+          <div class="chart-subtitle">Potential MRR sitting in active pipeline</div>
+        </div>
+      </div>
+      <div class="lb-list" id="lbTheoreticalMRR"><!-- dynamic --></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">🏆 Won Deals</div>
+          <div class="chart-subtitle">Closed-won deal count</div>
+        </div>
+      </div>
+      <div class="lb-list" id="lbWonDeals"><!-- dynamic --></div>
+    </div>
+  </div>
 
   <!-- 1. KPI CARDS -->
   <div class="section-title">Overall KPIs</div>
@@ -317,7 +345,7 @@
   </div>
 
   <!-- 2. SCORECARD PER REP -->
-  <div class="section-title">Rep Scorecards</div>
+  <div class="section-title">Upsell Rep Scorecards</div>
   <div class="scorecard-grid" id="scorecardGrid">
     <!-- dynamic -->
   </div>
@@ -365,45 +393,13 @@
     </div>
   </div>
 
-  <!-- ROW 1: Charts -->
-  <div class="section-title">Performance Overview</div>
-  <div class="chart-grid-3">
-    <div class="chart-card">
-      <div class="chart-header">
-        <div>
-          <div class="chart-title">Won vs Lost by Rep</div>
-          <div class="chart-subtitle">Deal count comparison</div>
-        </div>
-      </div>
-      <div class="chart-body"><canvas id="wonLostBar" height="220"></canvas></div>
-    </div>
-    <div class="chart-card">
-      <div class="chart-header">
-        <div>
-          <div class="chart-title">Won MRR by Rep</div>
-          <div class="chart-subtitle">Monthly recurring revenue</div>
-        </div>
-      </div>
-      <div class="chart-body"><canvas id="mrrByRepBar" height="220"></canvas></div>
-    </div>
-    <div class="chart-card">
-      <div class="chart-header">
-        <div>
-          <div class="chart-title">Win Rate by Rep</div>
-          <div class="chart-subtitle">% Won of all closed</div>
-        </div>
-      </div>
-      <div class="chart-body"><canvas id="winRateBar" height="220"></canvas></div>
-    </div>
-  </div>
-
   <!-- ROW 2 -->
   <div class="chart-grid-2">
     <div class="chart-card">
       <div class="chart-header">
         <div>
-          <div class="chart-title">Monthly MRR Trend</div>
-          <div class="chart-subtitle">MRR + EF MRR over time (close_date)</div>
+          <div class="chart-title">Weekly MRR Trend per Upsell Rep</div>
+          <div class="chart-subtitle">MRR by week (close_date), one line per rep</div>
         </div>
       </div>
       <div class="chart-body"><canvas id="mrrTrendLine" height="110"></canvas></div>
@@ -411,7 +407,7 @@
     <div class="chart-card">
       <div class="chart-header">
         <div>
-          <div class="chart-title">Pipeline by Stage</div>
+          <div class="chart-title">Active Deals per Stage</div>
           <div class="chart-subtitle">Active pipeline distribution</div>
         </div>
       </div>
@@ -458,10 +454,11 @@
         <thead>
           <tr>
             <th>Deal Name</th>
-            <th>Sales Rep</th>
-            <th>CSM (Owner)</th>
+            <th>Upsell Rep</th>
+            <th>CSM</th>
             <th>Stage</th>
             <th>Segment</th>
+            <th>Create Date</th>
             <th>Close Date</th>
             <th class="num">MRR</th>
             <th class="num">EF MRR</th>
@@ -470,7 +467,7 @@
           </tr>
         </thead>
         <tbody id="dealTableBody">
-          <tr><td colspan="10" class="no-data">Loading...</td></tr>
+          <tr><td colspan="11" class="no-data">Loading...</td></tr>
         </tbody>
       </table>
     </div>
@@ -485,8 +482,8 @@ async function dbQuery(sql) {
   const RT = (function(){ try { return localStorage.getItem("radar_id_token") || ""; } catch(e){ return ""; } })();
   const SHARED = !!RT;
   const H  = SHARED ? { "x-radar-token": RT, "Content-Type": "application/json" }
-                    : { "x-db-host": CONFIG.host, "x-db-token": CONFIG.token, 'x-radar-token': (localStorage.getItem('radar_id_token')||''), "Content-Type": "application/json" };
-  const PH = SHARED ? { "x-radar-token": RT } : { "x-db-host": CONFIG.host, "x-db-token": CONFIG.token , 'x-radar-token': (localStorage.getItem('radar_id_token')||'')};
+                    : { "x-db-host": CONFIG.host, "x-db-token": CONFIG.token, "Content-Type": "application/json" };
+  const PH = SHARED ? { "x-radar-token": RT } : { "x-db-host": CONFIG.host, "x-db-token": CONFIG.token };
   const reqBody = { statement: sql, wait_timeout: "0s", on_wait_timeout: "CONTINUE", format: "JSON_ARRAY" };
   if (!SHARED) reqBody.warehouse_id = CONFIG.warehouseId;
   const sub = await fetch("https://radar-revops.vercel.app/api/databricks", {
@@ -598,6 +595,7 @@ function filterDeals(rows) {
   const f = getFilters();
   return rows.filter(r => {
     if (!REP_ORDER.includes(r.sales_rep)) return false;
+    if (CSM_TO_REP[r.company_owner] !== r.sales_rep) return false;
     if (f.segment && normSeg(r.segment) !== f.segment) return false;
     if (f.rep && r.sales_rep !== f.rep) return false;
     if (f.csm && r.company_owner !== f.csm) return false;
@@ -666,6 +664,7 @@ function renderPodsSection(rows) {
 
   const wonStages = ['contract signed','project handover','sales handover','sales churn'];
   const lostStages = ['closed lost'];
+  const dqStages = ['disqualified','dq'];
 
   if (!rows.length) {
     thead.innerHTML = '';
@@ -683,12 +682,13 @@ function renderPodsSection(rows) {
       <th style="text-align:right">Active</th>
       <th style="text-align:right">Won</th>
       <th style="text-align:right">Lost</th>
+      <th style="text-align:right">DQ</th>
       <th style="text-align:right">Total</th>
     </tr>
   `;
 
   let bodyHtml = '';
-  let gActive = 0, gWon = 0, gLost = 0, gTotal = 0;
+  let gActive = 0, gWon = 0, gLost = 0, gDQ = 0, gTotal = 0;
 
   allOwners.forEach(owner => {
     const color = repColor(owner);
@@ -697,9 +697,10 @@ function renderPodsSection(rows) {
     ownerRows.forEach(r => {
       const csm = r.company_owner;
       if (!csm) return;
-      if (!csmCounts[csm]) csmCounts[csm] = { active: 0, won: 0, lost: 0, total: 0 };
+      if (!csmCounts[csm]) csmCounts[csm] = { active: 0, won: 0, lost: 0, dq: 0, total: 0 };
       const stage = (r.stage_label || '').toLowerCase();
       if (wonStages.includes(stage)) csmCounts[csm].won++;
+      else if (dqStages.includes(stage)) csmCounts[csm].dq++;
       else if (lostStages.includes(stage)) csmCounts[csm].lost++;
       else csmCounts[csm].active++;
       csmCounts[csm].total++;
@@ -708,7 +709,7 @@ function renderPodsSection(rows) {
     if (!csmsPresent.length) {
       bodyHtml += `<tr class="owner-group-end">
         <td style="font-weight:700;color:${color}">${safe(owner)}</td>
-        <td colspan="5" class="no-data" style="height:auto;padding:9px 12px;justify-content:flex-start">No mapped CSM deals in current filter</td>
+        <td></td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num"></td>
       </tr>`;
       return;
     }
@@ -716,7 +717,7 @@ function renderPodsSection(rows) {
 
     csms.forEach((csm, idx) => {
       const c = csmCounts[csm];
-      gActive += c.active; gWon += c.won; gLost += c.lost; gTotal += c.total;
+      gActive += c.active; gWon += c.won; gLost += c.lost; gDQ += c.dq; gTotal += c.total;
       bodyHtml += `<tr class="${idx === csms.length-1 ? 'owner-group-end' : ''}">`;
       if (idx === 0) {
         bodyHtml += `<td rowspan="${csms.length}" style="font-weight:700;color:${color};vertical-align:top">${safe(owner)}</td>`;
@@ -725,6 +726,7 @@ function renderPodsSection(rows) {
       bodyHtml += `<td class="num">${c.active}</td>`;
       bodyHtml += `<td class="num">${c.won}</td>`;
       bodyHtml += `<td class="num">${c.lost}</td>`;
+      bodyHtml += `<td class="num">${c.dq}</td>`;
       bodyHtml += `<td class="num" style="font-weight:700;color:var(--accent)">${c.total}</td>`;
       bodyHtml += `</tr>`;
     });
@@ -735,15 +737,58 @@ function renderPodsSection(rows) {
     <td class="num" style="font-weight:800">${gActive}</td>
     <td class="num" style="font-weight:800">${gWon}</td>
     <td class="num" style="font-weight:800">${gLost}</td>
+    <td class="num" style="font-weight:800">${gDQ}</td>
     <td class="num" style="font-weight:800;color:var(--accent)">${gTotal}</td>
   </tr>`;
 
   tbody.innerHTML = bodyHtml;
 }
 
+// ─── Upsell Rep Leaderboard ───────────────────────────────────────────────────
+function renderLeaderboard(rows) {
+  const elActive = document.getElementById('lbActiveDeals');
+  const elMRR = document.getElementById('lbTheoreticalMRR');
+  const elWon = document.getElementById('lbWonDeals');
+  if (!elActive || !elMRR || !elWon) return;
+
+  const wonStages = ['contract signed','project handover','sales handover','sales churn'];
+  const lostStages = ['closed lost'];
+
+  const stats = REP_ORDER.map(rep => {
+    const repRows = rows.filter(r => r.sales_rep === rep);
+    const activeRows = repRows.filter(r => {
+      const s = (r.stage_label||'').toLowerCase();
+      return !wonStages.includes(s) && !lostStages.includes(s);
+    });
+    const wonRows = repRows.filter(r => wonStages.includes((r.stage_label||'').toLowerCase()));
+    const theoreticalMRR = activeRows.reduce((s,r) => s+(parseFloat(r.mrr)||0), 0);
+    return { rep, activeDeals: activeRows.length, theoreticalMRR, wonDeals: wonRows.length };
+  });
+
+  const medals = ['🥇','🥈','🥉'];
+
+  function renderList(el, key, formatter, valueColor) {
+    const sorted = [...stats].sort((a,b) => b[key] - a[key]);
+    el.innerHTML = sorted.map((s, i) => {
+      const color = repColor(s.rep);
+      const rankLabel = s[key] === 0 ? '—' : (medals[i] || `#${i+1}`);
+      return `<div class="lb-row">
+        <div class="lb-rank">${rankLabel}</div>
+        <div class="lb-rep" style="color:${color}">${safe(s.rep)}</div>
+        <div class="lb-value" style="color:${valueColor}">${formatter(s[key])}</div>
+      </div>`;
+    }).join('');
+  }
+
+  renderList(elActive, 'activeDeals', v => v, 'var(--blue)');
+  renderList(elMRR, 'theoreticalMRR', v => fmt(v), 'var(--orange)');
+  renderList(elWon, 'wonDeals', v => v, 'var(--accent)');
+}
+
 // ─── Render Scorecards ───────────────────────────────────────────────────────
 function renderScorecards(rows) {
   const wonStages = ['contract signed','project handover','sales handover','sales churn'];
+  const dqStages = ['disqualified','dq'];
   const grid = document.getElementById('scorecardGrid');
   grid.innerHTML = '';
   const repColors = ['var(--accent)','var(--blue)','var(--orange)','var(--purple)'];
@@ -752,49 +797,55 @@ function renderScorecards(rows) {
     const repRows = rows.filter(r => r.sales_rep === rep);
     const wonRows = repRows.filter(r => wonStages.includes((r.stage_label||'').toLowerCase()));
     const lostRows = repRows.filter(r => (r.stage_label||'').toLowerCase() === 'closed lost');
+    const dqRows = repRows.filter(r => dqStages.includes((r.stage_label||'').toLowerCase()));
     const activeRows = repRows.filter(r => {
       const s = (r.stage_label||'').toLowerCase();
-      return !wonStages.includes(s) && s !== 'closed lost';
+      return !wonStages.includes(s) && s !== 'closed lost' && !dqStages.includes(s);
     });
     const totalClosed = wonRows.length + lostRows.length;
     const winRate = totalClosed > 0 ? (wonRows.length / totalClosed * 100) : 0;
     const mrr = wonRows.reduce((s,r) => s+(parseFloat(r.mrr)||0),0);
     const pipelineStages = ['initial discovery done','solutioning','commercial negotiation','committed accounts'];
     const pipelineMRR = repRows.filter(r => pipelineStages.includes((r.stage_label||'').toLowerCase())).reduce((s,r)=>s+(parseFloat(r.mrr)||0),0);
+    const color = repColors[idx];
 
     const card = document.createElement('div');
     card.className = 'scorecard-card';
-    card.style.borderTop = `3px solid ${repColors[idx]}`;
+    card.style.borderTop = `3px solid ${color}`;
     card.innerHTML = `
-      <div class="scorecard-rep" style="color:${repColors[idx]}">${rep}</div>
+      <div class="scorecard-rep" style="color:${color}">${rep}</div>
       <div class="scorecard-metrics">
         <div class="scorecard-metric">
           <div class="scorecard-metric-label">Active Deals</div>
-          <div class="scorecard-metric-value" style="color:var(--blue)">${activeRows.length}</div>
+          <div class="scorecard-metric-value" style="color:${color}">${activeRows.length}</div>
         </div>
         <div class="scorecard-metric">
           <div class="scorecard-metric-label">Won Deals</div>
-          <div class="scorecard-metric-value" style="color:${repColors[idx]}">${wonRows.length}</div>
+          <div class="scorecard-metric-value" style="color:${color}">${wonRows.length}</div>
         </div>
         <div class="scorecard-metric">
           <div class="scorecard-metric-label">Win Rate</div>
-          <div class="scorecard-metric-value" style="color:${repColors[idx]}">${pct(winRate)}</div>
+          <div class="scorecard-metric-value" style="color:${color}">${pct(winRate)}</div>
         </div>
         <div class="scorecard-metric">
           <div class="scorecard-metric-label">MRR</div>
-          <div class="scorecard-metric-value blue" style="color:var(--blue)">${fmt(mrr)}</div>
+          <div class="scorecard-metric-value" style="color:${color}">${fmt(mrr)}</div>
         </div>
         <div class="scorecard-metric">
           <div class="scorecard-metric-label">Pipeline MRR</div>
-          <div class="scorecard-metric-value orange" style="color:var(--orange)">${fmt(pipelineMRR)}</div>
+          <div class="scorecard-metric-value" style="color:${color}">${fmt(pipelineMRR)}</div>
         </div>
         <div class="scorecard-metric">
           <div class="scorecard-metric-label">Lost</div>
-          <div class="scorecard-metric-value red">${lostRows.length}</div>
+          <div class="scorecard-metric-value" style="color:${color}">${lostRows.length}</div>
         </div>
-        <div class="scorecard-metric span-2">
+        <div class="scorecard-metric">
+          <div class="scorecard-metric-label">DQ Deals</div>
+          <div class="scorecard-metric-value" style="color:${color}">${dqRows.length}</div>
+        </div>
+        <div class="scorecard-metric">
           <div class="scorecard-metric-label">Total Deals</div>
-          <div class="scorecard-metric-value" style="color:var(--text)">${repRows.length}</div>
+          <div class="scorecard-metric-value" style="color:${color}">${repRows.length}</div>
         </div>
       </div>
     `;
@@ -802,122 +853,49 @@ function renderScorecards(rows) {
   });
 }
 
-// ─── Won vs Lost Bar ──────────────────────────────────────────���──────────────
-function renderWonLostBar(rows) {
-  destroyChart('wonLostBar');
-  const wonStages = ['contract signed','project handover','sales handover','sales churn'];
-  const stats = REP_ORDER.map(rep => ({
-    rep,
-    won: rows.filter(r => r.sales_rep===rep && wonStages.includes((r.stage_label||'').toLowerCase())).length,
-    lost: rows.filter(r => r.sales_rep===rep && (r.stage_label||'').toLowerCase()==='closed lost').length
-  })).sort((a,b) => b.won - a.won);
-  const ctx = document.getElementById('wonLostBar').getContext('2d');
-  charts['wonLostBar'] = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: stats.map(s => s.rep.split(' ')[0]),
-      datasets: [
-        { label: 'Won', data: stats.map(s=>s.won), backgroundColor: '#1DB954', borderRadius: 4 },
-        { label: 'Lost', data: stats.map(s=>s.lost), backgroundColor: '#e74c3c', borderRadius: 4 }
-      ]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: true,
-      plugins: { legend: { labels: { color: '#aaa', font: { size: 11 } } }, datalabels: { display: false } },
-      scales: {
-        x: { ticks: { color: '#aaa', font: { size: 11 } }, grid: { color: '#222' } },
-        y: { ticks: { color: '#aaa', font: { size: 11 } }, grid: { color: '#222' }, beginAtZero: true }
-      }
-    }
-  });
+
+// ─── Weekly MRR Trend per Upsell Rep ─────────────────────────────────────────
+function getWeekStart(dateStr) {
+  const d = new Date(dateStr);
+  const day = d.getDay();
+  const diff = (day === 0 ? -6 : 1) - day; // shift to Monday
+  d.setDate(d.getDate() + diff);
+  d.setHours(0,0,0,0);
+  return d;
 }
 
-// ─── MRR by Rep ──────────────────────────────────────────────────────────────
-function renderMRRByRep(rows) {
-  destroyChart('mrrByRepBar');
-  const wonStages = ['contract signed','project handover','sales handover','sales churn'];
-  const wonRows = rows.filter(r => wonStages.includes((r.stage_label||'').toLowerCase()));
-  const stats = REP_ORDER.map(rep => ({ rep, mrr: wonRows.filter(r=>r.sales_rep===rep).reduce((s,r)=>s+(parseFloat(r.mrr)||0),0) }))
-    .sort((a,b) => b.mrr - a.mrr);
-  const ctx = document.getElementById('mrrByRepBar').getContext('2d');
-  charts['mrrByRepBar'] = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: stats.map(s => s.rep.split(' ')[0]),
-      datasets: [{ label: 'MRR', data: stats.map(s=>s.mrr), backgroundColor: stats.map(s=>repColor(s.rep)), borderRadius: 4 }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: true,
-      plugins: {
-        legend: { display: false },
-        datalabels: { color: '#fff', font: { size: 10, weight: 'bold' }, formatter: v => fmt(v), anchor: 'end', align: 'top' }
-      },
-      scales: {
-        x: { ticks: { color: '#aaa', font: { size: 11 } }, grid: { color: '#222' } },
-        y: { ticks: { color: '#aaa', font: { size: 11 }, callback: v => fmt(v) }, grid: { color: '#222' }, beginAtZero: true }
-      }
-    },
-    plugins: [ChartDataLabels]
-  });
-}
-
-// ─── Win Rate Bar ─────────────────────────────────────────────────────────────
-function renderWinRateBar(rows) {
-  destroyChart('winRateBar');
-  const wonStages = ['contract signed','project handover','sales handover','sales churn'];
-  const stats = REP_ORDER.map(rep => {
-    const repRows = rows.filter(r => r.sales_rep === rep);
-    const won = repRows.filter(r => wonStages.includes((r.stage_label||'').toLowerCase())).length;
-    const lost = repRows.filter(r => (r.stage_label||'').toLowerCase() === 'closed lost').length;
-    const total = won + lost;
-    return { rep, rate: total > 0 ? (won/total*100) : 0 };
-  }).sort((a,b) => b.rate - a.rate);
-  const ctx = document.getElementById('winRateBar').getContext('2d');
-  charts['winRateBar'] = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: stats.map(s => s.rep.split(' ')[0]),
-      datasets: [{ label: 'Win Rate %', data: stats.map(s=>s.rate), backgroundColor: stats.map(s=>repColor(s.rep)), borderRadius: 4 }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: true,
-      plugins: {
-        legend: { display: false },
-        datalabels: { color: '#fff', font: { size: 10, weight: 'bold' }, formatter: v => v.toFixed(1)+'%', anchor: 'end', align: 'top' }
-      },
-      scales: {
-        x: { ticks: { color: '#aaa', font: { size: 11 } }, grid: { color: '#222' } },
-        y: { ticks: { color: '#aaa', font: { size: 11 }, callback: v => v+'%' }, grid: { color: '#222' }, beginAtZero: true, max: 100 }
-      }
-    },
-    plugins: [ChartDataLabels]
-  });
-}
-
-// ─── MRR Trend Line ──────────────────────────────────────────────────────────
 function renderMRRTrend(rows) {
   destroyChart('mrrTrendLine');
   const wonStages = ['contract signed','project handover','sales handover','sales churn'];
   const wonRows = rows.filter(r => wonStages.includes((r.stage_label||'').toLowerCase()) && r.close_date);
-  const byMonth = {};
+
+  // Bucket by ISO week (Monday start), then by rep
+  const byWeek = {};
   wonRows.forEach(r => {
-    const d = new Date(r.close_date);
-    const k = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-    if (!byMonth[k]) byMonth[k] = { mrr: 0, efMrr: 0 };
-    byMonth[k].mrr += parseFloat(r.mrr)||0;
-    byMonth[k].efMrr += parseFloat(r.ef_mrr)||0;
+    const wk = getWeekStart(r.close_date);
+    const key = wk.toISOString().slice(0,10);
+    if (!byWeek[key]) byWeek[key] = {};
+    byWeek[key][r.sales_rep] = (byWeek[key][r.sales_rep] || 0) + (parseFloat(r.mrr)||0);
   });
-  const labels = Object.keys(byMonth).sort();
+
+  const labels = Object.keys(byWeek).sort();
+  const labelsDisplay = labels.map(k => new Date(k).toLocaleDateString('en-PH',{month:'short',day:'2-digit'}));
+
+  const datasets = REP_ORDER.map(rep => ({
+    label: rep.split(' ')[0],
+    data: labels.map(k => byWeek[k][rep] || 0),
+    borderColor: repColor(rep),
+    backgroundColor: repColor(rep) + '22',
+    fill: false,
+    tension: 0.35,
+    pointRadius: 3,
+    pointBackgroundColor: repColor(rep)
+  }));
+
   const ctx = document.getElementById('mrrTrendLine').getContext('2d');
   charts['mrrTrendLine'] = new Chart(ctx, {
     type: 'line',
-    data: {
-      labels,
-      datasets: [
-        { label: 'MRR', data: labels.map(k=>byMonth[k].mrr), borderColor: '#1DB954', backgroundColor: 'rgba(29,185,84,0.1)', fill: true, tension: 0.4, pointRadius: 4, pointBackgroundColor: '#1DB954' },
-        { label: 'EF MRR', data: labels.map(k=>byMonth[k].efMrr), borderColor: '#1abc9c', backgroundColor: 'rgba(26,188,156,0.1)', fill: true, tension: 0.4, pointRadius: 4, pointBackgroundColor: '#1abc9c', borderDash: [5,3] }
-      ]
-    },
+    data: { labels: labelsDisplay, datasets },
     options: {
       responsive: true, maintainAspectRatio: true,
       plugins: { legend: { labels: { color: '#aaa', font: { size: 11 } } }, datalabels: { display: false } },
@@ -1058,8 +1036,10 @@ function renderADSCombo(rows) {
     data: {
       labels,
       datasets: [
-        { type: 'bar', label: 'Won Deals', data: labels.map(k=>byMonth[k].count), backgroundColor: 'rgba(29,185,84,0.4)', borderRadius: 4, yAxisID: 'y' },
-        { type: 'line', label: 'Avg Deal Size', data: labels.map(k=>byMonth[k].count>0?byMonth[k].mrr/byMonth[k].count:0), borderColor: '#f39c12', backgroundColor: 'transparent', tension: 0.4, pointRadius: 4, pointBackgroundColor: '#f39c12', yAxisID: 'y1' }
+        { type: 'bar', label: 'Won Deals', data: labels.map(k=>byMonth[k].count), backgroundColor: 'rgba(29,185,84,0.4)', borderRadius: 4, yAxisID: 'y',
+          datalabels: { display: true, color: '#1DB954', font: { size: 10, weight: 'bold' }, anchor: 'end', align: 'top', formatter: v => v || '' } },
+        { type: 'line', label: 'Avg Deal Size', data: labels.map(k=>byMonth[k].count>0?byMonth[k].mrr/byMonth[k].count:0), borderColor: '#f39c12', backgroundColor: 'transparent', tension: 0.4, pointRadius: 4, pointBackgroundColor: '#f39c12', yAxisID: 'y1',
+          datalabels: { display: true, color: '#f39c12', font: { size: 10, weight: 'bold' }, anchor: 'end', align: 'bottom', formatter: v => fmt(v) } }
       ]
     },
     options: {
@@ -1070,7 +1050,8 @@ function renderADSCombo(rows) {
         y: { type: 'linear', position: 'left', ticks: { color: '#aaa', font: { size: 10 } }, grid: { color: '#222' }, beginAtZero: true },
         y1: { type: 'linear', position: 'right', ticks: { color: '#f39c12', font: { size: 10 }, callback: v => fmt(v) }, grid: { drawOnChartArea: false }, beginAtZero: true }
       }
-    }
+    },
+    plugins: [ChartDataLabels]
   });
 }
 
@@ -1108,7 +1089,7 @@ function renderDealTable(rows) {
   document.getElementById('tableCount').textContent = `Showing ${display.length} of ${mappedRows.length} deals`;
 
   if (!display.length) {
-    tbody.innerHTML = '<tr><td colspan="10" class="no-data">No deals found</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="11" class="no-data">No deals found</td></tr>';
     return;
   }
 
@@ -1118,7 +1099,8 @@ function renderDealTable(rows) {
     const statusBadge = isWon
       ? `<span class="badge badge-green">Won</span>`
       : isLost ? `<span class="badge badge-red">Lost</span>`
-      : `<span class="badge badge-blue">Pipeline</span>`;
+      : `<span class="badge badge-blue">Active</span>`;
+    const createDate = r.create_date ? new Date(r.create_date).toLocaleDateString('en-PH',{day:'2-digit',month:'short',year:'numeric'}) : '—';
     const closeDate = r.close_date ? new Date(r.close_date).toLocaleDateString('en-PH',{day:'2-digit',month:'short',year:'numeric'}) : '—';
     const repColor2 = repColor(r.sales_rep);
     const csmRep = CSM_TO_REP[r.company_owner];
@@ -1129,6 +1111,7 @@ function renderDealTable(rows) {
       <td><span style="color:${csmBadgeColor}">${safe(r.company_owner)}</span></td>
       <td><span style="font-size:11px">${safe(r.stage_label)}</span></td>
       <td>${normSeg(r.segment)||'—'}</td>
+      <td style="white-space:nowrap">${createDate}</td>
       <td style="white-space:nowrap">${closeDate}</td>
       <td class="num">${r.mrr && parseFloat(r.mrr) > 0 ? fmtFull(r.mrr) : '—'}</td>
       <td class="num">${r.ef_mrr && parseFloat(r.ef_mrr) > 0 ? fmtFull(r.ef_mrr) : '—'}</td>
@@ -1142,12 +1125,10 @@ function renderDealTable(rows) {
 function renderAll() {
   const rows = filterDeals(allDeals);
   const kpis = computeKPIs(rows);
+  renderLeaderboard(rows);
   renderPodsSection(rows);
   renderKPIs(kpis);
   renderScorecards(rows);
-  renderWonLostBar(rows);
-  renderMRRByRep(rows);
-  renderWinRateBar(rows);
   renderMRRTrend(rows);
   renderPipelineDonut(rows);
   renderMRRByCSM(rows);
@@ -1226,4 +1207,3 @@ document.addEventListener('DOMContentLoaded', init);
 </script>
 </body>
 </html>
-<!--radar-db-token-upgraded-->
