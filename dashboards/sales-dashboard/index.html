@@ -198,6 +198,64 @@ tfoot td:first-child { text-align:left; font-size:10px; font-weight:700; letter-
 .sp-panel { display:none; padding:28px 24px; }
 .sp-panel.active { display:block; }
 
+/* ── Department Mix ─────────────────────────────── */
+#deptmix-section { padding:0; }
+.dm-page { max-width:1300px; margin:0 auto; padding:28px 24px; display:flex; flex-direction:column; gap:16px; }
+.dm-header { display:flex; justify-content:space-between; align-items:flex-start; padding-bottom:16px; border-bottom:1px solid #ffffff0d; flex-wrap:wrap; gap:14px; }
+.dm-title { font-size:20px; font-weight:800; letter-spacing:-0.3px; color:#fff; }
+.dm-title span { color:#e8b86d; }
+.dm-sub { font-size:10px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:#ffffff25; margin-bottom:5px; font-family:'IBM Plex Mono',monospace; }
+.dm-header-right { display:flex; align-items:center; gap:14px; flex-wrap:wrap; justify-content:flex-end; }
+.dm-legend { display:flex; gap:12px; flex-wrap:wrap; }
+.dm-legend-item { display:flex; align-items:center; gap:5px; font-family:'IBM Plex Mono',monospace; font-size:9px; color:#ffffff45; letter-spacing:0.04em; }
+.dm-legend-dot { width:8px; height:8px; border-radius:50%; }
+.dm-badge { font-family:'IBM Plex Mono',monospace; font-size:14px; font-weight:600; padding:8px 18px; border-radius:24px; }
+.dm-fy-chip { font-family:'IBM Plex Mono',monospace; font-size:12px; color:#ffffff55; background:#ffffff08; border:1px solid #ffffff12; padding:6px 14px; border-radius:24px; }
+
+.dm-months { display:grid; grid-template-columns:repeat(12,1fr); gap:6px; }
+.dm-mon-card { background:#13151f; border:1px solid #ffffff0d; border-radius:9px; padding:9px 8px; display:flex; flex-direction:column; gap:6px; }
+.dm-mon-card.cur { border-color:#e8b86d40; background:#e8b86d06; }
+.dm-mon-name { font-family:'IBM Plex Mono',monospace; font-size:9px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:#ffffff40; text-align:center; }
+.dm-mon-card.cur .dm-mon-name { color:#e8b86d; }
+.dm-mon-total { font-family:'IBM Plex Mono',monospace; font-size:13px; font-weight:600; color:#fff; text-align:center; }
+.dm-mon-split { display:flex; flex-direction:column; gap:2px; border-top:1px solid #ffffff0a; padding-top:5px; }
+.dm-split-row { display:flex; justify-content:space-between; font-family:'IBM Plex Mono',monospace; font-size:8.5px; }
+.dm-split-val { color:#ffffff70; }
+
+.dm-cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:12px; }
+.dm-dept-card { background:#13151f; border:1px solid #ffffff0d; border-radius:12px; padding:16px 18px; border-top:3px solid; display:flex; flex-direction:column; gap:12px; }
+.dm-dept-name { font-size:11px; font-weight:800; letter-spacing:0.1em; text-transform:uppercase; }
+.dm-dept-actual { font-family:'IBM Plex Mono',monospace; font-size:22px; font-weight:600; color:#fff; margin-top:-6px; }
+.dm-metrics { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
+.dm-metric { background:#ffffff05; border-radius:7px; padding:7px 8px; }
+.dm-metric-label { font-family:'IBM Plex Mono',monospace; font-size:8px; font-weight:700; letter-spacing:0.06em; color:#ffffff30; margin-bottom:3px; }
+.dm-metric-val { font-family:'IBM Plex Mono',monospace; font-size:13px; font-weight:600; }
+.dm-mix-note { font-family:'IBM Plex Mono',monospace; font-size:9px; color:#ffffff30; }
+.dm-bars { display:flex; flex-direction:column; gap:6px; }
+.dm-bar-row { display:flex; align-items:center; gap:8px; }
+.dm-bar-tag { font-family:'IBM Plex Mono',monospace; font-size:8px; color:#ffffff30; width:24px; }
+.dm-bar { flex:1; height:4px; background:#ffffff0d; border-radius:99px; overflow:hidden; }
+.dm-bar-fill { height:100%; border-radius:99px; }
+
+.dm-lower { display:grid; grid-template-columns:1fr 340px; gap:14px; align-items:start; }
+.dm-donut-wrap { display:flex; flex-direction:column; align-items:center; gap:14px; padding:18px; }
+.dm-donut-legend { display:flex; flex-direction:column; gap:7px; width:100%; }
+.dm-dl-item { display:flex; align-items:center; gap:8px; font-size:11px; color:#ffffff70; }
+.dm-dl-dot { width:9px; height:9px; border-radius:2px; flex-shrink:0; }
+.dm-dl-pct { margin-left:auto; font-family:'IBM Plex Mono',monospace; color:#ffffffa0; }
+.dm-summary-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:16px; }
+.dm-sum-box { background:#ffffff05; border:1px solid #ffffff0a; border-radius:9px; padding:12px 14px; }
+.dm-sum-label { font-family:'IBM Plex Mono',monospace; font-size:8px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:#ffffff30; margin-bottom:5px; }
+.dm-sum-val { font-family:'IBM Plex Mono',monospace; font-size:17px; font-weight:600; color:#fff; }
+.dm-sum-bar-wrap { grid-column:1/-1; }
+.dm-sum-bar { height:6px; background:#ffffff0d; border-radius:99px; overflow:hidden; margin-top:4px; }
+.dm-tgt-cell { font-family:'IBM Plex Mono',monospace; font-size:9px; color:#ffffff35; display:block; }
+.dm-act-cell { font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:500; }
+@media (max-width: 900px) {
+  .dm-months { grid-template-columns:repeat(4,1fr); }
+  .dm-lower { grid-template-columns:1fr; }
+}
+
 /* ── Rep Summary Table ──────────────────────────── */
 .sp-rep-table { width:100%; border-collapse:collapse; }
 .sp-rep-table thead th { font-family:'IBM Plex Mono',monospace; font-size:9px; font-weight:500; letter-spacing:0.1em; text-transform:uppercase; color:#ffffff25; padding:9px 12px; text-align:right; background:#ffffff03; border-bottom:1px solid #ffffff08; white-space:nowrap; }
@@ -293,6 +351,7 @@ tfoot td:first-child { text-align:left; font-size:10px; font-weight:700; letter-
   <span class="mode-label">Dashboard</span>
   <button class="mode-btn active" id="mode-salesops"  onclick="switchMode('salesops')">Sales Ops</button>
   <button class="mode-btn"        id="mode-salesperf" onclick="switchMode('salesperf')">Sales Performance</button>
+  <button class="mode-btn"        id="mode-deptmix"   onclick="switchMode('deptmix')">Department Mix</button>
 </div>
 
 <div id="salesops-section">
@@ -743,6 +802,19 @@ tfoot td:first-child { text-align:left; font-size:10px; font-weight:700; letter-
   </div>
 
 </div><!-- end salesperf-section -->
+
+<!-- ═══════════════════════════════════════════════
+     DEPARTMENT MIX SECTION
+═══════════════════════════════════════════════ -->
+<div id="deptmix-section" style="display:none;">
+  <div class="tab-bar">
+    <span class="tab-bar-title">Department Mix</span>
+    <button class="tab active" id="dm-tab-sme" onclick="switchDmTab('sme')">🏢 SME</button>
+    <button class="tab"        id="dm-tab-ent" onclick="switchDmTab('ent')">🏛️ ENT</button>
+    <button class="tab"        id="dm-tab-ups" onclick="switchDmTab('ups')">⬆️ Upsell</button>
+  </div>
+  <div id="dm-content"></div>
+</div>
 
 
 <!-- ═══════════════════════════════════════════════
@@ -1732,17 +1804,258 @@ function spAttClass(p) {
 
 /* ── Mode & SP Tab Switching ────────────────────── */
 function switchMode(mode) {
-  const isOps = mode === 'salesops';
-  $id('salesops-section').style.display  = isOps ? '' : 'none';
-  $id('salesperf-section').style.display = isOps ? 'none' : '';
+  const isOps  = mode === 'salesops';
+  const isPerf = mode === 'salesperf';
+  const isMix  = mode === 'deptmix';
+  $id('salesops-section').style.display  = isOps  ? '' : 'none';
+  $id('salesperf-section').style.display = isPerf ? '' : 'none';
+  $id('deptmix-section').style.display   = isMix  ? '' : 'none';
   $id('mode-salesops').classList.toggle('active', isOps);
-  $id('mode-salesperf').classList.toggle('active', !isOps);
+  $id('mode-salesperf').classList.toggle('active', isPerf);
+  $id('mode-deptmix').classList.toggle('active', isMix);
   localStorage.setItem('sales_mode', mode);
-  if (isOps) {
-    switchTab(localStorage.getItem('sales_tab') || 'mrr');
-  } else {
-    switchSpTab(localStorage.getItem('sp_tab') || 'rep');
+  if (isOps)       switchTab(localStorage.getItem('sales_tab') || 'mrr');
+  else if (isMix)  switchDmTab(localStorage.getItem('dm_tab') || 'sme');
+  else             switchSpTab(localStorage.getItem('sp_tab') || 'rep');
+}
+
+/* ══════════════════════════════════════════════════
+   DEPARTMENT MIX
+   Monthly TOTAL target comes from Databricks (already
+   calculated); each department = total × its mix %.
+   Actuals = won MRR by department_source_clean.
+   ══════════════════════════════════════════════════ */
+const DEPTMIX = {
+  sme: {
+    title: 'SME', match: d => isNB(d) && (d.segment || '').toUpperCase() === 'SME',
+    targetPipes: ['Sales Pipeline'], targetSeg: 'SME',
+    depts: [
+      { key:'MKT Inbound',    tag:'MKT', label:'Marketing Inbound', pct:50, color:'#4ade80' },
+      { key:'LDU Outbound',   tag:'LDU', label:'LDU Outbound',      pct:30, color:'#a78bfa' },
+      { key:'Sales Outbound', tag:'SLS', label:'Sales Outbound',    pct:15, color:'#60a5fa' },
+      { key:'Channels',       tag:'CHN', label:'Channels',          pct:5,  color:'#fb923c' },
+    ],
+  },
+  ent: {
+    title: 'ENT', match: d => isNB(d) && (d.segment || '').toUpperCase() === 'ENT',
+    targetPipes: ['Sales Pipeline'], targetSeg: 'ENT',
+    depts: [
+      { key:'MKT Inbound',  tag:'MKT', label:'Marketing Inbound', pct:50, color:'#4ade80' },
+      { key:'LDU Outbound', tag:'LDU', label:'LDU Outbound',      pct:50, color:'#a78bfa' },
+      { key:'Channels',     tag:'CHN', label:'Channels',          pct:5,  color:'#fb923c' },
+    ],
+  },
+  ups: {
+    title: 'Upsell', match: d => isUS(d),
+    targetPipes: ['PH Upsell Pipeline'], targetSeg: null,
+    depts: [
+      { key:'MKT Inbound',     tag:'MKT', label:'Marketing Inbound', pct:10, color:'#4ade80' },
+      { key:'Upsell Outbound', tag:'UPS', label:'Upsell Outbound',   pct:20, color:'#a78bfa' },
+      { key:'CSM Inbound',     tag:'CSM', label:'CSM Inbound',       pct:70, color:'#60a5fa' },
+    ],
+  },
+};
+let dmSeg = 'sme';
+
+// 4-band color to match the dashboard legend (<60 / 60–79 / 80–99 / ≥100)
+function dmColor(p) { return p >= 100 ? '#4ade80' : p >= 80 ? '#60a5fa' : p >= 60 ? '#fbbf24' : '#f87171'; }
+function dmShort(n) {
+  n = Math.round(n || 0);
+  if (Math.abs(n) >= 1e6) return (n / 1e6).toFixed(2).replace(/\.?0+$/, '') + 'M';
+  if (Math.abs(n) >= 1e3) return Math.round(n / 1e3) + 'K';
+  return '' + n;
+}
+
+// Monthly total target from Databricks for a segment (departments split it by %)
+function dmTotalTarget(cfg, year, mon) {
+  return allTargets.reduce((s, t) => {
+    const dt = parseDate(t.metric_month);
+    if (!dt || isNaN(dt)) return s;
+    if (dt.getFullYear() !== year || (dt.getMonth() + 1) !== mon) return s;
+    if (!cfg.targetPipes.includes(t.pipeline_name)) return s;
+    if (cfg.targetSeg && (t.segment || '').toUpperCase() !== cfg.targetSeg.toUpperCase()) return s;
+    return s + (parseFloat(t.mrr_target) || 0);
+  }, 0);
+}
+
+function switchDmTab(t) {
+  dmSeg = t;
+  ['sme','ent','ups'].forEach(id => { const tb = $id('dm-tab-'+id); if (tb) tb.classList.toggle('active', id === t); });
+  localStorage.setItem('dm_tab', t);
+  renderDeptMix();
+}
+
+function dmDonut(segs) {
+  const total = segs.reduce((s, x) => s + x.value, 0) || 1;
+  const R = 54, C = 2 * Math.PI * R; let off = 0;
+  const rings = segs.map(s => {
+    const len = (s.value / total) * C;
+    const el = `<circle cx="70" cy="70" r="${R}" fill="none" stroke="${s.color}" stroke-width="20"
+      stroke-dasharray="${len.toFixed(2)} ${(C - len).toFixed(2)}" stroke-dashoffset="${(-off).toFixed(2)}"
+      transform="rotate(-90 70 70)"/>`;
+    off += len; return el;
+  }).join('');
+  return `<svg width="140" height="140" viewBox="0 0 140 140">${rings}</svg>`;
+}
+
+function renderDeptMix() {
+  const cfg = DEPTMIX[dmSeg];
+  const el = $id('dm-content');
+  if (!cfg || !el) return;
+
+  // Monthly total targets + per-department actuals (current year)
+  const totTgt = {};
+  for (let m = 1; m <= 12; m++) totTgt[m] = dmTotalTarget(cfg, CUR_YEAR, m);
+  const act = {};
+  cfg.depts.forEach(d => { act[d.key] = {}; for (let m = 1; m <= 12; m++) act[d.key][m] = 0; });
+  allDeals.forEach(d => {
+    if (EXCLUDED_PIPELINES.includes(d.pipeline_name)) return;
+    if (!cfg.match(d) || d.client_journey_stage !== 'Customer') return;
+    const dep = d.department_source_clean || '';
+    if (!(dep in act)) return;
+    const dt = parseDate(d.close_date);
+    if (!dt || isNaN(dt) || dt.getFullYear() !== CUR_YEAR) return;
+    act[dep][dt.getMonth() + 1] += parseFloat(d.mrr) || 0;
+  });
+  const deptTgt = (dk, m) => totTgt[m] * (cfg.depts.find(x => x.key === dk).pct / 100);
+
+  // Aggregates
+  const monthTotalTgt = m => cfg.depts.reduce((s, d) => s + deptTgt(d.key, m), 0);
+  const monthTotalAct = m => cfg.depts.reduce((s, d) => s + act[d.key][m], 0);
+  let totYtdAct = 0, totYtdTgt = 0, totFyTgt = 0;
+  const perDept = cfg.depts.map(d => {
+    let ya = 0, yt = 0, ft = 0;
+    for (let m = 1; m <= 12; m++) {
+      ft += deptTgt(d.key, m);
+      if (m <= CUR_MON) { ya += act[d.key][m]; yt += deptTgt(d.key, m); }
+    }
+    totYtdAct += ya; totYtdTgt += yt; totFyTgt += ft;
+    return { ...d, ya, yt, ft };
+  });
+  const ytdBadge = pct(totYtdAct, totYtdTgt);
+  const fyPct    = pct(totYtdAct, totFyTgt);
+
+  // ── Header ──
+  const bands = [['<60%','#f87171'],['60–79%','#fbbf24'],['80–99%','#60a5fa'],['≥100%','#4ade80']];
+  const legend = bands.map(b => `<span class="dm-legend-item"><span class="dm-legend-dot" style="background:${b[1]}"></span>${b[0]}</span>`).join('');
+  const bc = dmColor(ytdBadge);
+  const header = `<div class="dm-header">
+    <div>
+      <div class="dm-sub">MRR · FY${CUR_YEAR} · People-First AI</div>
+      <div class="dm-title">${cfg.title} Revenue <span>Dashboard</span></div>
+    </div>
+    <div class="dm-header-right">
+      <div class="dm-legend">${legend}</div>
+      <span class="dm-fy-chip">FY ${CUR_YEAR}</span>
+      <span class="dm-badge" style="color:${bc};background:${bc}18;border:1px solid ${bc}30;">YTD: ${ytdBadge}%</span>
+    </div>
+  </div>`;
+
+  // ── Monthly target cards ──
+  const monCards = [];
+  for (let m = 1; m <= 12; m++) {
+    const splits = cfg.depts.map(d =>
+      `<div class="dm-split-row"><span style="color:${d.color};">${d.tag}</span><span class="dm-split-val">${dmShort(deptTgt(d.key, m))}</span></div>`).join('');
+    monCards.push(`<div class="dm-mon-card ${m === CUR_MON ? 'cur' : ''}">
+      <div class="dm-mon-name">${MONTHS[m-1]}</div>
+      <div class="dm-mon-total">${dmShort(monthTotalTgt(m))}</div>
+      <div class="dm-mon-split">${splits}</div>
+    </div>`);
   }
+  const monthsPanel = `<div class="panel">
+    <div class="panel-header"><div class="panel-dot" style="background:#e8b86d;"></div>
+      <div class="panel-label">Monthly Targets <span>· distributed by contribution mix</span></div>
+      <div class="panel-desc">total × mix % per department</div></div>
+    <div style="padding:12px;"><div class="dm-months">${monCards.join('')}</div></div>
+  </div>`;
+
+  // ── Department cards ──
+  const deptCards = perDept.map(d => {
+    const ytdAtt = pct(d.ya, d.yt), fyAtt = pct(d.ya, d.ft);
+    const actShare = totYtdAct ? (d.ya / totYtdAct * 100) : 0;
+    const mixAtt = d.pct ? Math.round(actShare / d.pct * 100) : 0;
+    return `<div class="dm-dept-card" style="border-top-color:${d.color};">
+      <div><div class="dm-dept-name" style="color:${d.color};">${d.label}</div></div>
+      <div class="dm-dept-actual">${fmt(d.ya)}</div>
+      <div class="dm-metrics">
+        <div class="dm-metric"><div class="dm-metric-label">YTD ATT</div><div class="dm-metric-val" style="color:${dmColor(ytdAtt)};">${ytdAtt}%</div></div>
+        <div class="dm-metric"><div class="dm-metric-label">FY ATT</div><div class="dm-metric-val" style="color:${dmColor(fyAtt)};">${fyAtt}%</div></div>
+        <div class="dm-metric"><div class="dm-metric-label">MIX ATT</div><div class="dm-metric-val" style="color:${dmColor(mixAtt)};">${mixAtt}%</div></div>
+      </div>
+      <div class="dm-mix-note">${actShare.toFixed(1)}% ÷ ${d.pct}% mix</div>
+      <div class="dm-bars">
+        <div class="dm-bar-row"><span class="dm-bar-tag">YTD</span><div class="dm-bar"><div class="dm-bar-fill" style="width:${Math.min(ytdAtt,100)}%;background:${d.color};"></div></div></div>
+        <div class="dm-bar-row"><span class="dm-bar-tag">FY</span><div class="dm-bar"><div class="dm-bar-fill" style="width:${Math.min(fyAtt,100)}%;background:${d.color}80;"></div></div></div>
+      </div>
+    </div>`;
+  }).join('');
+  const cardsPanel = `<div class="dm-cards">${deptCards}</div>`;
+
+  // ── Donut (actual mix) ──
+  const donutSegs = perDept.map(d => ({ label:d.label, color:d.color, value:d.ya }));
+  const donutLegend = perDept.map(d => {
+    const share = totYtdAct ? (d.ya / totYtdAct * 100) : 0;
+    return `<div class="dm-dl-item"><span class="dm-dl-dot" style="background:${d.color};"></span>${d.label}<span class="dm-dl-pct">${share.toFixed(1)}%</span></div>`;
+  }).join('');
+  const donutPanel = `<div class="panel">
+    <div class="panel-header"><div class="panel-dot" style="background:#60a5fa;"></div>
+      <div class="panel-label">Dept Mix <span>· actual</span></div></div>
+    <div class="dm-donut-wrap">${dmDonut(donutSegs)}<div class="dm-donut-legend">${donutLegend}</div></div>
+  </div>`;
+
+  // ── Attainment summary ──
+  const yc = dmColor(ytdBadge), fc = dmColor(fyPct);
+  const summaryPanel = `<div class="panel">
+    <div class="panel-header"><div class="panel-dot" style="background:#4ade80;"></div>
+      <div class="panel-label">Attainment Summary</div></div>
+    <div class="dm-summary-grid">
+      <div class="dm-sum-box"><div class="dm-sum-label">YTD Actual (Jan–${MONTHS[CUR_MON-1]})</div><div class="dm-sum-val">${fmt(totYtdAct)}</div></div>
+      <div class="dm-sum-box"><div class="dm-sum-label">YTD Target</div><div class="dm-sum-val">${fmt(totYtdTgt)}</div></div>
+      <div class="dm-sum-bar-wrap"><div class="dm-sum-label" style="display:flex;justify-content:space-between;"><span>YTD Attainment</span><span style="color:${yc};">${ytdBadge}%</span></div><div class="dm-sum-bar"><div style="height:100%;border-radius:99px;width:${Math.min(ytdBadge,100)}%;background:${yc};"></div></div></div>
+      <div class="dm-sum-box"><div class="dm-sum-label">FY Actual (Jan–Dec)</div><div class="dm-sum-val">${fmt(totYtdAct)}</div></div>
+      <div class="dm-sum-box"><div class="dm-sum-label">FY Target</div><div class="dm-sum-val" style="color:#e8b86d;">${fmt(totFyTgt)}</div></div>
+      <div class="dm-sum-bar-wrap"><div class="dm-sum-label" style="display:flex;justify-content:space-between;"><span>FY Attainment</span><span style="color:${fc};">${fyPct}%</span></div><div class="dm-sum-bar"><div style="height:100%;border-radius:99px;width:${Math.min(fyPct,100)}%;background:${fc};"></div></div></div>
+    </div>
+  </div>`;
+
+  // ── Actuals table ──
+  const headCells = cfg.depts.map(d => `<th>${d.tag} <span style="color:${d.color};">Tgt·Act</span></th>`).join('');
+  const rows = [];
+  for (let m = 1; m <= 12; m++) {
+    const future = m > CUR_MON;
+    const cells = cfg.depts.map(d => {
+      const a = act[d.key][m];
+      const actTxt = future ? '<span style="color:#ffffff20;">—</span>' : `<span class="dm-act-cell" style="color:${a ? '#fff' : '#ffffff25'};">${fmt(a)}</span>`;
+      return `<td><span class="dm-tgt-cell">${fmt(deptTgt(d.key, m))}</span>${actTxt}</td>`;
+    }).join('');
+    const tt = monthTotalTgt(m), ta = monthTotalAct(m), ach = pct(ta, tt);
+    rows.push(`<tr class="${m === CUR_MON ? 'act-cur-mon' : ''}">
+      <td><span class="act-mon-label">${MONTHS[m-1]}</span></td>
+      ${cells}
+      <td><span class="num dim">${fmt(tt)}</span></td>
+      <td><span class="num bright">${future ? '—' : fmt(ta)}</span></td>
+      <td>${future ? '<span class="num dim">—</span>' : `<span style="color:${dmColor(ach)};font-family:'IBM Plex Mono',monospace;font-weight:600;">${ach}%</span>`}</td>
+    </tr>`);
+  }
+  const tablePanel = `<div class="panel" style="overflow-x:auto;">
+    <div class="panel-header"><div class="panel-dot" style="background:#a78bfa;"></div>
+      <div class="panel-label">Targets &amp; Actuals per Department</div>
+      <div class="panel-desc">won MRR · from Databricks</div></div>
+    <table>
+      <thead><tr><th>Month</th>${headCells}<th>Total Tgt</th><th>Total Act</th><th>ACH%</th></tr></thead>
+      <tbody>${rows.join('')}</tbody>
+    </table>
+  </div>`;
+
+  el.innerHTML = `<div class="dm-page">
+    ${header}
+    ${monthsPanel}
+    ${cardsPanel}
+    <div class="dm-lower">
+      ${tablePanel}
+      <div style="display:flex;flex-direction:column;gap:14px;">${donutPanel}${summaryPanel}</div>
+    </div>
+  </div>`;
 }
 
 function switchSpTab(t) {
@@ -2589,6 +2902,8 @@ function render() {
   if (active === 'fc')      renderForecast();
   if (active === 'deals')   renderDeals();
   if (active === 'actuals') renderActuals();
+  // Re-render Department Mix if it's the active mode (data may have just loaded)
+  if ((localStorage.getItem('sales_mode') || 'salesops') === 'deptmix') renderDeptMix();
 }
 
 /* ── Sample Data ────────────────────────────────── */
