@@ -1827,7 +1827,8 @@ function switchMode(mode) {
    ══════════════════════════════════════════════════ */
 const DEPTMIX = {
   sme: {
-    title: 'SME', match: d => isNB(d) && (d.segment || '').toUpperCase() === 'SME',
+    // Deal set mirrors the Segment Summary tab exactly (pipeline-based) so the two reconcile.
+    title: 'SME', match: d => DM_NB_PIPES.includes(d.pipeline_name) && (d.segment || '').toUpperCase() === 'SME',
     targetPipes: ['Sales Pipeline'], targetSeg: 'SME', chanFrac: 0.5,
     depts: [
       { key:'MKT Inbound',    tag:'MKT', label:'Marketing Inbound', pct:50, color:'#4ade80' },
@@ -1837,16 +1838,19 @@ const DEPTMIX = {
     ],
   },
   ent: {
-    title: 'ENT', match: d => isNB(d) && (d.segment || '').toUpperCase() === 'ENT',
+    title: 'ENT', match: d => DM_NB_PIPES.includes(d.pipeline_name) && (d.segment || '').toUpperCase() === 'ENT',
     targetPipes: ['Sales Pipeline'], targetSeg: 'ENT', chanFrac: 0.5,
+    // ENT targets are planned on Mkt/LDU (47.5/47.5) + separate Channels (5). Sales Outbound has
+    // no ENT target but does close deals, so it is shown as actual-only (pct 0) to reconcile totals.
     depts: [
-      { key:'MKT Inbound',  tag:'MKT', label:'Marketing Inbound', pct:47.5, color:'#4ade80' },
-      { key:'LDU Outbound', tag:'LDU', label:'LDU Outbound',      pct:47.5, color:'#a78bfa' },
-      { key:'Channels',     tag:'CHN', label:'Channels',          pct:5,    color:'#fb923c' },
+      { key:'MKT Inbound',    tag:'MKT', label:'Marketing Inbound', pct:47.5, color:'#4ade80' },
+      { key:'LDU Outbound',   tag:'LDU', label:'LDU Outbound',      pct:47.5, color:'#a78bfa' },
+      { key:'Sales Outbound', tag:'SLS', label:'Sales Outbound',    pct:0,    color:'#60a5fa' },
+      { key:'Channels',       tag:'CHN', label:'Channels',          pct:5,    color:'#fb923c' },
     ],
   },
   ups: {
-    title: 'Upsell', match: d => isUS(d),
+    title: 'Upsell', match: d => d.pipeline_name === 'PH Upsell Pipeline',
     targetPipes: ['PH Upsell Pipeline'], targetSeg: null, chanFrac: 0,
     depts: [
       { key:'MKT Inbound',     tag:'MKT', label:'Marketing Inbound', pct:10, color:'#4ade80' },
@@ -1855,6 +1859,7 @@ const DEPTMIX = {
     ],
   },
 };
+const DM_NB_PIPES = ['Sales Pipeline', 'Unified Channel Pipeline'];
 // Separate Channels target bucket (Unified Channel Pipeline). Split between SME/ENT via chanFrac,
 // matching the Segment Summary tab so the two views reconcile.
 function dmChannelsTarget(year, mon) {
@@ -1985,21 +1990,24 @@ function renderDeptMix() {
 
   // ── Department cards ──
   const deptCards = perDept.map(d => {
+    const noTgt = d.pct === 0;   // actual-only department (e.g. ENT Sales Outbound)
     const ytdAtt = pct(d.ya, d.yt), fyAtt = pct(d.ya, d.ft);
     const actShare = totYtdAct ? (d.ya / totYtdAct * 100) : 0;
     const mixAtt = d.pct ? Math.round(actShare / d.pct * 100) : 0;
+    const dash = '<span style="color:#ffffff25;">—</span>';
+    const mval = (v) => noTgt ? dash : `<span style="color:${dmColor(v)};">${v}%</span>`;
     return `<div class="dm-dept-card" style="border-top-color:${d.color};">
       <div><div class="dm-dept-name" style="color:${d.color};">${d.label}</div></div>
       <div class="dm-dept-actual">${fmt(d.ya)}</div>
       <div class="dm-metrics">
-        <div class="dm-metric"><div class="dm-metric-label">YTD ATT</div><div class="dm-metric-val" style="color:${dmColor(ytdAtt)};">${ytdAtt}%</div></div>
-        <div class="dm-metric"><div class="dm-metric-label">FY ATT</div><div class="dm-metric-val" style="color:${dmColor(fyAtt)};">${fyAtt}%</div></div>
-        <div class="dm-metric"><div class="dm-metric-label">MIX ATT</div><div class="dm-metric-val" style="color:${dmColor(mixAtt)};">${mixAtt}%</div></div>
+        <div class="dm-metric"><div class="dm-metric-label">YTD ATT</div><div class="dm-metric-val">${mval(ytdAtt)}</div></div>
+        <div class="dm-metric"><div class="dm-metric-label">FY ATT</div><div class="dm-metric-val">${mval(fyAtt)}</div></div>
+        <div class="dm-metric"><div class="dm-metric-label">MIX ATT</div><div class="dm-metric-val">${mval(mixAtt)}</div></div>
       </div>
-      <div class="dm-mix-note">${actShare.toFixed(1)}% ÷ ${d.pct}% mix</div>
+      <div class="dm-mix-note">${noTgt ? `${actShare.toFixed(1)}% actual · no target` : `${actShare.toFixed(1)}% ÷ ${d.pct}% mix`}</div>
       <div class="dm-bars">
-        <div class="dm-bar-row"><span class="dm-bar-tag">YTD</span><div class="dm-bar"><div class="dm-bar-fill" style="width:${Math.min(ytdAtt,100)}%;background:${d.color};"></div></div></div>
-        <div class="dm-bar-row"><span class="dm-bar-tag">FY</span><div class="dm-bar"><div class="dm-bar-fill" style="width:${Math.min(fyAtt,100)}%;background:${d.color}80;"></div></div></div>
+        <div class="dm-bar-row"><span class="dm-bar-tag">YTD</span><div class="dm-bar"><div class="dm-bar-fill" style="width:${noTgt ? 0 : Math.min(ytdAtt,100)}%;background:${d.color};"></div></div></div>
+        <div class="dm-bar-row"><span class="dm-bar-tag">FY</span><div class="dm-bar"><div class="dm-bar-fill" style="width:${noTgt ? 0 : Math.min(fyAtt,100)}%;background:${d.color}80;"></div></div></div>
       </div>
     </div>`;
   }).join('');
