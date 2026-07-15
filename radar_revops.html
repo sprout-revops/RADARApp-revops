@@ -8,6 +8,31 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800&display=swap" rel="stylesheet">
 <script src="https://accounts.google.com/gsi/client" async defer onload="if(window._radarGsiReady)initGoogleSignIn()"></script>
+<!-- ── RAN (RevOps Authentication Network) — Phase 1, flag-gated ──
+     When RAN_AUTH_ENABLED is true, RADAR gates every page load behind RAN's Google OAuth
+     gateway (full-screen spinner → GET /api/verify → redirect to RAN login if no session).
+     Kept OFF until the RAN team (1) allowlists https://radar-revops.vercel.app and
+     (2) exposes a bearer token our /api backend can verify (see docs/RAN_integration.md).
+     While OFF, RADAR behaves exactly as before (Google Sign-In). No tokens/codes are ever
+     written to localStorage/sessionStorage on the RAN path. -->
+<script>
+  window.RAN_URL = 'https://company-auth-gateway.vercel.app';
+  window.RAN_AUTH_ENABLED = false;   // ← Phase 2: set true once RAN is ready, then redeploy
+  if (window.RAN_AUTH_ENABLED) document.documentElement.classList.add('ran-checking');
+</script>
+<style>
+  /* RAN gate: while a session is being verified, hide the app and show only the gate —
+     the user never sees partially-loaded content before the redirect/reveal fires. */
+  html.ran-checking #app-root { visibility: hidden; }
+  #ran-gate { position: fixed; inset: 0; z-index: 100000; background: #030712;
+              display: none; align-items: center; justify-content: center; flex-direction: column; gap: 20px; }
+  html.ran-checking #ran-gate { display: flex; }
+  #ran-gate .ran-logo { font-weight: 800; font-size: 26px; letter-spacing: 2px; color: #1DB954; }
+  #ran-gate .ran-spin { width: 42px; height: 42px; border-radius: 50%;
+              border: 3px solid rgba(29,185,84,.2); border-top-color: #1DB954; animation: ran-spin .8s linear infinite; }
+  #ran-gate .ran-msg { color: #94a3b8; font-size: 13px; }
+  @keyframes ran-spin { to { transform: rotate(360deg); } }
+</style>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Rubik','Bahnschrift Light SemiCondensed','Bahnschrift',Arial,sans-serif;background:#030712;color:#e2e8f0}
@@ -605,6 +630,13 @@ body{font-family:'Rubik','Bahnschrift Light SemiCondensed','Bahnschrift',Arial,s
 </style>
 </head>
 <body>
+
+<!-- RAN auth gate — shown only while RAN verification is in flight (html.ran-checking). Inert unless RAN_AUTH_ENABLED. -->
+<div id="ran-gate" aria-live="polite" role="status">
+  <div class="ran-logo">RADAR</div>
+  <div class="ran-spin"></div>
+  <div class="ran-msg">Verifying your Sprout sign-in…</div>
+</div>
 
 <!-- ── APP ROOT ── -->
 <div id="app-root">
@@ -4907,7 +4939,7 @@ var DASH_ADMINS = ['lurbina@sprout.ph', 'apanares@sprout.ph'];
 // Served by Vercel (honors ?cb cache-bust; GitHub raw CDN ignores query strings and lags ~5 min)
 var DASH_REGISTRY_URL = 'https://radar-revops.vercel.app/user-dashboards/registry.json';
 
-function dashUserEmail(){ return (localStorage.getItem('radar_user_email') || '').toLowerCase(); }
+function dashUserEmail(){ return (window.RADAR_USER && window.RADAR_USER.email) ? window.RADAR_USER.email : (localStorage.getItem('radar_user_email') || '').toLowerCase(); }
 function dashUserName(){ return localStorage.getItem('radar_user_name') || (dashUserEmail().split('@')[0] || 'user'); }
 function dashIsAdmin(){ return DASH_ADMINS.indexOf(dashUserEmail()) !== -1; }
 
@@ -6162,6 +6194,7 @@ function radarShowUser(email) {
 }
 
 function radarLogout() {
+  if (window.RAN_AUTH_ENABLED) return ranLogout();   // RAN logout is a POST to the gateway
   const email = localStorage.getItem('radar_user_email');
   localStorage.removeItem('radar_user_email');
   localStorage.removeItem('radar_id_token');
@@ -6233,6 +6266,7 @@ function showFallbackBtn() {
 
 // Restore session on load — RADAR is always open; only DIY tab is restricted
 (function() {
+  if (window.RAN_AUTH_ENABLED) { ranCheckAuth(); return; }   // RAN gates the whole app; skip Google flow
   const stored = localStorage.getItem('radar_user_email');
   if (stored && isSproutEmail(stored)) {
     radarShowUser(stored);
@@ -6257,6 +6291,50 @@ function showFallbackBtn() {
   // Keep the token fresh in the background so users aren't forced to re-sign-in mid-session
   setInterval(radarMaybeRefreshToken, 5 * 60 * 1000);
 })();
+
+// ══════════════════════════════════════════════════════════════════════════
+//  RAN (RevOps Authentication Network) — Phase 1 (active only when RAN_AUTH_ENABLED)
+//  RAN is Sprout's centralized Google OAuth gateway. When enabled, RADAR renders NO
+//  content until RAN confirms a valid @sprout.ph / @sproutsolutions.io session.
+//  Hard rules honored: no tokens/codes in localStorage/sessionStorage; the ?code= from
+//  the callback is never logged; logout is POST; every RAN fetch sends credentials.
+// ══════════════════════════════════════════════════════════════════════════
+async function ranCheckAuth() {
+  try {
+    const res = await fetch(window.RAN_URL + '/api/verify', { credentials: 'include' });
+    if (!res.ok) { ranRedirectToLogin(); return; }
+    const who = await res.json();                                  // { email, user_id }
+    window.RADAR_USER = { email: (who.email || '').toLowerCase(), user_id: who.user_id };
+    ranReveal(window.RADAR_USER.email);
+  } catch (e) {
+    ranRedirectToLogin();                                          // network/CORS/not-allowlisted → login
+  }
+}
+function ranRedirectToLogin() {
+  // Send RAN the callback URL, carrying the page the user originally wanted as ?next=
+  const dest = window.location.pathname + window.location.search + window.location.hash;
+  const callback = window.location.origin + '/auth/callback?next=' + encodeURIComponent(dest);
+  window.location.replace(window.RAN_URL + '/auth/login?returnUrl=' + encodeURIComponent(callback));
+}
+function ranReveal(email) {
+  document.documentElement.classList.remove('ran-checking');       // show app, hide gate
+  var pill = document.getElementById('user-email-display');
+  var signout = document.getElementById('radar-signout-btn');
+  var signin = document.getElementById('radar-signin-btn');
+  var diyTab = document.getElementById('tab-diy');
+  if (pill) { pill.textContent = email; pill.style.display = ''; }
+  if (signout) signout.style.display = '';
+  if (signin) signin.style.display = 'none';                       // RAN auto-redirects; no manual sign-in button
+  if (diyTab) diyTab.style.display = '';                           // every authenticated Sprout user gets DIY
+  if (typeof updateConnBadge === 'function') updateConnBadge();
+  if (typeof radarTrack === 'function') radarTrack('signin');
+}
+async function ranLogout() {
+  try { await fetch(window.RAN_URL + '/auth/logout', { method: 'POST', credentials: 'include' }); }
+  catch (e) {}
+  window.RADAR_USER = null;
+  window.location.replace('/');                                    // guard re-runs → back to RAN login
+}
 
 
 function submitDashboardRequest() {

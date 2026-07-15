@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign-in problem — RADAR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;600;800&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Rubik',Arial,sans-serif;background:#030712;color:#e2e8f0;
+       min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+  .card{max-width:440px;text-align:center;background:#0B1E10;border:1px solid rgba(255,255,255,.08);
+        border-radius:16px;padding:36px 32px;display:flex;flex-direction:column;gap:16px;align-items:center}
+  .logo{font-weight:800;font-size:24px;letter-spacing:2px;color:#1DB954}
+  .icon{font-size:34px}
+  h1{font-size:18px;font-weight:600}
+  .msg{color:#94a3b8;font-size:14px;line-height:1.5}
+  .btn{margin-top:8px;background:#1DB954;color:#03110a;border:none;border-radius:10px;
+       padding:11px 22px;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer;text-decoration:none}
+  .btn:hover{filter:brightness(1.08)}
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">RADAR</div>
+    <div class="icon">🔒</div>
+    <h1 id="title">Sign-in problem</h1>
+    <div class="msg" id="msg">Something went wrong during sign-in. Please try again.</div>
+    <a class="btn" id="retry" href="#">Sign in again</a>
+  </div>
+<script>
+  var RAN_URL = 'https://company-auth-gateway.vercel.app';
+
+  // Friendly, non-technical messages. The raw error code is NEVER shown to the user.
+  var MESSAGES = {
+    domain_blocked:  'Your Google account is not authorized. Use your @sprout.ph or @sproutsolutions.io email.',
+    auth_failed:     'Sign-in failed. Please try again.',
+    session_expired: 'Your session expired. Please sign in again.',
+    missing_code:    'Something went wrong during sign-in. Please try again.'
+  };
+  var TITLES = {
+    domain_blocked:  'Account not authorized',
+    auth_failed:     'Sign-in failed',
+    session_expired: 'Session expired',
+    missing_code:    'Sign-in problem'
+  };
+
+  var params = new URLSearchParams(window.location.search);
+  var reason = params.get('reason') || params.get('error') || '';
+  if (MESSAGES[reason]) {
+    document.getElementById('msg').textContent = MESSAGES[reason];
+    document.getElementById('title').textContent = TITLES[reason];
+  }
+  // Retry sends the user back through RAN login, returning to the RADAR home via the callback.
+  var callback = window.location.origin + '/auth/callback?next=' + encodeURIComponent('/');
+  document.getElementById('retry').href = RAN_URL + '/auth/login?returnUrl=' + encodeURIComponent(callback);
+</script>
+</body>
+</html>

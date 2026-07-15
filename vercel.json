@@ -1,5 +1,9 @@
 {
   "functions": {
     "api/*.js": { "maxDuration": 300 }
-  }
+  },
+  "rewrites": [
+    { "source": "/auth/callback", "destination": "/auth/callback.html" },
+    { "source": "/auth/error", "destination": "/auth/error.html" }
+  ]
 }

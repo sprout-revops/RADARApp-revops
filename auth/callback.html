@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Signing you in… — RADAR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;600;800&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Rubik',Arial,sans-serif;background:#030712;color:#e2e8f0;
+       min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px}
+  .logo{font-weight:800;font-size:26px;letter-spacing:2px;color:#1DB954}
+  .spin{width:42px;height:42px;border-radius:50%;border:3px solid rgba(29,185,84,.2);
+        border-top-color:#1DB954;animation:spin .8s linear infinite}
+  .msg{color:#94a3b8;font-size:13px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+  <div class="logo">RADAR</div>
+  <div class="spin"></div>
+  <div class="msg">Completing sign-in…</div>
+<script>
+  // RAN redirects here after a successful Google login. We exchange the one-time code
+  // (30-second TTL) for a real session, then bounce to the page the user originally wanted.
+  // The ?code= is a secret: it is NEVER logged and NEVER written to storage.
+  var RAN_URL = 'https://company-auth-gateway.vercel.app';
+
+  async function handleCallback() {
+    var params = new URLSearchParams(window.location.search);
+    var code = params.get('code');
+    var next = params.get('next') || '/';
+
+    if (!code) { window.location.replace('/auth/error?reason=missing_code'); return; }
+
+    try {
+      var res = await fetch(RAN_URL + '/auth/exchange', {
+        method: 'POST',
+        credentials: 'include',                       // lets RAN set the session cookies in the browser
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: code })
+      });
+      if (!res.ok) { window.location.replace(RAN_URL + '/auth/login?error=session_expired'); return; }
+      // Session established. Only allow same-origin relative destinations (avoid open redirect).
+      if (!/^\/(?!\/)/.test(next)) next = '/';
+      window.location.replace(next);
+    } catch (e) {
+      window.location.replace('/auth/error?reason=auth_failed');
+    }
+  }
+  handleCallback();
+</script>
+</body>
+</html>
