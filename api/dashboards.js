@@ -157,21 +157,43 @@ module.exports = async function handler(req, res) {
       if (!email || !body.html) return res.status(400).json({ error: 'Missing ownerEmail or html.' });
       const id   = body.id || (slugify(body.name) + '-' + Date.now().toString(36));
       const path = `user-dashboards/${id}.html`;
+
+      // Read the registry FIRST and authorize before writing anything. Updating an existing
+      // dashboard is allowed only for the owner, an admin, or a granted editor (access level
+      // 'edit'). A brand-new dashboard (no matching entry) is owned by the caller.
+      const { data, sha } = await getRegistry();
+      const now = new Date().toISOString();
+      let entry = data.dashboards.find(d => d.id === id);
+      if (entry) {
+        const isAdmin  = DASH_ADMINS.includes(email);
+        const isOwner  = (entry.ownerEmail || '').toLowerCase() === email;
+        const isEditor = Array.isArray(entry.access) &&
+          entry.access.some(a => (a.email || '').toLowerCase() === email && a.level === 'edit');
+        if (!isOwner && !isAdmin && !isEditor) {
+          return res.status(403).json({ error: 'You do not have edit access to this dashboard.' });
+        }
+      }
+
       const fileSha = body.id ? await getFileSha(path) : undefined;
-      const safeHtml = stripSecrets(body.html);
+      let safeHtml = stripSecrets(body.html);
+      // If this dashboard is already published (access-controlled), a re-save must not drop the
+      // access guard — re-inject it so an editor's (or owner's) edit can't silently make it public.
+      if (entry && entry.status === 'published' && safeHtml.indexOf('data-radar-access-guard') === -1) {
+        const guard = buildGuard(id);
+        safeHtml = /<body[^>]*>/i.test(safeHtml) ? safeHtml.replace(/<body[^>]*>/i, m => m + guard) : (guard + safeHtml);
+      }
       const putResp = await putFile(path, safeHtml, `Save dashboard ${id} (${email})`, fileSha);
       if (putResp.status !== 200 && putResp.status !== 201) {
         return res.status(putResp.status).json({ error: putResp.body });
       }
       const url = `https://radar-revops.vercel.app/${path}`;
-      const { data, sha } = await getRegistry();
-      const now = new Date().toISOString();
-      let entry = data.dashboards.find(d => d.id === id);
       if (entry) {
         entry.name = body.name || entry.name;
         entry.desc = body.desc || entry.desc;
         entry.tags = body.tags || entry.tags;
         if (body.config) entry.config = body.config;
+        // ownerEmail is intentionally NOT reassigned — an editor's save keeps the original owner.
+        entry.lastEditedBy = email;
         entry.updatedAt = now;
       } else {
         entry = {

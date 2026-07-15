@@ -2350,14 +2350,16 @@ async function myDashRender() {
   // Source of truth = the RADAR server registry (same as the DIY "My Dashboards" modal),
   // filtered to the signed-in user. Reuses dashCardHtml for Open / Edit / Submit / Delete.
   var mine = [];
+  var shared = [];
   try {
     if (typeof dashFetchRegistry === 'function' && typeof dashUserEmail === 'function' && dashUserEmail()) {
       var all = await dashFetchRegistry();
       var email = dashUserEmail();
       mine = (all || []).filter(function(d){ return d.ownerEmail && d.ownerEmail.toLowerCase() === email; });
+      shared = dashSharedWithMe(all, email);
     }
   } catch(e) {}
-  if (!mine.length) {
+  if (!mine.length && !shared.length) {
     el.innerHTML = '<div style="background:rgba(255,255,255,.03);border:1px dashed rgba(255,255,255,.1);border-radius:12px;padding:28px;text-align:center">'
       + '<div style="font-size:28px;margin-bottom:10px">🛠️</div>'
       + '<div style="font-size:13px;font-weight:600;color:rgba(255,255,255,.5);margin-bottom:6px">No dashboards yet — build your first one above</div>'
@@ -2366,9 +2368,14 @@ async function myDashRender() {
       + '</div>';
     return;
   }
-  el.innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px">'
-    + mine.map(function(d){ return dashCardHtml(d, false); }).join('')
-    + '</div>';
+  var grid = function(items, sharedMode){ return '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px">'
+    + items.map(function(d){ return dashCardHtml(d, false, sharedMode); }).join('') + '</div>'; };
+  var out = '';
+  if(mine.length) out += grid(mine, false);
+  if(shared.length){
+    out += '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.4);margin:18px 0 10px">Shared with me (can edit)</div>' + grid(shared, true);
+  }
+  el.innerHTML = out;
 }
 
 function escHtml(s) {
@@ -5065,9 +5072,20 @@ async function dashOpenMyDashboards(){
   var list = document.getElementById('mydash-list');
   list.innerHTML = '<div style="color:#B2BEC3;font-size:13px">Loading…</div>';
   var all = await dashFetchRegistry();
-  var mine = all.filter(function(d){ return d.ownerEmail && d.ownerEmail.toLowerCase() === dashUserEmail(); });
-  if(!mine.length){ list.innerHTML = '<div style="color:#B2BEC3;font-size:13px">You haven\'t saved any dashboards yet. Generate one, then click 💾 Save to RADAR.</div>'; return; }
-  list.innerHTML = mine.map(function(d){ return dashCardHtml(d, false); }).join('');
+  var me = dashUserEmail();
+  var mine = all.filter(function(d){ return d.ownerEmail && d.ownerEmail.toLowerCase() === me; });
+  var shared = dashSharedWithMe(all, me);
+  if(!mine.length && !shared.length){ list.innerHTML = '<div style="color:#B2BEC3;font-size:13px">You haven\'t saved any dashboards yet. Generate one, then click 💾 Save to RADAR.</div>'; return; }
+  var html = '';
+  if(mine.length){
+    html += (shared.length ? '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.4);margin:2px 0 8px">Your dashboards</div>' : '')
+      + mine.map(function(d){ return dashCardHtml(d, false); }).join('');
+  }
+  if(shared.length){
+    html += '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.4);margin:16px 0 8px">Shared with me (can edit)</div>'
+      + shared.map(function(d){ return dashCardHtml(d, false, true); }).join('');
+  }
+  list.innerHTML = html;
 }
 
 async function dashOpenAdminRequests(){
@@ -5092,13 +5110,16 @@ function dashStatusBadge(s){
   return '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:' + m[1] + '22;color:' + m[1] + '">' + m[0] + '</span>';
 }
 
-function dashCardHtml(d, adminView){
+function dashCardHtml(d, adminView, sharedMode){
   var safeId = (d.id||'').replace(/'/g,"\\'");
   var actions = '';
   if(adminView){
     actions =
       '<button class="diy-btn diy-btn-sm" style="background:#1DB954;color:#000" onclick="dashApprove(\'' + safeId + '\')">✓ Approve</button>' +
       '<button class="diy-btn diy-btn-ghost diy-btn-sm" onclick="dashReject(\'' + safeId + '\')">✗ Reject</button>';
+  } else if(sharedMode){
+    // Editor granted access by the owner: can edit & re-save, but NOT delete or manage access.
+    actions += '<button class="diy-btn diy-btn-ghost diy-btn-sm" onclick="dashEditEntry(\'' + safeId + '\')">✏️ Edit</button>';
   } else {
     if(d.config){
       actions += '<button class="diy-btn diy-btn-ghost diy-btn-sm" onclick="dashEditEntry(\'' + safeId + '\')">✏️ Edit</button>';
@@ -5107,6 +5128,9 @@ function dashCardHtml(d, adminView){
     actions += '<button class="diy-btn diy-btn-ghost diy-btn-sm" onclick="dashDelete(\'' + safeId + '\')">🗑 Delete</button>';
   }
   var openBtn = d.url ? '<button class="diy-btn diy-btn-ghost diy-btn-sm" onclick="dashCloseModal(\'mydash\');dashCloseModal(\'adminreq\');openDashboardEmbed(\'' + d.url + '\',\'' + (d.name||'').replace(/'/g,"\\'") + '\')">🔗 Open</button>' : '';
+  var ownerLine = (adminView || sharedMode)
+    ? '<div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:4px">👤 ' + (d.ownerName||d.ownerEmail) + (sharedMode ? ' <span style="color:rgba(29,185,84,.7)">· shared with you (can edit)</span>' : '') + '</div>'
+    : '';
   return '' +
     '<div style="border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:14px 16px;background:rgba(255,255,255,.03)">' +
       '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px">' +
@@ -5114,9 +5138,20 @@ function dashCardHtml(d, adminView){
         dashStatusBadge(d.status) +
       '</div>' +
       (d.desc ? '<div style="font-size:12px;color:rgba(255,255,255,.45);margin-top:4px">' + d.desc + '</div>' : '') +
-      (adminView ? '<div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:4px">👤 ' + (d.ownerName||d.ownerEmail) + '</div>' : '') +
+      ownerLine +
       '<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">' + openBtn + actions + '</div>' +
     '</div>';
+}
+
+// Dashboards another owner granted me edit access to (published with my email at level 'edit').
+function dashSharedWithMe(all, me){
+  me = (me||'').toLowerCase();
+  if(!me) return [];
+  return (all||[]).filter(function(d){
+    var owner = (d.ownerEmail||'').toLowerCase();
+    return owner !== me && Array.isArray(d.access) &&
+      d.access.some(function(a){ return (a.email||'').toLowerCase() === me && a.level === 'edit'; });
+  });
 }
 
 // Edit a RADAR-saved dashboard: restore its builder selections in place (stays in the DIY
