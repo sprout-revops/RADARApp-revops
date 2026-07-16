@@ -85,6 +85,7 @@
 
   /* CHART GRID */
   .chart-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+  .chart-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
   .chart-grid-2 { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 24px; }
   .chart-grid-2b { display: grid; grid-template-columns: 1fr 2fr; gap: 16px; margin-bottom: 24px; }
   .chart-grid-full { margin-bottom: 24px; }
@@ -139,11 +140,13 @@
   @media (max-width: 1200px) {
     .kpi-grid { grid-template-columns: repeat(4, 1fr); }
     .chart-grid-3 { grid-template-columns: repeat(2, 1fr); }
+    .chart-grid-4 { grid-template-columns: repeat(2, 1fr); }
     .scorecard-grid { grid-template-columns: repeat(2, 1fr); }
   }
   @media (max-width: 768px) {
     .kpi-grid { grid-template-columns: repeat(2, 1fr); }
     .chart-grid-3 { grid-template-columns: 1fr; }
+    .chart-grid-4 { grid-template-columns: 1fr; }
     .chart-grid-2, .chart-grid-2b { grid-template-columns: 1fr; }
     .scorecard-grid { grid-template-columns: 1fr; }
     .filters-bar { flex-direction: column; align-items: flex-start; }
@@ -220,11 +223,11 @@
 <!-- FILTERS -->
 <div class="filters-bar">
   <div class="filter-group">
-    <label>From</label>
+    <label title="Filters by lead create date">From (Created)</label>
     <input type="date" id="filterFrom">
   </div>
   <div class="filter-group">
-    <label>To</label>
+    <label title="Filters by lead create date">To (Created)</label>
     <input type="date" id="filterTo">
   </div>
   <div class="filter-divider"></div>
@@ -279,12 +282,12 @@
 
   <!-- 0. LEADERBOARD (top of dashboard) -->
   <div class="section-title">Upsell Rep Leaderboard</div>
-  <div class="chart-grid-3" style="margin-bottom:24px;">
+  <div class="chart-grid-4" style="margin-bottom:24px;">
     <div class="chart-card">
       <div class="chart-header">
         <div>
-          <div class="chart-title">🔥 Active Deals</div>
-          <div class="chart-subtitle">Most open deals in pipeline</div>
+          <div class="chart-title">🔥 UQL</div>
+          <div class="chart-subtitle">Total deals generated (Upsell Qualified Lead)</div>
         </div>
       </div>
       <div class="lb-list" id="lbActiveDeals"><!-- dynamic --></div>
@@ -307,17 +310,20 @@
       </div>
       <div class="lb-list" id="lbWonDeals"><!-- dynamic --></div>
     </div>
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">💵 Won MRR</div>
+          <div class="chart-subtitle">Monthly recurring revenue closed-won</div>
+        </div>
+      </div>
+      <div class="lb-list" id="lbWonMRR"><!-- dynamic --></div>
+    </div>
   </div>
 
   <!-- 1. KPI CARDS -->
   <div class="section-title">Overall KPIs</div>
   <div class="kpi-grid">
-    <div class="kpi-card">
-      <div class="kpi-label">Won/Closed Rate</div>
-      <div class="kpi-value" id="kpiWinRate">—</div>
-      <div class="kpi-sub">Won ÷ (Won + Lost)</div>
-      <div class="kpi-icon">🏆</div>
-    </div>
     <div class="kpi-card blue">
       <div class="kpi-label">Won Deals</div>
       <div class="kpi-value" id="kpiWonDeals">—</div>
@@ -353,6 +359,12 @@
       <div class="kpi-value" id="kpiLostDeals">—</div>
       <div class="kpi-sub">Closed Lost</div>
       <div class="kpi-icon">❌</div>
+    </div>
+    <div class="kpi-card teal">
+      <div class="kpi-label">Lead to Won Conversion Rate</div>
+      <div class="kpi-value" id="kpiLeadToWon">—</div>
+      <div class="kpi-sub">Won ÷ Total Deals (UQL)</div>
+      <div class="kpi-icon">🎯</div>
     </div>
   </div>
 
@@ -419,7 +431,7 @@
     <div class="chart-card">
       <div class="chart-header">
         <div>
-          <div class="chart-title">Active Deals per Stage</div>
+          <div class="chart-title">UQL per Stage</div>
           <div class="chart-subtitle">Active pipeline distribution</div>
         </div>
       </div>
@@ -494,8 +506,8 @@ async function dbQuery(sql) {
   const RT = (function(){ try { return localStorage.getItem("radar_id_token") || ""; } catch(e){ return ""; } })();
   const SHARED = !!RT;
   const H  = SHARED ? { "x-radar-token": RT, "Content-Type": "application/json" }
-                    : { "x-db-host": CONFIG.host, "x-db-token": CONFIG.token, 'x-radar-token': (localStorage.getItem('radar_id_token')||''), "Content-Type": "application/json" };
-  const PH = SHARED ? { "x-radar-token": RT } : { "x-db-host": CONFIG.host, "x-db-token": CONFIG.token , 'x-radar-token': (localStorage.getItem('radar_id_token')||'')};
+                    : { "x-db-host": CONFIG.host, "x-db-token": CONFIG.token, "Content-Type": "application/json" };
+  const PH = SHARED ? { "x-radar-token": RT } : { "x-db-host": CONFIG.host, "x-db-token": CONFIG.token };
   const reqBody = { statement: sql, wait_timeout: "0s", on_wait_timeout: "CONTINUE", format: "JSON_ARRAY" };
   if (!SHARED) reqBody.warehouse_id = CONFIG.warehouseId;
   const sub = await fetch("https://radar-revops.vercel.app/api/databricks", {
@@ -613,9 +625,10 @@ function filterDeals(rows) {
     if (f.csm && r.company_owner !== f.csm) return false;
     if (f.stage && r.stage_label !== f.stage) return false;
     if (f.from || f.to) {
-      const raw = r.close_date || r.create_date;
-      if (!raw) return false;
-      const d = new Date(raw);
+      // Filter by CREATE DATE (lead cohort), not close date — so a lead
+      // created in this window still counts even if it later closes outside it.
+      if (!r.create_date) return false;
+      const d = new Date(r.create_date);
       if (f.from && d < new Date(f.from)) return false;
       if (f.to) {
         const toEnd = new Date(f.to);
@@ -642,9 +655,7 @@ function computeKPIs(rows) {
   const wonStages = ['contract signed','project handover','sales handover','sales churn'];
   const wonRows = rows.filter(r => wonStages.includes((r.stage_label||'').toLowerCase()));
   const lostRows = rows.filter(r => (r.stage_label||'').toLowerCase() === 'closed lost');
-  const totalClosed = wonRows.length + lostRows.length;
 
-  const winRate = totalClosed > 0 ? (wonRows.length / totalClosed * 100) : 0;
   const wonDeals = wonRows.length;
   const mrr = wonRows.reduce((s,r) => s + (parseFloat(r.mrr)||0), 0);
   const efMrr = wonRows.reduce((s,r) => s + (parseFloat(r.ef_mrr)||0), 0);
@@ -654,18 +665,23 @@ function computeKPIs(rows) {
   const pipelineMRR = pipelineRows.reduce((s,r) => s + (parseFloat(r.mrr)||0), 0);
   const lostDeals = lostRows.length;
 
-  return { winRate, wonDeals, mrr, efMrr, ads, pipelineMRR, lostDeals, wonRows, lostRows, pipelineRows };
+  // UQL = total deals generated (Total Deals)
+  const uql = rows.length;
+  // Lead to Won Conversion Rate = Won Deals ÷ UQL (Total Deals)
+  const leadToWonRate = uql > 0 ? (wonDeals / uql * 100) : 0;
+
+  return { wonDeals, mrr, efMrr, ads, pipelineMRR, lostDeals, leadToWonRate, wonRows, lostRows, pipelineRows };
 }
 
 // ─── Render KPI Cards ────────────────────────────────────────────────────────
 function renderKPIs(kpis) {
-  document.getElementById('kpiWinRate').textContent = pct(kpis.winRate);
   document.getElementById('kpiWonDeals').textContent = kpis.wonDeals;
   document.getElementById('kpiMRR').textContent = fmt(kpis.mrr);
   document.getElementById('kpiEFMRR').textContent = fmt(kpis.efMrr);
   document.getElementById('kpiADS').textContent = fmt(kpis.ads);
   document.getElementById('kpiPipelineMRR').textContent = fmt(kpis.pipelineMRR);
   document.getElementById('kpiLostDeals').textContent = kpis.lostDeals;
+  document.getElementById('kpiLeadToWon').textContent = pct(kpis.leadToWonRate);
 }
 
 // ─── Pods Section: CSMs actually contributing deals per rep (table format) ───
@@ -691,16 +707,15 @@ function renderPodsSection(rows) {
     <tr>
       <th>Deal owner</th>
       <th>CSM</th>
-      <th style="text-align:right">Active</th>
       <th style="text-align:right">Won</th>
       <th style="text-align:right">Lost</th>
       <th style="text-align:right">DQ</th>
-      <th style="text-align:right">Total</th>
+      <th style="text-align:right">UQL</th>
     </tr>
   `;
 
   let bodyHtml = '';
-  let gActive = 0, gWon = 0, gLost = 0, gDQ = 0, gTotal = 0;
+  let gWon = 0, gLost = 0, gDQ = 0, gUQL = 0;
 
   allOwners.forEach(owner => {
     const color = repColor(owner);
@@ -709,19 +724,18 @@ function renderPodsSection(rows) {
     ownerRows.forEach(r => {
       const csm = r.company_owner;
       if (!csm) return;
-      if (!csmCounts[csm]) csmCounts[csm] = { active: 0, won: 0, lost: 0, dq: 0, total: 0 };
+      if (!csmCounts[csm]) csmCounts[csm] = { won: 0, lost: 0, dq: 0, total: 0 };
       const stage = (r.stage_label || '').toLowerCase();
       if (wonStages.includes(stage)) csmCounts[csm].won++;
       else if (dqStages.includes(stage)) csmCounts[csm].dq++;
       else if (lostStages.includes(stage)) csmCounts[csm].lost++;
-      else csmCounts[csm].active++;
       csmCounts[csm].total++;
     });
     const csmsPresent = Object.keys(csmCounts).filter(csm => CSM_TO_REP[csm] === owner);
     if (!csmsPresent.length) {
       bodyHtml += `<tr class="owner-group-end">
         <td style="font-weight:700;color:${color}">${safe(owner)}</td>
-        <td></td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num"></td>
+        <td></td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num"></td>
       </tr>`;
       return;
     }
@@ -729,13 +743,12 @@ function renderPodsSection(rows) {
 
     csms.forEach((csm, idx) => {
       const c = csmCounts[csm];
-      gActive += c.active; gWon += c.won; gLost += c.lost; gDQ += c.dq; gTotal += c.total;
+      gWon += c.won; gLost += c.lost; gDQ += c.dq; gUQL += c.total;
       bodyHtml += `<tr class="${idx === csms.length-1 ? 'owner-group-end' : ''}">`;
       if (idx === 0) {
         bodyHtml += `<td rowspan="${csms.length}" style="font-weight:700;color:${color};vertical-align:top">${safe(owner)}</td>`;
       }
       bodyHtml += `<td style="color:var(--blue)">${safe(csm)}</td>`;
-      bodyHtml += `<td class="num">${c.active}</td>`;
       bodyHtml += `<td class="num">${c.won}</td>`;
       bodyHtml += `<td class="num">${c.lost}</td>`;
       bodyHtml += `<td class="num">${c.dq}</td>`;
@@ -746,11 +759,10 @@ function renderPodsSection(rows) {
 
   bodyHtml += `<tr class="report-total-row">
     <td colspan="2" style="font-weight:800">Report Total</td>
-    <td class="num" style="font-weight:800">${gActive}</td>
     <td class="num" style="font-weight:800">${gWon}</td>
     <td class="num" style="font-weight:800">${gLost}</td>
     <td class="num" style="font-weight:800">${gDQ}</td>
-    <td class="num" style="font-weight:800;color:var(--accent)">${gTotal}</td>
+    <td class="num" style="font-weight:800;color:var(--accent)">${gUQL}</td>
   </tr>`;
 
   tbody.innerHTML = bodyHtml;
@@ -761,7 +773,8 @@ function renderLeaderboard(rows) {
   const elActive = document.getElementById('lbActiveDeals');
   const elMRR = document.getElementById('lbTheoreticalMRR');
   const elWon = document.getElementById('lbWonDeals');
-  if (!elActive || !elMRR || !elWon) return;
+  const elWonMRR = document.getElementById('lbWonMRR');
+  if (!elActive || !elMRR || !elWon || !elWonMRR) return;
 
   const wonStages = ['contract signed','project handover','sales handover','sales churn'];
   const lostStages = ['closed lost'];
@@ -774,7 +787,9 @@ function renderLeaderboard(rows) {
     });
     const wonRows = repRows.filter(r => wonStages.includes((r.stage_label||'').toLowerCase()));
     const theoreticalMRR = activeRows.reduce((s,r) => s+(parseFloat(r.mrr)||0), 0);
-    return { rep, activeDeals: activeRows.length, theoreticalMRR, wonDeals: wonRows.length };
+    const wonMRR = wonRows.reduce((s,r) => s+(parseFloat(r.mrr)||0), 0);
+    // UQL = total deals generated (all stages), matching the "Total Deals" concept
+    return { rep, uql: repRows.length, theoreticalMRR, wonDeals: wonRows.length, wonMRR };
   });
 
   const medals = ['🥇','🥈','🥉'];
@@ -792,9 +807,10 @@ function renderLeaderboard(rows) {
     }).join('');
   }
 
-  renderList(elActive, 'activeDeals', v => v, 'var(--blue)');
+  renderList(elActive, 'uql', v => v, 'var(--blue)');
   renderList(elMRR, 'theoreticalMRR', v => fmt(v), 'var(--orange)');
   renderList(elWon, 'wonDeals', v => v, 'var(--accent)');
+  renderList(elWonMRR, 'wonMRR', v => fmt(v), 'var(--accent)');
 }
 
 // ─── Render Scorecards ───────────────────────────────────────────────────────
@@ -810,12 +826,8 @@ function renderScorecards(rows) {
     const wonRows = repRows.filter(r => wonStages.includes((r.stage_label||'').toLowerCase()));
     const lostRows = repRows.filter(r => (r.stage_label||'').toLowerCase() === 'closed lost');
     const dqRows = repRows.filter(r => dqStages.includes((r.stage_label||'').toLowerCase()));
-    const activeRows = repRows.filter(r => {
-      const s = (r.stage_label||'').toLowerCase();
-      return !wonStages.includes(s) && s !== 'closed lost' && !dqStages.includes(s);
-    });
-    const totalClosed = wonRows.length + lostRows.length;
-    const winRate = totalClosed > 0 ? (wonRows.length / totalClosed * 100) : 0;
+    const uql = repRows.length; // UQL = total deals generated
+    const leadToWonRate = uql > 0 ? (wonRows.length / uql * 100) : 0;
     const mrr = wonRows.reduce((s,r) => s+(parseFloat(r.mrr)||0),0);
     const pipelineStages = ['initial discovery done','solutioning','commercial negotiation','committed accounts'];
     const pipelineMRR = repRows.filter(r => pipelineStages.includes((r.stage_label||'').toLowerCase())).reduce((s,r)=>s+(parseFloat(r.mrr)||0),0);
@@ -828,16 +840,16 @@ function renderScorecards(rows) {
       <div class="scorecard-rep" style="color:${color}">${rep}</div>
       <div class="scorecard-metrics">
         <div class="scorecard-metric">
-          <div class="scorecard-metric-label">Active Deals</div>
-          <div class="scorecard-metric-value" style="color:${color}">${activeRows.length}</div>
+          <div class="scorecard-metric-label">UQL</div>
+          <div class="scorecard-metric-value" style="color:${color}">${uql}</div>
         </div>
         <div class="scorecard-metric">
           <div class="scorecard-metric-label">Won Deals</div>
           <div class="scorecard-metric-value" style="color:${color}">${wonRows.length}</div>
         </div>
         <div class="scorecard-metric">
-          <div class="scorecard-metric-label">Win Rate</div>
-          <div class="scorecard-metric-value" style="color:${color}">${pct(winRate)}</div>
+          <div class="scorecard-metric-label">Lead to Won Conversion Rate</div>
+          <div class="scorecard-metric-value" style="color:${color}">${pct(leadToWonRate)}</div>
         </div>
         <div class="scorecard-metric">
           <div class="scorecard-metric-label">MRR</div>
@@ -854,10 +866,6 @@ function renderScorecards(rows) {
         <div class="scorecard-metric">
           <div class="scorecard-metric-label">DQ Deals</div>
           <div class="scorecard-metric-value" style="color:${color}">${dqRows.length}</div>
-        </div>
-        <div class="scorecard-metric">
-          <div class="scorecard-metric-label">Total Deals</div>
-          <div class="scorecard-metric-value" style="color:${color}">${repRows.length}</div>
         </div>
       </div>
     `;
@@ -1219,4 +1227,3 @@ document.addEventListener('DOMContentLoaded', init);
 </script>
 </body>
 </html>
-<!--radar-db-token-upgraded-->
