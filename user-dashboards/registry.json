@@ -417,7 +417,7 @@
       "url": "https://radar-revops.vercel.app/user-dashboards/upsell-success-pods-performance-mrdc2fde.html",
       "status": "published",
       "createdAt": "2026-07-09T09:57:43.055Z",
-      "updatedAt": "2026-07-14T06:07:19.282Z",
+      "updatedAt": "2026-07-16T08:25:21.674Z",
       "requestedAt": null,
       "publishedAt": "2026-07-10T05:23:46.876Z",
       "access": [
@@ -445,7 +445,8 @@
           "email": "jlopez@sprout.ph",
           "level": "view"
         }
-      ]
+      ],
+      "lastEditedBy": "nduran@sprout.ph"
     }
   ]
 }
