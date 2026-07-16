@@ -427,7 +427,7 @@
         },
         {
           "email": "jmchumacera@sprout.ph",
-          "level": "edit"
+          "level": "view"
         },
         {
           "email": "kang@sprout.ph",
@@ -443,6 +443,10 @@
         },
         {
           "email": "jlopez@sprout.ph",
+          "level": "view"
+        },
+        {
+          "email": "apanares@sprout.ph",
           "level": "view"
         }
       ],
