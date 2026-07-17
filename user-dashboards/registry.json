@@ -451,6 +451,63 @@
         }
       ],
       "lastEditedBy": "nduran@sprout.ph"
+    },
+    {
+      "id": "revops-test-dashboard-v3-mro7turs",
+      "name": "REVOPS TEST DASHBOARD V3",
+      "desc": "",
+      "tags": [
+        "RevOps"
+      ],
+      "config": {
+        "tables": [
+          "silver_deals",
+          "silver_company",
+          "silver_line_items"
+        ],
+        "slicers": [
+          "date_range",
+          "pipeline_name",
+          "segment",
+          "department_source",
+          "channel_source",
+          "sales_rep",
+          "hubspot_team",
+          "deal_type",
+          "stage_label",
+          "client_journey_stage"
+        ],
+        "fieldSlicers": [],
+        "views": [
+          "kpi_cards",
+          "bar_chart",
+          "line_chart",
+          "data_table",
+          "pie_donut",
+          "combo_chart",
+          "stacked_bar",
+          "scorecard"
+        ],
+        "metrics": [
+          "Lead to Won Conversion %",
+          "Marketing Qualified Leads (MQL)",
+          "Outbound Qualified Leads (OQL)",
+          "Sales Qualified Leads (SQL)",
+          "Upsell Qualified Leads (UQL)"
+        ],
+        "dateScope": "between",
+        "dateBasis": "dynamic",
+        "layout": "kpichart"
+      },
+      "ownerEmail": "lurbina@sprout.ph",
+      "ownerName": "lurbina",
+      "file": "user-dashboards/revops-test-dashboard-v3-mro7turs.html",
+      "url": "https://radar-revops.vercel.app/user-dashboards/revops-test-dashboard-v3-mro7turs.html",
+      "status": "private",
+      "createdAt": "2026-07-17T00:44:31.738Z",
+      "updatedAt": "2026-07-17T00:44:31.738Z",
+      "requestedAt": null,
+      "publishedAt": null
     }
   ]
 }
