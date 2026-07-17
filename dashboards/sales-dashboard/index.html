@@ -1201,7 +1201,7 @@ function renderNewProducts(){
   // header
   let head = '<tr style="background:#ffffff08;">'
     + '<th style="text-align:left;padding:8px 10px;position:sticky;left:0;background:#0d1117;">Segment</th>'
-    + '<th style="text-align:left;padding:8px 10px;">Adj.</th>'
+    + '<th style="text-align:left;padding:8px 10px;">Target %</th>'
     + '<th style="text-align:left;padding:8px 10px;">Metric</th>';
   MONTHS.forEach((mo,i)=>{ head += `<th style="text-align:right;padding:8px 10px;${i>=6?'':'color:#ffffff30;'}">${mo}</th>`; });
   head += '<th style="text-align:right;padding:8px 12px;border-left:2px solid #ffffff20;">Total</th></tr>';
@@ -1209,53 +1209,54 @@ function renderNewProducts(){
 
   const th = (txt,extra='') => `<td style="padding:6px 10px;${extra}">${txt}</td>`;
   const num = (v,extra='') => `<td style="text-align:right;padding:6px 10px;font-family:'IBM Plex Mono',monospace;${extra}">${v}</td>`;
+  const sum = arr => arr.reduce((x,y)=>x+y,0);
   let body = '';
-  // running grand totals
-  const gT=Array(12).fill(0), gNB=Array(12).fill(0), gUS=Array(12).fill(0), gA=Array(12).fill(0);
+  // running grand totals: target, N/B target, U/S target, N/B actual, U/S actual
+  const gT=Array(12).fill(0), gNBt=Array(12).fill(0), gUSt=Array(12).fill(0), gNBa=Array(12).fill(0), gUSa=Array(12).fill(0);
 
   NP_CONFIG.forEach(cfg => {
     const tgt = npMonthlyTarget(cfg);
-    const nbT = tgt.map(v=>v*cfg.nb), usT = tgt.map(v=>v*cfg.us);
-    const aTot=[], aNB=[], aUS=[];
-    for (let m=1;m<=12;m++){ const a=act[cfg.key][m]; aNB.push(a.nb); aUS.push(a.us); aTot.push(a.nb+a.us); }
-    tgt.forEach((v,i)=>{ gT[i]+=v; gNB[i]+=nbT[i]; gUS[i]+=usT[i]; gA[i]+=aTot[i]; });
-    const sum = arr => arr.reduce((x,y)=>x+y,0);
+    const aNB=[], aUS=[];
+    for (let m=1;m<=12;m++){ const a=act[cfg.key][m]; aNB.push(a.nb); aUS.push(a.us); }
+    tgt.forEach((v,i)=>{ gT[i]+=v; gNBt[i]+=v*cfg.nb; gUSt[i]+=v*cfg.us; gNBa[i]+=aNB[i]; gUSa[i]+=aUS[i]; });
+    const aTot = aNB.map((v,i)=>v+aUS[i]);
 
-    // Target row
+    // Target row (total monthly target)
     body += `<tr style="border-top:2px solid #ffffff15;font-weight:700;color:#fff;background:#ffffff05;">`
-      + th(cfg.label,'position:sticky;left:0;background:#141a22;font-weight:700;') + th('MRR','color:#ffffff40;') + th('Target')
+      + th(cfg.label,'position:sticky;left:0;background:#141a22;font-weight:700;') + th('') + th('Target')
       + tgt.map((v,i)=>num(v?money0(v):'', i>=6?'':'color:#ffffff20;')).join('')
       + num(money0(sum(tgt)),'border-left:2px solid #ffffff20;') + '</tr>';
-    // N/B row
-    body += `<tr style="color:#ffffff70;">` + th('N/B','position:sticky;left:0;background:#0d1117;') + th((cfg.nb*100).toFixed(0)+'%','color:#ffffff40;') + th('')
-      + nbT.map((v,i)=>num(v?money0(v):'', i>=6?'':'color:#ffffff20;')).join('') + num(money0(sum(nbT))) + '</tr>';
-    // U/S row
-    body += `<tr style="color:#ffffff70;">` + th('U/S','position:sticky;left:0;background:#0d1117;') + th((cfg.us*100).toFixed(0)+'%','color:#ffffff40;') + th('')
-      + usT.map((v,i)=>num(v?money0(v):'', i>=6?'':'color:#ffffff20;')).join('') + num(money0(sum(usT))) + '</tr>';
-    // Actual row
-    body += `<tr style="background:rgba(52,211,153,0.07);color:#6ee7b7;">` + th('','position:sticky;left:0;background:#0f1a15;') + th('') + th('Actual','font-weight:700;')
-      + aTot.map((v,i)=>num(money0(v), i>=6?'':'color:#ffffff20;')).join('') + num(money0(sum(aTot)),'font-weight:700;border-left:2px solid #ffffff20;') + '</tr>';
-    // Achievement row
+    // N/B row → Target % + actual won MRR (New Business)
+    body += `<tr style="background:rgba(52,211,153,0.06);color:#6ee7b7;">`
+      + th('N/B','position:sticky;left:0;background:#0f1a15;') + th((cfg.nb*100).toFixed(0)+'%','color:#ffffff55;') + th('Actual')
+      + aNB.map((v,i)=>num(money0(v), i>=6?'':'color:#ffffff20;')).join('') + num(money0(sum(aNB)),'border-left:2px solid #ffffff20;') + '</tr>';
+    // U/S row → Target % + actual won MRR (Upsell)
+    body += `<tr style="background:rgba(52,211,153,0.06);color:#6ee7b7;">`
+      + th('U/S','position:sticky;left:0;background:#0f1a15;') + th((cfg.us*100).toFixed(0)+'%','color:#ffffff55;') + th('Actual')
+      + aUS.map((v,i)=>num(money0(v), i>=6?'':'color:#ffffff20;')).join('') + num(money0(sum(aUS)),'border-left:2px solid #ffffff20;') + '</tr>';
+    // Achievement row (total actual / target)
     body += `<tr style="color:#93c5fd;">` + th('','position:sticky;left:0;background:#0d1117;') + th('') + th('Achievement')
       + aTot.map((v,i)=>num(pct(v,tgt[i]), i>=6?'':'color:#ffffff20;')).join('') + num(pct(sum(aTot),sum(tgt)),'border-left:2px solid #ffffff20;') + '</tr>';
   });
 
-  // Grand total (Sales)
-  const sum = arr => arr.reduce((x,y)=>x+y,0);
+  // Grand total (Sales) — blended Target % from target splits
+  const nbPct = sum(gT)>0 ? (sum(gNBt)/sum(gT)*100).toFixed(0)+'%' : '';
+  const usPct = sum(gT)>0 ? (sum(gUSt)/sum(gT)*100).toFixed(0)+'%' : '';
+  const gATot = gNBa.map((v,i)=>v+gUSa[i]);
   body += `<tr style="border-top:3px solid #ffffff30;font-weight:800;color:#fbbf24;background:#ffffff08;">`
-    + th('Sales (Total)','position:sticky;left:0;background:#1a1508;font-weight:800;') + th('MRR','color:#ffffff40;') + th('Target')
+    + th('Sales (Total)','position:sticky;left:0;background:#1a1508;font-weight:800;') + th('') + th('Target')
     + gT.map((v,i)=>num(v?money0(v):'', i>=6?'':'color:#ffffff20;')).join('') + num(money0(sum(gT)),'border-left:2px solid #ffffff20;') + '</tr>';
-  body += `<tr style="color:#ffffff80;"><td style="padding:6px 10px;position:sticky;left:0;background:#0d1117;">N/B</td>` + th('') + th('')
-    + gNB.map((v,i)=>num(v?money0(v):'', i>=6?'':'color:#ffffff20;')).join('') + num(money0(sum(gNB))) + '</tr>';
-  body += `<tr style="color:#ffffff80;"><td style="padding:6px 10px;position:sticky;left:0;background:#0d1117;">U/S</td>` + th('') + th('')
-    + gUS.map((v,i)=>num(v?money0(v):'', i>=6?'':'color:#ffffff20;')).join('') + num(money0(sum(gUS))) + '</tr>';
-  body += `<tr style="background:rgba(52,211,153,0.12);color:#6ee7b7;font-weight:700;"><td style="padding:6px 10px;position:sticky;left:0;background:#0f1a15;"></td>` + th('') + th('Actual')
-    + gA.map((v,i)=>num(money0(v), i>=6?'':'color:#ffffff20;')).join('') + num(money0(sum(gA)),'border-left:2px solid #ffffff20;') + '</tr>';
-  body += `<tr style="color:#93c5fd;font-weight:700;"><td style="padding:6px 10px;position:sticky;left:0;background:#0d1117;"></td>` + th('') + th('Achievement')
-    + gA.map((v,i)=>num(pct(v,gT[i]), i>=6?'':'color:#ffffff20;')).join('') + num(pct(sum(gA),sum(gT)),'border-left:2px solid #ffffff20;') + '</tr>';
+  body += `<tr style="background:rgba(52,211,153,0.1);color:#6ee7b7;font-weight:700;">`
+    + th('N/B','position:sticky;left:0;background:#0f1a15;') + th(nbPct,'color:#ffffff55;') + th('Actual')
+    + gNBa.map((v,i)=>num(money0(v), i>=6?'':'color:#ffffff20;')).join('') + num(money0(sum(gNBa)),'border-left:2px solid #ffffff20;') + '</tr>';
+  body += `<tr style="background:rgba(52,211,153,0.1);color:#6ee7b7;font-weight:700;">`
+    + th('U/S','position:sticky;left:0;background:#0f1a15;') + th(usPct,'color:#ffffff55;') + th('Actual')
+    + gUSa.map((v,i)=>num(money0(v), i>=6?'':'color:#ffffff20;')).join('') + num(money0(sum(gUSa)),'border-left:2px solid #ffffff20;') + '</tr>';
+  body += `<tr style="color:#93c5fd;font-weight:700;">` + th('','position:sticky;left:0;background:#0d1117;') + th('') + th('Achievement')
+    + gATot.map((v,i)=>num(pct(v,gT[i]), i>=6?'':'color:#ffffff20;')).join('') + num(pct(sum(gATot),sum(gT)),'border-left:2px solid #ffffff20;') + '</tr>';
 
   $id('np-tbody').innerHTML = body;
-  const badge = $id('np-att-badge'); if (badge) badge.textContent = pct(sum(gA), sum(gT));
+  const badge = $id('np-att-badge'); if (badge) badge.textContent = pct(sum(gATot), sum(gT));
 }
 
 /* ── Month Picker ───────────────────────────────── */
