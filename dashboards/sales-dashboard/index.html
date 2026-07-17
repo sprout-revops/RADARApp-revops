@@ -721,8 +721,9 @@ tfoot td:first-child { text-align:left; font-size:10px; font-weight:700; letter-
               <th style="text-align:left;padding:9px 12px;">Product</th>
               <th style="text-align:right;padding:9px 12px;"># Deals</th>
               <th style="text-align:right;padding:9px 12px;">Won Deals</th>
+              <th style="text-align:right;padding:9px 12px;">Won MRR</th>
               <th style="text-align:right;padding:9px 12px;">Pipeline MRR</th>
-              <th style="width:20px;"></th>
+              <th style="width:24px;"></th>
             </tr>
           </thead>
           <tbody id="np-deals-tbody"><tr><td style="padding:14px;color:#ffffff40;">Loading…</td></tr></tbody>
@@ -1286,37 +1287,53 @@ const NP_OPEN = {}; // product -> expanded?
 function renderNewProductDeals(){
   const tb = $id('np-deals-tbody'); if (!tb) return;
   const money0 = n => n ? '₱' + Math.round(n).toLocaleString('en-PH') : '₱0';
-  const OPEN_STAGES = s => s !== 'Customer' && s !== 'Closed Lost'; // pipeline = not won, not lost
+  const isOpen = s => s !== 'Customer' && s !== 'Closed Lost'; // pipeline = not won, not lost
+  const mono = "font-family:'IBM Plex Mono',monospace;";
   let html = '';
   NP_CONFIG.forEach(cfg => {
     const rows = (newProductDeals || []).filter(d => d.product === cfg.key);
     const nDeals = rows.length;
-    const won = rows.filter(d => d.client_journey_stage === 'Customer').length;
-    const pipeMRR = rows.filter(d => OPEN_STAGES(d.client_journey_stage))
-                        .reduce((s,d)=>s + (parseFloat(d.mrr)||0), 0);
+    const wonRows = rows.filter(d => d.client_journey_stage === 'Customer');
+    const won = wonRows.length;
+    const wonMRR  = wonRows.reduce((s,d)=>s + (parseFloat(d.mrr)||0), 0);
+    const pipeMRR = rows.filter(d => isOpen(d.client_journey_stage)).reduce((s,d)=>s + (parseFloat(d.mrr)||0), 0);
     const open = NP_OPEN[cfg.key];
     const arrow = nDeals ? (open ? '▾' : '▸') : '';
     const clickable = nDeals ? `onclick="npToggleDeals('${cfg.key}')" style="cursor:pointer;"` : 'style="opacity:.5;"';
-    html += `<tr ${clickable} class="np-sum-row" data-p="${cfg.key}">`
-      + `<td style="padding:9px 12px;font-weight:600;color:#fff;">${arrow} ${cfg.label}</td>`
-      + `<td style="text-align:right;padding:9px 12px;font-family:'IBM Plex Mono',monospace;">${nDeals}</td>`
-      + `<td style="text-align:right;padding:9px 12px;font-family:'IBM Plex Mono',monospace;color:#6ee7b7;">${won}</td>`
-      + `<td style="text-align:right;padding:9px 12px;font-family:'IBM Plex Mono',monospace;color:#93c5fd;">${money0(pipeMRR)}</td>`
-      + `<td style="text-align:center;color:#ffffff40;">${arrow}</td></tr>`;
+    html += `<tr ${clickable} class="np-sum-row" data-p="${cfg.key}"${open?' style="background:#ffffff06;cursor:pointer;"':''}>`
+      + `<td style="padding:9px 12px;font-weight:600;color:#fff;">${cfg.label}</td>`
+      + `<td style="text-align:right;padding:9px 12px;${mono}">${nDeals}</td>`
+      + `<td style="text-align:right;padding:9px 12px;${mono}color:#6ee7b7;">${won}</td>`
+      + `<td style="text-align:right;padding:9px 12px;${mono}color:#6ee7b7;">${money0(wonMRR)}</td>`
+      + `<td style="text-align:right;padding:9px 12px;${mono}color:#93c5fd;">${money0(pipeMRR)}</td>`
+      + `<td style="text-align:center;color:#ffffff50;">${arrow}</td></tr>`;
     if (open && nDeals){
       const stageColor = s => s==='Customer' ? '#6ee7b7' : (s==='Closed Lost' ? '#f87171' : '#93c5fd');
-      const detail = rows.map(d =>
-        `<tr style="background:#ffffff03;font-size:11px;">`
-        + `<td style="padding:6px 12px 6px 28px;color:#e2e8f0;">${d.deal_name||'—'}</td>`
-        + `<td style="padding:6px 12px;color:#ffffff70;">${d.sales_rep||'—'}</td>`
-        + `<td style="padding:6px 12px;"><span style="color:${stageColor(d.client_journey_stage)};">${d.stage_label||'—'}</span></td>`
-        + `<td style="padding:6px 12px;color:#ffffff70;">${d.pipeline_name||'—'}</td>`
-        + `<td></td></tr>`).join('');
-      html += `<tr><td colspan="5" style="padding:0;">`
-        + `<table style="width:100%;border-collapse:collapse;">`
-        + `<thead><tr style="background:#ffffff05;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#ffffff40;">`
-        + `<th style="text-align:left;padding:6px 12px 6px 28px;">Deal Name</th><th style="text-align:left;padding:6px 12px;">Owner</th>`
-        + `<th style="text-align:left;padding:6px 12px;">Stage</th><th style="text-align:left;padding:6px 12px;">Pipeline</th><th></th></tr></thead>`
+      const cell = (v,extra='') => `<td style="padding:7px 12px;${extra}">${v}</td>`;
+      const rcell = (v,extra='') => `<td style="padding:7px 12px;text-align:right;${mono}${extra}">${v}</td>`;
+      const detail = rows.map(d => {
+        const m = parseFloat(d.mrr)||0;
+        const isWon = d.client_journey_stage === 'Customer';
+        const openStage = isOpen(d.client_journey_stage);
+        return `<tr style="font-size:11px;border-top:1px solid #ffffff08;">`
+          + cell(d.deal_name||'—', 'color:#e2e8f0;padding-left:28px;')
+          + cell(d.sales_rep||'—', 'color:#ffffff70;')
+          + cell(`<span style="color:${stageColor(d.client_journey_stage)};">${d.stage_label||'—'}</span>`)
+          + cell(d.pipeline_name||'—', 'color:#ffffff70;')
+          + rcell(isWon ? money0(m) : '—', isWon?'color:#6ee7b7;':'color:#ffffff25;')
+          + rcell(openStage ? money0(m) : '—', openStage?'color:#93c5fd;':'color:#ffffff25;')
+          + `</tr>`;
+      }).join('');
+      html += `<tr><td colspan="6" style="padding:0;background:#0a0e14;">`
+        + `<table style="width:100%;border-collapse:collapse;table-layout:fixed;">`
+        + `<colgroup><col style="width:34%"><col style="width:20%"><col style="width:16%"><col style="width:14%"><col style="width:8%"><col style="width:8%"></colgroup>`
+        + `<thead><tr style="background:#ffffff05;font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:#ffffff45;">`
+        + `<th style="text-align:left;padding:6px 12px 6px 28px;">Deal Name</th>`
+        + `<th style="text-align:left;padding:6px 12px;">Owner</th>`
+        + `<th style="text-align:left;padding:6px 12px;">Stage</th>`
+        + `<th style="text-align:left;padding:6px 12px;">Pipeline</th>`
+        + `<th style="text-align:right;padding:6px 12px;">Won MRR</th>`
+        + `<th style="text-align:right;padding:6px 12px;">Pipeline MRR</th></tr></thead>`
         + `<tbody>${detail}</tbody></table></td></tr>`;
     }
   });
