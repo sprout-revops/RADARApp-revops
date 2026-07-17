@@ -482,6 +482,7 @@
             <th>CSM</th>
             <th>Stage</th>
             <th>Segment</th>
+            <th>Department Source</th>
             <th>Create Date</th>
             <th>Close Date</th>
             <th class="num">MRR</th>
@@ -491,7 +492,7 @@
           </tr>
         </thead>
         <tbody id="dealTableBody">
-          <tr><td colspan="11" class="no-data">Loading...</td></tr>
+          <tr><td colspan="12" class="no-data">Loading...</td></tr>
         </tbody>
       </table>
     </div>
@@ -1109,19 +1110,20 @@ function renderDealTable(rows) {
   document.getElementById('tableCount').textContent = `Showing ${display.length} of ${mappedRows.length} deals`;
 
   if (!display.length) {
-    tbody.innerHTML = '<tr><td colspan="11" class="no-data">No deals found</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="12" class="no-data">No deals found</td></tr>';
     return;
   }
 
   tbody.innerHTML = display.map(r => {
     const isWon = wonStages.includes((r.stage_label||'').toLowerCase());
     const isLost = (r.stage_label||'').toLowerCase() === 'closed lost';
+    const isActive = !isWon && !isLost;
     const statusBadge = isWon
       ? `<span class="badge badge-green">Won</span>`
       : isLost ? `<span class="badge badge-red">Lost</span>`
       : `<span class="badge badge-blue">Active</span>`;
     const createDate = r.create_date ? new Date(r.create_date).toLocaleDateString('en-PH',{day:'2-digit',month:'short',year:'numeric'}) : '—';
-    const closeDate = r.close_date ? new Date(r.close_date).toLocaleDateString('en-PH',{day:'2-digit',month:'short',year:'numeric'}) : '—';
+    const closeDate = isActive ? '' : (r.close_date ? new Date(r.close_date).toLocaleDateString('en-PH',{day:'2-digit',month:'short',year:'numeric'}) : '—');
     const repColor2 = repColor(r.sales_rep);
     const csmRep = CSM_TO_REP[r.company_owner];
     const csmBadgeColor = csmRep ? repColor(csmRep) : '#666';
@@ -1131,6 +1133,7 @@ function renderDealTable(rows) {
       <td><span style="color:${csmBadgeColor}">${safe(r.company_owner)}</span></td>
       <td><span style="font-size:11px">${safe(r.stage_label)}</span></td>
       <td>${normSeg(r.segment)||'—'}</td>
+      <td><span style="font-size:11px">${safe(r.department_source_clean)||'—'}</span></td>
       <td style="white-space:nowrap">${createDate}</td>
       <td style="white-space:nowrap">${closeDate}</td>
       <td class="num">${r.mrr && parseFloat(r.mrr) > 0 ? fmtFull(r.mrr) : '—'}</td>
