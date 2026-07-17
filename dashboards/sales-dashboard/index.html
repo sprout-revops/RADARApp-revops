@@ -709,6 +709,26 @@ tfoot td:first-child { text-align:left; font-size:10px; font-weight:700; letter-
       <span style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#ffffff25;">Targets: hardcoded (planning sheet) · Actuals: Databricks Won MRR, updated daily</span>
       <span style="font-size:10px;color:#ffffff30;">Next &amp; Foresight: targets only until added in HubSpot</span>
     </div>
+
+    <!-- Deal counts + pipeline, with per-product drill-down -->
+    <div style="margin-top:26px;">
+      <div style="font-size:13px;font-weight:800;color:#fff;margin-bottom:4px;">Deal Summary</div>
+      <div style="font-size:11px;color:#ffffff40;margin-bottom:10px;">Click a product to see its deals (name, owner, stage, pipeline).</div>
+      <div style="overflow-x:auto; border:1px solid #ffffff10; border-radius:10px;">
+        <table style="width:100%; border-collapse:collapse; font-size:12px;">
+          <thead>
+            <tr style="background:#ffffff08;">
+              <th style="text-align:left;padding:9px 12px;">Product</th>
+              <th style="text-align:right;padding:9px 12px;"># Deals</th>
+              <th style="text-align:right;padding:9px 12px;">Won Deals</th>
+              <th style="text-align:right;padding:9px 12px;">Pipeline MRR</th>
+              <th style="width:20px;"></th>
+            </tr>
+          </thead>
+          <tbody id="np-deals-tbody"><tr><td style="padding:14px;color:#ffffff40;">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -969,6 +989,7 @@ let allDeals    = [];
 let allTargets  = [];
 let allianceData = []; // Third Party line items by month
 let newProductsData = []; // New products (3.5M) won MRR by product x month x nb/us
+let newProductDeals = []; // New products deal-level detail (name, owner, stage, pipeline)
 let repMRRTargets = {}; // canonical rep name -> {month: value}
 let repEFTargets  = {}; // canonical rep name -> {month: value}
 let selFcYear  = CUR_YEAR;
@@ -1257,7 +1278,51 @@ function renderNewProducts(){
 
   $id('np-tbody').innerHTML = body;
   const badge = $id('np-att-badge'); if (badge) badge.textContent = pct(sum(gATot), sum(gT));
+  renderNewProductDeals();
 }
+
+// Deal summary (# deals, won, pipeline MRR) per product + expandable deal list.
+const NP_OPEN = {}; // product -> expanded?
+function renderNewProductDeals(){
+  const tb = $id('np-deals-tbody'); if (!tb) return;
+  const money0 = n => n ? '₱' + Math.round(n).toLocaleString('en-PH') : '₱0';
+  const OPEN_STAGES = s => s !== 'Customer' && s !== 'Closed Lost'; // pipeline = not won, not lost
+  let html = '';
+  NP_CONFIG.forEach(cfg => {
+    const rows = (newProductDeals || []).filter(d => d.product === cfg.key);
+    const nDeals = rows.length;
+    const won = rows.filter(d => d.client_journey_stage === 'Customer').length;
+    const pipeMRR = rows.filter(d => OPEN_STAGES(d.client_journey_stage))
+                        .reduce((s,d)=>s + (parseFloat(d.mrr)||0), 0);
+    const open = NP_OPEN[cfg.key];
+    const arrow = nDeals ? (open ? '▾' : '▸') : '';
+    const clickable = nDeals ? `onclick="npToggleDeals('${cfg.key}')" style="cursor:pointer;"` : 'style="opacity:.5;"';
+    html += `<tr ${clickable} class="np-sum-row" data-p="${cfg.key}">`
+      + `<td style="padding:9px 12px;font-weight:600;color:#fff;">${arrow} ${cfg.label}</td>`
+      + `<td style="text-align:right;padding:9px 12px;font-family:'IBM Plex Mono',monospace;">${nDeals}</td>`
+      + `<td style="text-align:right;padding:9px 12px;font-family:'IBM Plex Mono',monospace;color:#6ee7b7;">${won}</td>`
+      + `<td style="text-align:right;padding:9px 12px;font-family:'IBM Plex Mono',monospace;color:#93c5fd;">${money0(pipeMRR)}</td>`
+      + `<td style="text-align:center;color:#ffffff40;">${arrow}</td></tr>`;
+    if (open && nDeals){
+      const stageColor = s => s==='Customer' ? '#6ee7b7' : (s==='Closed Lost' ? '#f87171' : '#93c5fd');
+      const detail = rows.map(d =>
+        `<tr style="background:#ffffff03;font-size:11px;">`
+        + `<td style="padding:6px 12px 6px 28px;color:#e2e8f0;">${d.deal_name||'—'}</td>`
+        + `<td style="padding:6px 12px;color:#ffffff70;">${d.sales_rep||'—'}</td>`
+        + `<td style="padding:6px 12px;"><span style="color:${stageColor(d.client_journey_stage)};">${d.stage_label||'—'}</span></td>`
+        + `<td style="padding:6px 12px;color:#ffffff70;">${d.pipeline_name||'—'}</td>`
+        + `<td></td></tr>`).join('');
+      html += `<tr><td colspan="5" style="padding:0;">`
+        + `<table style="width:100%;border-collapse:collapse;">`
+        + `<thead><tr style="background:#ffffff05;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#ffffff40;">`
+        + `<th style="text-align:left;padding:6px 12px 6px 28px;">Deal Name</th><th style="text-align:left;padding:6px 12px;">Owner</th>`
+        + `<th style="text-align:left;padding:6px 12px;">Stage</th><th style="text-align:left;padding:6px 12px;">Pipeline</th><th></th></tr></thead>`
+        + `<tbody>${detail}</tbody></table></td></tr>`;
+    }
+  });
+  tb.innerHTML = html;
+}
+function npToggleDeals(p){ NP_OPEN[p] = !NP_OPEN[p]; renderNewProductDeals(); }
 
 /* ── Month Picker ───────────────────────────────── */
 function buildMonthPicker() {
@@ -3117,6 +3182,7 @@ async function init() {
     allTargets   = data.targets  || [];
     allianceData = data.alliance || [];
     newProductsData = data.new_products || [];
+    newProductDeals = data.new_products_deals || [];
 
     // Manual segment overrides — deal_id → segment
     const SEGMENT_OVERRIDES = { '31987433646': 'ENT' };
