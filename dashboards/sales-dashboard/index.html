@@ -721,8 +721,8 @@ tfoot td:first-child { text-align:left; font-size:10px; font-weight:700; letter-
               <th style="text-align:left;padding:9px 12px;">Product</th>
               <th style="text-align:right;padding:9px 12px;"># Deals</th>
               <th style="text-align:right;padding:9px 12px;">Won Deals</th>
-              <th style="text-align:right;padding:9px 12px;">Won MRR</th>
               <th style="text-align:right;padding:9px 12px;">Pipeline MRR</th>
+              <th style="text-align:right;padding:9px 12px;">Won MRR</th>
               <th style="width:24px;"></th>
             </tr>
           </thead>
@@ -1304,8 +1304,8 @@ function renderNewProductDeals(){
       + `<td style="padding:9px 12px;font-weight:600;color:#fff;">${cfg.label}</td>`
       + `<td style="text-align:right;padding:9px 12px;${mono}">${nDeals}</td>`
       + `<td style="text-align:right;padding:9px 12px;${mono}color:#6ee7b7;">${won}</td>`
-      + `<td style="text-align:right;padding:9px 12px;${mono}color:#6ee7b7;">${money0(wonMRR)}</td>`
       + `<td style="text-align:right;padding:9px 12px;${mono}color:#93c5fd;">${money0(pipeMRR)}</td>`
+      + `<td style="text-align:right;padding:9px 12px;${mono}color:#6ee7b7;">${money0(wonMRR)}</td>`
       + `<td style="text-align:center;color:#ffffff50;">${arrow}</td></tr>`;
     if (open && nDeals){
       const stageColor = s => s==='Customer' ? '#6ee7b7' : (s==='Closed Lost' ? '#f87171' : '#93c5fd');
@@ -1320,8 +1320,8 @@ function renderNewProductDeals(){
           + cell(d.sales_rep||'—', 'color:#ffffff70;')
           + cell(`<span style="color:${stageColor(d.client_journey_stage)};">${d.stage_label||'—'}</span>`)
           + cell(d.pipeline_name||'—', 'color:#ffffff70;')
-          + rcell(isWon ? money0(m) : '—', isWon?'color:#6ee7b7;':'color:#ffffff25;')
           + rcell(openStage ? money0(m) : '—', openStage?'color:#93c5fd;':'color:#ffffff25;')
+          + rcell(isWon ? money0(m) : '—', isWon?'color:#6ee7b7;':'color:#ffffff25;')
           + `</tr>`;
       }).join('');
       html += `<tr><td colspan="6" style="padding:0;background:#0a0e14;">`
@@ -1332,8 +1332,8 @@ function renderNewProductDeals(){
         + `<th style="text-align:left;padding:6px 12px;">Owner</th>`
         + `<th style="text-align:left;padding:6px 12px;">Stage</th>`
         + `<th style="text-align:left;padding:6px 12px;">Pipeline</th>`
-        + `<th style="text-align:right;padding:6px 12px;">Won MRR</th>`
-        + `<th style="text-align:right;padding:6px 12px;">Pipeline MRR</th></tr></thead>`
+        + `<th style="text-align:right;padding:6px 12px;">Pipeline MRR</th>`
+        + `<th style="text-align:right;padding:6px 12px;">Won MRR</th></tr></thead>`
         + `<tbody>${detail}</tbody></table></td></tr>`;
     }
   });
