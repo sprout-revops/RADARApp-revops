@@ -366,6 +366,7 @@ tfoot td:first-child { text-align:left; font-size:10px; font-weight:700; letter-
   <button class="tab"        id="tab-deals"   onclick="switchTab('deals')">📋 Top Deals</button>
   <button class="tab"        id="tab-actuals" onclick="switchTab('actuals')">📅 Actuals Summary</button>
   <button class="tab"        id="tab-newprod" onclick="switchTab('newprod')">🚀 New Products 3.5M</button>
+  <button class="tab"        id="tab-industry" onclick="switchTab('industry')">🏭 Industry (ENT · NB)</button>
   <div style="margin-left:auto; padding-bottom:8px; display:flex; align-items:center; gap:10px;">
     <span id="sync-status" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#ffffff25;letter-spacing:0.06em;">Loading...</span>
   </div>
@@ -733,6 +734,38 @@ tfoot td:first-child { text-align:left; font-size:10px; font-weight:700; letter-
   </div>
 </div>
 
+<!-- ═══════════════════════════════════════════════
+     INDUSTRY (ENT · NEW BUSINESS) TAB
+═══════════════════════════════════════════════ -->
+<div id="industry-panel" class="tab-panel" style="display:none; padding:24px;">
+  <div style="max-width:1200px; margin:0 auto;">
+    <div style="margin-bottom:18px;">
+      <div style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#ffffff25;margin-bottom:4px;">Sales Ops · ENT · New Business</div>
+      <div style="font-size:20px;font-weight:800;color:#fff;letter-spacing:-0.3px;">Industry Performance — ENT (New Business)</div>
+      <div style="font-size:11px;color:#ffffff40;margin-top:4px;">Qualified Leads → SQL → Won, by industry · YTD · click an industry to drill into sub-industries</div>
+    </div>
+    <div style="overflow-x:auto; border:1px solid #ffffff10; border-radius:10px;">
+      <table style="width:100%; border-collapse:collapse; font-size:12px;">
+        <thead>
+          <tr style="background:#ffffff08;">
+            <th style="text-align:left;padding:9px 12px;">Industry</th>
+            <th style="text-align:right;padding:9px 12px;">Qualified Leads</th>
+            <th style="text-align:right;padding:9px 12px;">SQL</th>
+            <th style="text-align:right;padding:9px 12px;">SQL Rate</th>
+            <th style="text-align:right;padding:9px 12px;">Won Deals</th>
+            <th style="text-align:right;padding:9px 12px;">Won MRR</th>
+            <th style="width:24px;"></th>
+          </tr>
+        </thead>
+        <tbody id="ind-tbody"><tr><td style="padding:14px;color:#ffffff40;">Loading…</td></tr></tbody>
+      </table>
+    </div>
+    <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#ffffff25;margin-top:10px;">
+      QL = qualified deals (create date, YTD) · SQL = qualified & past MQL · Won = Customer (close date, YTD) · Source: Databricks, daily
+    </div>
+  </div>
+</div>
+
 </div><!-- end salesops-section -->
 
 
@@ -991,6 +1024,7 @@ let allTargets  = [];
 let allianceData = []; // Third Party line items by month
 let newProductsData = []; // New products (3.5M) won MRR by product x month x nb/us
 let newProductDeals = []; // New products deal-level detail (name, owner, stage, pipeline)
+let industryEnt = []; // ENT New-Business performance by industry x sub-industry
 let repMRRTargets = {}; // canonical rep name -> {month: value}
 let repEFTargets  = {}; // canonical rep name -> {month: value}
 let selFcYear  = CUR_YEAR;
@@ -1170,7 +1204,7 @@ function fcTag(cat) {
 
 /* ── Tab Switching ──────────────────────────────── */
 function switchTab(t) {
-  ['mrr','fc','deals','actuals','newprod'].forEach(id => {
+  ['mrr','fc','deals','actuals','newprod','industry'].forEach(id => {
     const p = $id(id + '-panel');
     if (p) { p.classList.remove('active'); p.style.display = 'none'; }
     const tb = $id('tab-' + id);
@@ -1188,6 +1222,7 @@ function switchTab(t) {
   if (t === 'deals')   renderDeals();
   if (t === 'actuals') renderActuals();
   if (t === 'newprod') renderNewProducts();
+  if (t === 'industry') renderIndustryEnt();
 }
 
 /* ── NEW PRODUCTS 3.5M ───────────────────────────── */
@@ -1340,6 +1375,59 @@ function renderNewProductDeals(){
   tb.innerHTML = html;
 }
 function npToggleDeals(p){ NP_OPEN[p] = !NP_OPEN[p]; renderNewProductDeals(); }
+
+/* ── INDUSTRY (ENT · NEW BUSINESS) ───────────────── */
+const IND_OPEN = {}; // industry -> expanded?
+function renderIndustryEnt(){
+  const tb = $id('ind-tbody'); if (!tb) return;
+  const money0 = n => n ? '₱' + Math.round(n).toLocaleString('en-PH') : '₱0';
+  const mono = "font-family:'IBM Plex Mono',monospace;";
+  const num = x => parseFloat(x)||0;
+  const rate = (s,q) => q>0 ? (s/q*100).toFixed(1)+'%' : '—';
+  // roll up to industry
+  const byInd = {};
+  (industryEnt||[]).forEach(r => {
+    const k = r.industry || '(Unspecified)';
+    if (!byInd[k]) byInd[k] = { ql:0, sql:0, won:0, mrr:0, subs:[] };
+    const o = byInd[k];
+    o.ql += num(r.ql); o.sql += num(r.sql); o.won += num(r.won_deals); o.mrr += num(r.won_mrr);
+    o.subs.push(r);
+  });
+  const inds = Object.keys(byInd).sort((a,b)=> byInd[b].ql - byInd[a].ql);
+  const tot = { ql:0, sql:0, won:0, mrr:0 };
+  inds.forEach(k => { tot.ql+=byInd[k].ql; tot.sql+=byInd[k].sql; tot.won+=byInd[k].won; tot.mrr+=byInd[k].mrr; });
+
+  const rcell = (v,extra='') => `<td style="text-align:right;padding:9px 12px;${mono}${extra}">${v}</td>`;
+  let html = '';
+  inds.forEach(k => {
+    const o = byInd[k];
+    const open = IND_OPEN[k];
+    const arrow = open ? '▾' : '▸';
+    html += `<tr onclick="indToggle('${k.replace(/'/g,"\\'")}')" style="cursor:pointer;${open?'background:#ffffff06;':''}" class="ind-row">`
+      + `<td style="padding:9px 12px;font-weight:600;color:#fff;">${arrow} ${k}</td>`
+      + rcell(o.ql) + rcell(o.sql,'color:#93c5fd;') + rcell(rate(o.sql,o.ql),'color:#fbbf24;')
+      + rcell(o.won,'color:#6ee7b7;') + rcell(money0(o.mrr),'color:#6ee7b7;')
+      + `<td style="text-align:center;color:#ffffff50;">${arrow}</td></tr>`;
+    if (open){
+      const subs = o.subs.slice().sort((a,b)=> num(b.ql)-num(a.ql));
+      subs.forEach(s => {
+        html += `<tr style="font-size:11px;background:#0a0e14;border-top:1px solid #ffffff08;">`
+          + `<td style="padding:6px 12px 6px 30px;color:#ffffff85;">${s.sub_industry||'—'}</td>`
+          + rcell(num(s.ql),'color:#ffffff85;') + rcell(num(s.sql),'color:#93c5fd;')
+          + rcell(rate(num(s.sql),num(s.ql)),'color:#ffffff55;')
+          + rcell(num(s.won_deals),'color:#6ee7b7;') + rcell(money0(num(s.won_mrr)),'color:#6ee7b7;')
+          + `<td></td></tr>`;
+      });
+    }
+  });
+  // total
+  html += `<tr style="border-top:2px solid #ffffff25;font-weight:800;color:#fbbf24;background:#ffffff08;">`
+    + `<td style="padding:10px 12px;font-weight:800;">Total (ENT · NB)</td>`
+    + rcell(tot.ql,'color:#fff;') + rcell(tot.sql,'color:#fff;') + rcell(rate(tot.sql,tot.ql))
+    + rcell(tot.won,'color:#6ee7b7;') + rcell(money0(tot.mrr),'color:#6ee7b7;') + `<td></td></tr>`;
+  tb.innerHTML = html;
+}
+function indToggle(k){ IND_OPEN[k] = !IND_OPEN[k]; renderIndustryEnt(); }
 
 /* ── Month Picker ───────────────────────────────── */
 function buildMonthPicker() {
@@ -3200,6 +3288,7 @@ async function init() {
     allianceData = data.alliance || [];
     newProductsData = data.new_products || [];
     newProductDeals = data.new_products_deals || [];
+    industryEnt = data.industry_ent || [];
 
     // Manual segment overrides — deal_id → segment
     const SEGMENT_OVERRIDES = { '31987433646': 'ENT' };
