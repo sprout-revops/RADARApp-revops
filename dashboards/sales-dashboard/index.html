@@ -752,13 +752,12 @@ tfoot td:first-child { text-align:left; font-size:10px; font-weight:700; letter-
       <table style="width:100%; border-collapse:collapse; font-size:12px;">
         <thead>
           <tr style="background:#ffffff08;">
-            <th style="text-align:left;padding:9px 12px;">Industry</th>
-            <th style="text-align:right;padding:9px 12px;">Qualified Leads</th>
+            <th style="text-align:left;padding:9px 12px;min-width:300px;">Industry</th>
+            <th style="text-align:right;padding:9px 12px;white-space:nowrap;">Qualified Leads</th>
             <th style="text-align:right;padding:9px 12px;">SQL</th>
-            <th style="text-align:right;padding:9px 12px;">SQL Rate</th>
-            <th style="text-align:right;padding:9px 12px;">Won Deals</th>
-            <th style="text-align:right;padding:9px 12px;">Won MRR</th>
-            <th style="width:24px;"></th>
+            <th style="text-align:right;padding:9px 12px;white-space:nowrap;">SQL Rate</th>
+            <th style="text-align:right;padding:9px 12px;white-space:nowrap;">Won Deals</th>
+            <th style="text-align:right;padding:9px 12px;white-space:nowrap;">Won MRR</th>
           </tr>
         </thead>
         <tbody id="ind-tbody"><tr><td style="padding:14px;color:#ffffff40;">Loading…</td></tr></tbody>
@@ -1408,19 +1407,19 @@ function renderIndustryEnt(){
     const open = IND_OPEN[k];
     const arrow = open ? '▾' : '▸';
     html += `<tr onclick="indToggle('${k.replace(/'/g,"\\'")}')" style="cursor:pointer;${open?'background:#ffffff06;':''}" class="ind-row">`
-      + `<td style="padding:9px 12px;font-weight:600;color:#fff;">${arrow} ${k}</td>`
+      + `<td style="padding:9px 12px;"><div style="display:flex;gap:8px;align-items:baseline;"><span style="color:#6ee7b7;flex-shrink:0;width:10px;">${arrow}</span><span style="font-weight:600;color:#fff;">${k}</span></div></td>`
       + rcell(o.ql) + rcell(o.sql,'color:#93c5fd;') + rcell(rate(o.sql,o.ql),'color:#fbbf24;')
       + rcell(o.won,'color:#6ee7b7;') + rcell(money0(o.mrr),'color:#6ee7b7;')
-      + `<td style="text-align:center;color:#ffffff50;">${arrow}</td></tr>`;
+      + `</tr>`;
     if (open){
       const subs = o.subs.slice().sort((a,b)=> num(b.ql)-num(a.ql));
       subs.forEach(s => {
         html += `<tr style="font-size:11px;background:#0a0e14;border-top:1px solid #ffffff08;">`
-          + `<td style="padding:6px 12px 6px 30px;color:#ffffff85;">${s.sub_industry||'—'}</td>`
+          + `<td style="padding:6px 12px 6px 34px;color:#ffffff85;">${s.sub_industry||'—'}</td>`
           + rcell(num(s.ql),'color:#ffffff85;') + rcell(num(s.sql),'color:#93c5fd;')
           + rcell(rate(num(s.sql),num(s.ql)),'color:#ffffff55;')
           + rcell(num(s.won_deals),'color:#6ee7b7;') + rcell(money0(num(s.won_mrr)),'color:#6ee7b7;')
-          + `<td></td></tr>`;
+          + `</tr>`;
       });
     }
   });
@@ -1428,7 +1427,7 @@ function renderIndustryEnt(){
   html += `<tr style="border-top:2px solid #ffffff25;font-weight:800;color:#fbbf24;background:#ffffff08;">`
     + `<td style="padding:10px 12px;font-weight:800;">Total (ENT · NB)</td>`
     + rcell(tot.ql,'color:#fff;') + rcell(tot.sql,'color:#fff;') + rcell(rate(tot.sql,tot.ql))
-    + rcell(tot.won,'color:#6ee7b7;') + rcell(money0(tot.mrr),'color:#6ee7b7;') + `<td></td></tr>`;
+    + rcell(tot.won,'color:#6ee7b7;') + rcell(money0(tot.mrr),'color:#6ee7b7;') + `</tr>`;
   tb.innerHTML = html;
 }
 function indToggle(k){ IND_OPEN[k] = !IND_OPEN[k]; renderIndustryEnt(); }
