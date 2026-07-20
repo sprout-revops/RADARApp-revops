@@ -367,7 +367,7 @@
     {
       "id": "upsell-success-pods-performance-mrdc2fde",
       "name": "Upsell | Success Pods Performance",
-      "desc": "The Upsell | Success Pods Performance dashboard tracks how Upsell Reps and their assigned CSM pods are performing across the [PH] Upsell Pipeline — covering deal counts, MRR, win rates, and leaderboards, all filterable by date, segment, rep, CSM, and stage. It's built to show actual pod contribution and performance at a glance, cross-checking real deal data against official CSM-to-Upsell Rep assignments.",
+      "desc": "The Upsell | Success Pods Performance dashboard tracks how Upsell Reps and their assigned CSM pods are performing across the [PH] Upsell Pipeline — covering deal counts, MRR, win rates, and leaderboards, all filterable by date, segment, rep, CSM, and stage.",
       "tags": [],
       "config": {
         "tables": [
@@ -417,7 +417,7 @@
       "url": "https://radar-revops.vercel.app/user-dashboards/upsell-success-pods-performance-mrdc2fde.html",
       "status": "published",
       "createdAt": "2026-07-09T09:57:43.055Z",
-      "updatedAt": "2026-07-17T06:33:45.899Z",
+      "updatedAt": "2026-07-20T05:22:25.303Z",
       "requestedAt": null,
       "publishedAt": "2026-07-10T05:23:46.876Z",
       "access": [
