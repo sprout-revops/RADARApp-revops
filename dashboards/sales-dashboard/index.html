@@ -352,6 +352,7 @@ tfoot td:first-child { text-align:left; font-size:10px; font-weight:700; letter-
   <button class="mode-btn active" id="mode-salesops"  onclick="switchMode('salesops')">Sales Ops</button>
   <button class="mode-btn"        id="mode-salesperf" onclick="switchMode('salesperf')">Sales Performance</button>
   <button class="mode-btn"        id="mode-deptmix"   onclick="switchMode('deptmix')">Department Mix</button>
+  <button class="mode-btn"        id="mode-industry"  onclick="switchMode('industry')">Industry (ENT · NB)</button>
 </div>
 
 <div id="salesops-section">
@@ -366,7 +367,6 @@ tfoot td:first-child { text-align:left; font-size:10px; font-weight:700; letter-
   <button class="tab"        id="tab-deals"   onclick="switchTab('deals')">📋 Top Deals</button>
   <button class="tab"        id="tab-actuals" onclick="switchTab('actuals')">📅 Actuals Summary</button>
   <button class="tab"        id="tab-newprod" onclick="switchTab('newprod')">🚀 New Products 3.5M</button>
-  <button class="tab"        id="tab-industry" onclick="switchTab('industry')">🏭 Industry (ENT · NB)</button>
   <div style="margin-left:auto; padding-bottom:8px; display:flex; align-items:center; gap:10px;">
     <span id="sync-status" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#ffffff25;letter-spacing:0.06em;">Loading...</span>
   </div>
@@ -734,14 +734,16 @@ tfoot td:first-child { text-align:left; font-size:10px; font-weight:700; letter-
   </div>
 </div>
 
+</div><!-- end salesops-section -->
+
 <!-- ═══════════════════════════════════════════════
-     INDUSTRY (ENT · NEW BUSINESS) TAB
+     INDUSTRY (ENT · NEW BUSINESS) — top-level mode
 ═══════════════════════════════════════════════ -->
-<div id="industry-panel" class="tab-panel" style="display:none; padding:24px;">
+<div id="industry-section" style="display:none; padding:24px;">
   <div style="max-width:1200px; margin:0 auto;">
     <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:18px; gap:12px; flex-wrap:wrap;">
       <div>
-        <div style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#ffffff25;margin-bottom:4px;">Sales Ops · ENT · New Business</div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#ffffff25;margin-bottom:4px;">ENT · New Business</div>
         <div style="font-size:20px;font-weight:800;color:#fff;letter-spacing:-0.3px;">Industry Performance — ENT (New Business)</div>
         <div style="font-size:11px;color:#ffffff40;margin-top:4px;">Qualified Leads → SQL → Won, by industry · YTD · click an industry to drill into sub-industries</div>
       </div>
@@ -767,9 +769,7 @@ tfoot td:first-child { text-align:left; font-size:10px; font-weight:700; letter-
       QL = qualified deals (create date, YTD) · SQL = qualified & past MQL · Won = Customer (close date, YTD) · Source: Databricks, daily
     </div>
   </div>
-</div>
-
-</div><!-- end salesops-section -->
+</div><!-- end industry-section -->
 
 
 <!-- ═══════════════════════════════════════════════
@@ -1207,7 +1207,7 @@ function fcTag(cat) {
 
 /* ── Tab Switching ──────────────────────────────── */
 function switchTab(t) {
-  ['mrr','fc','deals','actuals','newprod','industry'].forEach(id => {
+  ['mrr','fc','deals','actuals','newprod'].forEach(id => {
     const p = $id(id + '-panel');
     if (p) { p.classList.remove('active'); p.style.display = 'none'; }
     const tb = $id('tab-' + id);
@@ -1225,7 +1225,6 @@ function switchTab(t) {
   if (t === 'deals')   renderDeals();
   if (t === 'actuals') renderActuals();
   if (t === 'newprod') renderNewProducts();
-  if (t === 'industry') renderIndustryEnt();
 }
 
 /* ── NEW PRODUCTS 3.5M ───────────────────────────── */
@@ -2133,15 +2132,19 @@ function switchMode(mode) {
   const isOps  = mode === 'salesops';
   const isPerf = mode === 'salesperf';
   const isMix  = mode === 'deptmix';
+  const isInd  = mode === 'industry';
   $id('salesops-section').style.display  = isOps  ? '' : 'none';
   $id('salesperf-section').style.display = isPerf ? '' : 'none';
   $id('deptmix-section').style.display   = isMix  ? '' : 'none';
+  $id('industry-section').style.display  = isInd  ? '' : 'none';
   $id('mode-salesops').classList.toggle('active', isOps);
   $id('mode-salesperf').classList.toggle('active', isPerf);
   $id('mode-deptmix').classList.toggle('active', isMix);
+  $id('mode-industry').classList.toggle('active', isInd);
   localStorage.setItem('sales_mode', mode);
   if (isOps)       switchTab(localStorage.getItem('sales_tab') || 'mrr');
   else if (isMix)  switchDmTab(localStorage.getItem('dm_tab') || 'sme');
+  else if (isInd)  renderIndustryEnt();
   else             switchSpTab(localStorage.getItem('sp_tab') || 'rep');
 }
 
