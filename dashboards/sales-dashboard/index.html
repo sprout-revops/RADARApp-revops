@@ -2699,7 +2699,14 @@ function renderSegmentSummary() {
     { label:'U/S', pipelines:['PH Upsell Pipeline'], seg:null, color:'#e8b86d', chanFrac:0 },
   ];
 
+  // HARDCODED New-Business EF monthly target per segment (Sales Pipeline). The EF NB target sheet
+  // is not yet loaded into gold_targets (EF there sits only on PH Upsell). Remove once it's in the source.
+  const EF_NB_MON = { ENT: 40000, SME: 50000 };
   function getSegMonTgt(label, seg, mo, tf) {
+    if (tf === 'ef_mrr_target') {
+      if (label === 'U/S') return getTargetForRowMon('PH Upsell Pipeline', null, CUR_YEAR, mo, tf);
+      return EF_NB_MON[seg] || 0;   // ENT ₱40k/mo · SME ₱50k/mo (hardcoded, pending source)
+    }
     if (label === 'U/S') {
       return getTargetForRowMon('PH Upsell Pipeline', null, CUR_YEAR, mo, tf);
     }
