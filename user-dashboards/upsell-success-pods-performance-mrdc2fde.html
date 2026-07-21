@@ -251,12 +251,16 @@
       <option value="">All CSMs</option>
       <option value="France Paredes">France Paredes</option>
       <option value="Princess Mikhaela Manikan">Princess Mikhaela Manikan</option>
+      <option value="Matthew Abellaneda">Matthew Abellaneda</option>
       <option value="Ma. Rexelle Estacio">Ma. Rexelle Estacio</option>
       <option value="Jerome Portera">Jerome Portera</option>
+      <option value="Krystel Maano">Krystel Maano</option>
       <option value="Demcy Charles Cachero">Demcy Charles Cachero</option>
       <option value="Wil Luna">Wil Luna</option>
+      <option value="Ma. Ana Saavedra">Ma. Ana Saavedra</option>
       <option value="Lucky Lyne Penalosa">Lucky Lyne Penalosa</option>
       <option value="Mikhaela Angela Batara">Mikhaela Angela Batara</option>
+      <option value="Ross Benedict Palileo">Ross Benedict Palileo</option>
     </select>
   </div>
   <div class="filter-group">
@@ -577,15 +581,19 @@ const POD_COLORS = {
 const CSM_TO_REP = {
   'France Paredes': 'Kurt Ang',
   'Princess Mikhaela Manikan': 'Kurt Ang',
+  'Matthew Abellaneda': 'Kurt Ang',
   'Ma. Rexelle Estacio': 'Marie Christine Espineda',
   'Jerome Portera': 'Marie Christine Espineda',
+  'Krystel Maano': 'Marie Christine Espineda',
   'Demcy Charles Cachero': 'Ricardo Rigodon',
   'Wil Luna': 'Ricardo Rigodon',
+  'Ma. Ana Saavedra': 'Ricardo Rigodon',
   'Lucky Lyne Penalosa': 'Javier Lopez',
-  'Mikhaela Angela Batara': 'Javier Lopez'
+  'Mikhaela Angela Batara': 'Javier Lopez',
+  'Ross Benedict Palileo': 'Javier Lopez'
 };
 const REP_ORDER = ['Kurt Ang','Marie Christine Espineda','Ricardo Rigodon','Javier Lopez'];
-const CSM_ORDER = ['France Paredes','Princess Mikhaela Manikan','Ma. Rexelle Estacio','Jerome Portera','Demcy Charles Cachero','Wil Luna','Lucky Lyne Penalosa','Mikhaela Angela Batara'];
+const CSM_ORDER = ['France Paredes','Princess Mikhaela Manikan','Matthew Abellaneda','Ma. Rexelle Estacio','Jerome Portera','Krystel Maano','Demcy Charles Cachero','Wil Luna','Ma. Ana Saavedra','Lucky Lyne Penalosa','Mikhaela Angela Batara','Ross Benedict Palileo'];
 
 function repColor(rep) { return POD_COLORS[rep] || '#aaa'; }
 function csmColor(csm) { const rep = CSM_TO_REP[csm]; return rep ? repColor(rep) : '#aaa'; }
