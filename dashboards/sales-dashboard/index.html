@@ -1489,9 +1489,6 @@ function selectMonth(y, m) {
 function renderMRR() {
   let totalActual = 0, totalTarget = 0, totalLastYr = 0, totalWtdPipe = 0, html = '';
 
-  // Pre-compute Channels target once — split 50/50 between ENT and SME
-  const chanTarget = getTargetForRow('Unified Channel Pipeline', 'Channels', CUR_YEAR, CUR_MON, 'mrr_target');
-
   MRR_ROWS.forEach(({ label, pipelines, seg, targetPipe, targetSeg, chanFrac, pipePeriod }) => {
     const deals = dealsByRow(pipelines, seg);
 
@@ -1499,9 +1496,9 @@ function renderMRR() {
     const wonYTD = won(inYTD(deals, 'close_date', CUR_YEAR, CUR_MON));
     const actual = sum(wonYTD, mrr);
 
-    // YTD Target: own pipeline target + fraction of Channels target
-    const target = (targetPipe ? getTargetForRow(targetPipe, targetSeg, CUR_YEAR, CUR_MON, 'mrr_target') : 0)
-                 + chanFrac * chanTarget;
+    // YTD Target: sum mrr_target across this row's pipelines for its own segment.
+    // (Channels is now split into ENT/SME within Unified Channel Pipeline — no separate 'Channels' segment.)
+    const target = pipelines.reduce((s, p) => s + getTargetForRow(p, targetSeg, CUR_YEAR, CUR_MON, 'mrr_target'), 0);
 
     // YoY: same period last year
     const wonLY  = won(inYTD(deals, 'close_date', CUR_YEAR - 1, CUR_MON));
@@ -1519,8 +1516,7 @@ function renderMRR() {
     if (pipePeriod === 'CQ') {
       const { start } = currentQtr();
       const cqMons = [start, start + 1, start + 2].filter(m => m <= CUR_MON);
-      const qTarget = (targetPipe ? cqMons.reduce((s, m) => s + getTargetForRowMon(targetPipe, targetSeg, CUR_YEAR, m, 'mrr_target'), 0) : 0)
-                    + chanFrac * cqMons.reduce((s, m) => s + getTargetForRowMon('Unified Channel Pipeline', 'Channels', CUR_YEAR, m, 'mrr_target'), 0);
+      const qTarget = pipelines.reduce((sp, p) => sp + cqMons.reduce((s, m) => s + getTargetForRowMon(p, targetSeg, CUR_YEAR, m, 'mrr_target'), 0), 0);
       const qActual = sum(won(inPeriod(deals, 'close_date', 'CQ')), mrr);
       covRemaining = Math.max(0, qTarget - qActual);
     } else {
@@ -2199,12 +2195,13 @@ function dmDept(d) {
 }
 // Separate Channels target bucket (Unified Channel Pipeline). Split between SME/ENT via chanFrac,
 // matching the Segment Summary tab so the two views reconcile.
-function dmChannelsTarget(year, mon) {
+function dmChannelsTarget(seg, year, mon) {
   return allTargets.reduce((s, t) => {
     const dt = parseDate(t.metric_month);
     if (!dt || isNaN(dt)) return s;
     if (dt.getFullYear() !== year || (dt.getMonth() + 1) !== mon) return s;
-    if (t.pipeline_name !== 'Unified Channel Pipeline' || (t.segment || '') !== 'Channels') return s;
+    if (t.pipeline_name !== 'Unified Channel Pipeline') return s;
+    if (seg && (t.segment || '').toUpperCase() !== seg.toUpperCase()) return s;  // channels now split by segment
     return s + (parseFloat(t.mrr_target) || 0);
   }, 0);
 }
@@ -2231,7 +2228,7 @@ function dmTotalTarget(cfg, year, mon) {
     if (cfg.targetSeg && (t.segment || '').toUpperCase() !== cfg.targetSeg.toUpperCase()) return s;
     return s + (parseFloat(t.mrr_target) || 0);
   }, 0);
-  return base + (cfg.chanFrac ? cfg.chanFrac * dmChannelsTarget(year, mon) : 0);
+  return base + (cfg.chanFrac ? dmChannelsTarget(cfg.targetSeg, year, mon) : 0);
 }
 
 function switchDmTab(t) {
@@ -2705,10 +2702,10 @@ function renderSegmentSummary() {
   function getSegMonTgt(label, seg, mo, tf) {
     if (label === 'U/S') {
       return getTargetForRowMon('PH Upsell Pipeline', null, CUR_YEAR, mo, tf);
-    } else {
-      const chanT = getTargetForRowMon('Unified Channel Pipeline', 'Channels', CUR_YEAR, mo, tf);
-      return getTargetForRowMon('Sales Pipeline', seg, CUR_YEAR, mo, tf) + 0.5 * chanT;
     }
+    // Sales + Unified Channel target for this segment (Channels now split into ENT/SME).
+    return getTargetForRowMon('Sales Pipeline', seg, CUR_YEAR, mo, tf)
+         + getTargetForRowMon('Unified Channel Pipeline', seg, CUR_YEAR, mo, tf);
   }
 
   function buildTable(fn, tf) {
@@ -2873,13 +2870,14 @@ function renderTeams() {
     // Channels: YTD with ENT/SME segment breakdown (target 50/50)
     if (teamName === 'Channels') {
       const chanColor = '#2dd4bf';
-      const chanTgt = getTargetForRow('Unified Channel Pipeline', 'Channels', CUR_YEAR, CUR_MON, 'mrr_target') || 0;
+      // Channels target now split by segment within Unified Channel Pipeline (ENT/SME rows).
+      const chanTgtENT = getTargetForRow('Unified Channel Pipeline', 'ENT', CUR_YEAR, CUR_MON, 'mrr_target') || 0;
+      const chanTgtSME = getTargetForRow('Unified Channel Pipeline', 'SME', CUR_YEAR, CUR_MON, 'mrr_target') || 0;
+      const chanTgt = chanTgtENT + chanTgtSME;
       const chanDeals = won(inYTD(allDeals.filter(d => d.pipeline_name === 'Unified Channel Pipeline'), 'close_date', CUR_YEAR, CUR_MON));
       const chanAct = sum(chanDeals, mrr);
       const chanActENT = sum(chanDeals.filter(d => d.segment === 'ENT'), mrr);
       const chanActSME = sum(chanDeals.filter(d => d.segment === 'SME'), mrr);
-      const chanTgtENT = chanTgt * 0.50;
-      const chanTgtSME = chanTgt * 0.50;
       const chanAtt = pct(chanAct, chanTgt);
       const chanAttC = chanAtt >= 100 ? '#4ade80' : chanAtt >= 80 ? '#38bdf8' : chanAtt >= 60 ? '#fbbf24' : '#f87171';
       const chanSegRows = [
