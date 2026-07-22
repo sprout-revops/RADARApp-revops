@@ -3042,18 +3042,23 @@ function renderTeams() {
 
 /* ── Accelerator ────────────────────────────────── */
 // Manual override storage key: accel_<year>_<rep>_<month> → 'hit'|'miss'|'skip'|null
+const ACCEL_ADMINS = ['apanares@sprout.ph','lurbina@sprout.ph'];
+function _accelIsAdmin() { return ACCEL_ADMINS.includes((localStorage.getItem('radar_user_email')||'').toLowerCase().trim()); }
 function _accelKey(rep, m)  { return `accel_${CUR_YEAR}_${rep}_${m}`; }
 function _accelBakedKey(rep, m) { return `${CUR_YEAR}_${rep}_${m}`; }
 function _accelGet(rep, m) {
-  // 1. Manual local override (localStorage) takes priority
-  const local = localStorage.getItem(_accelKey(rep, m));
-  if (local) return local;
-  // 2. Fall back to shared repo snapshot (visible to all users)
+  // Local manual overrides apply ONLY for admins (editors). Everyone else always sees the shared
+  // repo snapshot — so all non-admins get the same, consistent view (no per-browser drift).
+  if (_accelIsAdmin()) {
+    const local = localStorage.getItem(_accelKey(rep, m));
+    if (local) return local;
+  }
   return ACCEL_BAKED[_accelBakedKey(rep, m)] || null;
 }
 function _accelSet(rep, m, val) { localStorage.setItem(_accelKey(rep, m), val); }
 
 function accelToggle(repEnc, m) {
+  if (!_accelIsAdmin()) return;   // read-only for non-admins
   const rep = decodeURIComponent(repEnc);
   const cur = _accelGet(rep, m);
   // Cycle: null/auto → 'hit' → 'miss' → 'skip' → 'hit' …
@@ -3080,10 +3085,8 @@ function renderAccelerator() {
     return `<th style="${isCur?'color:#e8b86d;':''}">${m}</th>`;
   }).join('');
 
-  // Only show Save button to admins
-  const ACCEL_ADMINS = ['apanares@sprout.ph','lurbina@sprout.ph'];
-  const currentUser  = (localStorage.getItem('radar_user_email') || '').toLowerCase().trim();
-  const isAdmin      = ACCEL_ADMINS.includes(currentUser);
+  // Editing (cell toggle + Save/Reset) is admin-only; everyone else sees the shared snapshot read-only.
+  const isAdmin = _accelIsAdmin();
   const saveBtn  = isAdmin ? `<button onclick="accelSaveSnapshot()" style="margin-left:12px;font-size:10px;padding:3px 10px;background:#1a3a24;border:1px solid #1DB954;border-radius:4px;color:#1DB954;cursor:pointer;font-weight:600;" title="Lock current ✓/✗ state so data refreshes won't change it">💾 Save</button>` : '';
   const resetBtn = isAdmin ? `<button onclick="accelResetAll()" style="margin-left:6px;font-size:10px;padding:3px 10px;background:#ffffff08;border:1px solid #ffffff15;border-radius:4px;color:#ffffff40;cursor:pointer;" title="Clear all manual overrides">Reset</button>` : '';
   const thead = `<thead><tr><th>Rep</th><th>Team ${saveBtn}${resetBtn}</th>${theadMons}</tr></thead>`;
@@ -3104,9 +3107,9 @@ function renderAccelerator() {
         } else if (override === 'miss') {
           inner = `<span class="accel-miss" title="Manual: MISS — click to change">✗</span>`;
         } else {
-          inner = `<span class="accel-fut" style="cursor:pointer;" title="Click to mark hit or miss">—</span>`;
+          inner = `<span class="accel-fut"${isAdmin?' style="cursor:pointer;" title="Click to mark hit or miss"':''}>—</span>`;
         }
-        cells += `<td class="accel-cell" onclick="accelToggle('${repEnc}',${m})" style="cursor:pointer;">${inner}</td>`;
+        cells += `<td class="accel-cell"${isAdmin?` onclick="accelToggle('${repEnc}',${m})" style="cursor:pointer;"`:''}>${inner}</td>`;
       } else {
         const override = _accelGet(rep, m);
         let inner;
@@ -3122,7 +3125,7 @@ function renderAccelerator() {
           const hit  = won_ >= moTarget;
           inner = `<span class="${hit?'accel-hit':'accel-miss'}" title="${fmt(won_)} vs ${fmt(moTarget)} — click to override">${hit?'✓':'✗'}</span>`;
         }
-        cells += `<td class="accel-cell" onclick="accelToggle('${repEnc}',${m})">${inner}</td>`;
+        cells += `<td class="accel-cell"${isAdmin?` onclick="accelToggle('${repEnc}',${m})" style="cursor:pointer;"`:''}>${inner}</td>`;
       }
     }
     const resigned = REP_TEAMS[rep].resigned;
