@@ -3042,7 +3042,7 @@ function renderTeams() {
 
 /* ── Accelerator ────────────────────────────────── */
 // Manual override storage key: accel_<year>_<rep>_<month> → 'hit'|'miss'|'skip'|null
-const ACCEL_ADMINS = ['apanares@sprout.ph','lurbina@sprout.ph'];
+const ACCEL_ADMINS = ['apanares@sprout.ph','lurbina@sprout.ph','louieb@sprout.ph'];
 function _accelIsAdmin() { return ACCEL_ADMINS.includes((localStorage.getItem('radar_user_email')||'').toLowerCase().trim()); }
 function _accelKey(rep, m)  { return `accel_${CUR_YEAR}_${rep}_${m}`; }
 function _accelBakedKey(rep, m) { return `${CUR_YEAR}_${rep}_${m}`; }
@@ -3117,13 +3117,9 @@ function renderAccelerator() {
           inner = `<span class="accel-hit" title="Manual: HIT — click to change">✓</span>`;
         } else if (override === 'miss') {
           inner = `<span class="accel-miss" title="Manual: MISS — click to change">✗</span>`;
-        } else if (override === 'skip') {
-          inner = `<span class="accel-skip" title="Skipped — click to change">—</span>`;
         } else {
-          // Auto-compute
-          const won_ = sum(won(inMonth(spRepDeals(rep),'close_date',CUR_YEAR,m)), mrr);
-          const hit  = won_ >= moTarget;
-          inner = `<span class="${hit?'accel-hit':'accel-miss'}" title="${fmt(won_)} vs ${fmt(moTarget)} — click to override">${hit?'✓':'✗'}</span>`;
+          // Fully manual — no auto-compute. Unmarked (and 'skip') show a neutral dash.
+          inner = `<span class="accel-fut"${isAdmin?' style="cursor:pointer;" title="Click to mark hit or miss"':''}>—</span>`;
         }
         cells += `<td class="accel-cell"${isAdmin?` onclick="accelToggle('${repEnc}',${m})" style="cursor:pointer;"`:''}>${inner}</td>`;
       }
@@ -3187,13 +3183,7 @@ function accelSaveSnapshot() {
   const checkpoint = {};
   Object.keys(REP_TEAMS).forEach(rep => {
     for (let m = 1; m <= CUR_MON; m++) {
-      const existing = _accelGet(rep, m); // localStorage first, then ACCEL_BAKED
-      let val = existing;
-      if (!val && m < CUR_MON) {
-        // Past month with no override — compute from data
-        const won_ = sum(won(inMonth(spRepDeals(rep), 'close_date', CUR_YEAR, m)), mrr);
-        val = won_ >= repMonthTarget(rep, m) ? 'hit' : 'miss';
-      }
+      const val = _accelGet(rep, m); // manual only — localStorage override, then shared snapshot; no auto-compute
       if (val) {
         _accelSet(rep, m, val);
         checkpoint[_accelBakedKey(rep, m)] = val;
