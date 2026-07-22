@@ -3180,20 +3180,37 @@ function accelSaveSnapshot() {
   // Manual overrides (set by clicking cells) are preserved exactly as-is.
   // Cells with no manual override fall back to ACCEL_BAKED or are computed from data.
   // Current month with no override is left dynamic (not locked).
-  const checkpoint = {};
+  // Build the full shared snapshot (every marked cell, all 12 months) + a local checkpoint.
+  const checkpoint = {}, snapshot = {};
   Object.keys(REP_TEAMS).forEach(rep => {
-    for (let m = 1; m <= CUR_MON; m++) {
+    for (let m = 1; m <= 12; m++) {
       const val = _accelGet(rep, m); // manual only — localStorage override, then shared snapshot; no auto-compute
       if (val) {
         _accelSet(rep, m, val);
         checkpoint[_accelBakedKey(rep, m)] = val;
+        snapshot[_accelBakedKey(rep, m)] = val;
       }
-      // Current month with no override: leave dynamic, don't checkpoint
     }
   });
   localStorage.setItem(ACCEL_SAVE_KEY, JSON.stringify(checkpoint));
   renderAccelerator();
-  _accelToast('✅ Changes saved');
+
+  // Publish to the shared snapshot so ALL users see it (works when opened via RADAR; the API is
+  // same-origin there). Others pick it up on their next reload. Falls back to local-only if the
+  // endpoint isn't reachable (e.g. standalone/GitHub Pages copy).
+  _accelToast('⏳ Publishing…');
+  fetch('/api/accel', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-radar-token': localStorage.getItem('radar_id_token') || '' },
+    body: JSON.stringify({ snapshot })
+  })
+  .then(r => r.json().catch(() => ({})).then(j => ({ ok: r.ok, status: r.status, j })))
+  .then(({ ok, status, j }) => {
+    _accelToast(ok
+      ? '✅ Published — everyone sees it on their next reload'
+      : ('⚠ Saved locally; publish failed: ' + (j.error || ('HTTP ' + status))));
+  })
+  .catch(() => _accelToast('✅ Saved locally (open via RADAR to publish to everyone)'));
 }
 
 /* ── Rep Forecast Overrides ────────────────────────── */
