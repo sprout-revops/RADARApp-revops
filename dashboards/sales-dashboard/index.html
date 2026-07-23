@@ -765,7 +765,7 @@ tfoot td:first-child { text-align:left; font-size:10px; font-weight:700; letter-
             <th style="text-align:right;padding:9px 12px;">SQL</th>
             <th style="text-align:right;padding:9px 12px;white-space:nowrap;">SQL Rate</th>
             <th style="text-align:right;padding:9px 12px;white-space:nowrap;">Won Deals</th>
-            <th style="text-align:right;padding:9px 12px;white-space:nowrap;">Win Rate</th>
+            <th style="text-align:right;padding:9px 12px;white-space:nowrap;">Won/Closed</th>
             <th style="text-align:right;padding:9px 12px;white-space:nowrap;">Won MRR</th>
           </tr>
         </thead>
@@ -773,7 +773,7 @@ tfoot td:first-child { text-align:left; font-size:10px; font-weight:700; letter-
       </table>
     </div>
     <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#ffffff25;margin-top:10px;">
-      QL = qualified deals (create date, YTD) · SQL = qualified & past MQL · Won = Customer (close date, YTD) · Win Rate = Won ÷ (Won + Lost) closed YTD · Source: Databricks, daily
+      QL = qualified deals (create date, YTD) · SQL = qualified & past MQL · Won = Customer (close date, YTD) · Won/Closed = Won ÷ (Won + Lost) closed YTD · Source: Databricks, daily
     </div>
   </div>
   </div>
@@ -1467,7 +1467,7 @@ function downloadIndustryCsv(){
   const rate = (s,q) => q>0 ? (s/q*100).toFixed(1) : '';
   const wrate = (w,l) => (w+l)>0 ? (w/(w+l)*100).toFixed(1) : '';
   const esc = v => { v = (v==null?'':String(v)); return /[",\n]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v; };
-  const rows = [['Segment','Pipeline','Level','Industry','Sub_industry','Qualified_Leads','SQL','SQL_Rate_%','Won_Deals','Lost_Deals','Win_Rate_%','Won_MRR']];
+  const rows = [['Segment','Pipeline','Level','Industry','Sub_industry','Qualified_Leads','SQL','SQL_Rate_%','Won_Deals','Lost_Deals','Won_Closed_%','Won_MRR']];
   // industry rollup + sub-industry detail (active segment only)
   const byInd = {};
   indRows().forEach(r => {
