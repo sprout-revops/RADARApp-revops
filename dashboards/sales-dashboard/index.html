@@ -764,7 +764,9 @@ tfoot td:first-child { text-align:left; font-size:10px; font-weight:700; letter-
             <th style="text-align:right;padding:9px 12px;white-space:nowrap;">Qualified Leads</th>
             <th style="text-align:right;padding:9px 12px;">SQL</th>
             <th style="text-align:right;padding:9px 12px;white-space:nowrap;">SQL Rate</th>
+            <th style="text-align:right;padding:9px 12px;white-space:nowrap;">Active SQL</th>
             <th style="text-align:right;padding:9px 12px;white-space:nowrap;">Won Deals</th>
+            <th style="text-align:right;padding:9px 12px;white-space:nowrap;">Won/SQL</th>
             <th style="text-align:right;padding:9px 12px;white-space:nowrap;">Won/Closed</th>
             <th style="text-align:right;padding:9px 12px;white-space:nowrap;">Won MRR</th>
           </tr>
@@ -773,7 +775,7 @@ tfoot td:first-child { text-align:left; font-size:10px; font-weight:700; letter-
       </table>
     </div>
     <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#ffffff25;margin-top:10px;">
-      QL = qualified deals (create date, YTD) · SQL = qualified & past MQL · Won = Customer (close date, YTD) · Won/Closed = Won ÷ (Won + Lost) closed YTD · Source: Databricks, daily
+      QL = qualified deals (create date, YTD) · SQL = qualified & past MQL (create date) · Active SQL = qualified & past MQL whose SQL lifespan overlaps YTD (ds_sql_start_date ≤ today AND ds_latest_stage_date ≥ Jan 1) · Won/SQL = Active Won ÷ Active SQL (same active window) · Won = Customer (close date, YTD) · Won/Closed = Won ÷ (Won + Lost) closed YTD · Source: Databricks, daily
     </div>
   </div>
   </div>
@@ -1412,23 +1414,25 @@ function renderIndustryEnt(){
   const num = x => parseFloat(x)||0;
   const rate = (s,q) => q>0 ? (s/q*100).toFixed(1)+'%' : '—';
   const wrate = (w,l) => (w+l)>0 ? (w/(w+l)*100).toFixed(1)+'%' : '—';
+  const wsql = (w,s) => s>0 ? (w/s*100).toFixed(1)+'%' : '—';   // Won/SQL = Active Won ÷ Active SQL
   // roll up to industry (active segment only)
   const byInd = {};
   indRows().forEach(r => {
     const k = r.industry || '(Unspecified)';
-    if (!byInd[k]) byInd[k] = { ql:0, sql:0, won:0, lost:0, mrr:0, subs:[] };
+    if (!byInd[k]) byInd[k] = { ql:0, sql:0, asql:0, awon:0, won:0, lost:0, mrr:0, subs:[] };
     const o = byInd[k];
-    o.ql += num(r.ql); o.sql += num(r.sql); o.won += num(r.won_deals); o.lost += num(r.lost_deals); o.mrr += num(r.won_mrr);
+    o.ql += num(r.ql); o.sql += num(r.sql); o.asql += num(r.active_sql); o.awon += num(r.active_won);
+    o.won += num(r.won_deals); o.lost += num(r.lost_deals); o.mrr += num(r.won_mrr);
     o.subs.push(r);
   });
   const inds = Object.keys(byInd).sort((a,b)=> byInd[b].ql - byInd[a].ql);
-  const tot = { ql:0, sql:0, won:0, lost:0, mrr:0 };
-  inds.forEach(k => { tot.ql+=byInd[k].ql; tot.sql+=byInd[k].sql; tot.won+=byInd[k].won; tot.lost+=byInd[k].lost; tot.mrr+=byInd[k].mrr; });
+  const tot = { ql:0, sql:0, asql:0, awon:0, won:0, lost:0, mrr:0 };
+  inds.forEach(k => { const o=byInd[k]; tot.ql+=o.ql; tot.sql+=o.sql; tot.asql+=o.asql; tot.awon+=o.awon; tot.won+=o.won; tot.lost+=o.lost; tot.mrr+=o.mrr; });
 
   const rcell = (v,extra='') => `<td style="text-align:right;padding:9px 12px;${mono}${extra}">${v}</td>`;
   let html = '';
   if (!inds.length){
-    tb.innerHTML = `<tr><td colspan="7" style="padding:16px;color:#ffffff40;">No ${IND_SEG} data available yet — refresh the dashboard data.</td></tr>`;
+    tb.innerHTML = `<tr><td colspan="9" style="padding:16px;color:#ffffff40;">No ${IND_SEG} data available yet — refresh the dashboard data.</td></tr>`;
     return;
   }
   inds.forEach(k => {
@@ -1438,7 +1442,8 @@ function renderIndustryEnt(){
     html += `<tr onclick="indToggle('${k.replace(/'/g,"\\'")}')" style="cursor:pointer;${open?'background:#ffffff06;':''}" class="ind-row">`
       + `<td style="padding:9px 12px;"><div style="display:flex;gap:8px;align-items:baseline;"><span style="color:#6ee7b7;flex-shrink:0;width:10px;">${arrow}</span><span style="font-weight:600;color:#fff;">${k}</span></div></td>`
       + rcell(o.ql) + rcell(o.sql,'color:#93c5fd;') + rcell(rate(o.sql,o.ql),'color:#fbbf24;')
-      + rcell(o.won,'color:#6ee7b7;') + rcell(wrate(o.won,o.lost),'color:#fbbf24;') + rcell(money0(o.mrr),'color:#6ee7b7;')
+      + rcell(o.asql,'color:#c4b5fd;')
+      + rcell(o.won,'color:#6ee7b7;') + rcell(wsql(o.awon,o.asql),'color:#fbbf24;') + rcell(wrate(o.won,o.lost),'color:#fbbf24;') + rcell(money0(o.mrr),'color:#6ee7b7;')
       + `</tr>`;
     if (open){
       const subs = o.subs.slice().sort((a,b)=> num(b.ql)-num(a.ql));
@@ -1447,7 +1452,8 @@ function renderIndustryEnt(){
           + `<td style="padding:6px 12px 6px 34px;color:#ffffff85;">${s.sub_industry||'—'}</td>`
           + rcell(num(s.ql),'color:#ffffff85;') + rcell(num(s.sql),'color:#93c5fd;')
           + rcell(rate(num(s.sql),num(s.ql)),'color:#ffffff55;')
-          + rcell(num(s.won_deals),'color:#6ee7b7;') + rcell(wrate(num(s.won_deals),num(s.lost_deals)),'color:#ffffff55;') + rcell(money0(num(s.won_mrr)),'color:#6ee7b7;')
+          + rcell(num(s.active_sql),'color:#c4b5fd;')
+          + rcell(num(s.won_deals),'color:#6ee7b7;') + rcell(wsql(num(s.active_won),num(s.active_sql)),'color:#ffffff55;') + rcell(wrate(num(s.won_deals),num(s.lost_deals)),'color:#ffffff55;') + rcell(money0(num(s.won_mrr)),'color:#6ee7b7;')
           + `</tr>`;
       });
     }
@@ -1456,7 +1462,8 @@ function renderIndustryEnt(){
   html += `<tr style="border-top:2px solid #ffffff25;font-weight:800;color:#fbbf24;background:#ffffff08;">`
     + `<td style="padding:10px 12px;font-weight:800;">Total (${IND_SEG} · NB)</td>`
     + rcell(tot.ql,'color:#fff;') + rcell(tot.sql,'color:#fff;') + rcell(rate(tot.sql,tot.ql))
-    + rcell(tot.won,'color:#6ee7b7;') + rcell(wrate(tot.won,tot.lost)) + rcell(money0(tot.mrr),'color:#6ee7b7;') + `</tr>`;
+    + rcell(tot.asql,'color:#c4b5fd;')
+    + rcell(tot.won,'color:#6ee7b7;') + rcell(wsql(tot.awon,tot.asql)) + rcell(wrate(tot.won,tot.lost)) + rcell(money0(tot.mrr),'color:#6ee7b7;') + `</tr>`;
   tb.innerHTML = html;
 }
 function indToggle(k){ IND_OPEN[k] = !IND_OPEN[k]; renderIndustryEnt(); }
@@ -1466,21 +1473,22 @@ function downloadIndustryCsv(){
   const num = x => parseFloat(x)||0;
   const rate = (s,q) => q>0 ? (s/q*100).toFixed(1) : '';
   const wrate = (w,l) => (w+l)>0 ? (w/(w+l)*100).toFixed(1) : '';
+  const wsql = (w,s) => s>0 ? (w/s*100).toFixed(1) : '';
   const esc = v => { v = (v==null?'':String(v)); return /[",\n]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v; };
-  const rows = [['Segment','Pipeline','Level','Industry','Sub_industry','Qualified_Leads','SQL','SQL_Rate_%','Won_Deals','Lost_Deals','Won_Closed_%','Won_MRR']];
+  const rows = [['Segment','Pipeline','Level','Industry','Sub_industry','Qualified_Leads','SQL','SQL_Rate_%','Active_SQL','Won_Deals','Active_Won','Won_SQL_%','Lost_Deals','Won_Closed_%','Won_MRR']];
   // industry rollup + sub-industry detail (active segment only)
   const byInd = {};
   indRows().forEach(r => {
     const k = r.industry || '(Unspecified)';
-    (byInd[k] = byInd[k] || {ql:0,sql:0,won:0,lost:0,mrr:0,subs:[]});
-    byInd[k].ql+=num(r.ql); byInd[k].sql+=num(r.sql); byInd[k].won+=num(r.won_deals); byInd[k].lost+=num(r.lost_deals); byInd[k].mrr+=num(r.won_mrr);
+    (byInd[k] = byInd[k] || {ql:0,sql:0,asql:0,awon:0,won:0,lost:0,mrr:0,subs:[]});
+    byInd[k].ql+=num(r.ql); byInd[k].sql+=num(r.sql); byInd[k].asql+=num(r.active_sql); byInd[k].awon+=num(r.active_won); byInd[k].won+=num(r.won_deals); byInd[k].lost+=num(r.lost_deals); byInd[k].mrr+=num(r.won_mrr);
     byInd[k].subs.push(r);
   });
   Object.keys(byInd).sort((a,b)=>byInd[b].ql-byInd[a].ql).forEach(k => {
     const o = byInd[k];
-    rows.push([IND_SEG,'New Business','Industry',k,'',o.ql,o.sql,rate(o.sql,o.ql),o.won,o.lost,wrate(o.won,o.lost),Math.round(o.mrr)]);
+    rows.push([IND_SEG,'New Business','Industry',k,'',o.ql,o.sql,rate(o.sql,o.ql),o.asql,o.won,o.awon,wsql(o.awon,o.asql),o.lost,wrate(o.won,o.lost),Math.round(o.mrr)]);
     o.subs.slice().sort((a,b)=>num(b.ql)-num(a.ql)).forEach(s => {
-      rows.push([IND_SEG,'New Business','Sub-industry',k,s.sub_industry||'',num(s.ql),num(s.sql),rate(num(s.sql),num(s.ql)),num(s.won_deals),num(s.lost_deals),wrate(num(s.won_deals),num(s.lost_deals)),Math.round(num(s.won_mrr))]);
+      rows.push([IND_SEG,'New Business','Sub-industry',k,s.sub_industry||'',num(s.ql),num(s.sql),rate(num(s.sql),num(s.ql)),num(s.active_sql),num(s.won_deals),num(s.active_won),wsql(num(s.active_won),num(s.active_sql)),num(s.lost_deals),wrate(num(s.won_deals),num(s.lost_deals)),Math.round(num(s.won_mrr))]);
     });
   });
   const csv = rows.map(r => r.map(esc).join(',')).join('\n');
