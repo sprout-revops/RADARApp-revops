@@ -761,14 +761,14 @@ tfoot td:first-child { text-align:left; font-size:10px; font-weight:700; letter-
         <thead>
           <tr style="background:#ffffff08;">
             <th style="text-align:left;padding:9px 12px;min-width:300px;">Industry</th>
-            <th style="text-align:right;padding:9px 12px;white-space:nowrap;">Qualified Leads</th>
-            <th style="text-align:right;padding:9px 12px;">SQL</th>
-            <th style="text-align:right;padding:9px 12px;white-space:nowrap;">SQL Rate</th>
-            <th style="text-align:right;padding:9px 12px;white-space:nowrap;">Active SQL</th>
-            <th style="text-align:right;padding:9px 12px;white-space:nowrap;">Won Deals</th>
-            <th style="text-align:right;padding:9px 12px;white-space:nowrap;">Won/SQL</th>
-            <th style="text-align:right;padding:9px 12px;white-space:nowrap;">Won/Closed</th>
-            <th style="text-align:right;padding:9px 12px;white-space:nowrap;">Won MRR</th>
+            <th class="mtip" data-tip="Qualified Leads (QL): distinct deals qualified (qualified_lead = Yes), by create date, YTD." style="text-align:right;padding:9px 12px;white-space:nowrap;cursor:help;">Qualified Leads</th>
+            <th class="mtip" data-tip="SQL: qualified deals that progressed past the MQL stage (client_journey_stage ≠ MQL), by create date, YTD." style="text-align:right;padding:9px 12px;cursor:help;">SQL</th>
+            <th class="mtip" data-tip="SQL Rate = SQL ÷ Qualified Leads." style="text-align:right;padding:9px 12px;white-space:nowrap;cursor:help;">SQL Rate</th>
+            <th class="mtip" data-tip="Active SQL: deals past MQL whose SQL lifespan OVERLAPS the period — ds_sql_start_date ≤ period end AND ds_latest_stage_date ≥ period start. Interval-overlap (not a create-date cohort); no qualified_lead filter." style="text-align:right;padding:9px 12px;white-space:nowrap;cursor:help;">Active SQL</th>
+            <th class="mtip" data-tip="Won Deals: Closed-Won deals (client_journey_stage = Customer) by close date, YTD. Affiliate deals excluded from the count." style="text-align:right;padding:9px 12px;white-space:nowrap;cursor:help;">Won Deals</th>
+            <th class="mtip" data-tip="Won/SQL = Won Deals (close date) ÷ Active SQL. How many of the active SQLs closed Won." style="text-align:right;padding:9px 12px;white-space:nowrap;cursor:help;">Won/SQL</th>
+            <th class="mtip" data-tip="Won/Closed = Won ÷ (Won + Lost), for deals closed YTD." style="text-align:right;padding:9px 12px;white-space:nowrap;cursor:help;">Won/Closed</th>
+            <th class="mtip" data-tip="Won MRR: sum of MRR from Closed-Won deals (Customer) by close date, YTD. Includes affiliate MRR." style="text-align:right;padding:9px 12px;white-space:nowrap;cursor:help;">Won MRR</th>
           </tr>
         </thead>
         <tbody id="ind-tbody"><tr><td style="padding:14px;color:#ffffff40;">Loading…</td></tr></tbody>
@@ -3523,5 +3523,36 @@ document.addEventListener('keydown', e => {
     </div>
   </div>
 </div>
+
+<!-- ── METRIC HOVER TOOLTIP (definitions) — body-appended so it never clips inside scroll containers ── -->
+<style>
+  .mtip { position: relative; }
+  #metric-tip {
+    position: fixed; z-index: 99999; display: none; max-width: 300px;
+    background: #0B1E10; border: 1px solid rgba(29,185,84,.45); color: #e2e8f0;
+    font-size: 11px; line-height: 1.55; font-weight: 500; padding: 9px 11px;
+    border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,.55); pointer-events: none;
+    letter-spacing: normal; text-transform: none;
+  }
+</style>
+<script>
+(function(){
+  var tip = document.createElement('div'); tip.id = 'metric-tip'; document.body.appendChild(tip);
+  document.addEventListener('mouseover', function(e){
+    var el = e.target.closest && e.target.closest('[data-tip]'); if (!el) return;
+    tip.textContent = el.getAttribute('data-tip'); tip.style.display = 'block';
+    var r = el.getBoundingClientRect();
+    var w = tip.offsetWidth || 300;
+    var left = Math.max(8, Math.min(r.left, window.innerWidth - w - 8));
+    var top = r.bottom + 8;
+    if (top + tip.offsetHeight > window.innerHeight - 8) top = r.top - tip.offsetHeight - 8; // flip above if needed
+    tip.style.left = left + 'px'; tip.style.top = Math.max(8, top) + 'px';
+  });
+  document.addEventListener('mouseout', function(e){
+    if (e.target.closest && e.target.closest('[data-tip]')) tip.style.display = 'none';
+  });
+  document.addEventListener('mousedown', function(){ tip.style.display = 'none'; });
+})();
+</script>
 </body>
 </html>
