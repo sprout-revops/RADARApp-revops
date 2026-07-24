@@ -775,7 +775,7 @@ tfoot td:first-child { text-align:left; font-size:10px; font-weight:700; letter-
       </table>
     </div>
     <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#ffffff25;margin-top:10px;">
-      QL = qualified deals (create date, YTD) · SQL = qualified & past MQL (create date) · Active SQL = qualified & past MQL whose SQL lifespan overlaps YTD (ds_sql_start_date ≤ today AND ds_latest_stage_date ≥ Jan 1) · Won/SQL = Won Deals (close date) ÷ Active SQL · Won = Customer (close date, YTD) · Won/Closed = Won ÷ (Won + Lost) closed YTD · Source: Databricks, daily
+      QL = qualified deals (create date, YTD) · SQL = qualified & past MQL (create date) · Active SQL = past-MQL deals whose SQL lifespan overlaps YTD (ds_sql_start_date ≤ today AND ds_latest_stage_date ≥ Jan 1; no qualified_lead filter) · Won/SQL = Won Deals (close date) ÷ Active SQL · Won = Customer (close date, YTD) · Won/Closed = Won ÷ (Won + Lost) closed YTD · Source: Databricks, daily
     </div>
   </div>
   </div>
@@ -1110,6 +1110,13 @@ function dealsByRow(pipelines, seg) {
   );
 }
 
+// ── AFFILIATE DEALS (TEMPORARY manual tag) ──────────────────────────────
+// Excluded from the WON-DEAL COUNT only (their MRR is still counted). Manually
+// tagged until an "Affiliates" property exists in Databricks — then swap for it.
+const AFFILIATE_IDS = new Set(['59790822523','59794025267','59796698659','59794406163','59791750689','59764842578','59795541418','59766666252','59792227989','59791580688','59775410497','59757306412','59792214928','59797008031','59797145150','59797126410','59797103666','59783507822','59795662516']);
+function isAffil(d) { return !!d && AFFILIATE_IDS.has(String(d.deal_id)); }
+// Count of won deals, EXCLUDING affiliates (use for counts/logos; never for MRR sums).
+function wonCt(arr) { return arr.filter(d => !isAffil(d)).length; }
 function won(deals)  { return deals.filter(d => d.client_journey_stage === 'Customer'); }
 function open(deals) { return deals.filter(d => d.client_journey_stage === 'Opportunity'); }
 function isNB(d)     { return !/(upsell|renewal)/i.test(d.deal_type || ''); }
@@ -1341,7 +1348,7 @@ function renderNewProductDeals(){
     const rows = (newProductDeals || []).filter(d => d.product === cfg.key);
     const nDeals = rows.length;
     const wonRows = rows.filter(d => d.client_journey_stage === 'Customer');
-    const won = wonRows.length;
+    const won = wonCt(wonRows);   // affiliates excluded from count (MRR below keeps them)
     const wonMRR  = wonRows.reduce((s,d)=>s + (parseFloat(d.mrr)||0), 0);
     const pipeMRR = rows.filter(d => isOpen(d.client_journey_stage)).reduce((s,d)=>s + (parseFloat(d.mrr)||0), 0);
     const open = NP_OPEN[cfg.key];
@@ -1944,13 +1951,13 @@ function renderActuals() {
     const nbEf    = sum(nbWon, efMrr);
     const nbImpl  = sum(nbWon.filter(noRecruit), implNB);
     const nbOtp   = sum(nbWon.filter(noRecruit), otp);
-    const nbLogos = nbWon.length;
+    const nbLogos = wonCt(nbWon);
 
     const usMrr   = sum(usWon, mrr);
     const usEf    = sum(usWon, efMrr);
     const usImpl  = sum(usWon.filter(noRecruit), d => parseFloat(d.implem_fee) || 0);
     const usOtp   = sum(usWon.filter(noRecruit), otp);
-    const usDeals = usWon.length;
+    const usDeals = wonCt(usWon);
 
     nbTotMrr += nbMrr; nbTotEf += nbEf; nbTotImpl += nbImpl; nbTotOtp += nbOtp; nbTotLogos += nbLogos;
     usTotMrr += usMrr; usTotEf += usEf; usTotImpl += usImpl; usTotOtp += usOtp; usTotDeals += usDeals;
@@ -2603,7 +2610,7 @@ function renderRepSummary() {
       : won(inMonth(repDs, 'close_date', CUR_YEAR, repFilterMon));
     const ytdWon = sum(wonYTD, mrr);
     const ytdEF  = sum(wonYTD, efMrr);
-    const logos  = wonYTD.length;
+    const logos  = wonCt(wonYTD);
     const ytdAtt = pct(ytdWon, ytdTarget);
     const toGo   = Math.max(0, ytdTarget - ytdWon);
 
